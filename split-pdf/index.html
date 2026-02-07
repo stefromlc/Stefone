@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple PDF Splitter</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PDF-Lib for PDF manipulation -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    
+    <!-- JSZip for zipping files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Custom drag-and-drop styles */
+        .drag-active {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        
+        /* Smooth fade in */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Spinner */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i data-lucide="scissors" class="text-blue-600 h-6 w-6"></i>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900">PDF Splitter</h1>
+            </div>
+            <a href="#" onclick="window.location.reload()" class="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors">Start Over</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow p-4 md:p-8">
+        <div class="max-w-2xl mx-auto space-y-6">
+            
+            <!-- Intro Text -->
+            <div class="text-center space-y-2 mb-8">
+                <h2 class="text-3xl font-bold text-slate-900">Split PDF Files</h2>
+                <p class="text-slate-500">Break large documents into smaller pieces. Safe, free, and runs entirely on your device.</p>
+            </div>
+
+            <!-- Upload Card -->
+            <div id="upload-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 transition-all">
+                <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-blue-400 hover:bg-slate-50">
+                    <input type="file" id="file-input" class="hidden" accept="application/pdf">
+                    <div class="bg-blue-50 p-4 rounded-full mb-4">
+                        <i data-lucide="upload-cloud" class="text-blue-600 h-8 w-8"></i>
+                    </div>
+                    <p class="text-lg font-medium text-slate-700 mb-1">Click to upload or drag & drop</p>
+                    <p class="text-sm text-slate-400">Works with any PDF document</p>
+                </div>
+            </div>
+
+            <!-- Configuration Card (Hidden initially) -->
+            <div id="config-card" class="hidden fade-in bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <!-- File Info Header -->
+                <div class="flex items-start gap-4 mb-6 pb-6 border-b border-slate-100">
+                    <div class="bg-green-100 p-3 rounded-lg shrink-0">
+                        <i data-lucide="file-check" class="text-green-600 h-6 w-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-lg text-slate-900" id="filename-display">filename.pdf</h3>
+                        <p class="text-sm text-slate-500" id="file-details">Loading...</p>
+                    </div>
+                    <button onclick="resetApp()" class="ml-auto text-slate-400 hover:text-red-500 p-2" title="Remove file">
+                        <i data-lucide="x" class="h-5 w-5"></i>
+                    </button>
+                </div>
+
+                <!-- Split Settings -->
+                <div class="space-y-6">
+                    
+                    <!-- Split Mode Selector -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-3">How do you want to split it?</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onclick="setMode('pages')" id="btn-mode-pages" class="mode-btn active ring-2 ring-blue-600 bg-blue-50 border-blue-200 border rounded-lg p-4 text-left transition-all hover:bg-blue-50">
+                                <span class="block font-semibold text-slate-800 mb-1">By Page Count</span>
+                                <span class="block text-xs text-slate-500">Example: "I want every file to have 5 pages."</span>
+                            </button>
+                            <button onclick="setMode('parts')" id="btn-mode-parts" class="mode-btn border border-slate-200 rounded-lg p-4 text-left hover:bg-slate-50 transition-all">
+                                <span class="block font-semibold text-slate-800 mb-1">Into Equal Parts</span>
+                                <span class="block text-xs text-slate-500">Example: "I want to split this into exactly 3 files."</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Input Field -->
+                    <div>
+                        <label for="split-input" id="input-label" class="block text-sm font-medium text-slate-700 mb-1">Pages per file</label>
+                        <div class="relative">
+                            <input type="number" id="split-input" min="1" value="1" 
+                                class="block w-full rounded-lg border-slate-300 border p-3 focus:border-blue-500 focus:ring-blue-500 sm:text-sm shadow-sm transition-all"
+                                placeholder="1">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span id="input-suffix" class="text-slate-400 text-sm">pages</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2 flex items-center gap-1">
+                            <i data-lucide="info" class="h-3 w-3"></i>
+                            <span id="split-preview">Will create approximately X files.</span>
+                        </p>
+                    </div>
+
+                    <button id="split-btn" class="w-full bg-blue-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span>Split PDF Now</span>
+                        <i data-lucide="arrow-right" class="h-4 w-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Card (Hidden initially) -->
+            <div id="results-card" class="hidden fade-in bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 p-4 border-b border-slate-200 flex items-center justify-between">
+                    <h3 class="font-semibold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="text-green-500 h-5 w-5"></i>
+                        Ready to Download
+                    </h3>
+                </div>
+                
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4 mb-6 text-center">
+                        <div class="bg-slate-50 p-3 rounded-lg">
+                            <p class="text-xs text-slate-500 uppercase font-semibold">Original Pages</p>
+                            <p class="text-xl font-bold text-slate-800" id="res-total-pages">-</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg">
+                            <p class="text-xs text-slate-500 uppercase font-semibold">New Files Created</p>
+                            <p class="text-xl font-bold text-blue-600" id="res-total-chunks">-</p>
+                        </div>
+                    </div>
+
+                    <button id="download-btn" class="w-full bg-green-600 text-white font-bold py-4 px-6 rounded-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-transform active:scale-[0.98] shadow-md hover:shadow-lg flex items-center justify-center gap-3">
+                        <i data-lucide="download" class="h-6 w-6"></i>
+                        Download All (ZIP)
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-6 text-center text-slate-400 text-sm">
+        <p>Private & Secure: Files are processed locally and never leave your browser.</p>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <i data-lucide="info" class="h-5 w-5 text-blue-400"></i>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // --- State Management ---
+        let currentFile = null;
+        let pdfDoc = null; 
+        let totalPages = 0;
+        let zipBlob = null;
+        let currentMode = 'pages'; // 'pages' or 'parts'
+
+        // --- DOM Elements ---
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const configCard = document.getElementById('config-card');
+        const uploadCard = document.getElementById('upload-card');
+        const resultsCard = document.getElementById('results-card');
+        
+        const fileNameDisplay = document.getElementById('filename-display');
+        const fileDetailsDisplay = document.getElementById('file-details');
+        
+        // Inputs
+        const splitInput = document.getElementById('split-input');
+        const inputLabel = document.getElementById('input-label');
+        const inputSuffix = document.getElementById('input-suffix');
+        const splitPreview = document.getElementById('split-preview');
+        
+        // Buttons
+        const splitBtn = document.getElementById('split-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const btnModePages = document.getElementById('btn-mode-pages');
+        const btnModeParts = document.getElementById('btn-mode-parts');
+
+        // --- Event Listeners ---
+        
+        // Upload logic
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-active');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-active');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Validation & Preview Logic
+        splitInput.addEventListener('input', updatePreview);
+
+        // Action Logic
+        splitBtn.addEventListener('click', processSplit);
+        downloadBtn.addEventListener('click', downloadZip);
+
+        // --- Functions ---
+
+        async function handleFile(file) {
+            if (file.type !== 'application/pdf') {
+                showToast('Please upload a valid PDF file.', 'error');
+                return;
+            }
+
+            currentFile = file;
+            uploadCard.classList.add('hidden');
+            configCard.classList.remove('hidden');
+            
+            // UI Update
+            fileNameDisplay.textContent = file.name;
+            fileDetailsDisplay.textContent = `Reading file (${(file.size / 1024 / 1024).toFixed(2)} MB)...`;
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                // Load PDF Document
+                pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                totalPages = pdfDoc.getPageCount();
+                
+                fileDetailsDisplay.textContent = `${totalPages} pages found in this document.`;
+                
+                // Set default max values
+                updatePreview();
+                
+            } catch (err) {
+                console.error(err);
+                showToast('Error reading PDF. Is it password protected?', 'error');
+                resetApp();
+            }
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Toggle Visual Styles
+            const activeClasses = ['ring-2', 'ring-blue-600', 'bg-blue-50', 'border-blue-200'];
+            const inactiveClasses = ['border-slate-200', 'hover:bg-slate-50'];
+
+            if (mode === 'pages') {
+                btnModePages.classList.add(...activeClasses);
+                btnModePages.classList.remove(...inactiveClasses);
+                
+                btnModeParts.classList.remove(...activeClasses);
+                btnModeParts.classList.add(...inactiveClasses);
+
+                inputLabel.textContent = "Number of pages in each file";
+                inputSuffix.textContent = "pages";
+                splitInput.placeholder = "e.g., 5";
+            } else {
+                btnModeParts.classList.add(...activeClasses);
+                btnModeParts.classList.remove(...inactiveClasses);
+                
+                btnModePages.classList.remove(...activeClasses);
+                btnModePages.classList.add(...inactiveClasses);
+
+                inputLabel.textContent = "Total number of files to create";
+                inputSuffix.textContent = "files";
+                splitInput.placeholder = "e.g., 3";
+            }
+            
+            // Reset input to 1 safely
+            splitInput.value = 1;
+            updatePreview();
+        }
+
+        function updatePreview() {
+            let val = parseInt(splitInput.value);
+            
+            if (isNaN(val) || val < 1) {
+                splitPreview.textContent = 'Please enter a valid number.';
+                splitBtn.disabled = true;
+                return;
+            }
+
+            if (totalPages === 0) {
+                splitPreview.textContent = 'Waiting for PDF...';
+                return;
+            }
+
+            if (currentMode === 'pages') {
+                // Mode: Pages per Chunk
+                if (val > totalPages) val = totalPages;
+                const numFiles = Math.ceil(totalPages / val);
+                splitPreview.textContent = `This will create ${numFiles} file(s).`;
+            } else {
+                // Mode: Number of Parts
+                if (val > totalPages) val = totalPages; // Can't have more files than pages
+                // Calculate average size
+                const avgSize = Math.floor(totalPages / val);
+                splitPreview.textContent = `This will create ${val} file(s) with roughly ${avgSize}-${avgSize+1} pages each.`;
+            }
+            
+            splitBtn.disabled = false;
+        }
+
+        async function processSplit() {
+            if (!pdfDoc) return;
+            
+            let val = parseInt(splitInput.value);
+            if (isNaN(val) || val < 1) return;
+            if (val > totalPages) val = totalPages;
+
+            // Set loading state
+            splitBtn.disabled = true;
+            splitBtn.innerHTML = '<div class="loader"></div><span>Working on it...</span>';
+
+            try {
+                await new Promise(r => setTimeout(r, 100)); // UI Refresh delay
+
+                const zip = new JSZip();
+                const originalName = currentFile.name.replace('.pdf', '');
+                let fileCount = 0;
+
+                // --- Splitting Logic ---
+                
+                if (currentMode === 'pages') {
+                    // Logic: Every X pages
+                    const size = val;
+                    const totalChunks = Math.ceil(totalPages / size);
+                    
+                    for (let i = 0; i < totalChunks; i++) {
+                        const newPdf = await PDFLib.PDFDocument.create();
+                        const start = i * size;
+                        const end = Math.min(start + size, totalPages);
+                        
+                        const pageIndices = [];
+                        for (let p = start; p < end; p++) pageIndices.push(p);
+
+                        const copiedPages = await newPdf.copyPages(pdfDoc, pageIndices);
+                        copiedPages.forEach((page) => newPdf.addPage(page));
+
+                        const pdfBytes = await newPdf.save();
+                        const partNum = (i + 1).toString().padStart(Math.max(2, totalChunks.toString().length), '0');
+                        zip.file(`${originalName}_part_${partNum}.pdf`, pdfBytes);
+                        fileCount++;
+                    }
+
+                } else {
+                    // Logic: Into X parts (Even distribution)
+                    // Algorithm: Distribute remainder pages one by one or calculate sizes dynamically
+                    // We use dynamic calculation to handle remainders gracefully
+                    let remainingPages = totalPages;
+                    let remainingParts = val;
+                    let currentPageIndex = 0;
+
+                    for (let i = 0; i < val; i++) {
+                        // Calculate size for this specific chunk
+                        const currentChunkSize = Math.ceil(remainingPages / remainingParts);
+                        
+                        const newPdf = await PDFLib.PDFDocument.create();
+                        const pageIndices = [];
+                        
+                        for (let p = 0; p < currentChunkSize; p++) {
+                            pageIndices.push(currentPageIndex + p);
+                        }
+
+                        const copiedPages = await newPdf.copyPages(pdfDoc, pageIndices);
+                        copiedPages.forEach((page) => newPdf.addPage(page));
+
+                        const pdfBytes = await newPdf.save();
+                        const partNum = (i + 1).toString().padStart(Math.max(2, val.toString().length), '0');
+                        zip.file(`${originalName}_part_${partNum}.pdf`, pdfBytes);
+
+                        // Update counters
+                        currentPageIndex += currentChunkSize;
+                        remainingPages -= currentChunkSize;
+                        remainingParts--;
+                        fileCount++;
+                    }
+                }
+
+                // Generate ZIP
+                zipBlob = await zip.generateAsync({type: "blob"});
+
+                showResults(totalPages, fileCount);
+
+            } catch (err) {
+                console.error(err);
+                showToast('Something went wrong. Please try again.', 'error');
+                splitBtn.disabled = false;
+                splitBtn.innerHTML = '<span>Split PDF Now</span><i data-lucide="arrow-right" class="h-4 w-4"></i>';
+                lucide.createIcons();
+            }
+        }
+
+        function showResults(total, chunks) {
+            configCard.classList.add('hidden');
+            resultsCard.classList.remove('hidden');
+
+            document.getElementById('res-total-pages').textContent = total;
+            document.getElementById('res-total-chunks').textContent = chunks;
+        }
+
+        function downloadZip() {
+            if (!zipBlob) return;
+            
+            const originalName = currentFile.name.replace('.pdf', '');
+            const url = URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${originalName}_split_files.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Download started!', 'success');
+        }
+
+        function resetApp() {
+            currentFile = null;
+            pdfDoc = null;
+            totalPages = 0;
+            zipBlob = null;
+            fileInput.value = '';
+            
+            // Reset to defaults
+            splitInput.value = '1';
+            setMode('pages'); // Resets visual state too
+            
+            uploadCard.classList.remove('hidden');
+            configCard.classList.add('hidden');
+            resultsCard.classList.add('hidden');
+            
+            splitBtn.disabled = false;
+            splitBtn.innerHTML = '<span>Split PDF Now</span><i data-lucide="arrow-right" class="h-4 w-4"></i>';
+            lucide.createIcons();
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toast-msg');
+            
+            msg.textContent = message;
+            
+            if(type === 'error') {
+                toast.classList.remove('bg-slate-800');
+                toast.classList.add('bg-red-600');
+            } else {
+                toast.classList.remove('bg-red-600');
+                toast.classList.add('bg-slate-800');
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

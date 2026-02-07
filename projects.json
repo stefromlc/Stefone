@@ -35,5 +35,21 @@
     "category": "Games",
     "featured": true,
     "date": "2026-02-07"
+  },
+  {
+    "demoUrl": "",
+    "repoUrl": "",
+    "title": "Split PDF",
+    "slug": "split-pdf",
+    "description": "A simple, friendly PDF splitter that lets you break large PDFs into smaller files right in your browser. Choose to split by page count or into equal parts—no uploads, no sign-ups, and your files never leave your device. Fast, free, and private.",
+    "thumbnail": "assets/thumbs/split-pdf.png",
+    "tags": [
+      "PDF",
+      "Productivity",
+      "Tools"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-02-07"
   }
 ]
