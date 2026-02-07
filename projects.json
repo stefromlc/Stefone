@@ -37,6 +37,24 @@
     "date": "2026-02-07"
   },
   {
+    "title": "sound-canvas",
+    "slug": "sound-canvas",
+    "description": "Sound Canvas transforms sound into living visuals. Experiment with styles, tweak the look, and export eye-catching audio art with ease.",
+    "thumbnail": "assets/thumbs/sound-canvas.png",
+    "tags": [
+      "Audio",
+      "Export",
+      "Music",
+      "Tools",
+      "Visualizer"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-02-07",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "Split PDF",

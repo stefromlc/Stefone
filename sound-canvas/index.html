@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundCanvas | Audio Rack</title>
+    <!-- Expanded Font Library -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Audiowide&family=Cinzel:wght@400;700&family=Lobster&family=Monoton&family=Montserrat:wght@400;900&family=Outfit:wght@300;400;600;700;900&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,400;0,900;1,400&family=Press+Start+2P&family=Share+Tech+Mono&family=Space+Grotesk:wght@300;500;700&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Rack Mount Theme Palette */
+            --rack-bg: #121214;
+            --panel-bg: #1e1e24;
+            --panel-border: #333333;
+            --screw-color: #0f0f10;
+            
+            --lcd-bg: #0d120d;
+            --lcd-text: #4aff4a; /* Classic Green Terminal */
+            
+            --text-primary: #e0e0e0;
+            --text-muted: #71717a;
+            
+            --accent-glow: #00f0ff;
+            --accent-dim: rgba(0, 240, 255, 0.2);
+            --danger: #ff2a2a;
+            
+            --knob-gradient: linear-gradient(180deg, #444 0%, #222 100%);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+
+        body {
+            font-family: 'Share Tech Mono', monospace; /* Techy default font */
+            background-color: #050505;
+            /* Mesh Pattern Background */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Layout --- */
+        header {
+            padding: 0.75rem 1.5rem;
+            background: #111;
+            border-bottom: 2px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            z-index: 20;
+        }
+
+        .back-btn {
+            display: flex; align-items: center; gap: 8px;
+            text-decoration: none; color: var(--text-muted);
+            font-family: 'Share Tech Mono', monospace; font-size: 0.8rem;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            padding: 6px 12px; border: 1px solid var(--panel-border);
+            border-radius: 4px; background: var(--panel-bg);
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            color: var(--accent-glow); border-color: var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-dim);
+        }
+
+        .logo { 
+            font-family: 'Audiowide', cursive;
+            font-size: 1.4rem; 
+            letter-spacing: 0.05em; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.75rem; 
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+        .logo span { color: var(--accent-glow); }
+
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- Rack Mount Sidebar --- */
+        .controls {
+            width: 440px;
+            background: var(--rack-bg);
+            border-right: 4px solid #000;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px; /* Slight gap between rack units */
+            padding: 10px;
+            z-index: 10;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+        }
+        
+        .controls::-webkit-scrollbar { width: 8px; background: #000; }
+        .controls::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; border: 1px solid #555; }
+
+        /* Rack Unit (Panel) Styling */
+        .rack-unit {
+            background: var(--panel-bg);
+            border: 1px solid #000;
+            border-top: 1px solid #3a3a40; /* Highlight for depth */
+            padding: 1.25rem;
+            position: relative;
+            margin-bottom: 2px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Simulated Rack Screws */
+        .rack-unit::before, .rack-unit::after {
+            content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+            width: 12px; height: 12px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #555, #111);
+            box-shadow: 0 1px 2px rgba(255,255,255,0.1);
+            border: 1px solid #000;
+        }
+        .rack-unit::before { left: 8px; }
+        .rack-unit::after { right: 8px; }
+        
+        /* Section Header (Label tape style) */
+        .unit-label {
+            position: absolute; top: -8px; left: 30px;
+            background: #000; color: #aaa;
+            font-size: 0.65rem; font-weight: bold;
+            padding: 2px 8px; border: 1px solid #333;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            border-radius: 2px;
+        }
+
+        /* --- Inputs --- */
+        
+        /* LCD Screen Inputs */
+        input[type="text"], select {
+            background: var(--lcd-bg);
+            border: 2px solid #333;
+            border-bottom: 2px solid #444; /* Bevel */
+            color: var(--lcd-text);
+            padding: 0.6rem;
+            border-radius: 2px;
+            font-family: 'VT323', monospace;
+            font-size: 1.1rem;
+            width: 100%;
+            text-transform: uppercase;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+            text-shadow: 0 0 2px var(--lcd-text);
+        }
+        input[type="text"]:focus, select:focus {
+            border-color: #555;
+            outline: none;
+        }
+
+        /* Fader Style Sliders */
+        .slider-row { 
+            display: flex; align-items: center; gap: 12px; 
+            font-size: 0.75rem; color: #888; margin-top: 8px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .slider-row span { min-width: 70px; text-align: right; }
+
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 6px;
+            background: #000; border-radius: 3px; outline: none;
+            border: 1px solid #333; box-shadow: inset 0 1px 3px rgba(0,0,0,1);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 12px; height: 24px;
+            background: linear-gradient(180deg, #666, #333);
+            border: 1px solid #111; border-radius: 2px;
+            cursor: ns-resize;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            margin-top: -1px; /* Align to track */
+            position: relative;
+        }
+        /* Fader Line */
+        input[type="range"]::-webkit-slider-thumb::after {
+            content: ''; position: absolute; top: 50%; left: 10%; right: 10%; height: 1px; background: #fff;
+        }
+
+        /* --- Dual Timeline (Custom) --- */
+        .timeline-wrapper {
+            position: relative; width: 100%; height: 48px;
+            margin-top: 10px; background: #050505;
+            border: 2px solid #333; border-radius: 4px; overflow: hidden;
+        }
+        #timelineCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.5; }
+        .range-slider-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        
+        .range-selected-bar {
+            position: absolute; top: 0; bottom: 0;
+            background: rgba(0, 240, 255, 0.2);
+            border-left: 2px solid var(--accent-glow);
+            border-right: 2px solid var(--accent-glow);
+            pointer-events: none;
+        }
+        .range-input {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            left: 0; width: 100%; -webkit-appearance: none; background: none;
+            pointer-events: none; margin: 0; z-index: 5;
+        }
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none; pointer-events: auto;
+            width: 14px; height: 48px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: col-resize;
+        }
+
+        /* --- Buttons (Pads) --- */
+        .grid-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 0.5rem; }
+        .grid-btn {
+            background: #2a2a30; border: 1px solid #111;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.5);
+            border-radius: 3px; padding: 10px; color: #888;
+            cursor: pointer; transition: all 0.1s; text-align: left;
+            position: relative; overflow: hidden;
+        }
+        .grid-btn:hover { background: #333; color: #ddd; }
+        .grid-btn:active { transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+        .grid-btn strong { display: block; font-size: 0.8rem; margin-bottom: 2px; }
+        .grid-btn small { font-size: 0.6rem; opacity: 0.6; }
+        
+        /* --- Style Selector (Radio Buttons style) --- */
+        .style-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 0.5rem; }
+        .style-btn {
+            background: #111; border: 1px solid #333; border-radius: 4px;
+            padding: 8px 2px; cursor: pointer; display: flex; flex-direction: column; align-items: center;
+            gap: 4px; transition: all 0.2s;
+        }
+        .style-btn:hover { border-color: #555; }
+        .style-btn.active { 
+            background: #1a1a1a; 
+            border-color: var(--accent-glow); 
+            box-shadow: 0 0 8px var(--accent-dim);
+        }
+        .style-btn span { font-size: 0.6rem; color: #888; font-weight: bold; }
+        .style-btn.active span { color: var(--accent-glow); }
+
+        /* --- Layer Toggles (LED Buttons) --- */
+        .layer-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #000; padding: 8px 12px; border-radius: 2px; margin-bottom: 6px;
+            border: 1px solid #333;
+        }
+        .layer-label { font-size: 0.8rem; color: #ccc; }
+        .led-toggle {
+            width: 30px; height: 12px; background: #222; border-radius: 6px;
+            position: relative; cursor: pointer; box-shadow: inset 0 1px 3px #000;
+        }
+        .led-toggle::after {
+            content: ''; position: absolute; top: 1px; left: 1px; width: 10px; height: 10px;
+            border-radius: 50%; background: #444; transition: all 0.2s;
+        }
+        .led-toggle.active::after {
+            left: 19px; background: var(--accent-glow);
+            box-shadow: 0 0 5px var(--accent-glow);
+        }
+
+        /* --- Color Pickers (Mini Pots) --- */
+        .color-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
+        .color-input-container {
+            background: #111; border: 1px solid #333; border-radius: 3px;
+            padding: 5px; display: flex; align-items: center; gap: 8px;
+        }
+        .color-label { font-size: 0.65rem; color: #777; text-transform: uppercase; }
+
+        /* --- Action Button (Big Switch) --- */
+        .btn {
+            background: linear-gradient(180deg, #333, #111);
+            color: #ddd; border: 1px solid #000; border-top: 1px solid #444;
+            padding: 1rem; border-radius: 4px; font-weight: bold;
+            cursor: pointer; font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em;
+            width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem;
+            box-shadow: 0 4px 0 #000; margin-top: 10px;
+        }
+        .btn:hover { background: linear-gradient(180deg, #444, #222); color: #fff; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #000; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* --- Audio Player --- */
+        .audio-player {
+            background: #000; border: 1px solid #333; padding: 10px; border-radius: 4px;
+            display: none; flex-direction: column; gap: 8px; margin-top: 8px;
+        }
+        .audio-player.active { display: flex; }
+        .play-btn {
+            width: 40px; height: 40px; background: #222; border: 1px solid #444; border-radius: 50%;
+            color: #ccc; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.1), 0 2px 5px #000;
+        }
+        .play-btn:active { box-shadow: inset 0 2px 5px #000; transform: translateY(1px); }
+
+        /* --- Preview Area --- */
+        .preview-area {
+            flex: 1; background-color: #080808;
+            background-image: 
+                linear-gradient(rgba(50, 50, 50, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(50, 50, 50, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            display: flex; justify-content: center; align-items: center;
+            padding: 3rem; position: relative;
+        }
+        canvas {
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            max-width: 100%; max-height: 100%; background: #111; 
+            cursor: grab; border: 1px solid #222;
+        }
+
+        /* --- Toast --- */
+        .toast {
+            position: fixed; bottom: 2rem; right: 2rem; 
+            background: #111; border: 1px solid var(--accent-glow);
+            color: var(--accent-glow); font-family: 'VT323', monospace; font-size: 1.2rem;
+            padding: 0.5rem 1.5rem; box-shadow: 0 0 10px var(--accent-dim);
+            transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 100;
+        }
+        .toast.visible { transform: translateY(0); opacity: 1; }
+
+        /* Mobile Toggle */
+        .toggle-menu { display: none; background: none; border: none; color: #fff; cursor: pointer; }
+        @media (max-width: 900px) { .toggle-menu { display: block; } }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display:flex; align-items:center; gap: 1.5rem;">
+            <a href="/projects/" class="back-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back to Projects
+            </a>
+            <div class="logo">
+                Sound<span>Canvas</span>
+            </div>
+        </div>
+        <button class="toggle-menu" id="toggleMenu">☰</button>
+    </header>
+
+    <main>
+        <!-- Rack Mount Sidebar -->
+        <aside class="controls" id="controls">
+            
+            <!-- UNIT 1: PRESETS -->
+            <div class="rack-unit">
+                <div class="unit-label">Presets</div>
+                <div class="grid-buttons">
+                    <div class="grid-btn" onclick="applyTemplate('spotify')">
+                        <strong>Spotify Editorial</strong><small>Bold / Overlay</small>
+                    </div>
+                    <div class="grid-btn" onclick="applyTemplate('techno')">
+                        <strong>Minimal Techno</strong><small>Mono / B&W</small>
+                    </div>
+                    <div class="grid-btn" onclick="applyTemplate('festival')">
+                        <strong>Festival Flyer</strong><small>Neon / Condensed</small>
+                    </div>
+                    <div class="grid-btn" onclick="applyTemplate('vinyl')">
+                        <strong>Ambient Vinyl</strong><small>Serif / Blur</small>
+                    </div>
+                    <div class="grid-btn" onclick="applyTemplate('retro')">
+                        <strong>Retro Console</strong><small>Pixel / Green</small>
+                    </div>
+                    <div class="grid-btn" onclick="applyTemplate('elegant')">
+                        <strong>Elegant Class</strong><small>Script / Gold</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UNIT 2: SOURCE -->
+            <div class="rack-unit">
+                <div class="unit-label">Input Source</div>
+                <input type="file" id="audioInput" accept="audio/*" style="display:none">
+                <button class="btn" onclick="document.getElementById('audioInput').click()" style="margin-top:0; padding: 0.8rem;">
+                    Load Audio File
+                </button>
+                <div id="fileName" style="font-size: 0.7rem; color: #666; text-align: center; margin-top: 4px;">No File Loaded</div>
+                
+                <div class="audio-player" id="audioPlayerUI">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="play-btn" id="playBtn">▶</button>
+                        <div class="time-display" id="timeDisplay" style="font-family:'VT323', monospace; color:var(--accent-glow); font-size:1.2rem;">0:00</div>
+                    </div>
+
+                    <!-- Dual Handle Timeline -->
+                    <div class="timeline-wrapper">
+                        <canvas id="timelineCanvas" width="380" height="48"></canvas>
+                        <div class="range-selected-bar" id="rangeBar"></div>
+                        <div class="range-slider-container">
+                            <input type="range" class="range-input" id="rangeStart" min="0" max="100" value="0" step="0.1">
+                            <input type="range" class="range-input" id="rangeEnd" min="0" max="100" value="100" step="0.1">
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.6rem; color:#555;">
+                        <span>LOOP START</span><span>LOOP END</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UNIT 3: VISUAL SYNTH -->
+            <div class="rack-unit">
+                <div class="unit-label">Visual Synth</div>
+                <div class="style-grid">
+                    <div class="style-btn active" data-style="radial">
+                        <div style="width:12px; height:12px; border-radius:50%; border:1px solid #666;"></div><span>RADIAL</span>
+                    </div>
+                    <div class="style-btn" data-style="wave">
+                        <div style="width:12px; height:2px; background:#666;"></div><span>WAVE</span>
+                    </div>
+                    <div class="style-btn" data-style="orb">
+                        <div style="width:12px; height:12px; border-radius:50%; background:#444;"></div><span>ORB</span>
+                    </div>
+                    <div class="style-btn" data-style="bars">
+                         <div style="display:flex; gap:1px;"><div style="width:3px; height:8px; background:#666;"></div><div style="width:3px; height:12px; background:#666;"></div></div><span>BARS</span>
+                    </div>
+                     <div class="style-btn" data-style="nova">
+                        <div style="width:12px; height:12px; border:1px dotted #666; border-radius:50%"></div><span>NOVA</span>
+                    </div>
+                </div>
+
+                <div class="slider-row">
+                    <span>SENSITIVITY</span>
+                    <input type="range" id="sensitivityInput" min="0.5" max="2.0" step="0.1" value="1.0">
+                </div>
+                <div class="slider-row">
+                    <span>LINE WIDTH</span>
+                    <input type="range" id="thicknessInput" min="1" max="10" step="0.5" value="3">
+                </div>
+                
+                <div class="color-grid">
+                    <div class="color-input-container">
+                        <input type="color" id="colorBg" value="#0a0a0a">
+                        <div class="color-label">BG Color</div>
+                    </div>
+                    <div class="color-input-container">
+                        <input type="color" id="colorFg" value="#00f2ff">
+                        <div class="color-label">Line Color</div>
+                    </div>
+                    <div class="color-input-container">
+                        <input type="color" id="colorAccent" value="#bd00ff">
+                        <div class="color-label">Accent</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UNIT 4: TYPOGRAPHY -->
+            <div class="rack-unit">
+                <div class="unit-label">Typography</div>
+                
+                <!-- TITLE CONTROL -->
+                <div class="layer-row">
+                    <div class="layer-label">TITLE</div>
+                    <div class="led-toggle active" id="toggleTitle" onclick="toggleLayer('showTitle')"></div>
+                </div>
+                <input type="text" id="textTitle" placeholder="TITLE" value="SOUNDCANVAS">
+                <div class="color-grid" style="margin-bottom: 10px;">
+                    <div class="color-input-container">
+                        <input type="color" id="colorTitle" value="#ffffff">
+                        <div class="color-label">Title Color</div>
+                    </div>
+                </div>
+                <div class="slider-row">
+                    <span>TITLE SIZE</span>
+                    <input type="range" id="titleSizeInput" min="20" max="300" step="5" value="80">
+                </div>
+                 
+                <!-- ARTIST CONTROL -->
+                <div class="layer-row" style="margin-top: 15px;">
+                    <div class="layer-label">ARTIST</div>
+                    <div class="led-toggle active" id="toggleArtist" onclick="toggleLayer('showArtist')"></div>
+                </div>
+                <input type="text" id="textArtist" placeholder="ARTIST" value="Audio Visualizer">
+                <div class="color-grid" style="margin-bottom: 10px;">
+                    <div class="color-input-container">
+                        <input type="color" id="colorArtist" value="#777777">
+                        <div class="color-label">Artist Color</div>
+                    </div>
+                </div>
+                <div class="slider-row">
+                    <span>ARTIST SIZE</span>
+                    <input type="range" id="artistSizeInput" min="10" max="150" step="2" value="30">
+                </div>
+
+                <div class="layer-row" style="margin-top:20px;">
+                    <div class="layer-label">FONT & LAYOUT</div>
+                </div>
+                <select id="fontSelect">
+                    <option value="Outfit">Outfit (Clean)</option>
+                    <option value="Space Grotesk">Space Grotesk (Tech)</option>
+                    <option value="Cinzel">Cinzel (Cinematic)</option>
+                    <option value="Playfair Display">Playfair (Elegant)</option>
+                    <option value="Montserrat">Montserrat (Geometric)</option>
+                    <option value="Press Start 2P">Press Start 2P (Pixel)</option>
+                    <option value="Lobster">Lobster (Script)</option>
+                    <option value="Monoton">Monoton (Retro)</option>
+                    <option value="Abril Fatface">Abril Fatface (Bold)</option>
+                    <option value="Audiowide">Audiowide (Sci-Fi)</option>
+                    <option value="Permanent Marker">Marker (Grunge)</option>
+                    <option value="Share Tech Mono">Tech Mono (System)</option>
+                </select>
+
+                <div class="slider-row" style="margin-top: 12px;">
+                    <span>GROUP SCALE</span>
+                    <input type="range" id="textScaleInput" min="0.1" max="3.0" step="0.1" value="1.0">
+                </div>
+
+                <div class="slider-row">
+                    <span>V-POS</span>
+                    <input type="range" id="textYInput" min="0" max="40" step="1" value="8">
+                </div>
+            </div>
+
+            <!-- UNIT 5: MASTER OUT -->
+            <div class="rack-unit">
+                <div class="unit-label">Master Output</div>
+                <div class="layer-row">
+                     <div class="layer-label">GRAPHIC LAYER</div>
+                     <div class="led-toggle active" id="toggleGraphic" onclick="toggleLayer('showGraphic')"></div>
+                </div>
+                
+                <div class="slider-row">
+                    <span>FORMAT</span>
+                    <select id="exportFormat" style="width: auto; flex: 1;">
+                        <option value="ig_post">Square (1:1)</option>
+                        <option value="ig_story">Story (9:16)</option>
+                        <option value="album">Album (HD)</option>
+                        <option value="wallpaper">Wall (16:9)</option>
+                    </select>
+                </div>
+
+                <button class="btn" id="downloadBtn" disabled>
+                    EXPORT RENDER
+                </button>
+            </div>
+        </aside>
+
+        <!-- Preview Area -->
+        <section class="preview-area" id="previewContainer">
+            <canvas id="artCanvas"></canvas>
+            <div id="loader" style="display:none; position:absolute; color:var(--accent-glow); font-family:'VT323'; font-size:1.5rem;">PROCESSING...</div>
+        </section>
+    </main>
+
+    <div class="toast" id="toast">ACTION COMPLETE</div>
+
+    <script>
+        /**
+         * SoundCanvas - Audio Rack Edition
+         */
+
+        // --- Data: Templates & Formats ---
+        const templates = {
+            spotify: {
+                style: 'radial', bg: '#121212', fg: '#1DB954', accent: '#ffffff', 
+                titleColor: '#ffffff', artistColor: '#b3b3b3',
+                font: 'Montserrat', titleSize: 120, artistSize: 40, textY: 15, sensitivity: 1.2, thickness: 5
+            },
+            techno: {
+                style: 'bars', bg: '#000000', fg: '#ffffff', accent: '#333333',
+                titleColor: '#ffffff', artistColor: '#666666',
+                font: 'Share Tech Mono', titleSize: 40, artistSize: 20, textY: 5, sensitivity: 1.5, thickness: 2
+            },
+            festival: {
+                style: 'nova', bg: '#090014', fg: '#ff00cc', accent: '#333399', 
+                titleColor: '#00ffcc', artistColor: '#ffffff',
+                font: 'Audiowide', titleSize: 90, artistSize: 30, textY: 50, sensitivity: 1.8, thickness: 3
+            },
+            vinyl: {
+                style: 'orb', bg: '#e0e0e0', fg: '#333333', accent: '#666666', 
+                titleColor: '#000000', artistColor: '#444444',
+                font: 'Cinzel', titleSize: 60, artistSize: 30, textY: 10, sensitivity: 0.8, thickness: 1
+            },
+            retro: {
+                style: 'bars', bg: '#0d120d', fg: '#4aff4a', accent: '#004400',
+                titleColor: '#4aff4a', artistColor: '#2a882a',
+                font: 'Press Start 2P', titleSize: 50, artistSize: 20, textY: 20, sensitivity: 1.0, thickness: 8
+            },
+            elegant: {
+                style: 'wave', bg: '#1a0b0b', fg: '#d4af37', accent: '#554411',
+                titleColor: '#d4af37', artistColor: '#aa8822',
+                font: 'Playfair Display', titleSize: 100, artistSize: 30, textY: 12, sensitivity: 1.0, thickness: 1.5
+            }
+        };
+
+        const exportFormats = {
+            ig_post: { w: 1080, h: 1080 },
+            ig_story: { w: 1080, h: 1920 },
+            album: { w: 3000, h: 3000 },
+            a3: { w: 3508, h: 4961 },
+            wallpaper: { w: 1920, h: 1080 }
+        };
+
+        // --- State Management ---
+        const state = {
+            audioBuffer: null,
+            fileName: "",
+            view: {
+                scale: 0.9,
+                offsetX: 0,
+                offsetY: 0,
+                isDragging: false,
+                lastX: 0,
+                lastY: 0
+            },
+            config: {
+                style: 'radial',
+                bg: '#0a0a0a',
+                fg: '#00f2ff',
+                accent: '#bd00ff',
+                
+                // Typography
+                title: 'SOUNDCANVAS',
+                artist: 'Audio Visualizer',
+                titleColor: '#ffffff',
+                artistColor: '#777777',
+                font: 'Outfit',
+                textY: 8,
+                titleSize: 80,
+                artistSize: 30,
+                textScale: 1.0, // Master scale for text
+                
+                // Visuals
+                sensitivity: 1.2,
+                thickness: 3.0,
+                
+                // Layers
+                showGraphic: true,
+                showTitle: true,
+                showArtist: true,
+                
+                // Timeline
+                startPct: 0,
+                endPct: 100,
+                
+                // Export
+                format: 'ig_post'
+            }
+        };
+
+        // --- DOM Elements ---
+        const els = {
+            input: document.getElementById('audioInput'),
+            fileName: document.getElementById('fileName'),
+            canvas: document.getElementById('artCanvas'),
+            loader: document.getElementById('loader'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            menuBtn: document.getElementById('toggleMenu'),
+            controls: document.getElementById('controls'),
+            audioPlayerUI: document.getElementById('audioPlayerUI'),
+            audioEl: document.getElementById('audioPreview'),
+            playBtn: document.getElementById('playBtn'),
+            timeDisplay: document.getElementById('timeDisplay'),
+            
+            // New Dual Timeline elements
+            timelineCanvas: document.getElementById('timelineCanvas'),
+            rangeBar: document.getElementById('rangeBar'),
+            rangeStart: document.getElementById('rangeStart'),
+            rangeEnd: document.getElementById('rangeEnd'),
+            
+            // Toggles
+            toggles: {
+                graphic: document.getElementById('toggleGraphic'),
+                title: document.getElementById('toggleTitle'),
+                artist: document.getElementById('toggleArtist')
+            },
+
+            inputs: {
+                bg: document.getElementById('colorBg'),
+                fg: document.getElementById('colorFg'),
+                accent: document.getElementById('colorAccent'),
+                
+                // Split Text Colors
+                titleColor: document.getElementById('colorTitle'),
+                artistColor: document.getElementById('colorArtist'),
+                
+                title: document.getElementById('textTitle'),
+                artist: document.getElementById('textArtist'),
+                font: document.getElementById('fontSelect'),
+                textY: document.getElementById('textYInput'),
+                sensitivity: document.getElementById('sensitivityInput'),
+                thickness: document.getElementById('thicknessInput'),
+                format: document.getElementById('exportFormat'),
+                
+                // Sizes
+                titleSize: document.getElementById('titleSizeInput'),
+                artistSize: document.getElementById('artistSizeInput'),
+                textScale: document.getElementById('textScaleInput')
+            },
+            styleBtns: document.querySelectorAll('.style-btn')
+        };
+
+        // --- Audio Processing ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        async function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            els.fileName.textContent = file.name.toUpperCase();
+            state.fileName = file.name.replace(/\.[^/.]+$/, "");
+            
+            if(els.inputs.title.value === "SOUNDCANVAS") {
+                els.inputs.title.value = state.fileName;
+                state.config.title = state.fileName;
+            }
+
+            // Setup Player
+            if (!document.getElementById('audioPreview')) {
+                const aud = document.createElement('audio');
+                aud.id = 'audioPreview';
+                document.body.appendChild(aud);
+            }
+            els.audioEl = document.getElementById('audioPreview');
+            els.audioEl.src = URL.createObjectURL(file);
+            els.audioPlayerUI.classList.add('active');
+            
+            els.loader.style.display = 'block';
+            els.downloadBtn.disabled = true;
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                state.audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                
+                els.loader.style.display = 'none';
+                els.downloadBtn.disabled = false;
+                
+                renderTimeline();
+                render();
+            } catch (err) {
+                console.error(err);
+                els.loader.style.display = 'none';
+                showToast('FILE ERROR');
+            }
+        }
+
+        // --- Visualization Core ---
+
+        function getWaveformData(buffer, samples) {
+            const totalSamples = buffer.length;
+            const startSample = Math.floor(totalSamples * (state.config.startPct / 100));
+            const endSample = Math.floor(totalSamples * (state.config.endPct / 100));
+            
+            if (endSample <= startSample) return new Array(samples).fill(0.1);
+
+            const durationSamples = endSample - startSample;
+            const rawData = buffer.getChannelData(0); 
+            
+            const step = Math.max(1, Math.floor(durationSamples / samples));
+            const data = [];
+
+            for (let i = 0; i < samples; i++) {
+                let sum = 0;
+                const chunkStart = startSample + (i * step);
+                const windowSize = Math.min(step, 100); 
+                
+                for (let j = 0; j < windowSize; j++) {
+                    const idx = chunkStart + j;
+                    if (idx < rawData.length) {
+                        sum += Math.abs(rawData[idx]);
+                    }
+                }
+                data.push(sum / windowSize);
+            }
+
+            const maxVal = Math.max(...data) || 0.001; 
+            return data.map(n => Math.pow(n / maxVal, 0.7) * state.config.sensitivity);
+        }
+
+        function renderTimeline() {
+            if (!state.audioBuffer) return;
+            const ctx = els.timelineCanvas.getContext('2d');
+            const w = els.timelineCanvas.width;
+            const h = els.timelineCanvas.height;
+            
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = "rgba(0, 240, 255, 0.3)";
+            
+            const raw = state.audioBuffer.getChannelData(0);
+            const step = Math.ceil(raw.length / w);
+            
+            ctx.beginPath();
+            for(let i=0; i<w; i++) {
+                let sum = 0;
+                for(let j=0; j<10; j++) sum += Math.abs(raw[i*step + j] || 0);
+                const barH = (sum / 10) * h * 0.8;
+                ctx.rect(i, (h - barH)/2, 1, barH);
+            }
+            ctx.fill();
+        }
+
+        function setupCanvas() {
+            const ctx = els.canvas.getContext('2d');
+            const fmt = exportFormats[state.config.format];
+            els.canvas.width = fmt.w;
+            els.canvas.height = fmt.h;
+            ctx.fillStyle = state.config.bg;
+            ctx.fillRect(0, 0, fmt.w, fmt.h);
+            return { ctx, width: fmt.w, height: fmt.h, cx: fmt.w/2, cy: fmt.h/2 };
+        }
+
+        function getGradient(ctx, x1, y1, x2, y2) {
+            const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+            grad.addColorStop(0, state.config.fg);
+            grad.addColorStop(1, state.config.accent);
+            return grad;
+        }
+
+        function drawText(ctx, width, height) {
+            if (!state.config.showTitle && !state.config.showArtist) return;
+
+            ctx.textAlign = 'center';
+            const scaleFactor = width / 1080;
+            const bottomMargin = height * (state.config.textY / 100);
+            const bottomArea = height - bottomMargin;
+            const masterScale = state.config.textScale || 1.0;
+
+            if (state.config.showArtist) {
+                ctx.fillStyle = state.config.artistColor;
+                const artistSize = state.config.artistSize * masterScale * scaleFactor; 
+                ctx.font = `300 ${artistSize}px "${state.config.font}"`;
+                ctx.fillText(state.config.artist.toUpperCase(), width / 2, bottomArea);
+            }
+
+            if (state.config.showTitle) {
+                ctx.fillStyle = state.config.titleColor;
+                const titleSize = state.config.titleSize * masterScale * scaleFactor;
+                const artistSize = state.config.artistSize * masterScale * scaleFactor;
+                
+                // Dynamic font weight based on font choice
+                let weight = '700';
+                if(state.config.font.includes('Cinzel') || state.config.font.includes('Playfair')) weight = '400';
+
+                ctx.font = `${weight} ${titleSize}px "${state.config.font}"`;
+                const gap = state.config.showArtist ? (artistSize * 1.5) : 0;
+                ctx.fillText(state.config.title, width / 2, bottomArea - gap);
+            }
+        }
+
+        function render() {
+            const { ctx, width, height, cx, cy } = setupCanvas();
+
+            // Transformations for Zoom/Pan
+            ctx.save();
+            const transX = cx + state.view.offsetX;
+            const transY = cy * 0.85 + state.view.offsetY; 
+            ctx.translate(transX, transY);
+            ctx.scale(state.view.scale, state.view.scale);
+
+            // Draw Graphic Layer
+            if (state.config.showGraphic) {
+                if (!state.audioBuffer) {
+                    ctx.strokeStyle = state.config.fg;
+                    ctx.lineWidth = 2 * (width/1080);
+                    ctx.beginPath();
+                    ctx.arc(0,0, width * 0.15, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else {
+                    const safeHeight = height * 0.8; 
+                    const radius = Math.min(width, safeHeight) * 0.35;
+                    
+                    ctx.fillStyle = getGradient(ctx, -radius, -radius, radius, radius);
+                    ctx.strokeStyle = ctx.fillStyle;
+                    
+                    const resScale = width / 1080;
+                    ctx.lineWidth = state.config.thickness * resScale;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+
+                    const data = getWaveformData(state.audioBuffer, 200); 
+
+                    if (state.config.style === 'radial') {
+                        const bars = 200;
+                        for(let i = 0; i < bars; i++) {
+                            const val = data[i];
+                            const angle = (i / bars) * Math.PI * 2;
+                            const barHeight = val * (radius * 0.8);
+                            ctx.save();
+                            ctx.rotate(angle);
+                            ctx.beginPath(); ctx.moveTo(0, radius); ctx.lineTo(0, radius + barHeight); ctx.stroke();
+                            ctx.restore();
+                        }
+                        ctx.beginPath(); ctx.arc(0, 0, radius * 0.95, 0, Math.PI * 2); ctx.stroke();
+
+                    } else if (state.config.style === 'wave') {
+                        const points = 400;
+                        const wData = getWaveformData(state.audioBuffer, points);
+                        const drawWidth = width * 0.9;
+                        const startX = -drawWidth / 2;
+                        const segWidth = drawWidth / points;
+
+                        ctx.beginPath(); ctx.moveTo(startX, 0);
+                        for(let i = 0; i < points; i++) {
+                            const x = startX + (i * segWidth);
+                            const y = -(wData[i] * (safeHeight * 0.35));
+                            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+                        }
+                        for(let i = points - 1; i >= 0; i--) {
+                            const x = startX + (i * segWidth);
+                            const y = (wData[i] * (safeHeight * 0.35));
+                            ctx.lineTo(x, y);
+                        }
+                        ctx.closePath();
+                        if(state.config.thickness > 1) ctx.stroke();
+                        ctx.globalAlpha = 0.8; ctx.fill(); ctx.globalAlpha = 1.0;
+
+                    } else if (state.config.style === 'orb') {
+                        const layers = 50;
+                        const oData = getWaveformData(state.audioBuffer, layers);
+                        ctx.lineWidth = 0; 
+                        for (let i = 0; i < layers; i++) {
+                            const size = radius * 1.5 - (i * (radius/layers));
+                            const opacity = Math.max(0.02, oData[i] * 0.5);
+                            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2);
+                            ctx.globalAlpha = opacity; ctx.fill();
+                        }
+                        ctx.globalAlpha = 1.0;
+
+                    } else if (state.config.style === 'bars') {
+                        const bars = 64;
+                        const bData = getWaveformData(state.audioBuffer, bars);
+                        const barW = (width * 0.8) / bars;
+                        const startX = -(width * 0.4);
+                        const gap = Math.max(0, barW - (state.config.thickness * resScale)); 
+
+                        for(let i = 0; i < bars; i++) {
+                            const h = Math.max(width*0.005, bData[i] * (safeHeight * 0.4));
+                            const x = startX + (i * barW);
+                            ctx.fillRect(x + (gap/2), -h, barW - gap, h * 2); 
+                        }
+
+                    } else if (state.config.style === 'nova') {
+                        const particles = 300;
+                        const nData = getWaveformData(state.audioBuffer, particles);
+                        for(let i=0; i<particles; i++) {
+                            const angle = (i * 137.5) * (Math.PI / 180); 
+                            const dist = radius * (Math.sqrt(i) / Math.sqrt(particles));
+                            const val = nData[i];
+                            const size = val * (width * 0.015 * state.config.thickness); 
+
+                            ctx.save(); ctx.rotate(angle);
+                            ctx.translate(0, dist + (val * 150 * state.config.sensitivity * resScale)); 
+                            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2);
+                            ctx.globalAlpha = 0.7; ctx.fill(); ctx.restore();
+                        }
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+            } 
+            ctx.restore();
+            drawText(ctx, width, height);
+        }
+
+        // --- Interaction Logic ---
+
+        function updateConfig(key, value) {
+            state.config[key] = value;
+            render();
+        }
+
+        window.applyTemplate = function(name) {
+            const t = templates[name];
+            if(!t) return;
+            Object.keys(t).forEach(k => state.config[k] = t[k]);
+            
+            // Sync UI inputs
+            els.inputs.bg.value = t.bg;
+            els.inputs.fg.value = t.fg;
+            els.inputs.accent.value = t.accent;
+            els.inputs.titleColor.value = t.titleColor;
+            els.inputs.artistColor.value = t.artistColor;
+            els.inputs.font.value = t.font;
+            els.inputs.textY.value = t.textY;
+            els.inputs.sensitivity.value = t.sensitivity;
+            els.inputs.thickness.value = t.thickness;
+            
+            // Sync Size sliders (if template overrides them)
+            if(t.titleSize) els.inputs.titleSize.value = t.titleSize;
+            if(t.artistSize) els.inputs.artistSize.value = t.artistSize;
+            
+            els.styleBtns.forEach(b => b.classList.toggle('active', b.dataset.style === t.style));
+            showToast(`LOADED: ${name.toUpperCase()}`);
+            render();
+        };
+
+        function updateRangeUI() {
+            let s = parseFloat(els.rangeStart.value);
+            let e = parseFloat(els.rangeEnd.value);
+            if (s > e - 2) {
+                if(s === parseFloat(state.config.startPct)) els.rangeStart.value = e - 2;
+                else els.rangeEnd.value = s + 2;
+                s = parseFloat(els.rangeStart.value); e = parseFloat(els.rangeEnd.value);
+            }
+            state.config.startPct = s; state.config.endPct = e;
+            els.rangeBar.style.left = s + "%"; els.rangeBar.style.width = (e - s) + "%";
+            render();
+        }
+        els.rangeStart.addEventListener('input', updateRangeUI);
+        els.rangeEnd.addEventListener('input', updateRangeUI);
+
+        window.toggleLayer = function(layerKey) {
+            state.config[layerKey] = !state.config[layerKey];
+            const map = { 'showGraphic': 'toggleGraphic', 'showTitle': 'toggleTitle', 'showArtist': 'toggleArtist' };
+            const btn = document.getElementById(map[layerKey]);
+            if(state.config[layerKey]) btn.classList.add('active'); else btn.classList.remove('active');
+            render();
+        };
+
+        // Attach Input Listeners
+        Object.keys(els.inputs).forEach(key => {
+            const input = els.inputs[key];
+            if(input) {
+                const eventType = (input.type === 'text' || input.type === 'range' || input.type === 'color') ? 'input' : 'change';
+                input.addEventListener(eventType, (e) => {
+                    let val = e.target.value;
+                    if(input.type === 'range') val = parseFloat(val);
+                    updateConfig(key, val);
+                });
+            }
+        });
+
+        els.styleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                els.styleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                updateConfig('style', btn.dataset.style);
+            });
+        });
+
+        els.input.addEventListener('change', handleFileSelect);
+        
+        // Player
+        els.playBtn.addEventListener('click', () => {
+            if(!els.audioEl) return;
+            if (els.audioEl.paused) {
+                const dur = els.audioEl.duration;
+                const startSec = dur * (state.config.startPct / 100);
+                const endSec = dur * (state.config.endPct / 100);
+                if (els.audioEl.currentTime < startSec || els.audioEl.currentTime > endSec) els.audioEl.currentTime = startSec;
+                els.audioEl.play();
+                els.playBtn.textContent = 'II';
+            } else {
+                els.audioEl.pause();
+                els.playBtn.textContent = '▶';
+            }
+        });
+
+        setInterval(() => {
+            if(!els.audioEl || els.audioEl.paused) return;
+            const dur = els.audioEl.duration;
+            const startSec = dur * (state.config.startPct / 100);
+            const endSec = dur * (state.config.endPct / 100);
+            if (els.audioEl.currentTime >= endSec) els.audioEl.currentTime = startSec;
+            
+            const m = Math.floor(els.audioEl.currentTime/60);
+            const s = Math.floor(els.audioEl.currentTime%60).toString().padStart(2,'0');
+            els.timeDisplay.textContent = `${m}:${s}`;
+        }, 100);
+
+        // Canvas Zoom
+        const c = els.canvas;
+        c.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = -Math.sign(e.deltaY) * 0.1;
+            state.view.scale = Math.max(0.1, Math.min(5.0, state.view.scale + delta));
+            render();
+        });
+        function startDrag(e) {
+            state.view.isDragging = true;
+            state.view.lastX = e.clientX || e.touches[0].clientX;
+            state.view.lastY = e.clientY || e.touches[0].clientY;
+        }
+        function doDrag(e) {
+            if (!state.view.isDragging) return;
+            e.preventDefault();
+            const x = e.clientX || e.touches[0].clientX;
+            const y = e.clientY || e.touches[0].clientY;
+            state.view.offsetX += (x - state.view.lastX) * 2;
+            state.view.offsetY += (y - state.view.lastY) * 2;
+            state.view.lastX = x; state.view.lastY = y;
+            render();
+        }
+        function endDrag() { state.view.isDragging = false; }
+        c.addEventListener('mousedown', startDrag); window.addEventListener('mousemove', doDrag); window.addEventListener('mouseup', endDrag);
+        c.addEventListener('touchstart', startDrag, {passive: false}); window.addEventListener('touchmove', doDrag, {passive: false}); window.addEventListener('touchend', endDrag);
+
+        els.menuBtn.addEventListener('click', () => els.controls.classList.toggle('active'));
+
+        els.downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = `SoundCanvas-${state.config.title.replace(/\s+/g, '-')}.png`;
+            link.href = els.canvas.toDataURL('image/png', 1.0);
+            link.click();
+            showToast('EXPORT STARTED');
+        });
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+        }
+
+        render();
+    </script>
+</body>
+</html>
