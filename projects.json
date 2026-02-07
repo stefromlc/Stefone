@@ -37,7 +37,9 @@
     "date": "2026-02-07"
   },
   {
-    "title": "sound-canvas",
+    "demoUrl": "",
+    "repoUrl": "",
+    "title": "Sound Canvas",
     "slug": "sound-canvas",
     "description": "Sound Canvas transforms sound into living visuals. Experiment with styles, tweak the look, and export eye-catching audio art with ease.",
     "thumbnail": "assets/thumbs/sound-canvas.png",
@@ -50,9 +52,7 @@
     ],
     "category": "Tools",
     "featured": true,
-    "date": "2026-02-07",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-02-07"
   },
   {
     "demoUrl": "",
