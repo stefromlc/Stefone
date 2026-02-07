@@ -1,0 +1,221 @@
+{
+  "bundle_version": "1.0.0",
+  "meta": {
+    "title": "Vibe Code Prompts",
+    "version": "1.0.0.0",
+    "image": "https://nationalcioreview.com/wp-content/uploads/2025/09/TNCR-graphics-KB-2.gif",
+    "description": "A prompt pack for quickly creating web apps, games, and tools with minimal setup.",
+    "author": "Stefone.com"
+  },
+  "prompts": [
+    {
+      "id": "webapp-generator",
+      "title": "Web App Generator",
+      "body": "Create a {{type}} web application using {{tech_stack}}.\n\nThe app should:\n- Solve {{problem}}\n- Target {{target_users}}\n- Include core features: {{core_features}}\n\nOutput:\n- App architecture\n- Key components\n- Suggested file structure\n- Next development steps",
+      "createdAt": "2026-02-07T23:09:37.190396Z",
+      "updatedAt": "2026-02-07T23:09:37.190396Z",
+      "notes": "",
+      "tags": [],
+      "versions": [
+        {
+          "id": "1ee72ff5-d23f-41a1-840a-cd1a18cb55e4",
+          "timestamp": "2026-02-07T23:09:37.190396Z",
+          "body": "Create a {{type}} web application using {{tech_stack}}.\n\nThe app should:\n- Solve {{problem}}\n- Target {{target_users}}\n- Include core features: {{core_features}}\n\nOutput:\n- App architecture\n- Key components\n- Suggested file structure\n- Next development steps",
+          "diff": "Initial import"
+        }
+      ],
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "saas-mvp",
+      "title": "SaaS MVP Builder",
+      "body": "Design an MVP for a SaaS product called {{product_name}}.\n\nPurpose:\n{{purpose}}\n\nConstraints:\n- Build time: {{time_limit}}\n- Skill level: {{skill_level}}\n\nInclude:\n- MVP feature list\n- User flow\n- Monetization idea\n- Tech recommendations",
+      "createdAt": "2026-02-07T23:09:37.190396Z",
+      "updatedAt": "2026-02-07T23:09:37.190396Z",
+      "notes": "",
+      "tags": [],
+      "versions": [
+        {
+          "id": "89f6a9e1-2aea-4f8d-b2bd-a51354d71fa8",
+          "timestamp": "2026-02-07T23:09:37.190396Z",
+          "body": "Design an MVP for a SaaS product called {{product_name}}.\n\nPurpose:\n{{purpose}}\n\nConstraints:\n- Build time: {{time_limit}}\n- Skill level: {{skill_level}}\n\nInclude:\n- MVP feature list\n- User flow\n- Monetization idea\n- Tech recommendations",
+          "diff": "Initial import"
+        }
+      ],
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "game-concept",
+      "title": "Game Concept Creator",
+      "body": "Create a {{genre}} game concept for {{platform}}.\n\nTheme: {{theme}}\nCore mechanic: {{core_mechanic}}\n\nProvide:\n- Game overview\n- Player objectives\n- Core loop\n- Progression system",
+      "createdAt": "2026-02-07T23:09:37.190396Z",
+      "updatedAt": "2026-02-07T23:09:37.190396Z",
+      "notes": "",
+      "tags": [],
+      "versions": [
+        {
+          "id": "548eb51e-6db2-4e07-a9fe-189b9203cf49",
+          "timestamp": "2026-02-07T23:09:37.190396Z",
+          "body": "Create a {{genre}} game concept for {{platform}}.\n\nTheme: {{theme}}\nCore mechanic: {{core_mechanic}}\n\nProvide:\n- Game overview\n- Player objectives\n- Core loop\n- Progression system",
+          "diff": "Initial import"
+        }
+      ],
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "indie-game-dev",
+      "title": "Indie Game Build Plan",
+      "body": "Plan development for an indie game called {{game_name}}.\n\nDetails:\n- Genre: {{genre}}\n- Engine: {{engine}}\n\nOutput:\n- Development roadmap\n- MVP scope\n- Asset requirements\n- Monetization options",
+      "createdAt": "2026-02-07T23:09:37.190396Z",
+      "updatedAt": "2026-02-07T23:09:37.190396Z",
+      "notes": "",
+      "tags": [],
+      "versions": [
+        {
+          "id": "1e9899e9-5389-4e91-b90b-718a375c3311",
+          "timestamp": "2026-02-07T23:09:37.190396Z",
+          "body": "Plan development for an indie game called {{game_name}}.\n\nDetails:\n- Genre: {{genre}}\n- Engine: {{engine}}\n\nOutput:\n- Development roadmap\n- MVP scope\n- Asset requirements\n- Monetization options",
+          "diff": "Initial import"
+        }
+      ],
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "tool-builder",
+      "title": "Utility Tool Builder",
+      "body": "Create a simple tool that helps users {{task}}.\n\nTarget users: {{target_users}}\nPlatform: {{platform}}\n\nInclude:\n- Core functionality\n- UX considerations\n- Edge cases\n- Expansion ideas",
+      "createdAt": "2026-02-07T23:09:37.190396Z",
+      "updatedAt": "2026-02-07T23:09:37.190396Z",
+      "notes": "",
+      "tags": [],
+      "versions": [
+        {
+          "id": "326ecc57-3427-4763-8b47-b66da3ba98e1",
+          "timestamp": "2026-02-07T23:09:37.190396Z",
+          "body": "Create a simple tool that helps users {{task}}.\n\nTarget users: {{target_users}}\nPlatform: {{platform}}\n\nInclude:\n- Core functionality\n- UX considerations\n- Edge cases\n- Expansion ideas",
+          "diff": "Initial import"
+        }
+      ],
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "api-designer",
+      "title": "API Design Prompt",
+      "body": "Design an API for {{service_name}}.\n\nThe API should:\n- Handle {{main_function}}\n- Support {{auth_method}} authentication\n\nProvide:\n- Endpoint list\n- Example requests/responses\n- Error handling strategy",
+      "createdAt": "2026-02-07T23:09:37.190396Z",
+      "updatedAt": "2026-02-07T23:09:37.190396Z",
+      "notes": "",
+      "tags": [],
+      "versions": [
+        {
+          "id": "2a6d5414-3306-4ff7-b3cf-1c4967bbe3aa",
+          "timestamp": "2026-02-07T23:09:37.190396Z",
+          "body": "Design an API for {{service_name}}.\n\nThe API should:\n- Handle {{main_function}}\n- Support {{auth_method}} authentication\n\nProvide:\n- Endpoint list\n- Example requests/responses\n- Error handling strategy",
+          "diff": "Initial import"
+        }
+      ],
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "chrome-extension",
+      "title": "Browser Extension Creator",
+      "body": "Create a browser extension for {{browser}} that {{function}}.\n\nRequirements:\n- Permissions: {{permissions}}\n- UI style: {{ui_style}}\n\nOutput:\n- Feature breakdown\n- File structure\n- Manifest overview",
+      "createdAt": "2026-02-07T23:09:37.190396Z",
+      "updatedAt": "2026-02-07T23:09:37.190396Z",
+      "notes": "",
+      "tags": [],
+      "versions": [
+        {
+          "id": "cf8577b8-bad3-4eb0-9005-cb27bdc1963c",
+          "timestamp": "2026-02-07T23:09:37.190396Z",
+          "body": "Create a browser extension for {{browser}} that {{function}}.\n\nRequirements:\n- Permissions: {{permissions}}\n- UI style: {{ui_style}}\n\nOutput:\n- Feature breakdown\n- File structure\n- Manifest overview",
+          "diff": "Initial import"
+        }
+      ],
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "automation-script",
+      "title": "Automation Script Generator",
+      "body": "Write an automation script using {{language}}.\n\nGoal:\n{{goal}}\n\nConstraints:\n- Runs on {{environment}}\n\nInclude:\n- Script logic\n- Required libraries\n- Setup instructions",
+      "createdAt": "2026-02-07T23:09:37.190396Z",
+      "updatedAt": "2026-02-07T23:09:37.190396Z",
+      "notes": "",
+      "tags": [],
+      "versions": [
+        {
+          "id": "85151999-53ff-4fd6-ac64-5a6db148e480",
+          "timestamp": "2026-02-07T23:09:37.190396Z",
+          "body": "Write an automation script using {{language}}.\n\nGoal:\n{{goal}}\n\nConstraints:\n- Runs on {{environment}}\n\nInclude:\n- Script logic\n- Required libraries\n- Setup instructions",
+          "diff": "Initial import"
+        }
+      ],
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "ai-tool",
+      "title": "AI-Powered Tool Prompt",
+      "body": "Design an AI-powered tool that {{ai_task}}.\n\nModel type: {{model_type}}\nInput: {{input_type}}\nOutput: {{output_type}}\n\nProvide:\n- System design\n- Data flow\n- Risks & limitations",
+      "createdAt": "2026-02-07T23:09:37.190396Z",
+      "updatedAt": "2026-02-07T23:09:37.190396Z",
+      "notes": "",
+      "tags": [],
+      "versions": [
+        {
+          "id": "94b27caf-3793-4d01-96e7-4fc2764254d4",
+          "timestamp": "2026-02-07T23:09:37.190396Z",
+          "body": "Design an AI-powered tool that {{ai_task}}.\n\nModel type: {{model_type}}\nInput: {{input_type}}\nOutput: {{output_type}}\n\nProvide:\n- System design\n- Data flow\n- Risks & limitations",
+          "diff": "Initial import"
+        }
+      ],
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "fullstack-starter",
+      "title": "Full-Stack Starter Blueprint",
+      "body": "Create a full-stack starter project using {{frontend}} and {{backend}}.\n\nApp idea: {{app_idea}}\n\nInclude:\n- Folder structure\n- Auth approach\n- Database schema overview\n- Deployment advice",
+      "createdAt": "2026-02-07T23:09:37.190396Z",
+      "updatedAt": "2026-02-07T23:11:24.441Z",
+      "notes": "",
+      "tags": [],
+      "versions": [
+        {
+          "id": "9822a218-5e6f-49e1-ab30-239df58d0695",
+          "timestamp": "2026-02-07T23:09:37.190396Z",
+          "body": "Create a full-stack starter project using {{frontend}} and {{backend}}.\n\nApp idea: {{app_idea}}\n\nInclude:\n- Folder structure\n- Auth approach\n- Database schema overview\n- Deployment advice",
+          "diff": "Initial import"
+        }
+      ],
+      "intent": "",
+      "isPinned": false
+    }
+  ],
+  "exported_at": "2026-02-07T23:11:41.683Z",
+  "packs": [
+    {
+      "id": "1417fa90-c403-4a32-b19b-3bf5a77527d6",
+      "name": "Vibe Code Prompts",
+      "promptIds": [
+        "webapp-generator",
+        "saas-mvp",
+        "game-concept",
+        "indie-game-dev",
+        "tool-builder",
+        "api-designer",
+        "chrome-extension",
+        "automation-script",
+        "ai-tool",
+        "fullstack-starter"
+      ]
+    }
+  ]
+}

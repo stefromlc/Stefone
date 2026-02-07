@@ -1,10 +1,7 @@
 {
   "packs": [
     {
-      "url": "./packs/content-brand-pack.pvb"
-    },
-    {
-      "url": "./packs/job-hunter-uk.pvb"
+      "url": "./packs/Vibe_Code_Prompts.pvb"
     }
   ]
 }
