@@ -37,6 +37,24 @@
     "date": "2026-02-07"
   },
   {
+    "title": "PromptVault",
+    "slug": "promptvault",
+    "description": "PromptVault is a clean, focused app for writing and reusing AI prompts. It’s built for people who work with prompts often and want everything organized, searchable, and available offline. The layout keeps writing front and center, with helpful tools close by but never in the way. Simple, calm, and reliable—PromptVault is a place to save prompts you’ll actually come back to.",
+    "thumbnail": "assets/thumbs/promptvault.png",
+    "tags": [
+      "AI Tools",
+      "Organization",
+      "Productivity",
+      "Prompts",
+      "Writing"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-02-07",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "Sound Canvas",

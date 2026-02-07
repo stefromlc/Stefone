@@ -1,0 +1,251 @@
+{
+  "bundle_version": "1.0.0",
+  "meta": {
+    "title": "Content & Brand — Power Prompt Pack (10)",
+    "version": "1.0.0.0",
+    "description": "10 prompts for brand voice, content systems, copywriting, SEO, webinars, stories, and ads. Each prompt uses 2–4 variables.",
+    "author": "Generated for user",
+    "image": "https://images.unsplash.com/photo-1498050108023-c5249f4df085"
+  },
+  "exported_at": "2026-02-07T12:00:00Z",
+  "packs": [
+    {
+      "id": "4486ab3d-a392-49e3-9761-173b59d5b46c",
+      "name": "Content & Brand — Power 10",
+      "promptIds": [
+        "88d9c795-f2a0-40a2-a5e5-8c845eacca77",
+        "9f198cee-5656-4b74-b954-e800bc9358d8",
+        "495122c5-d099-498f-a474-928fcd0963b5",
+        "c86a0f24-c063-4be9-bae3-609a46dd6b9b",
+        "d2d5fce4-358f-4fc4-821f-a670acec3c1d",
+        "95f6e443-c990-41a9-a5c9-1d941f8b5de7",
+        "dca765ee-22bd-47db-ac28-37c13615c268",
+        "931867e6-0b98-4ec1-8120-0a297285d15d",
+        "2f4419ea-1bd8-4710-be31-83895d16c600",
+        "fc3042ef-f2c7-47a8-942e-07628a77e1af"
+      ]
+    }
+  ],
+  "prompts": [
+    {
+      "id": "88d9c795-f2a0-40a2-a5e5-8c845eacca77",
+      "title": "Brand Voice Guide (do/don’t + examples)",
+      "body": "Define a consistent brand voice that writers can actually use.\n\nQuick questions:\n- What is your brand/product?: {{What is your brand/product?}}\n- Who is your audience (role + vibe)?: {{Who is your audience?}}\n- Name 2 brands/creators you want to sound like (optional): {{Reference voices (optional)}}\n\nInstructions:\n- Create:\n  - voice attributes (5) with “do/don’t”\n  - vocabulary: preferred phrases + banned phrases\n  - tone by context (sales page, support reply, social post)\n  - 5 example rewrites from “bland” to “on-voice”\n- Keep it tight and practical.\n\nOutput as a one-page guide.",
+      "notes": "A reusable brand voice sheet with examples and guardrails.",
+      "tags": [
+        "Brand",
+        "Voice"
+      ],
+      "versions": [
+        {
+          "id": "456e821e-e9cc-4135-a748-fdc37fe04ad5",
+          "timestamp": "2026-02-07T12:00:00Z",
+          "body": "Define a consistent brand voice that writers can actually use.\n\nQuick questions:\n- What is your brand/product?: {{What is your brand/product?}}\n- Who is your audience (role + vibe)?: {{Who is your audience?}}\n- Name 2 brands/creators you want to sound like (optional): {{Reference voices (optional)}}\n\nInstructions:\n- Create:\n  - voice attributes (5) with “do/don’t”\n  - vocabulary: preferred phrases + banned phrases\n  - tone by context (sales page, support reply, social post)\n  - 5 example rewrites from “bland” to “on-voice”\n- Keep it tight and practical.\n\nOutput as a one-page guide.",
+          "diff": "+588 chars"
+        }
+      ],
+      "createdAt": "2026-02-07T12:00:00Z",
+      "updatedAt": "2026-02-07T12:00:00Z",
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "9f198cee-5656-4b74-b954-e800bc9358d8",
+      "title": "Content Pillars + Weekly Calendar (high leverage)",
+      "body": "Build a content engine that aligns with your offer and audience.\n\nQuick questions:\n- What do you sell?: {{What do you sell?}}\n- Who is the audience?: {{Who is the audience?}}\n- Primary channel (LinkedIn, X, YouTube, blog, newsletter): {{Primary channel}}\n\nInstructions:\n- Define 4 content pillars with:\n  - audience problem\n  - angle\n  - proof you can show\n  - CTA type\n- Create a 2-week calendar (5 posts/week) with:\n  - post idea, hook, CTA, and format suggestion\n- Add a simple repurposing loop.\n\nOutput:\n1) Pillars\n2) 2-week calendar\n3) Repurposing loop",
+      "notes": "Make a repeatable calendar that drives leads and authority.",
+      "tags": [
+        "Content",
+        "Planning"
+      ],
+      "versions": [
+        {
+          "id": "bed269d2-67b2-48f7-be99-322adc17f11d",
+          "timestamp": "2026-02-07T12:00:00Z",
+          "body": "Build a content engine that aligns with your offer and audience.\n\nQuick questions:\n- What do you sell?: {{What do you sell?}}\n- Who is the audience?: {{Who is the audience?}}\n- Primary channel (LinkedIn, X, YouTube, blog, newsletter): {{Primary channel}}\n\nInstructions:\n- Define 4 content pillars with:\n  - audience problem\n  - angle\n  - proof you can show\n  - CTA type\n- Create a 2-week calendar (5 posts/week) with:\n  - post idea, hook, CTA, and format suggestion\n- Add a simple repurposing loop.\n\nOutput:\n1) Pillars\n2) 2-week calendar\n3) Repurposing loop",
+          "diff": "+557 chars"
+        }
+      ],
+      "createdAt": "2026-02-07T12:00:00Z",
+      "updatedAt": "2026-02-07T12:00:00Z",
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "495122c5-d099-498f-a474-928fcd0963b5",
+      "title": "Hook Generator (20 hooks, 3 styles)",
+      "body": "Generate hooks that stop the scroll and match my topic.\n\nQuick questions:\n- Topic (one sentence): {{Topic}}\n- Audience (who should care): {{Audience}}\n- Desired action (comment, click, DM, buy): {{Desired action}}\n\nInstructions:\n- Create 20 hooks in 3 styles:\n  - contrarian\n  - data/insight\n  - story/confession\n- Avoid clichés and exaggeration.\n- Then pick the best 5 and explain why they work (one line each).\n\nOutput:\n- 20 hooks\n- Best 5 + why",
+      "notes": "High-performing hooks tailored to your audience and CTA.",
+      "tags": [
+        "Content",
+        "Hooks"
+      ],
+      "versions": [
+        {
+          "id": "c2ee90b4-91fd-4190-8242-8d33459467c0",
+          "timestamp": "2026-02-07T12:00:00Z",
+          "body": "Generate hooks that stop the scroll and match my topic.\n\nQuick questions:\n- Topic (one sentence): {{Topic}}\n- Audience (who should care): {{Audience}}\n- Desired action (comment, click, DM, buy): {{Desired action}}\n\nInstructions:\n- Create 20 hooks in 3 styles:\n  - contrarian\n  - data/insight\n  - story/confession\n- Avoid clichés and exaggeration.\n- Then pick the best 5 and explain why they work (one line each).\n\nOutput:\n- 20 hooks\n- Best 5 + why",
+          "diff": "+447 chars"
+        }
+      ],
+      "createdAt": "2026-02-07T12:00:00Z",
+      "updatedAt": "2026-02-07T12:00:00Z",
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "c86a0f24-c063-4be9-bae3-609a46dd6b9b",
+      "title": "Landing Page Copy (hero → proof → CTA)",
+      "body": "Write landing page copy that is specific, scannable, and conversion-focused.\n\nQuick questions:\n- Offer (what it is): {{Offer}}\n- Target customer (role + pain): {{Target customer}}\n- Proof you can claim (results, numbers, logos, testimonials): {{Proof available}}\n- Primary CTA (book a call, start trial, buy): {{Primary CTA}}\n\nInstructions:\n- Write:\n  - Hero section (headline, subhead, 3 bullets, CTA)\n  - “How it works” (3 steps)\n  - Proof section (testimonials prompts + metrics placeholders)\n  - Objections section (5 Q&A)\n  - Final CTA section\n- Keep reading level simple; no fluff.\n\nDeliver as page-ready copy.",
+      "notes": "Conversion-focused landing page sections with proof and objections.",
+      "tags": [
+        "Copywriting",
+        "Landing Page"
+      ],
+      "versions": [
+        {
+          "id": "8d8a7c14-bfd3-4985-b8c4-0797497f786d",
+          "timestamp": "2026-02-07T12:00:00Z",
+          "body": "Write landing page copy that is specific, scannable, and conversion-focused.\n\nQuick questions:\n- Offer (what it is): {{Offer}}\n- Target customer (role + pain): {{Target customer}}\n- Proof you can claim (results, numbers, logos, testimonials): {{Proof available}}\n- Primary CTA (book a call, start trial, buy): {{Primary CTA}}\n\nInstructions:\n- Write:\n  - Hero section (headline, subhead, 3 bullets, CTA)\n  - “How it works” (3 steps)\n  - Proof section (testimonials prompts + metrics placeholders)\n  - Objections section (5 Q&A)\n  - Final CTA section\n- Keep reading level simple; no fluff.\n\nDeliver as page-ready copy.",
+          "diff": "+616 chars"
+        }
+      ],
+      "createdAt": "2026-02-07T12:00:00Z",
+      "updatedAt": "2026-02-07T12:00:00Z",
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "d2d5fce4-358f-4fc4-821f-a670acec3c1d",
+      "title": "Newsletter Issue (one idea, deep value, light CTA)",
+      "body": "Draft a newsletter issue that teaches something useful and builds trust.\n\nQuick questions:\n- Core idea / lesson: {{Core idea}}\n- Audience segment: {{Audience segment}}\n- Your offer/CTA (soft): {{Offer/CTA}}\n\nInstructions:\n- Write 700–900 words:\n  - punchy opening\n  - 3 key points with examples\n  - one practical exercise\n  - soft CTA (1–2 lines)\n- Provide 5 subject lines.\n- Avoid generic motivational filler.\n\nOutput:\n- 5 subject lines\n- Full newsletter",
+      "notes": "Publish-ready newsletter with value-first structure.",
+      "tags": [
+        "Content",
+        "Newsletter"
+      ],
+      "versions": [
+        {
+          "id": "3c9acc60-8654-4e2e-b68f-babeca76fb5b",
+          "timestamp": "2026-02-07T12:00:00Z",
+          "body": "Draft a newsletter issue that teaches something useful and builds trust.\n\nQuick questions:\n- Core idea / lesson: {{Core idea}}\n- Audience segment: {{Audience segment}}\n- Your offer/CTA (soft): {{Offer/CTA}}\n\nInstructions:\n- Write 700–900 words:\n  - punchy opening\n  - 3 key points with examples\n  - one practical exercise\n  - soft CTA (1–2 lines)\n- Provide 5 subject lines.\n- Avoid generic motivational filler.\n\nOutput:\n- 5 subject lines\n- Full newsletter",
+          "diff": "+455 chars"
+        }
+      ],
+      "createdAt": "2026-02-07T12:00:00Z",
+      "updatedAt": "2026-02-07T12:00:00Z",
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "95f6e443-c990-41a9-a5c9-1d941f8b5de7",
+      "title": "SEO Content Brief (keyword → outline → entities)",
+      "body": "Create an SEO brief a writer can execute without guessing.\n\nQuick questions:\n- Primary keyword: {{Primary keyword}}\n- Reader intent (what they want to accomplish): {{Reader intent}}\n- What do you want to rank against / beat (link or describe): {{Competitors to beat}}\n\nInstructions:\n- Provide:\n  - search intent + angle\n  - H1 + meta title + meta description\n  - outline (H2/H3)\n  - key points per section\n  - FAQ section (6 questions)\n  - internal link suggestions (topic-level)\n  - “unique value” suggestions (data, examples, templates)\n\nOutput as a structured brief.",
+      "notes": "A complete SEO brief with outline, FAQs, and unique value ideas.",
+      "tags": [
+        "SEO",
+        "Brief"
+      ],
+      "versions": [
+        {
+          "id": "3d380159-bce6-4baa-a507-18dee593d34d",
+          "timestamp": "2026-02-07T12:00:00Z",
+          "body": "Create an SEO brief a writer can execute without guessing.\n\nQuick questions:\n- Primary keyword: {{Primary keyword}}\n- Reader intent (what they want to accomplish): {{Reader intent}}\n- What do you want to rank against / beat (link or describe): {{Competitors to beat}}\n\nInstructions:\n- Provide:\n  - search intent + angle\n  - H1 + meta title + meta description\n  - outline (H2/H3)\n  - key points per section\n  - FAQ section (6 questions)\n  - internal link suggestions (topic-level)\n  - “unique value” suggestions (data, examples, templates)\n\nOutput as a structured brief.",
+          "diff": "+569 chars"
+        }
+      ],
+      "createdAt": "2026-02-07T12:00:00Z",
+      "updatedAt": "2026-02-07T12:00:00Z",
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "dca765ee-22bd-47db-ac28-37c13615c268",
+      "title": "Repurpose One Asset into 12 Pieces (multi-format)",
+      "body": "Repurpose one piece of content into a full week of distribution.\n\nQuick questions:\n- Paste or describe the original asset: {{Paste/describe the original asset}}\n- Primary channel: {{Primary channel}}\n- Secondary channel(s): {{Secondary channels}}\n\nInstructions:\n- Create 12 derivative pieces:\n  - 5 short posts\n  - 3 carousel/thread outlines\n  - 2 short video scripts (≤45 seconds)\n  - 1 newsletter section\n  - 1 sales/CTA post\n- For each: hook, key points, CTA, and suggested posting day.\n- Keep everything consistent with the original message.\n\nOutput as a numbered list.",
+      "notes": "Turn one asset into a week of content across formats.",
+      "tags": [
+        "Content",
+        "Repurposing"
+      ],
+      "versions": [
+        {
+          "id": "e70bf3c3-9d9b-43c8-96e7-e7bebc32cefe",
+          "timestamp": "2026-02-07T12:00:00Z",
+          "body": "Repurpose one piece of content into a full week of distribution.\n\nQuick questions:\n- Paste or describe the original asset: {{Paste/describe the original asset}}\n- Primary channel: {{Primary channel}}\n- Secondary channel(s): {{Secondary channels}}\n\nInstructions:\n- Create 12 derivative pieces:\n  - 5 short posts\n  - 3 carousel/thread outlines\n  - 2 short video scripts (≤45 seconds)\n  - 1 newsletter section\n  - 1 sales/CTA post\n- For each: hook, key points, CTA, and suggested posting day.\n- Keep everything consistent with the original message.\n\nOutput as a numbered list.",
+          "diff": "+573 chars"
+        }
+      ],
+      "createdAt": "2026-02-07T12:00:00Z",
+      "updatedAt": "2026-02-07T12:00:00Z",
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "931867e6-0b98-4ec1-8120-0a297285d15d",
+      "title": "Webinar Script (45 min) + Slide Outline",
+      "body": "Write a webinar that educates, builds trust, and converts politely.\n\nQuick questions:\n- Webinar topic + promise: {{Webinar topic + promise}}\n- Audience (role + pain): {{Audience}}\n- Offer at the end (what they can buy/do): {{End offer}}\n\nInstructions:\n- Produce:\n  - 45-minute run-of-show with timestamps\n  - slide-by-slide outline (15–25 slides)\n  - 3 interactive moments (poll, chat prompt, exercise)\n  - a 5-minute pitch segment (soft, helpful)\n  - Q&A handling prompts\n- Keep it practical and example-driven.\n\nOutput:\n1) Run-of-show\n2) Slide outline\n3) Interactions\n4) Pitch segment\n5) Q&A prompts",
+      "notes": "A complete webinar script and slide outline in one prompt.",
+      "tags": [
+        "Content",
+        "Webinar"
+      ],
+      "versions": [
+        {
+          "id": "deb4f0f2-ec98-473e-b508-5a35daadf603",
+          "timestamp": "2026-02-07T12:00:00Z",
+          "body": "Write a webinar that educates, builds trust, and converts politely.\n\nQuick questions:\n- Webinar topic + promise: {{Webinar topic + promise}}\n- Audience (role + pain): {{Audience}}\n- Offer at the end (what they can buy/do): {{End offer}}\n\nInstructions:\n- Produce:\n  - 45-minute run-of-show with timestamps\n  - slide-by-slide outline (15–25 slides)\n  - 3 interactive moments (poll, chat prompt, exercise)\n  - a 5-minute pitch segment (soft, helpful)\n  - Q&A handling prompts\n- Keep it practical and example-driven.\n\nOutput:\n1) Run-of-show\n2) Slide outline\n3) Interactions\n4) Pitch segment\n5) Q&A prompts",
+          "diff": "+601 chars"
+        }
+      ],
+      "createdAt": "2026-02-07T12:00:00Z",
+      "updatedAt": "2026-02-07T12:00:00Z",
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "2f4419ea-1bd8-4710-be31-83895d16c600",
+      "title": "Customer Story Interview (questions + angle + narrative)",
+      "body": "Create an interview guide that produces usable customer stories.\n\nQuick questions:\n- What product/service did they use?: {{What did they use?}}\n- What change/outcome did they get?: {{Outcome}}\n- Who is the ideal reader for this story?: {{Ideal reader}}\n\nInstructions:\n- Provide:\n  - 12 interview questions that elicit specifics\n  - 3 narrative angles (problem-led, transformation, contrarian)\n  - a story outline (headline, setup, turning point, results, lessons)\n  - a pull-quote finder checklist\n- Avoid leading questions; go for details.\n\nOutput in bullet lists.",
+      "notes": "Interview prompts and structure to capture compelling customer stories.",
+      "tags": [
+        "Content",
+        "Stories"
+      ],
+      "versions": [
+        {
+          "id": "6acafe09-98d1-4af5-8f54-ec44d6c34946",
+          "timestamp": "2026-02-07T12:00:00Z",
+          "body": "Create an interview guide that produces usable customer stories.\n\nQuick questions:\n- What product/service did they use?: {{What did they use?}}\n- What change/outcome did they get?: {{Outcome}}\n- Who is the ideal reader for this story?: {{Ideal reader}}\n\nInstructions:\n- Provide:\n  - 12 interview questions that elicit specifics\n  - 3 narrative angles (problem-led, transformation, contrarian)\n  - a story outline (headline, setup, turning point, results, lessons)\n  - a pull-quote finder checklist\n- Avoid leading questions; go for details.\n\nOutput in bullet lists.",
+          "diff": "+565 chars"
+        }
+      ],
+      "createdAt": "2026-02-07T12:00:00Z",
+      "updatedAt": "2026-02-07T12:00:00Z",
+      "intent": "",
+      "isPinned": false
+    },
+    {
+      "id": "fc3042ef-f2c7-47a8-942e-07628a77e1af",
+      "title": "Ad Copy Variations (meta/Google) with Testing Plan",
+      "body": "Generate ad copy variations and a simple test plan.\n\nQuick questions:\n- Offer and landing page goal: {{Offer + goal}}\n- Audience (who + pain): {{Audience}}\n- Primary proof/benefit to emphasise: {{Primary proof/benefit}}\n- Platform (Meta, Google Search, LinkedIn Ads): {{Platform}}\n\nInstructions:\n- Create:\n  - 10 headline options\n  - 10 primary text options\n  - 5 CTA button suggestions (if relevant)\n  - 3 audience/intent angles to test\n  - a 2-week test plan: budgets, what to measure, stop/iterate rules\n- Avoid prohibited claims; keep it credible.\n\nOutput in sections.",
+      "notes": "Generate credible ad copy plus a testing plan.",
+      "tags": [
+        "Ads",
+        "Copy"
+      ],
+      "versions": [
+        {
+          "id": "0a06bed9-2280-49e4-8f38-94e7e7507770",
+          "timestamp": "2026-02-07T12:00:00Z",
+          "body": "Generate ad copy variations and a simple test plan.\n\nQuick questions:\n- Offer and landing page goal: {{Offer + goal}}\n- Audience (who + pain): {{Audience}}\n- Primary proof/benefit to emphasise: {{Primary proof/benefit}}\n- Platform (Meta, Google Search, LinkedIn Ads): {{Platform}}\n\nInstructions:\n- Create:\n  - 10 headline options\n  - 10 primary text options\n  - 5 CTA button suggestions (if relevant)\n  - 3 audience/intent angles to test\n  - a 2-week test plan: budgets, what to measure, stop/iterate rules\n- Avoid prohibited claims; keep it credible.\n\nOutput in sections.",
+          "diff": "+572 chars"
+        }
+      ],
+      "createdAt": "2026-02-07T12:00:00Z",
+      "updatedAt": "2026-02-07T12:00:00Z",
+      "intent": "",
+      "isPinned": false
+    }
+  ]
+}

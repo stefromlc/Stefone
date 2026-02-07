@@ -1,0 +1,10 @@
+{
+  "packs": [
+    {
+      "url": "./packs/content-brand-pack.pvb"
+    },
+    {
+      "url": "./packs/job-hunter-uk.pvb"
+    }
+  ]
+}

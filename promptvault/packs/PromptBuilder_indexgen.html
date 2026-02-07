@@ -1,0 +1,1762 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PVB Prompt Pack Editor (Offline)</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --muted:#93a4c7;
+      --text:#e7eeff;
+      --accent:#7aa2ff;
+      --accent2:#55f2c4;
+      --danger:#ff5b7a;
+      --warn:#ffcc66;
+      --ok:#66ff99;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --radius2:12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      background:
+        radial-gradient(1200px 800px at 15% 10%, rgba(122,162,255,.18), transparent 60%),
+        radial-gradient(900px 700px at 80% 15%, rgba(85,242,196,.12), transparent 55%),
+        radial-gradient(900px 700px at 55% 90%, rgba(255,91,122,.10), transparent 55%),
+        var(--bg);
+      color: var(--text);
+    }
+    a{ color: var(--accent); }
+    .app{
+      height:100%;
+      display:grid;
+      grid-template-rows: auto 1fr;
+    }
+    header{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: rgba(10,16,33,.55);
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      min-width: 260px;
+    }
+    .logo{
+      width:36px; height:36px; border-radius:12px;
+      background: linear-gradient(135deg, rgba(122,162,255,.9), rgba(85,242,196,.85));
+      box-shadow: var(--shadow);
+    }
+    .title{
+      display:flex; flex-direction:column; line-height:1.1;
+    }
+    .title b{ font-size:14px; letter-spacing:.2px; }
+    .title span{ font-size:12px; color: var(--muted); }
+    .toolbar{
+      display:flex; flex-wrap:wrap;
+      gap:8px;
+      justify-content:flex-end;
+    }
+    button, .btn{
+      cursor:pointer;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:9px 10px;
+      border-radius:12px;
+      font-weight:600;
+      font-size:12px;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      transition: transform .05s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    button:hover{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18); }
+    button:active{ transform: translateY(1px); }
+    button.primary{
+      background: rgba(122,162,255,.18);
+      border-color: rgba(122,162,255,.35);
+    }
+    button.primary:hover{ background: rgba(122,162,255,.24); }
+    button.ghost{
+      background: transparent;
+    }
+    button.danger{
+      background: rgba(255,91,122,.16);
+      border-color: rgba(255,91,122,.32);
+    }
+    button.danger:hover{ background: rgba(255,91,122,.22); }
+    button.ok{
+      background: rgba(102,255,153,.12);
+      border-color: rgba(102,255,153,.25);
+    }
+    .kbd{
+      font-family: var(--mono);
+      font-size:11px;
+      padding:2px 6px;
+      border:1px solid var(--border);
+      border-radius:8px;
+      color: var(--muted);
+      background: rgba(0,0,0,.25);
+    }
+    .main{
+      display:grid;
+      grid-template-columns: 340px 1fr 360px;
+      gap:12px;
+      padding:12px;
+      min-height:0;
+    }
+    .panel{
+      background: rgba(17,26,51,.70);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-height:0;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .panel .head{
+      padding:12px 12px 10px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .panel .head h3{
+      margin:0;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    .panel .head .sub{
+      color: var(--muted);
+      font-size:12px;
+      font-weight:600;
+    }
+    .panel .body{
+      padding:10px 10px 12px;
+      overflow:auto;
+      min-height:0;
+    }
+    .stack{ display:flex; flex-direction:column; gap:10px; }
+    .row{ display:flex; gap:8px; align-items:center; }
+    .row.wrap{ flex-wrap:wrap; }
+    .row.between{ justify-content:space-between; }
+    .grow{ flex:1; }
+    input, textarea, select{
+      width:100%;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      padding:10px 10px;
+      outline:none;
+      font-size:13px;
+      transition: border-color .15s ease, background .15s ease;
+    }
+    textarea{ min-height: 220px; resize: vertical; font-family: var(--mono); font-size:12px; line-height:1.45; }
+    input:focus, textarea:focus, select:focus{
+      border-color: rgba(122,162,255,.55);
+      background: rgba(0,0,0,.28);
+    }
+    label{
+      display:block;
+      font-size:12px;
+      color: var(--muted);
+      margin: 0 0 6px 2px;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .card{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding:10px;
+      background: rgba(0,0,0,.18);
+    }
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .item{
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      border-radius: 14px;
+      padding:10px;
+      cursor:pointer;
+      transition: background .15s ease, border-color .15s ease, transform .05s ease;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .item:hover{ background: rgba(0,0,0,.24); border-color: rgba(255,255,255,.16); }
+    .item:active{ transform: translateY(1px); }
+    .item.selected{
+      border-color: rgba(122,162,255,.55);
+      background: rgba(122,162,255,.10);
+    }
+    .item .top{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .badge{
+      font-size:11px;
+      font-family: var(--mono);
+      color: var(--muted);
+      border:1px solid var(--border);
+      border-radius: 999px;
+      padding:2px 8px;
+      background: rgba(0,0,0,.20);
+      white-space:nowrap;
+    }
+    .pill{
+      font-size:11px;
+      font-weight:800;
+      border-radius:999px;
+      padding:3px 9px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+    }
+    .pill.pin{ border-color: rgba(255,204,102,.30); background: rgba(255,204,102,.10); }
+    .pill.tag{ border-color: rgba(122,162,255,.28); background: rgba(122,162,255,.08); }
+    .pill.intent{ border-color: rgba(85,242,196,.25); background: rgba(85,242,196,.08); }
+    .muted{ color: var(--muted); }
+    .mono{ font-family: var(--mono); }
+    .small{ font-size:12px; }
+    .tiny{ font-size:11px; }
+    .hr{ height:1px; background: var(--border); margin:10px 0; }
+    .help{
+      color: var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+    .dropzone{
+      border:1px dashed rgba(255,255,255,.25);
+      border-radius: 14px;
+      padding:10px;
+      background: rgba(0,0,0,.16);
+    }
+    .dropzone.dragover{
+      border-color: rgba(122,162,255,.65);
+      background: rgba(122,162,255,.10);
+    }
+    .two{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .tagchips{ display:flex; flex-wrap:wrap; gap:6px; }
+    .chip{
+      display:inline-flex; gap:6px; align-items:center;
+      padding:4px 8px;
+      border-radius: 999px;
+      border:1px solid rgba(122,162,255,.28);
+      background: rgba(122,162,255,.08);
+      font-size:11px;
+      font-weight:800;
+    }
+    .chip button{
+      padding:2px 6px;
+      border-radius: 999px;
+      font-size:11px;
+      background: rgba(0,0,0,.25);
+    }
+    .toast{
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      min-width: 260px;
+      max-width: 420px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(10,16,33,.85);
+      box-shadow: var(--shadow);
+      display:none;
+      gap:8px;
+      align-items:flex-start;
+      color: var(--text);
+      z-index:9999;
+    }
+    .toast.show{ display:flex; }
+    .toast .dot{
+      width:10px; height:10px; border-radius:50%;
+      margin-top:4px;
+      background: var(--accent2);
+      flex:0 0 auto;
+    }
+    .toast .msg{ font-size:12px; line-height:1.25; }
+    .warnDot{ background: var(--warn) !important; }
+    .dangerDot{ background: var(--danger) !important; }
+
+    @media (max-width: 1100px){
+      .main{ grid-template-columns: 340px 1fr; grid-template-rows: 1fr auto; }
+      #rightPanel{ grid-column: 1 / -1; }
+    }
+    @media (max-width: 820px){
+      .main{ grid-template-columns: 1fr; }
+      header{ flex-direction:column; align-items:stretch; }
+      .brand{ min-width:unset; }
+      .toolbar{ justify-content:flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div class="title">
+        <b>PVB Prompt Pack Editor</b>
+        <span id="statusLine">Offline • autosave enabled</span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="ghost" id="btnNewBundle" title="Create a fresh bundle"><span>🧱</span> New</button>
+      <button class="primary" id="btnImport" title="Import .pvb"><span>📥</span> Import</button>
+      <button class="primary" id="btnExport" title="Export .pvb"><span>📤</span> Export</button>
+            <button class="primary" id="btnBuildIndex" title="Generate index.json from a folder of .pvb files"><span>🧾</span> Build index</button>
+<button class="ghost" id="btnLoadAutosave" title="Load last autosave"><span>🧠</span> Load autosave</button>
+      <button class="ghost" id="btnClearAutosave" title="Clear autosave"><span>🧽</span> Clear autosave</button>
+      <button class="ghost" id="btnHelp" title="Keyboard tips"><span>⌨️</span> Tips</button>
+      <input id="fileInput" type="file" accept=".pvb,application/json" style="display:none" />
+          <input id="dirInput" type="file" webkitdirectory directory multiple style="display:none" />
+</div>
+  </header>
+
+  <div class="main">
+    <!-- LEFT: Packs + prompt list -->
+    <section class="panel" id="leftPanel">
+      <div class="head">
+        <div>
+          <h3>Packs</h3>
+          <div class="sub" id="bundleMetaMini">—</div>
+        </div>
+        <button class="ok" id="btnAddPack" title="Add pack"><span>＋</span> Pack</button>
+      </div>
+      <div class="body stack">
+        <div class="dropzone" id="dropzone">
+          <div class="row between">
+            <div class="help">
+              Drag & drop a <span class="mono">.pvb</span> here, or use <b>Import</b>.
+              <div class="tiny">Search prompts below.</div>
+            </div>
+            <div class="kbd">Ctrl+S</div>
+          </div>
+        </div>
+
+        <div class="list" id="packList"></div>
+
+        <div class="hr"></div>
+
+        <div class="row">
+          <input id="searchBox" placeholder="Search prompts (title/body/tags)..." />
+        </div>
+
+        <div class="row between">
+          <div class="help"><b id="promptCountLabel">0</b> prompts in this pack</div>
+          <button class="ok" id="btnAddPrompt"><span>＋</span> Prompt</button>
+        </div>
+
+        <div class="list" id="promptList"></div>
+      </div>
+    </section>
+
+    <!-- CENTER: Editor -->
+    <section class="panel" id="centerPanel">
+      <div class="head">
+        <div>
+          <h3 id="editorTitle">Editor</h3>
+          <div class="sub" id="editorSub">Select a pack or prompt</div>
+        </div>
+        <div class="row">
+          <button class="ghost" id="btnDuplicate" title="Duplicate selected"><span>📎</span> Duplicate</button>
+          <button class="danger" id="btnDelete" title="Delete selected"><span>🗑️</span> Delete</button>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="stack" id="editorEmpty">
+          <div class="card">
+            <div class="row between">
+              <div>
+                <div style="font-weight:900;">What this does</div>
+                <div class="help">
+                  Manage <span class="mono">.pvb</span> bundles: packs, prompts, tags, versions, variables and export.
+                  Works fully offline.
+                </div>
+              </div>
+              <div class="kbd">Ctrl+E</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-weight:900;">Quick actions</div>
+            <div class="help">
+              • <b>Import</b> your existing .pvb<br/>
+              • Select a <b>pack</b> to edit pack name & ordering<br/>
+              • Select a <b>prompt</b> to edit content + create versions on save
+            </div>
+          </div>
+        </div>
+
+        <!-- Bundle meta editor -->
+        <div class="stack" id="bundleEditor" style="display:none;">
+          <div class="card">
+            <div class="row between">
+              <div>
+                <div style="font-weight:900;">Bundle metadata</div>
+                <div class="help">This maps to <span class="mono">meta</span> + <span class="mono">bundle_version</span>.</div>
+              </div>
+              <button class="primary" id="btnSaveBundle"><span>💾</span> Save</button>
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label>Title</label>
+              <input id="metaTitle" />
+            </div>
+            <div>
+              <label>Version</label>
+              <input id="metaVersion" placeholder="e.g. 1.0.0" />
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label>Author</label>
+              <input id="metaAuthor" />
+            </div>
+            <div>
+              <label>Image URL</label>
+              <input id="metaImage" placeholder="https://..." />
+            </div>
+          </div>
+
+          <div>
+            <label>Description</label>
+            <textarea id="metaDescription" style="min-height:120px; font-family:var(--sans)"></textarea>
+          </div>
+
+          <div class="card">
+            <div class="help">
+              <b>Note:</b> Export will set <span class="mono">exported_at</span> to now (UTC).
+              Packs and prompts will be included exactly as shown on the left.
+            </div>
+          </div>
+        </div>
+
+        <!-- Pack editor -->
+        <div class="stack" id="packEditor" style="display:none;">
+          <div class="row between">
+            <div>
+              <div style="font-weight:900;">Pack</div>
+              <div class="help">Rename the pack, reorder prompts, or move prompts between packs.</div>
+            </div>
+            <button class="primary" id="btnSavePack"><span>💾</span> Save</button>
+          </div>
+
+          <div class="two">
+            <div>
+              <label>Pack name</label>
+              <input id="packName" />
+            </div>
+            <div>
+              <label>Pack ID</label>
+              <input id="packId" disabled class="mono" />
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="row between">
+              <div>
+                <div style="font-weight:900;">Prompt order (in this pack)</div>
+                <div class="help">Use ↑ ↓ to reorder (affects <span class="mono">promptIds</span>).</div>
+              </div>
+              <div class="row">
+                <button class="ghost" id="btnMovePromptToPack" title="Move selected prompt to another pack">↪️ Move prompt</button>
+              </div>
+            </div>
+            <div class="hr"></div>
+            <div id="packOrderList" class="list"></div>
+          </div>
+        </div>
+
+        <!-- Prompt editor -->
+        <div class="stack" id="promptEditor" style="display:none;">
+          <div class="row between">
+            <div>
+              <div style="font-weight:900;">Prompt</div>
+              <div class="help">Edits here create a new version when you save (if body changed).</div>
+            </div>
+            <div class="row">
+              <button class="ghost" id="btnCopyId" title="Copy Prompt ID">🆔 Copy ID</button>
+              <button class="primary" id="btnSavePrompt"><span>💾</span> Save</button>
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label>Title</label>
+              <input id="promptTitle" />
+            </div>
+            <div class="row" style="gap:10px;">
+              <div class="grow">
+                <label>Prompt ID</label>
+                <input id="promptId" disabled class="mono" />
+              </div>
+              <div style="width:130px;">
+                <label>Pinned</label>
+                <select id="promptPinned">
+                  <option value="false">false</option>
+                  <option value="true">true</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label>Intent</label>
+              <input id="promptIntent" placeholder="(optional)" />
+            </div>
+            <div>
+              <label>Tags (comma separated)</label>
+              <input id="promptTags" placeholder="e.g. Ideation, Strategy" />
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label>Created</label>
+              <input id="promptCreatedAt" disabled class="mono" />
+            </div>
+            <div>
+              <label>Updated</label>
+              <input id="promptUpdatedAt" disabled class="mono" />
+            </div>
+          </div>
+
+          <div>
+            <label>Body</label>
+            <textarea id="promptBody" spellcheck="false"></textarea>
+          </div>
+
+          <div>
+            <label>Notes</label>
+            <textarea id="promptNotes" style="min-height:120px; font-family:var(--sans)"></textarea>
+          </div>
+
+          <div class="card">
+            <div class="row between">
+              <div>
+                <div style="font-weight:900;">Variables</div>
+                <div class="help">Detected placeholders like <span class="mono">{{example}}</span></div>
+              </div>
+              <button class="ghost" id="btnInsertVar">＋ Insert</button>
+            </div>
+            <div class="hr"></div>
+            <div class="tagchips" id="varChips"></div>
+            <div class="help tiny" id="varHint" style="margin-top:8px;"></div>
+          </div>
+
+          <div class="card">
+            <div class="row between">
+              <div>
+                <div style="font-weight:900;">Versions</div>
+                <div class="help">Shows <span class="mono">versions[]</span>. You can restore a version into the body.</div>
+              </div>
+              <button class="ghost" id="btnAddVersionNote">📝 Add version note</button>
+            </div>
+            <div class="hr"></div>
+            <div id="versionList" class="list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Inspector / Actions -->
+    <section class="panel" id="rightPanel">
+      <div class="head">
+        <div>
+          <h3>Inspector</h3>
+          <div class="sub">Validation • stats • utilities</div>
+        </div>
+        <button class="ghost" id="btnOpenBundleMeta"><span>🧾</span> Bundle meta</button>
+      </div>
+      <div class="body stack">
+        <div class="card">
+          <div class="row between">
+            <div>
+              <div style="font-weight:900;">Health check</div>
+              <div class="help">Find broken IDs, missing prompts, duplicates, etc.</div>
+            </div>
+            <button class="ghost" id="btnValidate">🧪 Validate</button>
+          </div>
+          <div class="hr"></div>
+          <div id="validateOut" class="help tiny muted">No checks run yet.</div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:900;">Bundle stats</div>
+          <div class="hr"></div>
+          <div id="statsOut" class="help tiny muted">—</div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:900;">Utilities</div>
+          <div class="hr"></div>
+          <div class="stack">
+            <button class="ghost" id="btnNormalizeTags">🏷️ Normalize tags</button>
+            <button class="ghost" id="btnSortPromptsByTitle">🔤 Sort prompts by title (pack)</button>
+            <button class="ghost" id="btnDeduplicatePrompts">🧹 Deduplicate prompt IDs (pack)</button>
+            <button class="ghost" id="btnExportSelectedPrompt">📄 Export selected prompt as JSON</button>
+          </div>
+          <div class="help tiny" style="margin-top:10px;">
+            “Normalize tags” trims whitespace, removes empties, and de-dupes per prompt.
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:900;">Keyboard</div>
+          <div class="hr"></div>
+          <div class="help tiny">
+            <b>Ctrl+S</b> save current editor<br/>
+            <b>Ctrl+E</b> focus search<br/>
+            <b>Del</b> delete selected prompt/pack<br/>
+            <b>Ctrl+D</b> duplicate selected<br/>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <div class="dot" id="toastDot"></div>
+  <div class="msg" id="toastMsg"></div>
+</div>
+
+<script>
+(() => {
+  // ========= Helpers =========
+  const $ = (sel, el=document) => el.querySelector(sel);
+  const $$ = (sel, el=document) => [...el.querySelectorAll(sel)];
+  const nowIso = () => new Date().toISOString();
+  const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
+
+  function uuid() {
+    if (crypto && crypto.randomUUID) return crypto.randomUUID();
+    // fallback
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8);
+      return v.toString(16);
+    });
+  }
+
+  function toast(msg, type="ok") {
+    const t = $("#toast");
+    const dot = $("#toastDot");
+    const m = $("#toastMsg");
+    dot.classList.remove("warnDot","dangerDot");
+    if (type === "warn") dot.classList.add("warnDot");
+    if (type === "danger") dot.classList.add("dangerDot");
+    m.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(()=>t.classList.remove("show"), 2600);
+  }
+
+  function safeJsonParse(text) {
+    try { return { ok:true, value: JSON.parse(text) }; }
+    catch (e) { return { ok:false, error: e }; }
+  }
+
+  function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+  function normalizeBundleShape(raw) {
+    // Tries to match your example schema:
+    // { bundle_version, meta, exported_at, packs:[{id,name,promptIds:[]}], prompts:[{id,title,body,notes,tags,versions,createdAt,updatedAt,intent,isPinned}] }
+    const b = (raw && typeof raw === "object") ? raw : {};
+    b.bundle_version = String(b.bundle_version ?? "1.0.0");
+    b.meta = b.meta && typeof b.meta === "object" ? b.meta : {};
+    b.meta.title = String(b.meta.title ?? "Untitled Bundle");
+    b.meta.version = String(b.meta.version ?? "1.0.0");
+    b.meta.description = String(b.meta.description ?? "");
+    b.meta.author = String(b.meta.author ?? "");
+    b.meta.image = String(b.meta.image ?? "");
+    b.exported_at = String(b.exported_at ?? nowIso());
+
+    b.packs = Array.isArray(b.packs) ? b.packs : [];
+    b.prompts = Array.isArray(b.prompts) ? b.prompts : [];
+
+    for (const p of b.packs) {
+      p.id = String(p.id ?? uuid());
+      p.name = String(p.name ?? "New Pack");
+      p.promptIds = Array.isArray(p.promptIds) ? p.promptIds.map(String) : [];
+    }
+
+    for (const pr of b.prompts) {
+      pr.id = String(pr.id ?? uuid());
+      pr.title = String(pr.title ?? "Untitled Prompt");
+      pr.body = String(pr.body ?? "");
+      pr.notes = String(pr.notes ?? "");
+      pr.tags = Array.isArray(pr.tags) ? pr.tags.map(String) : [];
+      pr.versions = Array.isArray(pr.versions) ? pr.versions : [];
+      pr.createdAt = String(pr.createdAt ?? nowIso());
+      pr.updatedAt = String(pr.updatedAt ?? pr.createdAt);
+      pr.intent = String(pr.intent ?? "");
+      pr.isPinned = Boolean(pr.isPinned ?? false);
+
+      // normalize versions
+      pr.versions = pr.versions.map(v => ({
+        id: String(v.id ?? uuid()),
+        timestamp: String(v.timestamp ?? pr.updatedAt ?? nowIso()),
+        body: String(v.body ?? pr.body ?? ""),
+        diff: String(v.diff ?? "")
+      }));
+      if (pr.versions.length === 0) {
+        pr.versions.unshift({
+          id: uuid(),
+          timestamp: pr.updatedAt,
+          body: pr.body,
+          diff: "Initial import"
+        });
+      }
+    }
+
+    // Ensure at least one pack if prompts exist and packs missing
+    if (b.packs.length === 0) {
+      b.packs.push({ id: uuid(), name: b.meta.title || "Default Pack", promptIds: b.prompts.map(x=>x.id) });
+    }
+
+    // Ensure every prompt is referenced by at least one pack (optional, but handy)
+    const allRefs = new Set(b.packs.flatMap(pk => pk.promptIds));
+    for (const pr of b.prompts) {
+      if (!allRefs.has(pr.id)) b.packs[0].promptIds.push(pr.id);
+    }
+
+    return b;
+  }
+
+  function extractVars(body) {
+    const re = /\{\{\s*([^}]+?)\s*\}\}/g;
+    const found = new Set();
+    let m;
+    while ((m = re.exec(body)) !== null) {
+      const v = (m[1] || "").trim();
+      if (v) found.add(v);
+    }
+    return [...found].sort((a,b)=>a.localeCompare(b));
+  }
+
+  function titleFromPrompt(p) {
+    return (p?.title || "Untitled").trim() || "Untitled";
+  }
+
+  // ========= State =========
+  const AUTOSAVE_KEY = "pvb_editor_autosave_v1";
+  let bundle = normalizeBundleShape(null);
+
+  let selectedPackId = bundle.packs[0]?.id ?? null;
+  let selectedPromptId = null;
+  let editorMode = "empty"; // "bundle" | "pack" | "prompt" | "empty"
+  let lastBodyOnLoad = "";  // used for version diff detection
+  let lastVersionNote = "";
+
+  function selectedPack() {
+    return bundle.packs.find(p => p.id === selectedPackId) || null;
+  }
+  function selectedPrompt() {
+    return bundle.prompts.find(p => p.id === selectedPromptId) || null;
+  }
+
+  function indexPrompts() {
+    const map = new Map();
+    for (const p of bundle.prompts) map.set(p.id, p);
+    return map;
+  }
+
+  // ========= Autosave =========
+  function autosave() {
+    try {
+      const payload = JSON.stringify(bundle);
+      localStorage.setItem(AUTOSAVE_KEY, payload);
+      $("#statusLine").textContent = "Offline • autosaved " + new Date().toLocaleTimeString();
+    } catch (e) {
+      console.warn(e);
+      toast("Autosave failed (storage full?)", "warn");
+    }
+    updateStats();
+  }
+
+  function loadAutosave() {
+    const txt = localStorage.getItem(AUTOSAVE_KEY);
+    if (!txt) return toast("No autosave found.", "warn");
+    const p = safeJsonParse(txt);
+    if (!p.ok) return toast("Autosave is corrupted JSON.", "danger");
+    bundle = normalizeBundleShape(p.value);
+    selectedPackId = bundle.packs[0]?.id ?? null;
+    selectedPromptId = null;
+    setEditor("empty");
+    renderAll();
+    toast("Loaded autosave.");
+  }
+
+  function clearAutosave() {
+    localStorage.removeItem(AUTOSAVE_KEY);
+    toast("Autosave cleared.");
+    $("#statusLine").textContent = "Offline • autosave enabled";
+  }
+
+  // ========= Rendering =========
+  function renderAll() {
+    renderBundleMini();
+    renderPackList();
+    renderPromptList();
+    renderEditor();
+    updateStats();
+  }
+
+  function renderBundleMini() {
+    const m = bundle.meta || {};
+    $("#bundleMetaMini").textContent = `${m.title || "Untitled"} • v${m.version || "—"}`;
+  }
+
+  function renderPackList() {
+    const el = $("#packList");
+    el.innerHTML = "";
+    for (const pk of bundle.packs) {
+      const div = document.createElement("div");
+      div.className = "item" + (pk.id === selectedPackId ? " selected" : "");
+      div.innerHTML = `
+        <div class="top">
+          <div style="font-weight:900; font-size:13px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            ${escapeHtml(pk.name)}
+          </div>
+          <span class="badge">${pk.promptIds.length} prompts</span>
+        </div>
+        <div class="row wrap">
+          <span class="pill intent">pack</span>
+          <span class="badge mono">${escapeHtml(pk.id)}</span>
+        </div>
+      `;
+      div.onclick = () => {
+        selectedPackId = pk.id;
+        selectedPromptId = null;
+        setEditor("pack");
+        renderAll();
+      };
+      el.appendChild(div);
+    }
+  }
+
+  function renderPromptList() {
+    const pk = selectedPack();
+    const list = $("#promptList");
+    list.innerHTML = "";
+    const search = ($("#searchBox").value || "").trim().toLowerCase();
+    const pmap = indexPrompts();
+
+    const ids = (pk?.promptIds || []).filter(id => pmap.has(id));
+    const prompts = ids.map(id => pmap.get(id));
+
+    let filtered = prompts;
+    if (search) {
+      filtered = prompts.filter(p => {
+        const hay = [
+          p.title, p.body, p.notes,
+          (p.tags||[]).join(", "),
+          p.intent || ""
+        ].join("\n").toLowerCase();
+        return hay.includes(search);
+      });
+    }
+
+    $("#promptCountLabel").textContent = String(filtered.length);
+
+    for (const pr of filtered) {
+      const div = document.createElement("div");
+      const pinned = pr.isPinned ? `<span class="pill pin">pinned</span>` : "";
+      const tags = (pr.tags || []).slice(0,3).map(t=>`<span class="pill tag">${escapeHtml(t)}</span>`).join("");
+      div.className = "item" + (pr.id === selectedPromptId ? " selected" : "");
+      div.innerHTML = `
+        <div class="top">
+          <div style="font-weight:900; font-size:13px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            ${escapeHtml(titleFromPrompt(pr))}
+          </div>
+          <span class="badge">${(pr.body || "").length} chars</span>
+        </div>
+        <div class="row wrap">
+          ${pinned}
+          ${pr.intent ? `<span class="pill intent">${escapeHtml(pr.intent)}</span>` : ""}
+          ${tags}
+        </div>
+        <div class="tiny muted mono" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          ${escapeHtml(pr.id)}
+        </div>
+      `;
+      div.onclick = () => {
+        selectedPromptId = pr.id;
+        setEditor("prompt");
+        renderAll();
+      };
+      list.appendChild(div);
+    }
+  }
+
+  function renderEditor() {
+    $("#editorEmpty").style.display = editorMode === "empty" ? "" : "none";
+    $("#bundleEditor").style.display = editorMode === "bundle" ? "" : "none";
+    $("#packEditor").style.display = editorMode === "pack" ? "" : "none";
+    $("#promptEditor").style.display = editorMode === "prompt" ? "" : "none";
+
+    $("#btnDelete").disabled = editorMode === "empty" || editorMode === "bundle";
+    $("#btnDuplicate").disabled = editorMode === "empty" || editorMode === "bundle";
+
+    if (editorMode === "bundle") {
+      $("#editorTitle").textContent = "Bundle metadata";
+      $("#editorSub").textContent = "Edit meta fields used by the pack";
+      $("#metaTitle").value = bundle.meta.title || "";
+      $("#metaVersion").value = bundle.meta.version || "";
+      $("#metaAuthor").value = bundle.meta.author || "";
+      $("#metaImage").value = bundle.meta.image || "";
+      $("#metaDescription").value = bundle.meta.description || "";
+    }
+
+    if (editorMode === "pack") {
+      const pk = selectedPack();
+      $("#editorTitle").textContent = "Pack editor";
+      $("#editorSub").textContent = pk ? pk.name : "—";
+      if (!pk) return;
+
+      $("#packName").value = pk.name || "";
+      $("#packId").value = pk.id || "";
+
+      // order list
+      const pmap = indexPrompts();
+      const ol = $("#packOrderList");
+      ol.innerHTML = "";
+      pk.promptIds
+        .filter(id => pmap.has(id))
+        .forEach((id, idx) => {
+          const pr = pmap.get(id);
+          const row = document.createElement("div");
+          row.className = "item";
+          row.style.cursor = "default";
+          row.innerHTML = `
+            <div class="top">
+              <div style="font-weight:900; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                ${escapeHtml(titleFromPrompt(pr))}
+              </div>
+              <span class="badge">${idx+1}/${pk.promptIds.length}</span>
+            </div>
+            <div class="row between">
+              <div class="tiny muted mono" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:240px;">
+                ${escapeHtml(id)}
+              </div>
+              <div class="row">
+                <button class="ghost" data-up title="Move up">↑</button>
+                <button class="ghost" data-down title="Move down">↓</button>
+                <button class="ghost" data-open title="Open">✏️</button>
+              </div>
+            </div>
+          `;
+          row.querySelector("[data-up]").onclick = () => { movePromptInPack(pk.id, id, -1); };
+          row.querySelector("[data-down]").onclick = () => { movePromptInPack(pk.id, id, +1); };
+          row.querySelector("[data-open]").onclick = () => {
+            selectedPromptId = id;
+            setEditor("prompt");
+            renderAll();
+          };
+          ol.appendChild(row);
+        });
+    }
+
+    if (editorMode === "prompt") {
+      const pr = selectedPrompt();
+      $("#editorTitle").textContent = "Prompt editor";
+      $("#editorSub").textContent = pr ? pr.title : "—";
+      if (!pr) return;
+
+      $("#promptTitle").value = pr.title || "";
+      $("#promptId").value = pr.id || "";
+      $("#promptPinned").value = String(!!pr.isPinned);
+      $("#promptIntent").value = pr.intent || "";
+      $("#promptTags").value = (pr.tags || []).join(", ");
+      $("#promptBody").value = pr.body || "";
+      $("#promptNotes").value = pr.notes || "";
+      $("#promptCreatedAt").value = pr.createdAt || "";
+      $("#promptUpdatedAt").value = pr.updatedAt || "";
+
+      lastBodyOnLoad = pr.body || "";
+      renderVars(pr.body || "");
+      renderVersions(pr);
+    }
+  }
+
+  function renderVars(body) {
+    const vars = extractVars(body);
+    const wrap = $("#varChips");
+    wrap.innerHTML = "";
+    if (vars.length === 0) {
+      $("#varHint").textContent = "No variables detected. Tip: use {{variable_name}} placeholders.";
+      return;
+    }
+    $("#varHint").textContent = "Click a variable to copy it.";
+    for (const v of vars) {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.innerHTML = `<span class="mono">{{${escapeHtml(v)}}}</span> <button class="ghost" title="Copy">⧉</button>`;
+      chip.onclick = async () => {
+        await copyText(`{{${v}}}`);
+        toast("Copied variable.");
+      };
+      wrap.appendChild(chip);
+    }
+  }
+
+  function renderVersions(pr) {
+    const list = $("#versionList");
+    list.innerHTML = "";
+    const versions = (pr.versions || []).slice().sort((a,b) => (b.timestamp||"").localeCompare(a.timestamp||""));
+    for (const v of versions) {
+      const item = document.createElement("div");
+      item.className = "item";
+      item.style.cursor = "default";
+      const ts = v.timestamp ? new Date(v.timestamp).toLocaleString() : "—";
+      const bodyLen = (v.body || "").length;
+      item.innerHTML = `
+        <div class="top">
+          <div style="font-weight:900; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:240px;">
+            ${escapeHtml(v.diff || "Version")}
+          </div>
+          <span class="badge">${bodyLen} chars</span>
+        </div>
+        <div class="row between">
+          <div class="tiny muted">${escapeHtml(ts)}</div>
+          <div class="row">
+            <button class="ghost" data-restore title="Restore this version to body">⟲ Restore</button>
+            <button class="ghost" data-copy title="Copy body to clipboard">⧉ Copy</button>
+          </div>
+        </div>
+        <div class="tiny muted mono" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          ${escapeHtml(v.id)}
+        </div>
+      `;
+      item.querySelector("[data-restore]").onclick = () => {
+        $("#promptBody").value = v.body || "";
+        renderVars($("#promptBody").value);
+        toast("Restored version into editor (not saved yet).", "warn");
+      };
+      item.querySelector("[data-copy]").onclick = async () => {
+        await copyText(v.body || "");
+        toast("Copied version body.");
+      };
+      list.appendChild(item);
+    }
+  }
+
+  function updateStats() {
+    const packs = bundle.packs.length;
+    const prompts = bundle.prompts.length;
+    const versions = bundle.prompts.reduce((acc,p)=>acc + (p.versions?.length||0), 0);
+    const tags = new Set();
+    bundle.prompts.forEach(p => (p.tags||[]).forEach(t => tags.add((t||"").trim())));
+    const pinned = bundle.prompts.filter(p => p.isPinned).length;
+
+    $("#statsOut").innerHTML = `
+      <div>📦 Packs: <b>${packs}</b></div>
+      <div>🧩 Prompts: <b>${prompts}</b></div>
+      <div>🕒 Versions: <b>${versions}</b></div>
+      <div>📌 Pinned: <b>${pinned}</b></div>
+      <div>🏷️ Unique tags: <b>${[...tags].filter(Boolean).length}</b></div>
+      <div class="tiny muted" style="margin-top:6px;">Autosave stores the full bundle in localStorage.</div>
+    `;
+  }
+
+  function setEditor(mode) {
+    editorMode = mode;
+    if (mode === "pack" && !selectedPackId) selectedPackId = bundle.packs[0]?.id ?? null;
+    if (mode === "prompt" && !selectedPromptId) mode = "empty";
+  }
+
+  // ========= CRUD =========
+  function addPack() {
+    const name = "New Pack";
+    const pk = { id: uuid(), name, promptIds: [] };
+    bundle.packs.push(pk);
+    selectedPackId = pk.id;
+    selectedPromptId = null;
+    setEditor("pack");
+    autosave();
+    renderAll();
+    toast("Pack created.");
+  }
+
+  function deleteSelected() {
+    if (editorMode === "pack") {
+      const pk = selectedPack();
+      if (!pk) return;
+      if (!confirm(`Delete pack "${pk.name}"? (Prompts will NOT be deleted, only the pack.)`)) return;
+      bundle.packs = bundle.packs.filter(p => p.id !== pk.id);
+      // Ensure at least 1 pack
+      if (bundle.packs.length === 0) bundle.packs.push({ id: uuid(), name: "Default Pack", promptIds: [] });
+      selectedPackId = bundle.packs[0].id;
+      selectedPromptId = null;
+      setEditor("pack");
+      autosave();
+      renderAll();
+      toast("Pack deleted.", "warn");
+      return;
+    }
+
+    if (editorMode === "prompt") {
+      const pr = selectedPrompt();
+      if (!pr) return;
+      if (!confirm(`Delete prompt "${pr.title}"? (Removed from all packs.)`)) return;
+
+      bundle.prompts = bundle.prompts.filter(p => p.id !== pr.id);
+      for (const pk of bundle.packs) {
+        pk.promptIds = pk.promptIds.filter(id => id !== pr.id);
+      }
+      selectedPromptId = null;
+      setEditor("pack");
+      autosave();
+      renderAll();
+      toast("Prompt deleted.", "warn");
+      return;
+    }
+  }
+
+  function duplicateSelected() {
+    if (editorMode === "pack") {
+      const pk = selectedPack();
+      if (!pk) return;
+      const copy = deepClone(pk);
+      copy.id = uuid();
+      copy.name = pk.name + " (Copy)";
+      // keep same promptIds references (points to same prompt objects)
+      bundle.packs.push(copy);
+      selectedPackId = copy.id;
+      selectedPromptId = null;
+      setEditor("pack");
+      autosave();
+      renderAll();
+      toast("Pack duplicated.");
+      return;
+    }
+
+    if (editorMode === "prompt") {
+      const pr = selectedPrompt();
+      const pk = selectedPack();
+      if (!pr || !pk) return;
+      const copy = deepClone(pr);
+      copy.id = uuid();
+      copy.title = (pr.title || "Untitled") + " (Copy)";
+      copy.createdAt = nowIso();
+      copy.updatedAt = copy.createdAt;
+      copy.versions = [{
+        id: uuid(),
+        timestamp: copy.updatedAt,
+        body: copy.body || "",
+        diff: "Duplicated from " + pr.id
+      }];
+      bundle.prompts.push(copy);
+      pk.promptIds.push(copy.id);
+      selectedPromptId = copy.id;
+      setEditor("prompt");
+      autosave();
+      renderAll();
+      toast("Prompt duplicated.");
+      return;
+    }
+  }
+
+  function addPrompt() {
+    const pk = selectedPack();
+    if (!pk) return toast("Select a pack first.", "warn");
+
+    const id = uuid();
+    const t = nowIso();
+    const pr = {
+      id,
+      title: "New Prompt",
+      body: "Write your prompt here.\n\nTip: use variables like {{topic}} and {{tone}}.\n",
+      notes: "",
+      tags: [],
+      versions: [{
+        id: uuid(),
+        timestamp: t,
+        body: "Write your prompt here.\n\nTip: use variables like {{topic}} and {{tone}}.\n",
+        diff: "Initial commit"
+      }],
+      createdAt: t,
+      updatedAt: t,
+      intent: "",
+      isPinned: false
+    };
+
+    bundle.prompts.push(pr);
+    pk.promptIds.push(id);
+    selectedPromptId = id;
+    setEditor("prompt");
+    autosave();
+    renderAll();
+    toast("Prompt created.");
+  }
+
+  function movePromptInPack(packId, promptId, dir) {
+    const pk = bundle.packs.find(p => p.id === packId);
+    if (!pk) return;
+    const idx = pk.promptIds.indexOf(promptId);
+    if (idx < 0) return;
+    const ni = clamp(idx + dir, 0, pk.promptIds.length - 1);
+    if (ni === idx) return;
+    pk.promptIds.splice(idx, 1);
+    pk.promptIds.splice(ni, 0, promptId);
+    autosave();
+    renderAll();
+  }
+
+  function saveBundleMeta() {
+    bundle.meta.title = ($("#metaTitle").value || "").trim();
+    bundle.meta.version = ($("#metaVersion").value || "").trim();
+    bundle.meta.author = ($("#metaAuthor").value || "").trim();
+    bundle.meta.image = ($("#metaImage").value || "").trim();
+    bundle.meta.description = ($("#metaDescription").value || "").trim();
+    autosave();
+    renderAll();
+    toast("Bundle meta saved.");
+  }
+
+  function savePack() {
+    const pk = selectedPack();
+    if (!pk) return;
+    pk.name = ($("#packName").value || "").trim() || pk.name;
+    autosave();
+    renderAll();
+    toast("Pack saved.");
+  }
+
+  function savePrompt() {
+    const pr = selectedPrompt();
+    if (!pr) return;
+
+    const newTitle = ($("#promptTitle").value || "").trim() || pr.title;
+    const newBody = $("#promptBody").value ?? "";
+    const newNotes = $("#promptNotes").value ?? "";
+    const newIntent = ($("#promptIntent").value || "").trim();
+    const newPinned = ($("#promptPinned").value === "true");
+    const tagText = ($("#promptTags").value || "");
+    const newTags = tagText.split(",").map(x=>x.trim()).filter(Boolean);
+
+    // detect body change => create version
+    const bodyChanged = (newBody !== lastBodyOnLoad);
+    pr.title = newTitle;
+    pr.body = newBody;
+    pr.notes = newNotes;
+    pr.intent = newIntent;
+    pr.isPinned = newPinned;
+    pr.tags = newTags;
+    pr.updatedAt = nowIso();
+
+    if (bodyChanged) {
+      const diff = computeDiffLabel(lastBodyOnLoad, newBody, lastVersionNote);
+      pr.versions = Array.isArray(pr.versions) ? pr.versions : [];
+      pr.versions.unshift({
+        id: uuid(),
+        timestamp: pr.updatedAt,
+        body: newBody,
+        diff
+      });
+      lastBodyOnLoad = newBody;
+      lastVersionNote = "";
+      toast("Prompt saved + version created.");
+    } else {
+      toast("Prompt saved.");
+    }
+
+    autosave();
+    renderAll();
+  }
+
+  function computeDiffLabel(oldBody, newBody, note) {
+    if (note && note.trim()) return note.trim();
+    const delta = (newBody?.length||0) - (oldBody?.length||0);
+    const sign = delta >= 0 ? "+" : "";
+    return `${sign}${delta} chars`;
+  }
+
+  // ========= Import / Export =========
+  function importFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || "");
+      const p = safeJsonParse(text);
+      if (!p.ok) {
+        toast("Import failed: invalid JSON.", "danger");
+        return;
+      }
+      bundle = normalizeBundleShape(p.value);
+      selectedPackId = bundle.packs[0]?.id ?? null;
+      selectedPromptId = null;
+      setEditor("empty");
+      autosave();
+      renderAll();
+      toast("Imported .pvb successfully.");
+    };
+    reader.readAsText(file);
+  }
+
+  function exportPvb() {
+    bundle.exported_at = nowIso();
+    // Keep consistent ordering of keys by just JSON.stringify-ing the object;
+    // browsers typically preserve insertion order, but correctness doesn't rely on it.
+    const json = JSON.stringify(bundle, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const a = document.createElement("a");
+    const safeName = (bundle.meta.title || "prompt-bundle").replace(/[^\w\-]+/g, "_").slice(0,80);
+    a.href = URL.createObjectURL(blob);
+    a.download = `${safeName}.pvb`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Exported .pvb.");
+  }
+
+  async function exportSelectedPromptJson() {
+    const pr = selectedPrompt();
+    if (!pr) return toast("Select a prompt first.", "warn");
+    const json = JSON.stringify(pr, null, 2);
+    await copyText(json);
+    toast("Copied selected prompt JSON to clipboard.");
+  }
+
+  
+
+  // ========= index.json builder =========
+  function downloadTextFile(filename, text, mime="application/octet-stream") {
+    const blob = new Blob([text], { type: mime });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function buildIndexObjectFromPaths(folderName, relPaths) {
+    // relPaths are paths *within* the selected folder, using "/" separators.
+    const base = String(folderName || "").trim();
+    const prefix = base ? `./${base}/` : "./";
+    const urls = relPaths
+      .filter(Boolean)
+      .map(p => p.replaceAll("\\\\", "/").replace(/^\/+/, ""))
+      .sort((a,b)=>a.localeCompare(b))
+      .map(p => ({ url: prefix + p }));
+    return { packs: urls };
+  }
+
+  async function scanDirForPvb(dirHandle, relPrefix="", out=[]) {
+    // Recursively scans dirHandle for .pvb files.
+    for await (const entry of dirHandle.values()) {
+      if (entry.kind === "file") {
+        const name = entry.name || "";
+        if (name.toLowerCase().endsWith(".pvb")) out.push(relPrefix + name);
+      } else if (entry.kind === "directory") {
+        await scanDirForPvb(entry, relPrefix + (entry.name || "") + "/", out);
+      }
+    }
+    return out;
+  }
+
+  async function buildIndexJsonFromFolder() {
+    // Preferred: File System Access API (Chromium). Fallback: <input webkitdirectory>.
+    if ("showDirectoryPicker" in window) {
+      try {
+        const dir = await window.showDirectoryPicker();
+        const rel = await scanDirForPvb(dir);
+        if (rel.length === 0) {
+          toast("No .pvb files found in that folder.", "warn");
+          return;
+        }
+        const obj = buildIndexObjectFromPaths(dir.name || "packs", rel);
+        const json = JSON.stringify(obj, null, 2);
+        downloadTextFile("index.json", json, "application/json");
+        toast(`Built index.json (${rel.length} pack(s)).`);
+      } catch (e) {
+        // user cancelled
+        toast("Folder selection cancelled.", "warn");
+      }
+      return;
+    }
+
+    // Fallback path: trigger directory input
+    $("#dirInput").click();
+  }
+
+// ========= Validation =========
+  function validateBundle() {
+    const lines = [];
+    const pmap = indexPrompts();
+
+    // duplicates
+    const promptIds = bundle.prompts.map(p=>p.id);
+    const dupPromptIds = findDuplicates(promptIds);
+    if (dupPromptIds.length) lines.push(`⚠️ Duplicate prompt IDs: ${dupPromptIds.join(", ")}`);
+
+    const packIds = bundle.packs.map(p=>p.id);
+    const dupPackIds = findDuplicates(packIds);
+    if (dupPackIds.length) lines.push(`⚠️ Duplicate pack IDs: ${dupPackIds.join(", ")}`);
+
+    // missing prompt refs
+    let missingRefs = [];
+    for (const pk of bundle.packs) {
+      for (const id of (pk.promptIds||[])) {
+        if (!pmap.has(id)) missingRefs.push(`${pk.name}: ${id}`);
+      }
+    }
+    if (missingRefs.length) {
+      lines.push(`❌ Missing prompt objects referenced by packs (${missingRefs.length}):`);
+      missingRefs.slice(0,10).forEach(x=>lines.push("  • " + x));
+      if (missingRefs.length > 10) lines.push(`  …and ${missingRefs.length - 10} more`);
+    }
+
+    // orphan prompts (not referenced)
+    const refs = new Set(bundle.packs.flatMap(pk => pk.promptIds || []));
+    const orphans = bundle.prompts.filter(p => !refs.has(p.id)).map(p => p.id);
+    if (orphans.length) {
+      lines.push(`ℹ️ Orphan prompts not in any pack (${orphans.length}). (They’ll be exported but unreachable in pack UIs.)`);
+    }
+
+    // versions sanity
+    let badVersions = 0;
+    for (const pr of bundle.prompts) {
+      if (!Array.isArray(pr.versions) || pr.versions.length === 0) badVersions++;
+    }
+    if (badVersions) lines.push(`⚠️ Prompts missing versions: ${badVersions}`);
+
+    if (!lines.length) lines.push("✅ Looks good. No issues found.");
+
+    $("#validateOut").textContent = lines.join("\n");
+    toast("Validation complete.");
+  }
+
+  function findDuplicates(arr) {
+    const seen = new Set();
+    const d = new Set();
+    for (const x of arr) {
+      if (seen.has(x)) d.add(x);
+      seen.add(x);
+    }
+    return [...d];
+  }
+
+  // ========= Utilities =========
+  function normalizeTags() {
+    for (const pr of bundle.prompts) {
+      const clean = (pr.tags||[])
+        .map(t => String(t||"").trim())
+        .filter(Boolean);
+      pr.tags = [...new Set(clean)];
+    }
+    autosave();
+    renderAll();
+    toast("Tags normalized.");
+  }
+
+  function sortPromptsByTitleInPack() {
+    const pk = selectedPack();
+    if (!pk) return toast("Select a pack first.", "warn");
+    const pmap = indexPrompts();
+    const ids = pk.promptIds.filter(id => pmap.has(id));
+    ids.sort((a,b) => titleFromPrompt(pmap.get(a)).localeCompare(titleFromPrompt(pmap.get(b))));
+    pk.promptIds = ids;
+    autosave();
+    renderAll();
+    toast("Sorted prompts by title.");
+  }
+
+  function dedupePromptIdsInPack() {
+    const pk = selectedPack();
+    if (!pk) return toast("Select a pack first.", "warn");
+    const seen = new Set();
+    pk.promptIds = (pk.promptIds||[]).filter(id => {
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+    autosave();
+    renderAll();
+    toast("Deduplicated prompt IDs in pack.");
+  }
+
+  function moveSelectedPromptToAnotherPack() {
+    const pr = selectedPrompt();
+    if (!pr) return toast("Select a prompt to move (open it first).", "warn");
+
+    const current = selectedPack();
+    if (!current) return toast("Select a pack first.", "warn");
+
+    const choices = bundle.packs.filter(p => p.id !== current.id);
+    if (choices.length === 0) return toast("You only have one pack.", "warn");
+
+    const nameList = choices.map((p,i)=>`${i+1}: ${p.name}`).join("\n");
+    const input = prompt(`Move prompt to which pack?\n${nameList}\n\nEnter a number:`);
+    if (!input) return;
+    const idx = Number(input) - 1;
+    if (!Number.isFinite(idx) || idx < 0 || idx >= choices.length) return toast("Invalid selection.", "warn");
+
+    const target = choices[idx];
+    // remove from all packs, add to target
+    for (const pk of bundle.packs) pk.promptIds = pk.promptIds.filter(id => id !== pr.id);
+    target.promptIds.push(pr.id);
+
+    selectedPackId = target.id;
+    setEditor("pack");
+    autosave();
+    renderAll();
+    toast("Moved prompt to pack.");
+  }
+
+  // ========= Clipboard / HTML =========
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  // ========= Event wiring =========
+  $("#btnImport").onclick = () => $("#fileInput").click();
+  $("#fileInput").addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) importFile(f);
+    e.target.value = "";
+  });
+
+  
+  $("#dirInput").addEventListener("change", (e) => {
+    const files = (e.target.files ? [...e.target.files] : []);
+    // webkitdirectory provides webkitRelativePath including the selected folder name
+    const pvbs = files.filter(f => (f.name || "").toLowerCase().endsWith(".pvb"));
+    if (pvbs.length === 0) {
+      toast("No .pvb files found in that folder.", "warn");
+      e.target.value = "";
+      return;
+    }
+
+    const firstPath = pvbs[0].webkitRelativePath || "";
+    const folderName = firstPath.split("/")[0] || "packs";
+
+    const relPaths = pvbs.map(f => {
+      const p = f.webkitRelativePath || f.name || "";
+      // strip "folderName/" prefix if present
+      return p.startsWith(folderName + "/") ? p.slice(folderName.length + 1) : p;
+    });
+
+    const obj = buildIndexObjectFromPaths(folderName, relPaths);
+    const json = JSON.stringify(obj, null, 2);
+    downloadTextFile("index.json", json, "application/json");
+    toast(`Built index.json (${pvbs.length} pack(s)).`);
+    e.target.value = "";
+  });
+
+$("#btnExport").onclick = exportPvb;
+  
+  $("#btnBuildIndex").onclick = buildIndexJsonFromFolder;
+$("#btnNewBundle").onclick = () => {
+    if (!confirm("Create a new empty bundle? (Unsaved changes will be lost unless exported.)")) return;
+    bundle = normalizeBundleShape({
+      bundle_version: "1.0.0",
+      meta: { title: "New Bundle", version: "1.0.0", description: "", author: "", image: "" },
+      exported_at: nowIso(),
+      packs: [{ id: uuid(), name: "New Pack", promptIds: [] }],
+      prompts: []
+    });
+    selectedPackId = bundle.packs[0].id;
+    selectedPromptId = null;
+    setEditor("empty");
+    autosave();
+    renderAll();
+    toast("New bundle created.");
+  };
+
+  $("#btnLoadAutosave").onclick = loadAutosave;
+  $("#btnClearAutosave").onclick = clearAutosave;
+
+  $("#btnAddPack").onclick = addPack;
+  $("#btnAddPrompt").onclick = addPrompt;
+
+  $("#btnDelete").onclick = deleteSelected;
+  $("#btnDuplicate").onclick = duplicateSelected;
+
+  $("#btnOpenBundleMeta").onclick = () => {
+    selectedPromptId = null;
+    setEditor("bundle");
+    renderAll();
+  };
+
+  $("#btnSaveBundle").onclick = saveBundleMeta;
+  $("#btnSavePack").onclick = savePack;
+  $("#btnSavePrompt").onclick = savePrompt;
+
+  $("#btnValidate").onclick = validateBundle;
+
+  $("#btnNormalizeTags").onclick = normalizeTags;
+  $("#btnSortPromptsByTitle").onclick = sortPromptsByTitleInPack;
+  $("#btnDeduplicatePrompts").onclick = dedupePromptIdsInPack;
+  $("#btnExportSelectedPrompt").onclick = exportSelectedPromptJson;
+
+  $("#btnMovePromptToPack").onclick = moveSelectedPromptToAnotherPack;
+
+  $("#searchBox").addEventListener("input", () => renderPromptList());
+
+  $("#btnCopyId").onclick = async () => {
+    const pr = selectedPrompt();
+    if (!pr) return;
+    await copyText(pr.id);
+    toast("Copied prompt ID.");
+  };
+
+  $("#promptBody").addEventListener("input", (e) => {
+    renderVars(e.target.value || "");
+  });
+
+  $("#btnInsertVar").onclick = async () => {
+    const name = prompt("Variable name (no braces), e.g. topic:");
+    if (!name) return;
+    const v = name.trim();
+    if (!v) return;
+    const ta = $("#promptBody");
+    const insert = `{{${v}}}`;
+    const start = ta.selectionStart ?? ta.value.length;
+    const end = ta.selectionEnd ?? ta.value.length;
+    const before = ta.value.slice(0, start);
+    const after = ta.value.slice(end);
+    ta.value = before + insert + after;
+    ta.selectionStart = ta.selectionEnd = start + insert.length;
+    ta.focus();
+    renderVars(ta.value);
+    toast("Inserted variable.");
+  };
+
+  $("#btnAddVersionNote").onclick = () => {
+    const note = prompt("Optional version note (will be used on next save if body changed):", lastVersionNote || "");
+    if (note === null) return;
+    lastVersionNote = String(note || "").trim();
+    toast(lastVersionNote ? "Version note set." : "Version note cleared.");
+  };
+
+  $("#btnHelp").onclick = () => {
+    alert(
+`Tips:
+• Import your .pvb, edit packs & prompts, then Export.
+• Saving a prompt creates a new version IF the body changed.
+• Variables are placeholders like {{topic}}.
+Keyboard:
+• Ctrl+S save current editor
+• Ctrl+E focus search
+• Del delete selected prompt/pack
+• Ctrl+D duplicate selected
+`);
+  };
+
+  // Drag & drop import
+  const dz = $("#dropzone");
+  dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("dragover"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+  dz.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dz.classList.remove("dragover");
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) importFile(f);
+  });
+
+  // Keyboard shortcuts
+  window.addEventListener("keydown", (e) => {
+    const isMac = navigator.platform.toUpperCase().includes("MAC");
+    const ctrl = isMac ? e.metaKey : e.ctrlKey;
+
+    if (ctrl && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      if (editorMode === "bundle") saveBundleMeta();
+      else if (editorMode === "pack") savePack();
+      else if (editorMode === "prompt") savePrompt();
+      else toast("Nothing selected to save.", "warn");
+    }
+
+    if (ctrl && e.key.toLowerCase() === "e") {
+      e.preventDefault();
+      $("#searchBox").focus();
+    }
+
+    if (ctrl && e.key.toLowerCase() === "d") {
+      e.preventDefault();
+      duplicateSelected();
+    }
+
+    if (e.key === "Delete" || e.key === "Backspace") {
+      // Avoid deleting while typing in inputs/textareas
+      const tag = (document.activeElement?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea") return;
+      if (editorMode === "pack" || editorMode === "prompt") {
+        e.preventDefault();
+        deleteSelected();
+      }
+    }
+  });
+
+  // First run: try autosave load if present
+  const existing = localStorage.getItem(AUTOSAVE_KEY);
+  if (existing) {
+    const p = safeJsonParse(existing);
+    if (p.ok) {
+      bundle = normalizeBundleShape(p.value);
+      selectedPackId = bundle.packs[0]?.id ?? null;
+      setEditor("empty");
+      toast("Loaded autosave from previous session.");
+    }
+  }
+
+  // ========= Init =========
+  renderAll();
+
+})();
+</script>
+</body>
+</html>
