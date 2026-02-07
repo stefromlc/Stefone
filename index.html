@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="site-root" content="./" />
+  <title>stefone.com | Vibe Coding</title>
+  <meta name="description" content="Stefone — vibe coding projects, apps, and experiments." />
+<link rel="icon" href="/favicon.png" type="image/png">
+
+  
+  <!-- Keep your original CSS link -->
+  <link rel="stylesheet" href="assets/styles.css" />
+
+  <style>
+    /* --- MODERN THEME OVERRIDES --- */
+    :root {
+      --bg-dark: #050505; /* Deep black/gray */
+      --glass-surface: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-highlight: rgba(255, 255, 255, 0.15);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.4);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --radius: 20px;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding-top: 100px;
+      min-height: 100vh;
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    /* --- FIXED BACKGROUND LAYERS (Fixes the hard line/scrolling issue) --- */
+    .fixed-background {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -2;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #050505 60%);
+    }
+
+    .grid-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+      pointer-events: none;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+      -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+    }
+
+    /* Animated Orbs */
+    .orb-container {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.5;
+      animation: float-orb 25s infinite ease-in-out;
+      transform: translate3d(0, 0, 0); /* HW accel */
+    }
+
+    .orb-1 {
+      top: -10%; left: -10%; width: 60vw; height: 60vw;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      bottom: -10%; right: -20%; width: 50vw; height: 50vw;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+      animation-delay: -8s;
+    }
+
+    @keyframes float-orb {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(20px, -20px) scale(1.05); }
+    }
+
+    a { text-decoration: none; color: inherit; transition: all 0.2s ease; }
+    
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 20px; left: 0; right: 0;
+      z-index: 100;
+      pointer-events: none; /* Let clicks pass through around the nav */
+    }
+
+    .nav-pill {
+      pointer-events: auto;
+      background: rgba(15, 15, 20, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      padding: 12px 24px;
+      border-radius: 100px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+    
+    .navlinks { display: flex; gap: 24px; font-size: 0.9rem; font-weight: 500; }
+    .nav-item { color: var(--text-muted); transition: color 0.2s; }
+    .nav-item:hover { color: var(--text-main); }
+
+    /* Hero Section */
+    .hero { padding: 80px 0 100px; }
+
+    .grid-hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    @media (max-width: 800px) {
+      .grid-hero { grid-template-columns: 1fr; gap: 40px; }
+      .nav-pill { margin: 0 20px; }
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 32px;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+    }
+
+    .status-dot {
+      width: 6px; height: 6px; background: #60a5fa; border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.7);
+      animation: pulse-blue 2s infinite;
+    }
+
+    @keyframes pulse-blue {
+      0% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(96, 165, 250, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0); }
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      line-height: 1;
+      margin: 0 0 24px 0;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+      background: linear-gradient(to bottom right, #fff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sub {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      background: var(--text-main);
+      color: #000;
+      transition: all 0.2s;
+      box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    }
+    .btn-primary:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 4px 25px rgba(255,255,255,0.25); 
+    }
+
+    /* Stack Card */
+    .stack-card {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 30px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      display: block;
+      font-weight: 600;
+    }
+
+    .tool-grid {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 30px;
+      padding-bottom: 30px; border-bottom: 1px solid var(--glass-border);
+    }
+
+    .tool-icon {
+      width: 50px; height: 50px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tool-icon:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--text-muted);
+      transform: translateY(-4px);
+    }
+    .tool-icon svg { width: 24px; height: 24px; opacity: 0.8; }
+    .tool-icon:hover svg { opacity: 1; }
+
+    .link-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      border-radius: 10px;
+      transition: 0.2s;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+    .link-row:hover { background: var(--glass-surface); }
+    .link-row span { color: var(--text-muted); }
+    .link-row:hover span { color: var(--text-main); }
+
+    /* Featured Projects */
+    .section-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 30px;
+    }
+    .section-head h2 { font-size: 2rem; margin: 0; letter-spacing: -0.02em; }
+    
+    #featuredRoot {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 30px;
+      margin-bottom: 80px;
+    }
+
+    /* Generic Card Styles for Projects */
+    #featuredRoot > div {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #featuredRoot > div:hover {
+      border-color: var(--glass-highlight);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px -20px rgba(0,0,0,0.7);
+      background: rgba(255,255,255,0.04);
+    }
+    
+    /* Layout Logic for Card Content */
+    #featuredRoot img {
+      width: 100%; border-radius: 12px; 
+      margin-bottom: 12px; /* Decreased from 20px to reduce gap */
+      background: #111; aspect-ratio: 16/9; object-fit: cover;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Titles inside cards (Assuming h3 or strong from generated JS) */
+    #featuredRoot h3, #featuredRoot strong {
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    /* Description text */
+    #featuredRoot p {
+      margin-bottom: 24px; /* Increased to push tags down */
+      color: var(--text-muted);
+      flex-grow: 1; /* Pushes the bottom elements (tags) down */
+    }
+
+    /* Story Section */
+    .story-card {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Subtle gradient spotlight for story */
+    .story-card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.02));
+      pointer-events: none;
+    }
+
+    .story-card h2 { margin-top: 0; font-size: 1.8rem; }
+    .story-card p { 
+      color: #cbd5e1; max-width: 700px; margin-bottom: 20px; font-size: 1.05rem; 
+    }
+    .story-card strong { color: #fff; font-weight: 600; }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--glass-border);
+      padding: 60px 0;
+      margin-top: 100px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FIXED BACKGROUNDS -->
+  <div class="fixed-background"></div>
+  <div class="grid-overlay"></div>
+  <div class="orb-container">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <header>
+    <div class="nav-pill">
+      <a class="brand" href="./">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        Stefone
+      </a>
+
+      <nav class="navlinks">
+        <a class="nav-item" href="./projects/">Projects</a>
+        <a class="nav-item" href="https://github.com/stefromlc/" target="_blank">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="grid-hero">
+          
+          <!-- Left: Intro -->
+          <div>
+            <div class="status-badge">
+              <span class="status-dot"></span>
+              Working on: MusicMap
+            </div>
+
+            <h1>I turn random ideas into real apps.</h1>
+            <p class="sub">
+              Hi, I’m Stefone. I build games, tools, and experiments using AI. No overthinking, no heavy code—just vibes and shipping ideas.
+            </p>
+
+            <div class="actions">
+              <a class="btn-primary" href="./projects/">Browse Projects</a>
+            </div>
+          </div>
+
+          <!-- Right: Stack & Connect -->
+          <div class="stack-card">
+            <span class="section-label">My Vibe Stack</span>
+            <div class="tool-grid">
+               <!-- OpenAI -->
+              <div class="tool-icon" title="OpenAI / ChatGPT">
+                 <svg viewBox="0 0 24 24" role="img"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a1.54 1.54 0 0 1 .7279 1.356v5.8217a4.4627 4.4627 0 0 1-5.1844 2.9513zm-3.5014-1.6363a4.4674 4.4674 0 0 1-1.248-2.414l1.4083.8096a.7924.7924 0 0 0 .7924 0l5.835-3.3752v2.3336a1.54 1.54 0 0 1-.7671 1.3391l-6.0206 3.4727v-.0804a4.466 4.466 0 0 1 0-.0854zm-4.2233-5.2662a4.4717 4.4717 0 0 1-.2208-3.0488l1.3963.8116a.7953.7953 0 0 0 .7924 0l5.835-3.3728v2.3312a1.54 1.54 0 0 1-.772 1.3391l-6.0157 3.4751a4.521 4.521 0 0 1-1.0152-1.5354zm1.1923-6.9158a4.457 4.457 0 0 1 2.8716-1.0408l-.1419.0804-4.7735 2.7508a.7924.7924 0 0 0-.3927.6837v6.7417l-2.02-1.1686a1.54 1.54 0 0 1-.7279-1.356v-5.8217a4.4674 4.4674 0 0 1 5.1844-2.8695zM15.7725 3.23a4.4674 4.4674 0 0 1 1.2528 2.414l-1.4132-.8096a.7924.7924 0 0 0-.7924 0l-5.835 3.3752V5.8759a1.54 1.54 0 0 1 .7671-1.3391l6.0206-3.4727v.0804a4.466 4.466 0 0 1 0 .0854zm4.2233 5.2662a4.4717 4.4717 0 0 1 .2208 3.0488l-1.3963-.8116a.7953.7953 0 0 0-.7924 0l-5.835 3.3728v-2.3312a1.54 1.54 0 0 1 .772-1.3391l6.0157-3.4751a4.521 4.521 0 0 1 1.0152 1.5354z" fill="white"/></svg>
+              </div>
+              <!-- Gemini -->
+              <div class="tool-icon" title="Google Gemini">
+                <svg viewBox="0 0 24 24" role="img"><path d="M12 24c0-6.627-5.373-12-12-12 6.627 0 12-5.373 12-12 0 6.627 5.373 12 12 12-6.627 0-12 5.373-12 12z" fill="white"/></svg>
+              </div>
+              <!-- Python -->
+              <div class="tool-icon" title="Python">
+                <svg viewBox="0 0 24 24" role="img"><path d="M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-2.9l-.05-.51-.13-.44-.2-.37-.26-.3-.31-.24-.34-.18-.35-.13-.34-.09-.31-.06-.25-.03-.16-.01H6.1l-.25.03-.32.08-.34.13-.34.2-.31.25-.27.31-.2.38-.15.46-.1.55-.03.64v1.72l.01.21.04.2.06.18.09.16.1.13.13.11.14.08.15.06.16.03.14.01h3.38l.14.01.13.04.12.06.1.09.09.12.06.14.04.16.01.16v1.31l-.01.16-.04.16-.06.14-.09.12-.1.09-.12.06-.13.04-.14.01H2.4l-.15-.01-.15-.05-.14-.08-.12-.11-.1-.13-.08-.15-.06-.17-.03-.18V8.26l.03-.66.09-.64.15-.6.23-.55.29-.49.36-.42.42-.35.47-.28.52-.2.57-.12.6-.06.62-.02h6.63l.63.03.6.09.57.16.53.23.49.31.43.39.38.46.31.54.24.6.17.67.08.72.03.49v.15h1.76l.02-.03.04-.13.06-.21.09-.3.12-.37.16-.44.21-.49.26-.54.32-.57.38-.58.44-.56.5-.53.57-.47.64-.39.71-.28.77-.17.84-.06.91.05zm-5.46 4.47c-.05-.05-.12-.09-.19-.11-.08-.02-.15-.02-.22-.01-.08.01-.15.04-.2.08-.05.05-.09.12-.1.19-.02.08-.01.15.01.22.02.08.06.14.1.19.05.05.12.09.19.11.08.02.15.02.22.01.08-.02.14-.05.19-.09.05-.05.09-.12.11-.19.02-.07.02-.15.01-.22-.02-.07-.06-.13-.11-.18zm-2.7 13.91l.24.49.32.44.38.38.44.31.49.23.54.15.58.07.61.02h5.18l.19.01.17.03.17.06.15.08.13.1.11.12.09.13.06.15.04.16.01.16v1.31l-.01.16-.04.15-.06.15-.09.12-.11.1-.13.08-.15.06-.17.03-.19.01H9.86l-.14-.01-.16-.04-.16-.06-.15-.09-.13-.12-.1-.14-.07-.15-.05-.17-.02-.18v-1.72l-.02-.63-.09-.56-.15-.46-.2-.37-.27-.31-.31-.25-.34-.2-.34-.13-.32-.08-.25-.03H3.63l-.16.01-.25.03-.31.06-.34.09-.35.13-.34.18-.31.24-.26.3-.2.37-.13.44-.05.51v2.9l.05.24.1.24.16.22.21.19.26.15.3.1.34.05h.06l.32.05.36.1.4.16.42.24.42.33.4.44.36.57.32.71.24.87.16 1.04.06 1.22-.05 1.23-.14 1.05-.21.88-.28.73-.32.59-.35.46-.36.36-.36.26-.35.18-.32.12-.28.07-.21.03H7.66v-3.06l-.02-.21-.04-.27-.07-.32-.1-.35-.15-.37-.2-.36-.27-.35-.33-.32-.41-.27-.5-.22-.59-.14-.69-.05H2.3l-.21-.02-.26-.04-.3-.07-.33-.1-.35-.14-.35-.19-.33-.25-.3-.31-.26-.38-.21-.46-.13-.55-.05-.63v-8.5l-.01-.13.02-.2.04-.26.1-.3.16-.33.25-.34.34-.34.45-.32.59-.3.73-.26.9-.2H14.25v-.15l.03-.49.08-.72.17-.67.24-.6.31-.54.38-.46.43-.39.49-.31.53-.23.57-.16.6-.09.63-.03zM15.22 20.35c-.05.05-.09.12-.11.19-.02.07-.02.15-.01.22.02.07.06.13.11.18.05.05.12.09.19.11.08.02.15.02.22.01.07-.02.14-.06.19-.1.05-.05.09-.11.11-.19.02-.07.01-.15-.01-.22-.02-.07-.05-.14-.1-.18-.04-.05-.11-.09-.18-.11-.08-.02-.15-.01-.22.01-.08.02-.14.05-.19.09z" fill="white"/></svg>
+              </div>
+              <!-- AWS -->
+              <div class="tool-icon" title="AWS">
+                <svg viewBox="0 0 24 24" role="img"><path d="M12.9 14.2c-1.1 1.6-2.9 2.5-4.8 2.5-4.2 0-6.7-3.2-6.7-7.2 0-3.6 2.5-6.8 6.5-6.8 2.4 0 4.1 1.2 5 2.5l-1.6 1.3c-.5-.9-1.6-1.7-3.3-1.7-2.3 0-4.1 2-4.1 4.7 0 2.8 1.6 4.9 4.3 4.9 1.1 0 2.3-.5 3-1.6l1.7 1.4zm6.6-8.7v10.8h-2.3v-1.8c-.8 1.3-2.3 2.1-3.8 2.1-2.8 0-4.5-2.2-4.5-5 0-2.5 1.7-4.9 4.8-4.9 1.4 0 2.6.5 3.5 1.6V5.5h2.3zm-2.3 7.5c0-1.8-1.2-3-2.9-3-1.7 0-2.8 1.2-2.8 3 0 1.9 1.1 3.2 2.9 3.2 1.7 0 2.8-1.4 2.8-3.2z" fill="white"/></svg>
+              </div>
+               <!-- Github -->
+              <div class="tool-icon" title="GitHub">
+                 <svg viewBox="0 0 24 24" role="img"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" fill="white"/></svg>
+              </div>
+            </div>
+
+            <div class="link-list">
+              <a href="https://x.com/" target="_blank" class="link-row">
+                <span>Follow on X</span>
+                <span class="link-arrow">→</span>
+              </a>
+              <a href="https://github.com/your-username" target="_blank" class="link-row">
+                <span>GitHub</span>
+                <span class="link-arrow">→</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        
+        <div class="section-head">
+          <h2>Featured projects</h2>
+          <a class="btn-primary" style="padding: 10px 20px; font-size: 0.9rem;" href="./projects/">All Projects</a>
+        </div>
+
+        <!-- Logic preserved: Cards render here -->
+        <div id="featuredRoot"></div>
+
+        <!-- New About Section -->
+        <div id="about" class="story-card">
+          <h2 style="margin:0 0 20px; font-size:1.5rem; color: #fff;">The Story</h2>
+          
+          <p>
+            Hey, I’m Stefone. I’ve been using AI since 2023, and for about the past year I’ve been “vibe coding”—basically using AI to skip the traditional learning-to-code grind and build apps fast.
+          </p>
+          <p>
+            My workflow is pretty simple. I use <strong>ChatGPT</strong> to explore ideas and fine-tune prompts, then hand things off to <strong>Google Gemini</strong> to do the heavy lifting—building web apps, games, and little tools.
+          </p>
+          <p>
+            It all started with a basic photo app, then turned into experimenting with facial recognition. Somewhere along the way, I also learned an important lesson after accidentally burning through £20 of OpenAI tokens in 15 minutes. (Pro tip: always test before you spend 😅)
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="footer">
+      <div class="container">
+        <div>
+          <span>© <span id="year"></span> Stefone</span> — <span>Vibe Coding Experiments</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    window.StefoneSite.renderFeatured({ rootId: "featuredRoot", limit: 6 });
+  </script>
+</body>
+</html>

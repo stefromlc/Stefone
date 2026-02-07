@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SONAR: Tactical Naval Command</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" href="/favicon.png" type="image/png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #050505;
+            --color-panel: #0a0f14;
+            --color-primary: #00ff9d; /* Radar Green */
+            --color-secondary: #00ccff; /* Cyan */
+            --color-danger: #ff3333; /* Alert Red */
+            --color-dim: #1a2a26;
+            --grid-size: 40px;
+        }
+
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-primary);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden; /* App feel */
+            user-select: none;
+        }
+
+        /* CRT Effect Overlay */
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 50;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .crt::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 50;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.027906; }
+            5% { opacity: 0.034860; }
+            10% { opacity: 0.023028; }
+            15% { opacity: 0.08028; }
+            20% { opacity: 0.02816; }
+            25% { opacity: 0.04683; }
+            30% { opacity: 0.03417; }
+            35% { opacity: 0.03964; }
+            40% { opacity: 0.02535; }
+            45% { opacity: 0.04654; }
+            50% { opacity: 0.02863; }
+            55% { opacity: 0.02741; }
+            60% { opacity: 0.03953; }
+            65% { opacity: 0.04364; }
+            70% { opacity: 0.03698; }
+            75% { opacity: 0.02432; }
+            80% { opacity: 0.03348; }
+            85% { opacity: 0.02980; }
+            90% { opacity: 0.03157; }
+            95% { opacity: 0.04218; }
+            100% { opacity: 0.03906; }
+        }
+
+        /* Screen Shake FX */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .shake-fx {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* Grid Styling */
+        .battle-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 2px;
+            background-color: var(--color-dim);
+            border: 2px solid var(--color-primary);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.2);
+            position: relative;
+            transition: box-shadow 0.2s;
+        }
+
+        .battle-grid.damage-flash {
+            box-shadow: 0 0 50px var(--color-danger);
+            border-color: var(--color-danger);
+        }
+
+        .cell {
+            background-color: rgba(0, 20, 10, 0.8);
+            border: 1px solid rgba(0, 255, 157, 0.1);
+            cursor: crosshair;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cell:hover {
+            background-color: rgba(0, 255, 157, 0.2);
+        }
+
+        /* States */
+        .cell.ship { 
+            background-color: rgba(0, 255, 157, 0.2); /* Primary Green tint */
+            border: 1px solid var(--color-primary);
+            box-shadow: inset 0 0 10px rgba(0, 255, 157, 0.2);
+            z-index: 1;
+        }
+
+        .cell.hit { background-color: rgba(255, 51, 51, 0.2); }
+        .cell.miss { background-color: rgba(255, 255, 255, 0.05); }
+        
+        .cell.sunk-ship {
+            background-color: rgba(255, 51, 51, 0.5) !important;
+            border: 1px dashed var(--color-danger) !important;
+            box-shadow: 0 0 15px var(--color-danger) !important;
+            z-index: 10;
+        }
+
+        /* Pegs */
+        .peg {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            z-index: 20;
+            box-shadow: 0 0 8px currentColor;
+        }
+        
+        .peg.hit { 
+            background-color: var(--color-danger); 
+            color: var(--color-danger); 
+            animation: pulse-red 1s infinite; 
+        }
+        
+        .peg.miss { 
+            background-color: white; 
+            color: white; 
+            opacity: 0.6; 
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Radar Scan Animation */
+        .radar-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--color-primary));
+            transform-origin: left center;
+            animation: radar-spin 4s linear infinite;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        @keyframes radar-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Log Styling */
+        .log-panel::-webkit-scrollbar { width: 6px; }
+        .log-panel::-webkit-scrollbar-track { background: #000; }
+        .log-panel::-webkit-scrollbar-thumb { background: var(--color-primary); }
+
+        .log-entry { margin-bottom: 4px; padding-left: 8px; border-left: 2px solid transparent; font-size: 0.75rem; line-height: 1.4; }
+        .log-system { color: var(--color-primary); border-left-color: var(--color-primary); opacity: 0.9; }
+        .log-player { color: var(--color-secondary); border-left-color: var(--color-secondary); background: linear-gradient(90deg, rgba(0, 204, 255, 0.1), transparent); }
+        .log-enemy { color: var(--color-danger); border-left-color: var(--color-danger); background: linear-gradient(90deg, rgba(255, 51, 51, 0.1), transparent); }
+
+        /* Modals */
+        .modal-backdrop { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
+
+        /* Toast */
+        .toast-overlay {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            text-align: center;
+            width: 100%;
+            background: rgba(0,0,0,0.8);
+            padding: 2rem 0;
+            border-top: 2px solid;
+            border-bottom: 2px solid;
+            backdrop-filter: blur(2px);
+            letter-spacing: 0.1em;
+        }
+        .toast-visible { animation: flash-toast 3.5s forwards; }
+        @keyframes flash-toast {
+            0% { opacity: 0; transform: translate(-50%, -45%) scale(0.9); }
+            10% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -55%) scale(1.05); }
+        }
+
+        /* Typography */
+        h1, h2, h3 { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+        .hidden-visually { display: none; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col crt">
+
+    <!-- Header -->
+    <header class="h-16 border-b border-primary/30 flex items-center justify-between px-6 bg-black/80 z-40">
+        <div class="flex items-center gap-4">
+<a
+  href="/projects/"
+  class="flex items-center gap-2 px-4 py-2 rounded-full border border-primary/40 bg-black/60 text-primary hover:bg-primary hover:text-black transition uppercase text-sm"
+  title="Back to Projects"
+>
+  <span aria-hidden="true">←</span>
+  Back to Projects
+</a>
+
+            <div class="w-8 h-8 border-2 border-primary rounded-full flex items-center justify-center animate-pulse">
+                <div class="w-4 h-4 bg-primary rounded-full"></div>
+            </div>
+            <h1 class="text-2xl text-primary font-bold shadow-glow">SONAR <span class="text-sm font-normal text-secondary opacity-70">TACTICAL COMMAND v2.7</span></h1>
+        </div>
+        
+        <div class="flex gap-4">
+            <button id="btn-settings" class="px-4 py-1 border border-primary/50 text-primary hover:bg-primary hover:text-black transition uppercase text-sm">Sys.Config</button>
+            <button id="btn-reset" class="px-4 py-1 border border-danger/50 text-danger hover:bg-danger hover:text-black transition uppercase text-sm">Abort</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-interface" class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        
+        <!-- Toast Notification Area -->
+        <div id="toast-msg" class="toast-overlay"></div>
+
+        <!-- Left: Player Status & Fleet -->
+        <section class="flex-1 flex flex-col p-4 border-r border-primary/20 bg-black/40 relative">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-secondary text-lg">Friendly Waters [SECURE]</h2>
+                <div class="text-xs text-primary/60">GRID: 8x8 // LAT-LONG</div>
+            </div>
+            
+            <div class="flex-1 flex justify-center items-center relative">
+                <!-- Labels -->
+                <div class="absolute left-2 top-0 bottom-0 flex flex-col justify-around text-xs text-primary/40 h-full py-4">
+                    <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span>
+                </div>
+                <div class="absolute top-2 left-0 right-0 flex justify-around text-xs text-primary/40 w-full px-4 ml-6" style="width: calc(100% - 2.5rem);">
+                    <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                </div>
+
+                <div id="player-grid" class="battle-grid w-[300px] h-[300px] md:w-[400px] md:h-[400px]"></div>
+            </div>
+
+            <!-- Fleet Status -->
+            <div class="mt-4 p-2 border-t border-dashed border-primary/30">
+                <h3 class="text-xs text-secondary mb-2">Fleet Status</h3>
+                <div id="fleet-status" class="grid grid-cols-2 gap-2 text-xs"></div>
+            </div>
+        </section>
+
+        <!-- Center: Tactical Log & Controls (Narrow Strip) -->
+        <section class="w-full md:w-64 bg-black/60 border-r border-primary/20 flex flex-col z-30">
+            <div class="p-2 border-b border-primary/30 bg-primary/10 text-center">
+                <span id="turn-indicator" class="text-xl font-bold text-primary animate-pulse">INITIATING...</span>
+            </div>
+
+            <!-- Log -->
+            <div id="game-log" class="flex-1 p-2 overflow-y-auto log-panel text-xs space-y-1 font-mono">
+                <div class="log-entry log-system">> SYSTEM BOOT SEQUENCE</div>
+                <div class="log-entry log-system">> AUDIO ENGINE: ONLINE</div>
+                <div class="log-entry log-system">> AWAITING FLEET DEPLOYMENT...</div>
+            </div>
+
+            <!-- Controls -->
+            <div id="setup-controls" class="p-4 border-t border-primary/30 flex flex-col gap-2">
+                <div class="text-xs text-center text-secondary mb-1">DEPLOYMENT MODE</div>
+                <button id="btn-rotate" class="w-full border border-secondary text-secondary hover:bg-secondary hover:text-black py-2 text-sm">ROTATE SHIP [R]</button>
+                <button id="btn-auto-deploy" class="w-full border border-primary text-primary hover:bg-primary hover:text-black py-2 text-sm">AUTO DEPLOY</button>
+                <button id="btn-start-combat" class="w-full bg-primary text-black font-bold py-2 text-sm mt-2 opacity-50 cursor-not-allowed" disabled>ENGAGE ENEMY</button>
+            </div>
+        </section>
+
+        <!-- Right: Enemy Radar -->
+        <section class="flex-1 flex flex-col p-4 bg-black/40 relative">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-danger text-lg">Target Vector [HOSTILE]</h2>
+                <div class="text-xs text-danger/60">SENSORS: ACTIVE</div>
+            </div>
+
+            <div class="flex-1 flex justify-center items-center relative">
+                 <!-- Radar Line Overlay -->
+                 <div class="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-20">
+                    <div class="w-[300px] h-[300px] md:w-[400px] md:h-[400px] rounded-full border border-danger/30 relative overflow-hidden">
+                        <div class="radar-line bg-danger"></div>
+                        <div class="absolute inset-0 border border-danger/10 rounded-full scale-75"></div>
+                        <div class="absolute inset-0 border border-danger/10 rounded-full scale-50"></div>
+                        <div class="absolute inset-0 border border-danger/10 rounded-full scale-25"></div>
+                    </div>
+                </div>
+
+                <!-- Labels -->
+                <div class="absolute left-2 top-0 bottom-0 flex flex-col justify-around text-xs text-danger/40 h-full py-4">
+                    <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span><span>I</span><span>J</span>
+                </div>
+                <div class="absolute top-2 left-0 right-0 flex justify-around text-xs text-danger/40 w-full px-4 ml-6" style="width: calc(100% - 2.5rem);">
+                    <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                </div>
+
+                <div id="enemy-grid" class="battle-grid w-[300px] h-[300px] md:w-[400px] md:h-[400px] border-danger/50 shadow-[0_0_15px_rgba(255,50,50,0.2)] z-10 relative"></div>
+            </div>
+
+             <!-- Enemy Status (Intel) -->
+             <div class="mt-4 p-2 border-t border-dashed border-danger/30">
+                <h3 class="text-xs text-danger mb-2">Enemy Intel</h3>
+                <div id="enemy-status" class="grid grid-cols-2 gap-2 text-xs"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 border border-primary p-6 w-[450px] shadow-[0_0_30px_rgba(0,255,157,0.3)]">
+            <h2 class="text-xl text-primary mb-4 border-b border-primary/30 pb-2">SYSTEM CONFIGURATION</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm text-secondary block mb-1">AI DIFFICULTY LEVEL</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button class="py-1 border border-primary/50 text-[10px] hover:bg-primary hover:text-black difficulty-btn" data-level="easy">ENSIGN<br>(Random)</button>
+                        <button class="py-1 border border-primary/50 text-[10px] hover:bg-primary hover:text-black difficulty-btn active" data-level="medium">LIEUTENANT<br>(Standard)</button>
+                        <button class="py-1 border border-primary/50 text-[10px] hover:bg-primary hover:text-black difficulty-btn" data-level="hard">CAPTAIN<br>(Hunter)</button>
+                        <button class="py-1 border border-primary/50 text-[10px] hover:bg-primary hover:text-black difficulty-btn" data-level="expert">ADMIRAL<br>(Predictive)</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-sm text-secondary block mb-1">AUDIO VOLUME</label>
+                    <input type="range" id="vol-control" min="0" max="100" value="50" class="w-full accent-primary h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button id="btn-close-settings" class="px-6 py-2 bg-primary text-black font-bold uppercase hover:bg-white transition">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="modal-gameover" class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 border-2 p-8 w-[500px] text-center transform transition-transform scale-100">
+            <h1 id="gameover-title" class="text-4xl font-bold mb-2">VICTORY</h1>
+            <p id="gameover-msg" class="text-primary/80 font-mono mb-6">ENEMY FLEET NEUTRALIZED</p>
+            
+            <div class="flex justify-center gap-4">
+                <button onclick="location.reload()" class="px-8 py-3 bg-primary text-black font-bold uppercase hover:bg-white hover:scale-105 transition shadow-[0_0_20px_rgba(0,255,157,0.5)]">Re-Initialize</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUDIO ENGINE (Web Audio API) ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.connect(this.ctx.destination);
+                this.masterGain.gain.value = 0.5;
+                this.enabled = true;
+            }
+
+            setVolume(val) {
+                // val 0 to 1
+                this.masterGain.gain.value = val;
+            }
+
+            playTone(freq, type, duration, startTime = 0) {
+                if (!this.enabled) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime + startTime);
+                
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime + startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + startTime + duration);
+
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(this.ctx.currentTime + startTime);
+                osc.stop(this.ctx.currentTime + startTime + duration);
+            }
+
+            playNoise(duration, filterFreq = 1000) {
+                if (!this.enabled) return;
+                const bufferSize = this.ctx.sampleRate * duration;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const gain = this.ctx.createGain();
+                
+                // Lowpass filter for explosion thud
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(filterFreq, this.ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + duration);
+
+                gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                noise.start();
+            }
+
+            sfxHover() { this.playTone(800, 'sine', 0.05); }
+            sfxClick() { this.playTone(1200, 'square', 0.05); }
+            sfxPlace() { this.playTone(400, 'triangle', 0.1); }
+            sfxError() { this.playTone(150, 'sawtooth', 0.3); }
+            
+            sfxMiss() { 
+                // Water splash sound simulation
+                this.playNoise(0.3, 800);
+                setTimeout(() => this.playTone(300, 'sine', 0.3), 0); 
+            }
+            
+            sfxHit() { 
+                // Hard explosion
+                this.playNoise(0.6, 2000); 
+                this.playTone(100, 'sawtooth', 0.4);
+                this.playTone(50, 'square', 0.5);
+            }
+            
+            sfxSunk() {
+                // Deep resonant explosion + alarm
+                this.playNoise(1.2, 1000);
+                setTimeout(() => this.playTone(600, 'square', 0.3, 0), 0);
+                setTimeout(() => this.playTone(500, 'square', 0.3, 0.2), 200);
+                setTimeout(() => this.playTone(400, 'square', 0.6, 0.4), 400);
+                setTimeout(() => this.playTone(300, 'sawtooth', 0.8, 0.6), 600);
+            }
+            
+            sfxPing() {
+                // High sonar ping
+                this.playTone(2000, 'sine', 0.5);
+            }
+
+            sfxWin() {
+                // Victory Fanfare
+                [523, 659, 783, 1046, 1318].forEach((freq, i) => {
+                    this.playTone(freq, 'triangle', 0.4, i * 0.15);
+                });
+            }
+            
+            sfxLose() {
+                // Sad trombone-ish
+                [400, 380, 360, 340].forEach((freq, i) => {
+                    this.playTone(freq, 'sawtooth', 0.5, i * 0.4);
+                });
+            }
+        }
+
+        // --- GAME LOGIC ---
+
+        const SHIPS = [
+            { name: "Carrier", length: 5, id: "cv" },
+            { name: "Battleship", length: 4, id: "bb" },
+            { name: "Destroyer", length: 3, id: "dd" },
+            { name: "Submarine", length: 3, id: "ss" },
+            { name: "Patrol Boat", length: 2, id: "pt" }
+        ];
+
+        class Game {
+            constructor() {
+                this.gridSize = 10;
+                this.state = 'SETUP'; // SETUP, PLAYER_TURN, CPU_TURN, GAMEOVER
+                this.sound = new SoundEngine();
+                this.difficulty = 'medium'; // easy, medium, hard, expert
+                
+                // Data structures
+                this.playerShips = []; // {id, hits: 0, length, coords: []}
+                this.cpuShips = [];
+                this.playerBoard = this.createEmptyBoard(); // 0: empty, 1: ship, 2: miss, 3: hit
+                this.cpuBoard = this.createEmptyBoard();
+                this.cpuShots = new Set(); // Strings "x,y"
+                this.playerShots = new Set();
+                
+                // Setup specific
+                this.setupShipIndex = 0;
+                this.isHorizontal = true;
+                this.hoverX = -1; // Track mouse for keyboard rotation
+                this.hoverY = -1;
+                
+                // AI Hard Mode Memory
+                this.aiStack = []; // For "Hunt" mode
+                
+                // Initialize UI
+                this.initUI();
+            }
+
+            createEmptyBoard() {
+                return Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(0));
+            }
+
+            initUI() {
+                this.renderGrid('player-grid', true);
+                this.renderGrid('enemy-grid', false);
+                this.updateLog("SYSTEM INITIALIZED. WELCOME, COMMANDER.", "system");
+                this.updateLog("MISSION: DEPLOY FLEET TO SECTOR.", "system");
+                this.updateFleetStatus();
+
+                // Listeners
+                document.getElementById('btn-rotate').addEventListener('click', () => {
+                    this.toggleRotation();
+                });
+
+                // Keyboard Input for Rotation
+                window.addEventListener('keydown', (e) => {
+                    if (this.state === 'SETUP' && e.key.toLowerCase() === 'r') {
+                        this.toggleRotation();
+                    }
+                });
+
+                document.getElementById('btn-auto-deploy').addEventListener('click', () => {
+                    this.sound.sfxClick();
+                    this.autoDeployPlayer();
+                });
+
+                document.getElementById('btn-start-combat').addEventListener('click', () => {
+                    if (this.playerShips.length === 5) {
+                        this.startGame();
+                    }
+                });
+                
+                document.getElementById('btn-reset').addEventListener('click', () => location.reload());
+
+                // Settings
+                const modal = document.getElementById('modal-settings');
+                document.getElementById('btn-settings').addEventListener('click', () => {
+                    modal.classList.remove('hidden');
+                    this.sound.sfxClick();
+                });
+                document.getElementById('btn-close-settings').addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                    this.sound.sfxClick();
+                });
+
+                document.getElementById('vol-control').addEventListener('input', (e) => {
+                    this.sound.setVolume(e.target.value / 100);
+                });
+
+                document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active', 'bg-primary', 'text-black'));
+                        e.target.classList.add('active', 'bg-primary', 'text-black');
+                        this.difficulty = e.target.dataset.level;
+                        this.updateLog(`DIFFICULTY SET TO: ${this.difficulty.toUpperCase()}`, "system");
+                        this.sound.sfxClick();
+                    });
+                });
+            }
+
+            toggleRotation() {
+                this.isHorizontal = !this.isHorizontal;
+                this.sound.sfxClick();
+                // Refresh preview if mouse is hovering
+                if (this.hoverX !== -1 && this.hoverY !== -1) {
+                    this.handleSetupHover(this.hoverX, this.hoverY);
+                }
+            }
+
+            renderGrid(elementId, isPlayer) {
+                const gridEl = document.getElementById(elementId);
+                gridEl.innerHTML = '';
+                
+                for (let y = 0; y < this.gridSize; y++) {
+                    for (let x = 0; x < this.gridSize; x++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.x = x;
+                        cell.dataset.y = y;
+                        cell.id = `${isPlayer ? 'p' : 'e'}-${x}-${y}`;
+                        
+                        // Event Listeners
+                        if (isPlayer) {
+                            cell.addEventListener('mouseover', () => {
+                                this.hoverX = x;
+                                this.hoverY = y;
+                                this.handleSetupHover(x, y);
+                            });
+                            cell.addEventListener('mouseleave', () => {
+                                this.hoverX = -1;
+                                this.hoverY = -1;
+                                // Clear preview logic handled by next hover or manual clear if needed
+                            });
+                            cell.addEventListener('click', () => this.handleSetupClick(x, y));
+                            cell.addEventListener('contextmenu', (e) => {
+                                e.preventDefault();
+                                this.toggleRotation();
+                            });
+                        } else {
+                            cell.addEventListener('click', () => this.handleAttack(x, y));
+                            cell.addEventListener('mouseover', () => {
+                                if(this.state === 'PLAYER_TURN' && !this.playerShots.has(`${x},${y}`)) this.sound.sfxHover();
+                            });
+                        }
+
+                        gridEl.appendChild(cell);
+                    }
+                }
+            }
+
+            // --- SETUP PHASE ---
+
+            handleSetupHover(x, y) {
+                if (this.state !== 'SETUP' || this.setupShipIndex >= SHIPS.length) return;
+                
+                // Clear previous previews
+                document.querySelectorAll('.player-preview').forEach(el => {
+                    el.style.backgroundColor = '';
+                    el.classList.remove('player-preview');
+                });
+
+                const ship = SHIPS[this.setupShipIndex];
+                const valid = this.isValidPlacement(this.playerBoard, x, y, ship.length, this.isHorizontal);
+
+                const coords = this.getCoords(x, y, ship.length, this.isHorizontal);
+                
+                coords.forEach(([cx, cy]) => {
+                    if (cx < this.gridSize && cy < this.gridSize) {
+                        const cell = document.getElementById(`p-${cx}-${cy}`);
+                        if (cell) {
+                            cell.style.backgroundColor = valid ? 'rgba(0, 255, 157, 0.5)' : 'rgba(255, 50, 50, 0.5)';
+                            cell.classList.add('player-preview');
+                        }
+                    }
+                });
+            }
+
+            updateSetupPreview() {
+                // Handled by toggleRotation utilizing hoverX/Y
+            }
+
+            handleSetupClick(x, y) {
+                if (this.state !== 'SETUP' || this.setupShipIndex >= SHIPS.length) return;
+
+                const shipTemplate = SHIPS[this.setupShipIndex];
+                if (this.isValidPlacement(this.playerBoard, x, y, shipTemplate.length, this.isHorizontal)) {
+                    this.placeShip(this.playerShips, this.playerBoard, shipTemplate, x, y, this.isHorizontal);
+                    this.setupShipIndex++;
+                    this.sound.sfxPlace();
+                    this.updateLog(`DEPLOYED: ${shipTemplate.name}`, "system");
+                    
+                    if (this.setupShipIndex >= SHIPS.length) {
+                        this.finalizeSetup();
+                    }
+                } else {
+                    this.sound.sfxError();
+                    this.updateLog("ERROR: INVALID DEPLOYMENT COORDINATES", "system");
+                }
+                this.drawBoardState(true);
+            }
+
+            autoDeployPlayer() {
+                this.resetPlayerBoard();
+                this.placeAllShipsRandomly(this.playerShips, this.playerBoard);
+                this.setupShipIndex = 5; // Done
+                this.sound.sfxPlace();
+                this.drawBoardState(true);
+                this.updateLog("AUTO-DEPLOYMENT COMPLETE.", "system");
+                this.finalizeSetup();
+            }
+
+            finalizeSetup() {
+                document.getElementById('setup-controls').classList.add('opacity-50', 'pointer-events-none');
+                const btn = document.getElementById('btn-start-combat');
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                // Auto-start game to avoid confusion
+                setTimeout(() => this.startGame(), 500);
+            }
+
+            resetPlayerBoard() {
+                this.playerBoard = this.createEmptyBoard();
+                this.playerShips = [];
+                this.setupShipIndex = 0;
+                document.querySelectorAll('#player-grid .cell').forEach(c => c.className = 'cell');
+            }
+
+            // --- PLACEMENT LOGIC ---
+
+            isValidPlacement(board, x, y, length, horizontal) {
+                for (let i = 0; i < length; i++) {
+                    const cx = horizontal ? x + i : x;
+                    const cy = horizontal ? y : y + i;
+                    if (cx >= this.gridSize || cy >= this.gridSize || board[cy][cx] !== 0) return false;
+                }
+                return true;
+            }
+
+            getCoords(x, y, length, horizontal) {
+                const coords = [];
+                for (let i = 0; i < length; i++) {
+                    coords.push([horizontal ? x + i : x, horizontal ? y : y + i]);
+                }
+                return coords;
+            }
+
+            placeShip(fleetArray, board, template, x, y, horizontal) {
+                const coords = this.getCoords(x, y, template.length, horizontal);
+                const newShip = {
+                    ...template,
+                    hits: 0,
+                    coords: coords,
+                    sunk: false
+                };
+                fleetArray.push(newShip);
+                coords.forEach(([cx, cy]) => board[cy][cx] = 1); // 1 = Ship
+            }
+
+            placeAllShipsRandomly(fleetArray, board) {
+                SHIPS.forEach(template => {
+                    let placed = false;
+                    while (!placed) {
+                        const x = Math.floor(Math.random() * this.gridSize);
+                        const y = Math.floor(Math.random() * this.gridSize);
+                        const horiz = Math.random() > 0.5;
+                        if (this.isValidPlacement(board, x, y, template.length, horiz)) {
+                            this.placeShip(fleetArray, board, template, x, y, horiz);
+                            placed = true;
+                        }
+                    }
+                });
+            }
+
+            // --- GAME LOOP ---
+
+            startGame() {
+                this.placeAllShipsRandomly(this.cpuShips, this.cpuBoard);
+                this.state = 'PLAYER_TURN';
+                
+                // UI Updates
+                document.getElementById('setup-controls').classList.add('hidden');
+                document.getElementById('btn-start-combat').classList.add('hidden');
+                document.getElementById('turn-indicator').innerText = "STATUS: PLAYER TURN";
+                document.getElementById('turn-indicator').className = "text-xl font-bold text-secondary animate-pulse";
+                
+                this.sound.sfxClick();
+                this.sound.sfxPing(); // Sonar ping on start
+                this.updateLog("COMBAT ENGAGED. WEAPONS FREE.", "system");
+                this.updateFleetStatus(); // Initial render
+            }
+
+            triggerShake() {
+                const main = document.getElementById('main-interface');
+                main.classList.remove('shake-fx');
+                void main.offsetWidth; // trigger reflow
+                main.classList.add('shake-fx');
+            }
+
+            triggerDamageFlash(gridId) {
+                const grid = document.getElementById(gridId);
+                grid.classList.add('damage-flash');
+                setTimeout(() => grid.classList.remove('damage-flash'), 200);
+            }
+
+            handleAttack(x, y) {
+                if (this.state !== 'PLAYER_TURN') return;
+                if (this.playerShots.has(`${x},${y}`)) {
+                    this.updateLog("COORD ALREADY TARGETED.", "system");
+                    return;
+                }
+
+                this.playerShots.add(`${x},${y}`);
+                const { status, ship } = this.fireAt(x, y, this.cpuBoard, this.cpuShips);
+                
+                // Visual Update
+                const cell = document.getElementById(`e-${x}-${y}`);
+                const peg = document.createElement('div');
+                
+                if (status === 'HIT' || status === 'SUNK') {
+                    cell.classList.add('hit');
+                    peg.className = 'peg hit';
+                    this.sound.sfxHit();
+                    this.triggerDamageFlash('enemy-grid');
+                    
+                    if (status === 'SUNK') {
+                        this.updateLog(`CONFIRMED: ${ship.name.toUpperCase()} DESTROYED.`, "player");
+                        this.showToast(`ENEMY ${ship.name} SUNK`);
+                        this.sound.sfxSunk();
+                        this.triggerShake();
+                        this.markShipSunk(ship, false); // Mark enemy ship
+                        this.checkVictory();
+                    } else {
+                        this.updateLog(`TARGET ${String.fromCharCode(65+y)}${x+1}: DIRECT HIT!`, "player");
+                    }
+
+                    if (this.state !== 'GAMEOVER') {
+                        this.updateLog("BONUS TURN GRANTED.", "system");
+                    }
+                    // Do NOT switch turn on hit
+                } else {
+                    cell.classList.add('miss');
+                    peg.className = 'peg miss';
+                    this.updateLog(`TARGET ${String.fromCharCode(65+y)}${x+1}: MISS.`, "player");
+                    this.sound.sfxMiss();
+                    
+                    // Switch turn on miss
+                    if (this.state !== 'GAMEOVER') {
+                        this.state = 'CPU_TURN';
+                        document.getElementById('turn-indicator').innerText = "STATUS: ENEMY TARGETING...";
+                        document.getElementById('turn-indicator').className = "text-xl font-bold text-danger animate-pulse";
+                        
+                        // Enemy "thinking" time
+                        setTimeout(() => this.cpuTurn(), 1000 + Math.random() * 800);
+                    }
+                }
+                cell.appendChild(peg);
+                this.updateFleetStatus();
+            }
+
+            fireAt(x, y, targetBoard, targetFleet) {
+                const cellValue = targetBoard[y][x];
+                
+                if (cellValue === 1) {
+                    targetBoard[y][x] = 3; // Hit
+                    // Find ship
+                    const ship = targetFleet.find(s => s.coords.some(([cx, cy]) => cx === x && cy === y));
+                    ship.hits++;
+                    if (ship.hits >= ship.length) {
+                        ship.sunk = true;
+                        // Mark neighbors for AI 'Sunk' logic if needed, 
+                        // For visuals, we can outline the sunken ship on player board
+                        return { status: 'SUNK', ship: ship };
+                    }
+                    return { status: 'HIT', ship: ship };
+                } else {
+                    targetBoard[y][x] = 2; // Miss
+                    return { status: 'MISS', ship: null };
+                }
+            }
+
+            cpuTurn() {
+                if (this.state === 'GAMEOVER') return;
+
+                let x, y;
+                
+                // AI Logic Selection
+                if (this.difficulty === 'easy') {
+                    [x, y] = this.aiRandom();
+                } else if (this.difficulty === 'medium') {
+                    [x, y] = this.aiMedium(); // Parity/Hunt
+                } else if (this.difficulty === 'hard') {
+                    [x, y] = this.aiHard(); // Advanced Hunt
+                } else {
+                    [x, y] = this.aiExpert(); // Probability Density
+                }
+
+                this.cpuShots.add(`${x},${y}`);
+                const { status, ship } = this.fireAt(x, y, this.playerBoard, this.playerShips);
+
+                // Update Player Grid UI
+                const cell = document.getElementById(`p-${x}-${y}`);
+                const peg = document.createElement('div');
+                let bonusTurn = false;
+
+                if (status === 'HIT' || status === 'SUNK') {
+                    cell.classList.add('hit'); // Red background
+                    peg.className = 'peg hit';
+                    this.sound.sfxHit();
+                    this.triggerDamageFlash('player-grid');
+                    this.triggerShake(); // Small shake on player hit
+                    bonusTurn = true;
+                    
+                    // Populate Hunt Stack for Medium, Hard, and Expert
+                    if (this.difficulty === 'medium' || this.difficulty === 'hard' || this.difficulty === 'expert') {
+                        this.addNeighborsToStack(x, y);
+                    }
+
+                    if (status === 'SUNK') {
+                        this.updateLog(`CRITICAL ALERT: ${ship.name.toUpperCase()} LOST!`, "enemy");
+                        this.showToast(`OUR ${ship.name} SUNK`, true);
+                        this.markShipSunk(ship, true); // Mark player ship
+                        this.sound.sfxSunk();
+                        this.triggerShake(); // Big shake
+                        this.checkDefeat();
+                    } else {
+                        this.updateLog(`WARNING: WE ARE HIT AT ${String.fromCharCode(65+y)}${x+1}!`, "enemy");
+                    }
+                } else {
+                    cell.classList.add('miss');
+                    peg.className = 'peg miss';
+                    this.updateLog(`ENEMY FIRE MISSED AT ${String.fromCharCode(65+y)}${x+1}.`, "enemy");
+                    this.sound.sfxMiss();
+                }
+                cell.appendChild(peg);
+                this.updateFleetStatus();
+
+                if (this.state !== 'GAMEOVER') {
+                    if (bonusTurn) {
+                        // AI shoots again
+                        setTimeout(() => this.cpuTurn(), 1000);
+                    } else {
+                        // Pass back to player
+                        this.state = 'PLAYER_TURN';
+                        document.getElementById('turn-indicator').innerText = "STATUS: PLAYER TURN";
+                        document.getElementById('turn-indicator').className = "text-xl font-bold text-secondary animate-pulse";
+                    }
+                }
+            }
+
+            // --- AI STRATEGIES ---
+
+            aiRandom() {
+                let x, y;
+                do {
+                    x = Math.floor(Math.random() * this.gridSize);
+                    y = Math.floor(Math.random() * this.gridSize);
+                } while (this.cpuShots.has(`${x},${y}`));
+                return [x, y];
+            }
+
+            aiMedium() {
+                // 1. Hunt Mode (Targeting neighbors of hits)
+                // Consume stack first if we have active targets
+                while (this.aiStack.length > 0) {
+                    const [mx, my] = this.aiStack.pop();
+                    if (!this.cpuShots.has(`${mx},${my}`)) {
+                        return [mx, my];
+                    }
+                }
+
+                // 2. Parity (Checkerboard) Search
+                // Only targets cells where x+y is even (or odd), effectively cutting search space in half
+                let attempts = 0;
+                let x, y;
+                do {
+                    x = Math.floor(Math.random() * this.gridSize);
+                    y = Math.floor(Math.random() * this.gridSize);
+                    attempts++;
+                    // Try to find a parity spot
+                    if ((x + y) % 2 === 0 && !this.cpuShots.has(`${x},${y}`)) {
+                        return [x, y];
+                    }
+                } while (this.cpuShots.has(`${x},${y}`) || (attempts < 100)); // Fallback if stuck
+                
+                // If parity search fails (unlikely early game), just find any open spot
+                return this.aiRandom();
+            }
+
+            aiHard() {
+                // Hunt Mode: Use stack
+                while (this.aiStack.length > 0) {
+                    const [mx, my] = this.aiStack.pop();
+                    if (!this.cpuShots.has(`${mx},${my}`)) {
+                        return [mx, my];
+                    }
+                }
+                // If stack empty, Hunt (using Parity for efficiency)
+                return this.aiMedium();
+            }
+            
+            aiExpert() {
+                // 1. If actively hunting (stack exists), prioritize finishing the kill
+                while (this.aiStack.length > 0) {
+                    const [mx, my] = this.aiStack.pop();
+                    if (!this.cpuShots.has(`${mx},${my}`)) {
+                        return [mx, my];
+                    }
+                }
+
+                // 2. Probability Density Function (PDF)
+                // Calculate which cells are most likely to contain the remaining ships
+                const probabilityGrid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(0));
+                
+                // Filter out sunken ships from calculation
+                const activeShips = this.playerShips.filter(s => !s.sunk);
+
+                activeShips.forEach(ship => {
+                    // Try to place this ship at every coordinate
+                    for (let y = 0; y < this.gridSize; y++) {
+                        for (let x = 0; x < this.gridSize; x++) {
+                            // Horizontal Check
+                            if (this.canFitShip(x, y, ship.length, true)) {
+                                for(let k=0; k<ship.length; k++) probabilityGrid[y][x+k]++;
+                            }
+                            // Vertical Check
+                            if (this.canFitShip(x, y, ship.length, false)) {
+                                for(let k=0; k<ship.length; k++) probabilityGrid[y+k][x]++;
+                            }
+                        }
+                    }
+                });
+
+                // Find max probability
+                let bestCoords = [];
+                let maxProb = -1;
+
+                for (let y = 0; y < this.gridSize; y++) {
+                    for (let x = 0; x < this.gridSize; x++) {
+                        if (this.cpuShots.has(`${x},${y}`)) continue; // Skip already shot
+
+                        if (probabilityGrid[y][x] > maxProb) {
+                            maxProb = probabilityGrid[y][x];
+                            bestCoords = [[x, y]];
+                        } else if (probabilityGrid[y][x] === maxProb) {
+                            bestCoords.push([x, y]);
+                        }
+                    }
+                }
+
+                // Pick random best
+                if (bestCoords.length > 0) {
+                    const idx = Math.floor(Math.random() * bestCoords.length);
+                    return bestCoords[idx];
+                }
+
+                // Fallback (shouldn't happen unless board full)
+                return this.aiRandom();
+            }
+
+            canFitShip(x, y, length, horizontal) {
+                for (let i = 0; i < length; i++) {
+                    const cx = horizontal ? x + i : x;
+                    const cy = horizontal ? y : y + i;
+                    
+                    // Out of bounds
+                    if (cx >= this.gridSize || cy >= this.gridSize) return false;
+                    
+                    // Check logic:
+                    // We only care if it hits a 'MISS' or a 'SUNK'. 
+                    // A 'HIT' (3) is actually good for probability if we were ignoring stack,
+                    // but since we clear stack first, we treat HITs as obstacles for placement 
+                    // to find *hidden* ships, not partially found ones.
+                    // Actually, simpler PDF: Avoid Misses (2) and Sunk ships.
+                    // (We don't know where sunk ships are exactly in code unless we track board state 3 accurately)
+                    // Simplified: Avoid shots we've already taken.
+                    if (this.cpuShots.has(`${cx},${cy}`)) return false;
+                }
+                return true;
+            }
+
+            addNeighborsToStack(x, y) {
+                const neighbors = [];
+                let axis = null; // 'horiz', 'vert', or null
+
+                // 1. Detect Axis: Check if this hit aligns with a previous hit on the board
+                // Value 3 = HIT
+                if (x > 0 && this.playerBoard[y][x - 1] === 3) axis = 'horiz';
+                if (x < this.gridSize - 1 && this.playerBoard[y][x + 1] === 3) axis = 'horiz';
+                if (y > 0 && this.playerBoard[y - 1][x] === 3) axis = 'vert';
+                if (y < this.gridSize - 1 && this.playerBoard[y + 1][x] === 3) axis = 'vert';
+
+                // 2. Add Smart Neighbors based on Axis
+                if (axis === 'horiz') {
+                    // Found a horizontal line: Filter out any vertical pending shots from the stack
+                    this.aiStack = this.aiStack.filter(([sx, sy]) => sy === y);
+                    
+                    // Add Left/Right only
+                    if (x > 0) neighbors.push([x - 1, y]);
+                    if (x < this.gridSize - 1) neighbors.push([x + 1, y]);
+
+                } else if (axis === 'vert') {
+                    // Found a vertical line: Filter out horizontal pending shots
+                    this.aiStack = this.aiStack.filter(([sx, sy]) => sx === x);
+
+                    // Add Up/Down only
+                    if (y > 0) neighbors.push([x, y - 1]);
+                    if (y < this.gridSize - 1) neighbors.push([x, y + 1]);
+
+                } else {
+                    // No axis established yet -> Add all 4 neighbors
+                    if (y > 0) neighbors.push([x, y - 1]);
+                    if (y < this.gridSize - 1) neighbors.push([x, y + 1]);
+                    if (x > 0) neighbors.push([x - 1, y]);
+                    if (x < this.gridSize - 1) neighbors.push([x + 1, y]);
+                    
+                    // Shuffle
+                    for (let i = neighbors.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [neighbors[i], neighbors[j]] = [neighbors[j], neighbors[i]];
+                    }
+                }
+
+                // 3. Push to Stack (if not already shot)
+                neighbors.forEach(([nx, ny]) => {
+                    if (!this.cpuShots.has(`${nx},${ny}`)) {
+                        this.aiStack.push([nx, ny]);
+                    }
+                });
+            }
+
+
+            // --- UTILS & DRAWING ---
+
+            drawBoardState(isPlayer) {
+                // Used during setup to draw ships
+                if (!isPlayer) return;
+                
+                // Reset visual classes first
+                document.querySelectorAll('#player-grid .cell').forEach(c => {
+                    if(!c.classList.contains('hit') && !c.classList.contains('miss')) {
+                        c.className = 'cell'; 
+                    }
+                });
+
+                this.playerShips.forEach(ship => {
+                    ship.coords.forEach(([x, y]) => {
+                        const cell = document.getElementById(`p-${x}-${y}`);
+                        cell.classList.add('ship');
+                    });
+                });
+            }
+
+            markShipSunk(ship, isPlayer) {
+                ship.coords.forEach(([x, y]) => {
+                    const id = `${isPlayer ? 'p' : 'e'}-${x}-${y}`;
+                    const cell = document.getElementById(id);
+                    if(cell) {
+                        cell.classList.add('sunk-ship');
+                    }
+                });
+            }
+
+            showToast(msg, isWarning = false) {
+                const toast = document.getElementById('toast-msg');
+                toast.innerText = msg;
+                toast.style.color = isWarning ? 'var(--color-danger)' : 'var(--color-primary)';
+                toast.style.borderColor = isWarning ? 'var(--color-danger)' : 'var(--color-primary)';
+                toast.style.textShadow = `0 0 20px ${isWarning ? 'var(--color-danger)' : 'var(--color-primary)'}`;
+                
+                // Reset animation
+                toast.classList.remove('toast-visible');
+                void toast.offsetWidth; // trigger reflow
+                toast.classList.add('toast-visible');
+            }
+
+            updateLog(msg, type = "system") {
+                const logEl = document.getElementById('game-log');
+                const line = document.createElement('div');
+                
+                // Add prefix based on type
+                let prefix = "";
+                let className = "log-entry";
+                
+                if (type === "player") {
+                    prefix = " [PLAYER] > ";
+                    className += " log-player";
+                } else if (type === "enemy") {
+                    prefix = " [ENEMY] > ";
+                    className += " log-enemy";
+                } else {
+                    prefix = " [SYS] > ";
+                    className += " log-system";
+                }
+                
+                line.className = className;
+                line.textContent = prefix + msg;
+                logEl.appendChild(line);
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+
+            updateFleetStatus() {
+                // Player Fleet
+                const pContainer = document.getElementById('fleet-status');
+                pContainer.innerHTML = this.playerShips.map(s => 
+                    `<div class="${s.sunk ? 'text-danger line-through' : 'text-primary'}">${s.name} [${s.length}]</div>`
+                ).join('') || "<div class='text-secondary/50'>...No Ships Deployed...</div>";
+
+                // Enemy Status (Obfuscated)
+                const eContainer = document.getElementById('enemy-status');
+                const alive = this.cpuShips.filter(s => !s.sunk).length;
+                const dead = this.cpuShips.filter(s => s.sunk).length;
+                
+                eContainer.innerHTML = `
+                    <div class="text-danger">ACTIVE CONTACTS: ${alive}</div>
+                    <div class="text-secondary opacity-50">ELIMINATED: ${dead}</div>
+                `;
+            }
+
+            checkVictory() {
+                if (this.cpuShips.every(s => s.sunk)) {
+                    this.state = 'GAMEOVER';
+                    this.sound.sfxWin();
+                    document.getElementById('modal-gameover').classList.remove('hidden');
+                    document.getElementById('modal-gameover').querySelector('div').classList.add('border-primary');
+                    document.getElementById('gameover-title').innerText = "MISSION ACCOMPLISHED";
+                    document.getElementById('gameover-title').className = "text-4xl font-bold mb-2 text-primary";
+                    document.getElementById('gameover-msg').innerText = "ENEMY FLEET DESTROYED. WATERS SECURE.";
+                }
+            }
+
+            checkDefeat() {
+                if (this.playerShips.every(s => s.sunk)) {
+                    this.state = 'GAMEOVER';
+                    this.sound.sfxLose();
+                    document.getElementById('modal-gameover').classList.remove('hidden');
+                    document.getElementById('modal-gameover').querySelector('div').classList.add('border-danger');
+                    document.getElementById('gameover-title').innerText = "CRITICAL FAILURE";
+                    document.getElementById('gameover-title').className = "text-4xl font-bold mb-2 text-danger";
+                    document.getElementById('gameover-msg').innerText = "OUR FLEET HAS BEEN DESTROYED.";
+                }
+            }
+        }
+
+        // Boot
+        window.addEventListener('load', () => {
+            // Need user interaction to unlock audio context usually
+            const startOverlay = document.createElement('div');
+            startOverlay.className = "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center cursor-pointer";
+            startOverlay.innerHTML = `
+                <h1 class="text-6xl font-bold text-primary mb-4 tracking-widest animate-pulse">SONAR</h1>
+                <p class="text-secondary font-mono">CLICK TO INITIALIZE SYSTEM</p>
+            `;
+            document.body.appendChild(startOverlay);
+
+            startOverlay.addEventListener('click', () => {
+                const game = new Game();
+                game.sound.ctx.resume(); // Unlock audio
+                startOverlay.style.opacity = '0';
+                setTimeout(() => startOverlay.remove(), 500);
+            });
+        });
+
+    </script>
+</body>
+</html>

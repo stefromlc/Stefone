@@ -1,0 +1,39 @@
+[
+  {
+    "demoUrl": "",
+    "repoUrl": "",
+    "title": "Tune 3310",
+    "slug": "tune-3310",
+    "description": "Ever miss the classic Nokia days? Tone 3310 lets you quickly make your own old-school 3310-style ringtone—tap out a melody, tweak it until it feels right, and save it as a fun little throwback.",
+    "thumbnail": "assets/thumbs/tune-3310.png",
+    "tags": [
+      "Fun",
+      "Nokia",
+      "Nostalgia",
+      "Retro",
+      "Ringtone Maker"
+    ],
+    "category": "Apps",
+    "featured": true,
+    "date": "2026-01-25"
+  },
+  {
+    "demoUrl": "",
+    "repoUrl": "",
+    "title": "Sonar",
+    "slug": "sonar",
+    "description": "A slick, retro-style naval tactics game where you command a fleet, hunt enemy ships, and listen for that satisfying sonar ping. It’s classic Battleship vibes wrapped in a glowing CRT interface with smart AI, punchy sound effects, and lots of tactical tension. Easy to pick up, hard to stop playing. ",
+    "thumbnail": "assets/thumbs/sonar.png",
+    "tags": [
+      "Arcade",
+      "Battleships",
+      "Game",
+      "Retro",
+      "Sonar",
+      "Strategy"
+    ],
+    "category": "Games",
+    "featured": true,
+    "date": "2026-02-07"
+  }
+]

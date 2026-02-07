@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stefone Project Manager v3</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Chart.js (for Stats) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0f0f11',
+                        darker: '#09090b',
+                        card: '#18181b',
+                        primary: '#3b82f6',
+                        accent: '#8b5cf6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                        'fade-in': 'fadeIn 0.2s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #09090b; color: #e4e4e7; font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #18181b; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+        
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .empty-state-pattern {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* Drag and Drop Styles */
+        .draggable-card { cursor: grab; }
+        .draggable-card:active { cursor: grabbing; }
+        .dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+            border: 2px dashed #3b82f6 !important;
+        }
+        
+        /* Checkbox custom styles */
+        .custom-checkbox:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        /* Kanban Column Scroll */
+        .kanban-column {
+            min-width: 320px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+        // --- Components ---
+
+        const Icon = ({ name, size = 20, className = "", weight = "regular", onClick }) => {
+            return <i onClick={onClick} className={`ph ph-${name} ${className}`} style={{ fontSize: size, fontWeight: weight === 'bold' ? 'bold' : 'normal' }}></i>;
+        };
+
+        const Toast = ({ message, type, onClose }) => {
+            const styles = {
+                success: 'bg-green-500/10 border-green-500/20 text-green-400',
+                error: 'bg-red-500/10 border-red-500/20 text-red-400',
+                info: 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+            };
+            const icons = { success: 'check-circle', error: 'warning-circle', info: 'info' };
+
+            return (
+                <div className={`fixed bottom-24 right-6 z-[70] flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur-md shadow-2xl animate-slide-up ${styles[type] || styles.info}`}>
+                    <Icon name={icons[type] || 'info'} size={24} weight="fill" />
+                    <span className="text-sm font-medium pr-2">{message}</span>
+                    <button onClick={onClose} className="opacity-50 hover:opacity-100 transition-opacity">
+                        <Icon name="x" size={16} />
+                    </button>
+                </div>
+            );
+        };
+
+        const TagInput = ({ tags, onChange, suggestions = [] }) => {
+            const [input, setInput] = useState('');
+            const [showSuggestions, setShowSuggestions] = useState(false);
+
+            const handleKeyDown = (e) => {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    addTag(input);
+                } else if (e.key === 'Backspace' && !input && tags.length > 0) {
+                    onChange(tags.slice(0, -1));
+                }
+            };
+
+            const addTag = (val) => {
+                // Normalize existing tags to lowercase for comparison
+                const existingTagsLower = tags.map(t => t.toLowerCase());
+                
+                const newTags = val.split(',')
+                    .map(t => t.trim())
+                    // Filter: Must be non-empty AND not exist in current tags (case-insensitive)
+                    .filter(t => t && !existingTagsLower.includes(t.toLowerCase()));
+                
+                if (newTags.length > 0) onChange([...tags, ...newTags]);
+                setInput('');
+                setShowSuggestions(false);
+            };
+
+            // Updated filter: Exclude tags that already exist (case-insensitive check)
+            const filteredSuggestions = suggestions.filter(s => 
+                !tags.some(t => t.toLowerCase() === s.toLowerCase()) && 
+                s.toLowerCase().includes(input.toLowerCase())
+            );
+
+            return (
+                <div className="relative">
+                    <div className="flex flex-wrap gap-2 p-2 bg-darker border border-gray-700 rounded-lg focus-within:border-primary transition-colors">
+                        {tags.map(tag => (
+                            <span key={tag} className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gray-800 text-gray-300 rounded-md border border-gray-700">
+                                {tag}
+                                <button type="button" onClick={() => onChange(tags.filter(t => t !== tag))} className="hover:text-red-400"><Icon name="x" size={12} /></button>
+                            </span>
+                        ))}
+                        <input 
+                            type="text" 
+                            value={input} 
+                            onChange={(e) => { setInput(e.target.value); setShowSuggestions(true); }} 
+                            onKeyDown={handleKeyDown} 
+                            onFocus={() => setShowSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                            placeholder={tags.length === 0 ? "Add tags..." : ""} 
+                            className="flex-1 bg-transparent outline-none text-sm min-w-[120px]" 
+                        />
+                    </div>
+                    {showSuggestions && input && filteredSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 mt-1 w-full bg-[#18181b] border border-gray-700 rounded-lg shadow-xl z-50 max-h-40 overflow-y-auto">
+                            {filteredSuggestions.map(s => (
+                                <button key={s} type="button" onClick={() => addTag(s)} className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // NEW: Smart Dropdown / Combobox for Category
+        const CategoryInput = ({ value, onChange, options }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const wrapperRef = useRef(null);
+
+            useEffect(() => {
+                const handleClickOutside = (event) => {
+                    if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+                        setIsOpen(false);
+                    }
+                };
+                document.addEventListener("mousedown", handleClickOutside);
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+            }, []);
+
+            return (
+                <div className="relative" ref={wrapperRef}>
+                    <div className="relative group">
+                        <input 
+                            type="text" 
+                            value={value} 
+                            onChange={(e) => { onChange(e.target.value); setIsOpen(true); }}
+                            onFocus={() => setIsOpen(true)}
+                            className="w-full bg-darker border border-gray-700 rounded-lg p-2.5 text-sm outline-none focus:border-primary pr-8"
+                            placeholder="Select or type category..."
+                        />
+                        <button 
+                            type="button"
+                            onClick={() => setIsOpen(!isOpen)} 
+                            className="absolute right-0 top-0 h-full px-2.5 text-gray-500 hover:text-white transition-colors"
+                        >
+                            <Icon name="caret-down" weight="bold" size={14} />
+                        </button>
+                    </div>
+                    
+                    {isOpen && (
+                        <div className="absolute top-full left-0 mt-1 w-full bg-[#18181b] border border-gray-700 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar animate-fade-in">
+                            {options.map(opt => (
+                                <button 
+                                    key={opt} 
+                                    type="button" 
+                                    onClick={() => { onChange(opt); setIsOpen(false); }} 
+                                    className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${value === opt ? 'bg-primary/20 text-primary' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
+                                >
+                                    {opt}
+                                    {value === opt && <Icon name="check" size={12} />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const StatusBadge = ({ status }) => {
+            const colors = {
+                'Idea': 'text-gray-400 bg-gray-500/10 border-gray-500/20',
+                'Draft': 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
+                'In Progress': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+                'Live': 'text-green-400 bg-green-500/10 border-green-500/20',
+                'Archived': 'text-purple-400 bg-purple-500/10 border-purple-500/20'
+            };
+            return (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${colors[status] || colors['Draft']}`}>
+                    {status}
+                </span>
+            );
+        };
+
+        // --- Core Validation Logic ---
+        const validateProject = (data, existingProjects, currentSlug) => {
+            const errors = {};
+            if (!data.title?.trim()) errors.title = "Title is required";
+            if (!data.description?.trim()) errors.description = "Description is required";
+            if (!data.slug?.trim()) {
+                errors.slug = "Slug is required";
+            } else if (!/^[a-z0-9-]+$/.test(data.slug)) {
+                errors.slug = "Slug must contain only lowercase letters, numbers, and hyphens";
+            } else {
+                const isDuplicate = existingProjects.some(p => p.slug === data.slug && p.slug !== currentSlug);
+                if (isDuplicate) errors.slug = "This slug is already used";
+            }
+            if (!data.thumbnail?.trim()) errors.thumbnail = "Thumbnail path is empty";
+            return errors;
+        };
+
+        // --- Features: Kanban, Stats, Health, Discovery ---
+
+        const HealthCheckModal = ({ isOpen, onClose, projects }) => {
+            const [report, setReport] = useState(null);
+            const [isScanning, setIsScanning] = useState(false);
+
+            useEffect(() => { if (isOpen) setReport(null); }, [isOpen]);
+
+            const handleFolderScan = (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+                setIsScanning(true);
+                setTimeout(() => {
+                    const siteFiles = new Set(files.map(f => {
+                        const parts = f.webkitRelativePath.split('/');
+                        return parts.slice(1).join('/'); 
+                    }));
+                    const missingImages = [];
+                    const issues = [];
+                    const slugs = new Set();
+                    projects.forEach(p => {
+                        if (p.thumbnail) {
+                            let found = siteFiles.has(p.thumbnail);
+                            if (!found) found = files.some(f => f.webkitRelativePath.endsWith(p.thumbnail));
+                            if (!found) missingImages.push({ project: p.title, path: p.thumbnail });
+                        }
+                        if (!p.title) issues.push({ project: 'Unknown', type: 'Missing Title', severity: 'high' });
+                        if (slugs.has(p.slug)) issues.push({ project: p.title, type: `Duplicate Slug: ${p.slug}`, severity: 'high' });
+                        slugs.add(p.slug);
+                    });
+                    setReport({ missingImages, issues, totalFiles: files.length, scanned: true });
+                    setIsScanning(false);
+                }, 800);
+            };
+
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-[#121214] border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-slide-up shadow-2xl">
+                        <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-[#121214]">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-green-500/10 text-green-500 rounded-lg"><Icon name="heartbeat" size={24} weight="fill" /></div>
+                                <div><h2 className="text-xl font-bold text-white">System Health Check</h2><p className="text-xs text-gray-500">Scan your local folder to verify assets.</p></div>
+                            </div>
+                            <button onClick={onClose} className="text-gray-500 hover:text-white"><Icon name="x" size={24} /></button>
+                        </div>
+                        <div className="p-6 overflow-y-auto custom-scrollbar">
+                            {!report && !isScanning && (
+                                <div className="text-center py-10">
+                                    <div className="w-16 h-16 bg-darker rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-700"><Icon name="folder-notch-open" size={32} className="text-gray-500" /></div>
+                                    <p className="text-gray-400 text-sm mb-6 max-w-sm mx-auto">Select your main website folder to verify images.</p>
+                                    <label className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-all cursor-pointer shadow-lg shadow-blue-500/20">
+                                        <Icon name="scan" weight="bold" /> Select Folder & Scan
+                                        <input type="file" webkitdirectory="" directory="" multiple className="hidden" onChange={handleFolderScan} />
+                                    </label>
+                                </div>
+                            )}
+                            {isScanning && <div className="text-center py-20 text-gray-300">Scanning...</div>}
+                            {report && (
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-4 bg-darker rounded-xl border border-gray-800 text-center"><div className="text-2xl font-bold text-white">{report.totalFiles}</div><div className="text-xs text-gray-500">Files</div></div>
+                                        <div className="p-4 bg-darker rounded-xl border border-gray-800 text-center"><div className={`text-2xl font-bold ${report.missingImages.length > 0 ? 'text-red-500' : 'text-green-500'}`}>{report.missingImages.length}</div><div className="text-xs text-gray-500">Missing Assets</div></div>
+                                    </div>
+                                    {report.missingImages.map((m, i) => <div key={i} className="text-sm text-red-400">{m.project}: Missing {m.path}</div>)}
+                                    {report.missingImages.length === 0 && <div className="text-green-500 text-center font-bold">All assets valid!</div>}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const DiscoveryModal = ({ isOpen, onClose, projects, onAddProject }) => {
+            const [discovered, setDiscovered] = useState(null);
+            const [isScanning, setIsScanning] = useState(false);
+
+            useEffect(() => { if (isOpen) setDiscovered(null); }, [isOpen]);
+
+            const handleScan = (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+                setIsScanning(true);
+                setTimeout(() => {
+                    const existingSlugs = new Set(projects.map(p => p.slug.toLowerCase()));
+                    const candidates = new Map();
+                    files.forEach(f => {
+                        const pathParts = f.webkitRelativePath.split('/');
+                        if (f.name === 'index.html' && pathParts.length >= 3) {
+                            const folderName = pathParts[pathParts.length - 2];
+                            const slug = folderName.toLowerCase();
+                            // Added 'projects' to the ignored list
+                            const ignored = ['assets', 'css', 'js', 'lib', 'node_modules', 'dist', 'public', 'projects'];
+                            if (!existingSlugs.has(slug) && !ignored.includes(slug) && !candidates.has(slug)) {
+                                candidates.set(slug, { slug, name: folderName, files: [] });
+                            }
+                        }
+                    });
+                    setDiscovered(Array.from(candidates.values()));
+                    setIsScanning(false);
+                }, 800);
+            };
+
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-[#121214] border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-slide-up shadow-2xl">
+                        <div className="p-6 border-b border-gray-800 flex justify-between items-center"><h2 className="text-xl font-bold text-white">Discovery</h2><button onClick={onClose} className="text-gray-500 hover:text-white"><Icon name="x" size={24} /></button></div>
+                        <div className="p-6 overflow-y-auto custom-scrollbar">
+                            {!discovered && !isScanning && (
+                                <div className="text-center py-10">
+                                    <label className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-blue-600 text-white rounded-xl cursor-pointer">
+                                        <Icon name="binoculars" weight="bold" /> Scan for New Projects
+                                        <input type="file" webkitdirectory="" directory="" multiple className="hidden" onChange={handleScan} />
+                                    </label>
+                                </div>
+                            )}
+                            {discovered && discovered.map((item, i) => (
+                                <div key={i} className="flex justify-between items-center p-3 border-b border-gray-800">
+                                    <span className="text-white">{item.name}</span>
+                                    <button onClick={() => onAddProject({ title: item.name, slug: item.slug, thumbnail: `assets/thumbs/${item.slug}.png`, description: `Auto-discovered project: ${item.name}`, tags: ['New'], category: 'Experiments', status: 'Draft' })} className="text-xs bg-primary px-3 py-1 rounded text-white">Add</button>
+                                </div>
+                            ))}
+                            {discovered && discovered.length === 0 && <div className="text-center text-gray-500">No new projects found.</div>}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const StatsDashboard = ({ projects }) => {
+            // Calculate stats
+            const total = projects.length;
+            const byCategory = projects.reduce((acc, p) => { acc[p.category] = (acc[p.category] || 0) + 1; return acc; }, {});
+            const byStatus = projects.reduce((acc, p) => { acc[p.status || 'Draft'] = (acc[p.status || 'Draft'] || 0) + 1; return acc; }, {});
+            const allTags = projects.flatMap(p => p.tags);
+            const topTags = Object.entries(allTags.reduce((acc, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {})).sort((a,b) => b[1] - a[1]).slice(0, 5);
+
+            return (
+                <div className="animate-fade-in space-y-6 pb-20">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-card border border-gray-800 p-4 rounded-xl">
+                            <div className="text-gray-500 text-xs uppercase font-bold mb-1">Total Projects</div>
+                            <div className="text-3xl font-bold text-white">{total}</div>
+                        </div>
+                        <div className="bg-card border border-gray-800 p-4 rounded-xl">
+                            <div className="text-gray-500 text-xs uppercase font-bold mb-1">Live</div>
+                            <div className="text-3xl font-bold text-green-400">{byStatus['Live'] || 0}</div>
+                        </div>
+                        <div className="bg-card border border-gray-800 p-4 rounded-xl">
+                            <div className="text-gray-500 text-xs uppercase font-bold mb-1">In Progress</div>
+                            <div className="text-3xl font-bold text-blue-400">{byStatus['In Progress'] || 0}</div>
+                        </div>
+                        <div className="bg-card border border-gray-800 p-4 rounded-xl">
+                            <div className="text-gray-500 text-xs uppercase font-bold mb-1">Categories</div>
+                            <div className="text-3xl font-bold text-purple-400">{Object.keys(byCategory).length}</div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-card border border-gray-800 p-6 rounded-xl">
+                            <h3 className="text-lg font-bold text-white mb-4">Category Distribution</h3>
+                            <div className="space-y-3">
+                                {Object.entries(byCategory).map(([cat, count]) => (
+                                    <div key={cat}>
+                                        <div className="flex justify-between text-xs mb-1"><span className="text-gray-300">{cat}</span><span className="text-gray-500">{count}</span></div>
+                                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden"><div className="h-full bg-blue-500" style={{width: `${(count/total)*100}%`}}></div></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="bg-card border border-gray-800 p-6 rounded-xl">
+                            <h3 className="text-lg font-bold text-white mb-4">Top Tags</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {topTags.map(([tag, count]) => (
+                                    <div key={tag} className="px-3 py-1.5 bg-darker border border-gray-700 rounded-lg flex items-center gap-2">
+                                        <span className="text-gray-300">#{tag}</span>
+                                        <span className="bg-gray-700 text-white text-[10px] px-1.5 py-0.5 rounded-full">{count}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const KanbanBoard = ({ projects, onUpdateStatus, onEdit }) => {
+            const statuses = ['Idea', 'In Progress', 'Live', 'Archived'];
+            const [draggedId, setDraggedId] = useState(null);
+
+            const handleDrop = (e, status) => {
+                e.preventDefault();
+                if (draggedId) {
+                    onUpdateStatus(draggedId, status);
+                    setDraggedId(null);
+                }
+            };
+
+            return (
+                <div className="flex gap-4 overflow-x-auto pb-6 h-[calc(100vh-200px)] animate-fade-in">
+                    {statuses.map(status => (
+                        <div 
+                            key={status} 
+                            className="kanban-column flex-shrink-0 w-80 bg-black/20 rounded-xl border border-gray-800/50 flex flex-col"
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => handleDrop(e, status)}
+                        >
+                            <div className="p-3 border-b border-gray-800/50 flex justify-between items-center sticky top-0 bg-[#09090b] z-10 rounded-t-xl">
+                                <div className="flex items-center gap-2">
+                                    <StatusBadge status={status} />
+                                    <span className="text-xs text-gray-500 font-mono">({projects.filter(p => (p.status || 'Draft') === status).length})</span>
+                                </div>
+                            </div>
+                            <div className="p-3 space-y-3 overflow-y-auto flex-1 custom-scrollbar">
+                                {projects.filter(p => (p.status || 'Draft') === status).map(p => (
+                                    <div 
+                                        key={p.slug}
+                                        draggable
+                                        onDragStart={() => setDraggedId(p.slug)}
+                                        className="bg-card p-3 rounded-lg border border-gray-800 hover:border-gray-600 cursor-grab active:cursor-grabbing shadow-sm group hover:shadow-md transition-all"
+                                        onClick={() => onEdit(p)}
+                                    >
+                                        {p.thumbnail && <img src={p.thumbnail} className="w-full h-24 object-cover rounded-md mb-2 opacity-80 group-hover:opacity-100 transition-opacity bg-darker" onError={(e) => e.target.style.display='none'} />}
+                                        <h4 className="text-sm font-bold text-white mb-1 truncate">{p.title}</h4>
+                                        <p className="text-xs text-gray-500 line-clamp-2 mb-2">{p.description}</p>
+                                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-800">
+                                            <span className="text-[10px] text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">{p.category}</span>
+                                            {p.featured && <Icon name="star" weight="fill" className="text-yellow-500 text-xs" />}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        // --- Main Application ---
+        const App = () => {
+            // Load initial state & migrate old data if needed
+            const loadInitialProjects = () => {
+                const saved = localStorage.getItem('stefone-cms-projects');
+                try { 
+                    const parsed = saved ? JSON.parse(saved) : []; 
+                    // Migration: Ensure status field exists
+                    return parsed.map(p => ({ ...p, status: p.status || 'Live' }));
+                } catch (e) { return []; }
+            };
+
+            const [history, setHistory] = useState([loadInitialProjects()]);
+            const [historyIndex, setHistoryIndex] = useState(0);
+            const projects = history[historyIndex];
+
+            // Views & UI State
+            const [viewMode, setViewMode] = useState('grid'); // 'grid', 'kanban', 'stats'
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [isHealthOpen, setIsHealthOpen] = useState(false);
+            const [isDiscoverOpen, setIsDiscoverOpen] = useState(false);
+            const [editingProject, setEditingProject] = useState(null);
+            const [deleteTarget, setDeleteTarget] = useState(null);
+            const [toast, setToast] = useState(null);
+            const [lastSaved, setLastSaved] = useState(new Date());
+
+            // Filters
+            const [searchQuery, setSearchQuery] = useState('');
+            const [filterCategory, setFilterCategory] = useState('All');
+            const [sortBy, setSortBy] = useState('manual');
+            
+            // Bulk Actions
+            const [selectedIds, setSelectedIds] = useState(new Set());
+            const [isBulkCategoryOpen, setIsBulkCategoryOpen] = useState(false);
+            const [bulkCategoryInput, setBulkCategoryInput] = useState('');
+
+            // Derived
+            const isDragEnabled = filterCategory === 'All' && searchQuery === '' && sortBy === 'manual';
+
+            // Form Data
+            const [formData, setFormData] = useState({
+                title: '', slug: '', description: '', thumbnail: 'assets/thumbs/',
+                tags: [], category: 'Apps', status: 'Draft', featured: false, 
+                date: new Date().toISOString().split('T')[0],
+                demoUrl: '', repoUrl: ''
+            });
+            const [formErrors, setFormErrors] = useState({});
+
+            // Calculate Categories (Defaults + Existing)
+            const categoryDefaults = ["Apps", "Websites", "Games", "Tools", "Experiments", "UI/UX", "Art"];
+            const formCategories = useMemo(() => {
+                // Ensure default, existing, and current form value are all in the list
+                return Array.from(new Set([...categoryDefaults, ...projects.map(p => p.category), formData.category].filter(Boolean))).sort();
+            }, [projects, formData.category]);
+
+            // History Actions
+            const updateProjects = (newProjects, addToHistory = true) => {
+                if (addToHistory) {
+                    const newHistory = history.slice(0, historyIndex + 1);
+                    newHistory.push(newProjects);
+                    if (newHistory.length > 50) newHistory.shift();
+                    setHistory(newHistory);
+                    setHistoryIndex(newHistory.length - 1);
+                } else {
+                    const newHistory = [...history];
+                    newHistory[historyIndex] = newProjects;
+                    setHistory(newHistory);
+                }
+            };
+
+            const undo = useCallback(() => {
+                if (historyIndex > 0) { setHistoryIndex(prev => prev - 1); showToast("Undone", "info"); }
+            }, [historyIndex]);
+
+            const redo = useCallback(() => {
+                if (historyIndex < history.length - 1) { setHistoryIndex(prev => prev + 1); showToast("Redone", "info"); }
+            }, [historyIndex, history.length]);
+
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+                        e.preventDefault();
+                        e.shiftKey ? redo() : undo();
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [undo, redo]);
+
+            useEffect(() => {
+                localStorage.setItem('stefone-cms-projects', JSON.stringify(projects));
+                setLastSaved(new Date());
+            }, [projects]);
+
+            const showToast = (message, type = 'info') => {
+                setToast({ message, type });
+                setTimeout(() => setToast(null), 3000);
+            };
+
+            // Handlers
+            const handleClearAll = () => {
+                if (projects.length === 0) {
+                    showToast("List is already empty", "info");
+                    return;
+                }
+                if (confirm(`Are you sure you want to delete ALL ${projects.length} projects? This creates a history point so you can Undo.`)) {
+                    updateProjects([]);
+                    showToast("All projects cleared", "warning");
+                }
+            };
+
+            const moveProject = (index, direction, e) => {
+                e.stopPropagation();
+                if (!isDragEnabled) return;
+
+                const newProjects = [...projects];
+                if (direction === 'up' && index > 0) {
+                    [newProjects[index - 1], newProjects[index]] = [newProjects[index], newProjects[index - 1]];
+                } else if (direction === 'down' && index < projects.length - 1) {
+                    [newProjects[index + 1], newProjects[index]] = [newProjects[index], newProjects[index + 1]];
+                }
+                updateProjects(newProjects);
+            };
+
+            const handleFormSubmit = (e) => {
+                e.preventDefault();
+                const errors = validateProject(formData, projects, editingProject?.slug);
+                if (Object.keys(errors).length > 0) { setFormErrors(errors); showToast("Fix errors", "error"); return; }
+
+                const finalData = { ...formData, tags: formData.tags.sort() };
+                if (editingProject) {
+                    updateProjects(projects.map(p => p.slug === editingProject.slug ? finalData : p));
+                    showToast("Updated", "success");
+                } else {
+                    updateProjects([finalData, ...projects]);
+                    showToast("Created", "success");
+                }
+                setIsModalOpen(false);
+            };
+
+            const toggleSelection = (slug) => {
+                const newSet = new Set(selectedIds);
+                newSet.has(slug) ? newSet.delete(slug) : newSet.add(slug);
+                setSelectedIds(newSet);
+            };
+
+            // Fix: Added isDiscovery flag to differentiate between Editing and Adding Discovered items
+            const openModal = (project = null, isDiscovery = false) => {
+                setFormErrors({});
+                if (project && !isDiscovery) {
+                    // Editing an existing project
+                    setEditingProject(project);
+                    setFormData({ demoUrl: '', repoUrl: '', status: 'Live', ...project });
+                } else {
+                    // Creating a new project (Empty or from Discovery)
+                    setEditingProject(null);
+                    
+                    const defaultData = {
+                        title: '', slug: '', description: '', thumbnail: 'assets/thumbs/',
+                        tags: [], category: 'Apps', status: 'Draft', featured: false,
+                        date: new Date().toISOString().split('T')[0], demoUrl: '', repoUrl: ''
+                    };
+
+                    if (project && isDiscovery) {
+                        // Pre-fill with discovered data, but treat as NEW
+                        setFormData({ ...defaultData, ...project });
+                    } else {
+                        // Completely blank
+                        setFormData(defaultData);
+                    }
+                }
+                setIsModalOpen(true);
+            };
+
+            // Kanban Drag handler
+            const handleKanbanStatusUpdate = (slug, newStatus) => {
+                const updated = projects.map(p => p.slug === slug ? { ...p, status: newStatus } : p);
+                updateProjects(updated);
+                showToast(`Moved to ${newStatus}`, "success");
+            };
+
+            // File Ops
+            const handleFileUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const json = JSON.parse(event.target.result);
+                        if (Array.isArray(json)) { updateProjects(json); showToast(`Loaded ${json.length} projects`, 'success'); }
+                    } catch (err) { showToast("Invalid JSON", 'error'); }
+                };
+                reader.readAsText(file);
+            };
+
+            const handleExport = () => {
+                // Filter: Only "Live" projects
+                const liveProjects = projects.filter(p => (p.status || 'Draft') === 'Live');
+                
+                // Format: Remove 'status' key to match desired structure
+                const exportData = liveProjects.map(({ status, ...rest }) => rest);
+
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+                const anchor = document.createElement('a');
+                anchor.setAttribute("href", dataStr);
+                anchor.setAttribute("download", "projects.json");
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+                showToast(`Exported ${exportData.length} Live projects`, "success");
+            };
+
+            // Derived
+            const allTags = useMemo(() => [...new Set(projects.flatMap(p => p.tags))], [projects]);
+            const filteredProjects = useMemo(() => {
+                let result = projects.filter(p => {
+                    const matchSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase());
+                    const matchCat = filterCategory === 'All' || p.category === filterCategory;
+                    return matchSearch && matchCat;
+                });
+                if (sortBy === 'date-newest') result.sort((a, b) => new Date(b.date) - new Date(a.date));
+                else if (sortBy === 'date-oldest') result.sort((a, b) => new Date(a.date) - new Date(b.date));
+                else if (sortBy === 'alpha') result.sort((a, b) => a.title.localeCompare(b.title));
+                return result;
+            }, [projects, searchQuery, filterCategory, sortBy]);
+
+            const categories = ['All', ...new Set(projects.map(p => p.category))];
+
+            return (
+                <div className="min-h-screen bg-darker p-6 pb-32 font-sans relative">
+                    {/* Header */}
+                    <header className="max-w-7xl mx-auto flex flex-col xl:flex-row items-center justify-between gap-6 mb-8">
+                        <div className="flex items-center gap-4 w-full xl:w-auto">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                                <Icon name="cube" weight="fill" size={24} />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-white tracking-tight">Stefone Manager <span className="text-xs bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded ml-2 font-mono">v3.0</span></h1>
+                                <p className="text-gray-400 text-xs">Vibe Coding Portfolio CMS</p>
+                            </div>
+                        </div>
+
+                        <div className="flex bg-card p-1 rounded-lg border border-gray-800">
+                            {[
+                                { id: 'grid', icon: 'squares-four', label: 'Grid' },
+                                { id: 'kanban', icon: 'columns', label: 'Kanban' },
+                                { id: 'stats', icon: 'chart-bar', label: 'Stats' }
+                            ].map(mode => (
+                                <button 
+                                    key={mode.id}
+                                    onClick={() => setViewMode(mode.id)} 
+                                    className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === mode.id ? 'bg-primary text-white shadow-md' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    <Icon name={mode.icon} weight={viewMode === mode.id ? 'fill' : 'regular'} />
+                                    {mode.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                             <div className="flex items-center gap-1 bg-card border border-gray-700 rounded-lg p-1 mr-2">
+                                <button onClick={undo} disabled={historyIndex === 0} className="p-2 text-gray-400 hover:text-white disabled:opacity-30 transition-colors" title="Undo (Ctrl+Z)"><Icon name="arrow-u-up-left" weight="bold" /></button>
+                                <div className="w-px h-4 bg-gray-700"></div>
+                                <button onClick={redo} disabled={historyIndex === history.length - 1} className="p-2 text-gray-400 hover:text-white disabled:opacity-30 transition-colors" title="Redo (Ctrl+Shift+Z)"><Icon name="arrow-u-up-right" weight="bold" /></button>
+                            </div>
+                            <button onClick={() => setIsHealthOpen(true)} className="p-2 bg-card hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-green-400 transition-colors" title="Health Check"><Icon name="heartbeat" weight="fill" /></button>
+                            <button onClick={() => setIsDiscoverOpen(true)} className="p-2 bg-card hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-blue-400 transition-colors" title="Discover Projects"><Icon name="binoculars" weight="fill" /></button>
+                            <button onClick={handleExport} className="p-2 bg-card hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-white transition-colors" title="Export JSON"><Icon name="download-simple" /></button>
+                            <label className="p-2 bg-card hover:bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer" title="Import JSON"><Icon name="upload-simple" /><input type="file" accept=".json" onChange={handleFileUpload} className="hidden" /></label>
+                            <button onClick={handleClearAll} className="p-2 bg-card hover:bg-red-900/20 border border-gray-700 rounded-lg text-gray-400 hover:text-red-500 transition-colors" title="Clear All Projects"><Icon name="trash" /></button>
+                            <button onClick={() => openModal()} className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2"><Icon name="plus" weight="bold" /> New Project</button>
+                        </div>
+                    </header>
+
+                    {/* Filter Bar (Only for Grid) */}
+                    {viewMode === 'grid' && (
+                        <div className="max-w-7xl mx-auto mb-6 glass-panel rounded-xl p-3 flex flex-wrap gap-4 items-center justify-between">
+                            <div className="flex items-center gap-2 bg-darker px-3 py-2 rounded-lg border border-gray-700 w-full md:w-64 focus-within:border-primary transition-colors">
+                                <Icon name="magnifying-glass" className="text-gray-500" />
+                                <input type="text" placeholder="Search projects..." className="bg-transparent outline-none text-sm w-full placeholder-gray-600" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                            </div>
+                            <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0 items-center">
+                                <select 
+                                    value={sortBy} 
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                    className="bg-darker border border-gray-700 text-gray-400 text-xs rounded-lg px-2 py-2 outline-none focus:border-gray-500 cursor-pointer"
+                                >
+                                    <option value="manual">Manual Order</option>
+                                    <option value="date-newest">Newest First</option>
+                                    <option value="date-oldest">Oldest First</option>
+                                    <option value="alpha">A-Z</option>
+                                </select>
+                                <div className="w-px h-6 bg-gray-700 mx-2 hidden md:block"></div>
+                                {categories.map(cat => (
+                                    <button key={cat} onClick={() => setFilterCategory(cat)} className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${filterCategory === cat ? 'bg-white text-black' : 'bg-darker border border-gray-700 text-gray-400 hover:text-white'}`}>{cat}</button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Main Content Area */}
+                    <main className="max-w-7xl mx-auto">
+                        
+                        {viewMode === 'stats' && <StatsDashboard projects={projects} />}
+                        
+                        {viewMode === 'kanban' && <KanbanBoard projects={filteredProjects} onUpdateStatus={handleKanbanStatusUpdate} onEdit={openModal} />}
+
+                        {viewMode === 'grid' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+                                {filteredProjects.map((project, idx) => (
+                                    <div key={project.slug} className={`group bg-card rounded-xl border overflow-hidden transition-all flex flex-col h-full hover:shadow-2xl hover:shadow-black/50 ${selectedIds.has(project.slug) ? 'border-primary ring-1 ring-primary' : 'border-gray-800 hover:border-gray-600'}`}>
+                                        <div className="relative aspect-video w-full bg-darker border-b border-gray-800 group-hover:brightness-110 transition-all">
+                                            {project.thumbnail ? <img src={project.thumbnail} className="w-full h-full object-cover" onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }} /> : null}
+                                            <div className="absolute inset-0 hidden flex-col items-center justify-center text-gray-600"><Icon name="image-broken" size={32} /></div>
+                                            <div className="absolute top-3 right-3 flex gap-2">
+                                                 {project.featured && <div className="bg-yellow-500/90 text-black px-2 py-0.5 rounded text-[10px] font-bold uppercase shadow-sm">Featured</div>}
+                                            </div>
+                                            <div className="absolute top-3 left-3" onClick={(e) => { e.stopPropagation(); toggleSelection(project.slug); }}>
+                                                <div className={`w-6 h-6 rounded border flex items-center justify-center cursor-pointer transition-colors shadow-sm ${selectedIds.has(project.slug) ? 'bg-primary border-primary text-white' : 'bg-black/50 border-white/20 text-transparent hover:border-white/50'}`}><Icon name="check" size={14} weight="bold" /></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="p-5 flex-1 flex flex-col">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors">{project.title}</h3>
+                                                    <StatusBadge status={project.status || 'Draft'} />
+                                                </div>
+                                            </div>
+                                            <p className="text-gray-400 text-sm mb-4 line-clamp-2">{project.description}</p>
+                                            
+                                            <div className="flex flex-wrap gap-1.5 mb-4">
+                                                {project.tags.slice(0, 4).map(tag => <span key={tag} className="text-[10px] px-2 py-0.5 bg-gray-800/50 text-gray-400 rounded border border-gray-700/50">#{tag}</span>)}
+                                                {project.tags.length > 4 && <span className="text-[10px] text-gray-500 py-0.5">+{project.tags.length - 4}</span>}
+                                            </div>
+
+                                            <div className="mt-auto pt-4 border-t border-gray-800 flex items-center gap-2">
+                                                {/* Move Up/Down Buttons (Only visible in Manual Mode & No Filter) */}
+                                                {isDragEnabled && (
+                                                    <div className="flex gap-1 mr-2 border-r border-gray-800 pr-2">
+                                                        <button 
+                                                            onClick={(e) => moveProject(idx, 'up', e)} 
+                                                            disabled={idx === 0} 
+                                                            className="p-1 rounded hover:bg-gray-700 text-gray-500 hover:text-white disabled:opacity-20 transition-colors"
+                                                            title="Move Up"
+                                                        >
+                                                            <Icon name="caret-up" size={14} weight="bold" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={(e) => moveProject(idx, 'down', e)} 
+                                                            disabled={idx === projects.length - 1} 
+                                                            className="p-1 rounded hover:bg-gray-700 text-gray-500 hover:text-white disabled:opacity-20 transition-colors"
+                                                            title="Move Down"
+                                                        >
+                                                            <Icon name="caret-down" size={14} weight="bold" />
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {project.demoUrl && <a href={project.demoUrl} target="_blank" className="p-2 text-gray-400 hover:text-blue-400 bg-darker rounded hover:bg-gray-800 transition-colors" title="Live Demo"><Icon name="globe" /></a>}
+                                                {project.repoUrl && <a href={project.repoUrl} target="_blank" className="p-2 text-gray-400 hover:text-white bg-darker rounded hover:bg-gray-800 transition-colors" title="Source Code"><Icon name="github-logo" /></a>}
+                                                <div className="flex-1"></div>
+                                                <button onClick={() => openModal(project)} className="px-3 py-1.5 text-xs font-medium bg-gray-800 hover:bg-gray-700 text-white rounded transition-colors border border-transparent hover:border-gray-600">Edit</button>
+                                                <button onClick={() => setDeleteTarget(project)} className="p-1.5 text-red-500 hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"><Icon name="trash" /></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Bottom Toolbar for Bulk Actions */}
+                    {selectedIds.size > 0 && (
+                        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[#18181b] border border-gray-700 rounded-full shadow-2xl p-2 pl-6 pr-2 flex items-center gap-4 animate-slide-up">
+                            <span className="text-sm font-bold text-white">{selectedIds.size} selected</span>
+                            <div className="h-4 w-px bg-gray-700"></div>
+                            <button onClick={() => { if (confirm("Delete selected?")) { updateProjects(projects.filter(p => !selectedIds.has(p.slug))); setSelectedIds(new Set()); } }} className="text-xs font-bold text-red-400 hover:text-red-300 uppercase tracking-wide px-2">Delete</button>
+                            <button onClick={() => setSelectedIds(new Set())} className="w-8 h-8 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center"><Icon name="x" /></button>
+                        </div>
+                    )}
+
+                    {/* Modals */}
+                    <HealthCheckModal isOpen={isHealthOpen} onClose={() => setIsHealthOpen(false)} projects={projects} />
+                    <DiscoveryModal 
+                        isOpen={isDiscoverOpen} 
+                        onClose={() => setIsDiscoverOpen(false)} 
+                        projects={projects} 
+                        onAddProject={(data) => { 
+                            setIsDiscoverOpen(false); 
+                            openModal(data, true); // Pass true to indicate this is a discovery add, not an edit
+                        }} 
+                    />
+                    
+                    {/* Main Editor Modal */}
+                    {isModalOpen && (
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                            <div className="bg-[#121214] border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col animate-slide-up">
+                                <div className="p-6 border-b border-gray-800 flex justify-between items-center sticky top-0 bg-[#121214]/95 backdrop-blur z-10">
+                                    <h2 className="text-xl font-bold text-white flex items-center gap-2">{editingProject ? 'Edit Project' : 'New Project'}</h2>
+                                    <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white"><Icon name="x" size={24} /></button>
+                                </div>
+                                <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
+                                    {Object.values(formErrors).length > 0 && <div className="p-3 bg-red-900/10 text-red-300 text-xs rounded border border-red-900/20">{Object.values(formErrors)[0]}</div>}
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1"><label className="text-xs font-medium text-gray-400 uppercase">Title</label><input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value, slug: !editingProject ? e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') : formData.slug})} className="w-full bg-darker border border-gray-700 rounded-lg p-2.5 text-sm outline-none focus:border-primary transition-colors" /></div>
+                                        <div className="space-y-1"><label className="text-xs font-medium text-gray-400 uppercase">Slug</label><input required type="text" value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="w-full bg-darker border border-gray-700 rounded-lg p-2.5 text-sm font-mono text-gray-300 outline-none focus:border-primary transition-colors" /></div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-medium text-gray-400 uppercase">Status</label>
+                                            <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-darker border border-gray-700 rounded-lg p-2.5 text-sm outline-none focus:border-primary">
+                                                <option value="Idea">Idea</option>
+                                                <option value="Draft">Draft</option>
+                                                <option value="In Progress">In Progress</option>
+                                                <option value="Live">Live</option>
+                                                <option value="Archived">Archived</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-medium text-gray-400 uppercase">Category</label>
+                                            <CategoryInput 
+                                                value={formData.category} 
+                                                onChange={(val) => setFormData({...formData, category: val})}
+                                                options={formCategories}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1"><label className="text-xs font-medium text-gray-400 uppercase">Description</label><textarea rows="3" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-darker border border-gray-700 rounded-lg p-2.5 text-sm outline-none focus:border-primary resize-none"></textarea></div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1"><label className="text-xs font-medium text-gray-400 uppercase">Demo Link</label><div className="relative"><Icon name="globe" className="absolute left-3 top-2.5 text-gray-500" /><input type="url" value={formData.demoUrl} onChange={e => setFormData({...formData, demoUrl: e.target.value})} className="w-full bg-darker border border-gray-700 rounded-lg pl-9 p-2.5 text-sm outline-none focus:border-primary" placeholder="https://..." /></div></div>
+                                        <div className="space-y-1"><label className="text-xs font-medium text-gray-400 uppercase">Repo Link</label><div className="relative"><Icon name="github-logo" className="absolute left-3 top-2.5 text-gray-500" /><input type="url" value={formData.repoUrl} onChange={e => setFormData({...formData, repoUrl: e.target.value})} className="w-full bg-darker border border-gray-700 rounded-lg pl-9 p-2.5 text-sm outline-none focus:border-primary" placeholder="https://..." /></div></div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-gray-400 uppercase">Thumbnail</label>
+                                        <div className="flex gap-4">
+                                            <input type="text" value={formData.thumbnail} onChange={e => setFormData({...formData, thumbnail: e.target.value})} className="flex-1 bg-darker border border-gray-700 rounded-lg p-2.5 text-xs font-mono outline-none focus:border-primary" />
+                                            <div className="w-16 h-12 bg-darker border border-gray-700 rounded overflow-hidden flex items-center justify-center">
+                                                {formData.thumbnail ? <img src={formData.thumbnail} className="w-full h-full object-cover" onError={e=>e.target.style.display='none'} /> : <Icon name="image" />}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1"><label className="text-xs font-medium text-gray-400 uppercase">Tags</label><TagInput tags={formData.tags} suggestions={allTags} onChange={newTags => setFormData({...formData, tags: newTags})} /></div>
+
+                                    <div className="flex items-center gap-2 py-2">
+                                        <input type="checkbox" id="featured" checked={formData.featured} onChange={e => setFormData({...formData, featured: e.target.checked})} className="w-4 h-4 rounded bg-darker border-gray-700 text-primary focus:ring-offset-darker focus:ring-primary" />
+                                        <label htmlFor="featured" className="text-sm text-gray-300 select-none">Mark as Featured</label>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-gray-800 flex justify-end gap-3 sticky bottom-0 bg-[#121214] pb-2">
+                                        <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white">Cancel</button>
+                                        <button type="submit" className="px-6 py-2 bg-primary hover:bg-blue-600 text-white text-sm font-bold rounded-lg shadow-lg shadow-blue-500/20">{editingProject ? 'Save' : 'Create'}</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {deleteTarget && (
+                        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                            <div className="bg-[#121214] border border-gray-700 rounded-xl w-full max-w-sm shadow-2xl p-6 text-center animate-slide-up">
+                                <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto mb-4 border border-red-500/20"><Icon name="warning" size={24} weight="fill" /></div>
+                                <h3 className="text-lg font-bold text-white mb-2">Delete Project?</h3>
+                                <div className="flex gap-3 w-full mt-6">
+                                    <button onClick={() => setDeleteTarget(null)} className="flex-1 px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg">Cancel</button>
+                                    <button onClick={() => { updateProjects(projects.filter(p => p !== deleteTarget)); setDeleteTarget(null); showToast("Deleted", "success"); }} className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
