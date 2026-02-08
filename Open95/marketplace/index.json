@@ -1,0 +1,24 @@
+{
+  "marketplace": {
+    "name": "Open95 Marketplace",
+    "maintainer": "Stefone.com"
+  },
+  "apps": [
+    {
+      "id": "pixelpad",
+      "name": "PixelPad",
+      "description": "PixelPad is a free, image editing program that offers powerful tools for photo retouching, graphic design, and digital art, making it a alternative to Adobe Photoshop.",
+      "version": "1.0.0",
+      "path": "/pixelpad/app.json",
+      "icon": "icon.png"
+    },
+    {
+      "id": "tunebox",
+      "name": "TuneBox",
+      "description": "TuneBox lets you upload and play your own MP3 files.",
+      "version": "1.0.0",
+      "path": "/tunebox/app.json",
+      "icon": "icon.png"
+    }
+  ]
+}

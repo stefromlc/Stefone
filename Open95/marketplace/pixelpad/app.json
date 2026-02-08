@@ -1,0 +1,17 @@
+{
+  "id": "pixelpad",
+  "name": "PixelPad",
+  "author": "Stefone",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "icon": {
+    "type": "url",
+    "value": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/The_GIMP_icon_-_v3.0.svg/1280px-The_GIMP_icon_-_v3.0.svg.png"
+  },
+  "window": {
+    "width": 1100,
+    "height": 720,
+    "resizable": true
+  },
+  "permissions": []
+}

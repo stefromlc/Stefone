@@ -1,0 +1,17 @@
+{
+  "id": "tunebox",
+  "name": "TuneBox",
+  "author": "Stefone",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "icon": {
+    "type": "url",
+    "value": "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/f46a6f2e-69a3-44a9-b82d-9c3b502e92d4/deunhkf-439c7be1-b553-483a-b913-727f2a098c35.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi9mNDZhNmYyZS02OWEzLTQ0YTktYjgyZC05YzNiNTAyZTkyZDQvZGV1bmhrZi00MzljN2JlMS1iNTUzLTQ4M2EtYjkxMy03MjdmMmEwOThjMzUucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.dStnDwPYv-EDMFcFO3mT8MfRAyY2agVyJh9JAlP6fIs"
+  },
+  "window": {
+    "width": 960,
+    "height": 640,
+    "resizable": true
+  },
+  "permissions": []
+}

@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PixelPad</title>
+<link rel="icon" href="/favicon.png" type="image/png">
+  <style>
+    :root{
+      --bg: #c0c0c0;
+      --panel: #d7d7d7;
+      --panel2: #e6e6e6;
+      --borderDark: #7a7a7a;
+      --borderLight: #ffffff;
+      --text: #111;
+      --shadow: rgba(0,0,0,.08);
+      --accent: #0b57d0;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: "MS Sans Serif", Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:var(--bg);
+      color:var(--text);
+      overflow:hidden;
+      user-select:none;
+    }
+
+    /* win95-ish bevel */
+    .bevel{
+      border: 1px solid var(--borderDark);
+      box-shadow:
+        inset 1px 1px 0 var(--borderLight),
+        inset -1px -1px 0 #9a9a9a;
+      background: var(--panel);
+    }
+
+    .app{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      padding:6px;
+    }
+
+    /* Menu bar */
+    .menubar{
+      display:flex;
+      gap:8px;
+      padding:4px 6px;
+      align-items:center;
+    }
+    .menuitem{
+      padding:2px 8px;
+      cursor:pointer;
+      border-radius:3px;
+    }
+    .menuitem:hover{
+      background:#000;
+      color:#fff;
+    }
+    .menuitem[aria-expanded="true"]{
+      background:#000;
+      color:#fff;
+    }
+
+    .dropdown{
+      position:fixed;
+      display:none;
+      min-width:220px;
+      padding:4px;
+      z-index:50;
+      background: var(--panel2);
+      border:1px solid var(--borderDark);
+      box-shadow: 4px 4px 0 rgba(0,0,0,.15);
+    }
+    .dd-item{
+      padding:6px 8px;
+      font-size:12px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-radius:3px;
+    }
+    .dd-item:hover{
+      background: var(--accent);
+      color:#fff;
+    }
+    .dd-sep{
+      height:1px;
+      background:#b4b4b4;
+      margin:4px 0;
+    }
+    .kbd{
+      font-family:var(--mono);
+      font-size:11px;
+      opacity:.85;
+    }
+    .dd-item[aria-disabled="true"]{
+      opacity:.45;
+      pointer-events:none;
+    }
+
+    /* Main layout */
+    .main{
+      flex:1;
+      display:grid;
+      grid-template-columns: 64px 1fr 280px;
+      gap:6px;
+      min-height:0;
+    }
+
+    /* Toolbar */
+    .toolbar{
+      padding:6px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-height:0;
+    }
+    .toolbtn{
+      width:100%;
+      height:44px;
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      border-radius:4px;
+      background: var(--panel2);
+      border:1px solid #9f9f9f;
+      box-shadow: inset 1px 1px 0 #fff;
+      text-align:center;
+      line-height:1.1;
+      padding:4px;
+    }
+    .toolbtn:hover{ filter:brightness(1.03); }
+    .toolbtn.active{
+      outline:2px solid var(--accent);
+      outline-offset:-2px;
+    }
+
+    /* Canvas workspace */
+    .workspace{
+      min-width:0;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:6px;
+    }
+    .pill{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:4px 8px;
+      background: var(--panel2);
+      border:1px solid #a3a3a3;
+      border-radius:999px;
+      box-shadow: inset 1px 1px 0 #fff;
+      font-size:12px;
+      min-width:0;
+    }
+    .pill label{ opacity:.85; }
+    .pill input[type="range"]{ width:140px; }
+    .pill input[type="number"]{
+      width:64px;
+      font-family:var(--mono);
+      font-size:12px;
+      padding:3px 6px;
+      border:1px solid #9f9f9f;
+      background:#fff;
+      border-radius:6px;
+    }
+    .pill input[type="color"]{
+      width:34px; height:26px; border:1px solid #9f9f9f; background:#fff; border-radius:6px;
+      padding:0;
+    }
+    .pill .btn{
+      padding:4px 8px;
+      border:1px solid #9f9f9f;
+      background:#fff;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:12px;
+    }
+    .pill .btn:hover{ filter:brightness(1.02); }
+
+    .canvasWrap{
+      flex:1;
+      min-height:0;
+      position:relative;
+      overflow:hidden;
+      background:
+        linear-gradient(45deg, #dcdcdc 25%, transparent 25%),
+        linear-gradient(-45deg, #dcdcdc 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #dcdcdc 75%),
+        linear-gradient(-45deg, transparent 75%, #dcdcdc 75%);
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
+      border:1px solid var(--borderDark);
+      box-shadow: inset 1px 1px 0 var(--borderLight);
+    }
+
+    canvas#view{
+      position:absolute;
+      left:0; top:0;
+      image-rendering: pixelated;
+    }
+
+    .hud{
+      position:absolute;
+      left:8px;
+      bottom:8px;
+      background: rgba(255,255,255,.85);
+      border:1px solid #b5b5b5;
+      padding:6px 8px;
+      border-radius:10px;
+      box-shadow: 0 6px 16px var(--shadow);
+      font-size:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      user-select:none;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:50%;
+      background:#2e7d32;
+      box-shadow: 0 0 0 2px rgba(46,125,50,.15);
+    }
+    .hud .mono{ font-family:var(--mono); }
+
+    /* Right panel */
+    .side{
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .panel{
+      padding:10px;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .panel h3{
+      margin:0;
+      font-size:13px;
+    }
+    .row{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      font-size:12px;
+    }
+    .row .btn{
+      padding:6px 10px;
+      border:1px solid #9f9f9f;
+      background:#fff;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:12px;
+    }
+    .row .btn:hover{ filter:brightness(1.02); }
+
+    .layers{
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .layerList{
+      flex:1;
+      min-height:0;
+      overflow:auto;
+      background:#fff;
+      border:1px solid #9f9f9f;
+      border-radius:10px;
+      padding:6px;
+      box-shadow: inset 1px 1px 0 #fff;
+    }
+    .layerItem{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:6px 8px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:12px;
+      border:1px solid transparent;
+    }
+    .layerItem:hover{ background:#f2f6ff; }
+    .layerItem.active{
+      background:#e8f0ff;
+      border-color:#c7d8ff;
+    }
+    .layerMeta{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+    }
+    .eye{
+      width:22px;
+      height:22px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid #c8c8c8;
+      border-radius:7px;
+      background:#fafafa;
+      flex:0 0 auto;
+      cursor:pointer;
+    }
+    .eye:hover{ filter:brightness(1.02); }
+    .lname{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:150px;
+    }
+    .tag{
+      font-family:var(--mono);
+      font-size:11px;
+      opacity:.7;
+      flex:0 0 auto;
+    }
+    .field{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+    }
+    .field input[type="range"]{ flex:1; }
+
+    /* Status bar */
+    .status{
+      padding:6px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-size:12px;
+    }
+    .status .mono{ font-family:var(--mono); }
+    .toast{
+      position:fixed;
+      right:10px;
+      bottom:10px;
+      z-index:100;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      pointer-events:none;
+    }
+    .toastItem{
+      pointer-events:none;
+      background:rgba(0,0,0,.82);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:12px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.18);
+      font-size:12px;
+      max-width:360px;
+      line-height:1.25;
+    }
+
+    /* Hidden file input */
+    #fileInput{ display:none; }
+
+    /* Small helpers */
+    .muted{ opacity:.75; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="menubar bevel" id="menubar">
+      <div class="menuitem" data-menu="file" tabindex="0">File</div>
+      <div class="menuitem" data-menu="edit" tabindex="0">Edit</div>
+      <div class="menuitem" data-menu="image" tabindex="0">Image</div>
+      <div class="menuitem" data-menu="view" tabindex="0">View</div>
+      <div class="menuitem" data-menu="help" tabindex="0">Help</div>
+      <div style="margin-left:auto; font-size:12px;" class="muted">PixelPad (sandbox)</div>
+    </div>
+
+    <div class="main">
+      <div class="toolbar bevel" id="toolbar">
+        <button class="toolbtn active" data-tool="brush" title="Brush (B)">Brush<br><span class="muted">B</span></button>
+        <button class="toolbtn" data-tool="eraser" title="Eraser (E)">Eraser<br><span class="muted">E</span></button>
+        <button class="toolbtn" data-tool="line" title="Line (L)">Line<br><span class="muted">L</span></button>
+        <button class="toolbtn" data-tool="rect" title="Rectangle (R)">Rect<br><span class="muted">R</span></button>
+        <button class="toolbtn" data-tool="ellipse" title="Ellipse (O)">Ellipse<br><span class="muted">O</span></button>
+        <button class="toolbtn" data-tool="fill" title="Fill (F)">Fill<br><span class="muted">F</span></button>
+        <button class="toolbtn" data-tool="text" title="Text (T)">Text<br><span class="muted">T</span></button>
+        <button class="toolbtn" data-tool="move" title="Move (V)">Move<br><span class="muted">V</span></button>
+      </div>
+
+      <div class="workspace">
+        <div class="topbar bevel">
+          <div class="pill">
+            <label>Color</label>
+            <input id="color" type="color" value="#111111" />
+          </div>
+          <div class="pill">
+            <label>Size</label>
+            <input id="size" type="range" min="1" max="80" value="12" />
+            <span class="mono" id="sizeLabel">12</span>
+          </div>
+          <div class="pill">
+            <label>Zoom</label>
+            <input id="zoom" type="range" min="10" max="800" value="100" />
+            <span class="mono" id="zoomLabel">100%</span>
+            <button class="btn" id="zoomFit" title="Fit (Shift+0)">Fit</button>
+            <button class="btn" id="zoom100" title="100% (0)">100%</button>
+          </div>
+          <div class="pill" style="min-width:260px;">
+            <label>Canvas</label>
+            <input id="cw" type="number" min="16" max="8192" value="1024" />
+            <span class="muted">×</span>
+            <input id="ch" type="number" min="16" max="8192" value="768" />
+            <button class="btn" id="resizeCanvas">Resize</button>
+          </div>
+        </div>
+
+        <div class="canvasWrap" id="canvasWrap">
+          <canvas id="view" width="800" height="600"></canvas>
+
+          <div class="hud">
+            <div class="dot" title="All local; no network"></div>
+            <div><span class="muted">Tool:</span> <span class="mono" id="hudTool">brush</span></div>
+            <div><span class="muted">Layer:</span> <span class="mono" id="hudLayer">Background</span></div>
+            <div><span class="muted">Pos:</span> <span class="mono" id="hudPos">0,0</span></div>
+            <div><span class="muted">Hint:</span> <span class="mono" id="hudHint">Drag to draw • Space to pan • Ctrl+Z undo</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="panel bevel">
+          <h3>Layers</h3>
+
+          <div class="row">
+            <button class="btn" id="addLayer">+ Add</button>
+            <button class="btn" id="dupLayer">Duplicate</button>
+            <button class="btn" id="delLayer">Delete</button>
+          </div>
+
+          <div class="layers">
+            <div class="layerList" id="layerList"></div>
+
+            <div class="field">
+              <span class="muted" style="min-width:58px;">Opacity</span>
+              <input id="opacity" type="range" min="0" max="100" value="100" />
+              <span class="mono" id="opacityLabel">100%</span>
+            </div>
+
+            <div class="row">
+              <button class="btn" id="mergeDown">Merge down</button>
+              <button class="btn" id="flatten">Flatten</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel bevel" style="padding-top:8px;">
+          <h3>Quick Actions</h3>
+          <div class="row">
+            <button class="btn" id="importBtn">Import PNG/JPG</button>
+            <button class="btn" id="exportBtn">Export PNG</button>
+          </div>
+          <div class="row">
+            <button class="btn" id="clearLayer">Clear layer</button>
+            <button class="btn" id="newDoc">New</button>
+          </div>
+          <div class="row muted" style="line-height:1.35;">
+            Shortcuts: <span class="mono">B E L R O F T V</span> •
+            <span class="mono">Ctrl+Z / Ctrl+Shift+Z</span> •
+            <span class="mono">Ctrl+S</span> export •
+            <span class="mono">Ctrl+O</span> import •
+            <span class="mono">Space</span> pan
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status bevel">
+      <div class="mono" id="statusLeft">Ready.</div>
+      <div class="mono" id="statusRight">1024×768 • 1 layer • 100%</div>
+    </div>
+  </div>
+
+  <div class="dropdown" id="dd"></div>
+  <div class="toast" id="toast"></div>
+  <input id="fileInput" type="file" accept="image/png,image/jpeg" />
+
+  <script>
+    // PixelPad — "feels real" editor in a sandbox.
+    // No external libs, no network, no filesystem writes; import/export uses file input + download link.
+
+    const APP_ID = "pixelpad";
+
+    function emit(event, detail = {}) {
+      // Optional OS telemetry hook (same shape as your Hello World Ping).
+      window.parent?.postMessage?.({ type: "APP_EVENT", appId: APP_ID, event, detail }, "*");
+    }
+
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+    // UI elements
+    const view = $("#view");
+    const vctx = view.getContext("2d", { willReadFrequently: true });
+    const wrap = $("#canvasWrap");
+    const toolButtons = $$(".toolbtn");
+    const sizeEl = $("#size"), sizeLabel = $("#sizeLabel");
+    const colorEl = $("#color");
+    const zoomEl = $("#zoom"), zoomLabel = $("#zoomLabel");
+    const zoomFitBtn = $("#zoomFit"), zoom100Btn = $("#zoom100");
+    const cwEl = $("#cw"), chEl = $("#ch"), resizeBtn = $("#resizeCanvas");
+    const layerListEl = $("#layerList");
+    const opacityEl = $("#opacity"), opacityLabel = $("#opacityLabel");
+    const statusLeft = $("#statusLeft"), statusRight = $("#statusRight");
+    const hudTool = $("#hudTool"), hudLayer = $("#hudLayer"), hudPos = $("#hudPos"), hudHint = $("#hudHint");
+    const fileInput = $("#fileInput");
+    const toastEl = $("#toast");
+
+    // Menus
+    const menubar = $("#menubar");
+    const dd = $("#dd");
+
+    const state = {
+      tool: "brush",
+      size: 12,
+      color: "#111111",
+      zoom: 1,
+      panX: 0,
+      panY: 0,
+      isPanning: false,
+      isDrawing: false,
+      pointerId: null,
+      startX: 0,
+      startY: 0,
+      lastX: 0,
+      lastY: 0,
+      docW: 1024,
+      docH: 768,
+      layers: [],
+      activeLayer: 0,
+      history: [],
+      historyIndex: -1,
+      tempOverlay: document.createElement("canvas"), // for shape previews
+      textDraft: null
+    };
+
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    function toast(msg) {
+      const div = document.createElement("div");
+      div.className = "toastItem";
+      div.textContent = msg;
+      toastEl.appendChild(div);
+      setTimeout(() => div.remove(), 2400);
+    }
+
+    function setStatus(left, right) {
+      if (left != null) statusLeft.textContent = left;
+      if (right != null) statusRight.textContent = right;
+    }
+
+    function makeLayer(name) {
+      const c = document.createElement("canvas");
+      c.width = state.docW;
+      c.height = state.docH;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.clearRect(0,0,c.width,c.height);
+      return {
+        id: Math.random().toString(16).slice(2),
+        name,
+        canvas: c,
+        ctx,
+        visible: true,
+        opacity: 1
+      };
+    }
+
+    function resetDoc(w, h) {
+      state.docW = w; state.docH = h;
+      cwEl.value = w; chEl.value = h;
+
+      state.layers = [ makeLayer("Background") ];
+      state.activeLayer = 0;
+
+      // a tiny "starter" so it doesn't feel empty
+      const g = state.layers[0].ctx;
+      g.fillStyle = "#ffffff";
+      g.fillRect(0,0,w,h);
+      g.fillStyle = "#111";
+      g.font = "28px " + getComputedStyle(document.body).fontFamily;
+      g.fillText("PixelPad", 24, 48);
+      g.font = "14px " + getComputedStyle(document.body).fontFamily;
+      g.fillText("Sandbox editor • Layers • Undo • Filters • Export PNG", 24, 76);
+
+      state.panX = 20; state.panY = 20;
+      setZoom(1);
+      rebuildLayerList();
+      pushHistory("New document");
+      render();
+      emit("DOC_NEW", { w, h });
+    }
+
+    function resizeDoc(newW, newH) {
+      newW = clamp(newW|0, 16, 8192);
+      newH = clamp(newH|0, 16, 8192);
+      if (newW === state.docW && newH === state.docH) return;
+
+      for (const layer of state.layers) {
+        const old = layer.canvas;
+        const oldW = old.width, oldH = old.height;
+        const n = document.createElement("canvas");
+        n.width = newW; n.height = newH;
+        const nctx = n.getContext("2d", { willReadFrequently: true });
+        nctx.clearRect(0,0,newW,newH);
+        nctx.drawImage(old, 0,0, oldW, oldH, 0,0, oldW, oldH);
+        layer.canvas = n;
+        layer.ctx = nctx;
+      }
+      state.docW = newW; state.docH = newH;
+      state.tempOverlay.width = newW;
+      state.tempOverlay.height = newH;
+      setStatus(`Canvas resized to ${newW}×${newH}.`, null);
+      pushHistory("Resize canvas");
+      render();
+      rebuildLayerList();
+      emit("DOC_RESIZE", { w: newW, h: newH });
+    }
+
+    function pushHistory(label) {
+      // snapshot all layers (ImageData per layer) — heavier, but simple + reliable in a sandbox.
+      const snap = state.layers.map(l => ({
+        visible: l.visible,
+        opacity: l.opacity,
+        name: l.name,
+        data: l.ctx.getImageData(0,0,state.docW,state.docH)
+      }));
+
+      // truncate redo branch
+      state.history = state.history.slice(0, state.historyIndex + 1);
+      state.history.push({ label, snap, w: state.docW, h: state.docH, active: state.activeLayer });
+      state.historyIndex++;
+
+      // cap
+      const MAX = 50;
+      if (state.history.length > MAX) {
+        const extra = state.history.length - MAX;
+        state.history.splice(0, extra);
+        state.historyIndex -= extra;
+      }
+      setStatus(label + ".", null);
+      emit("HISTORY_PUSH", { label });
+      updateMenuDisabled();
+    }
+
+    function restoreFromHistory(entry) {
+      if (!entry) return;
+      // ensure doc size
+      if (entry.w !== state.docW || entry.h !== state.docH) {
+        // rebuild layers with new size
+        state.docW = entry.w;
+        state.docH = entry.h;
+        cwEl.value = entry.w; chEl.value = entry.h;
+      }
+      state.layers = entry.snap.map((s, i) => {
+        const l = makeLayer(s.name || `Layer ${i+1}`);
+        l.visible = s.visible;
+        l.opacity = s.opacity;
+        l.ctx.putImageData(s.data, 0,0);
+        return l;
+      });
+      state.activeLayer = clamp(entry.active, 0, state.layers.length-1);
+      rebuildLayerList();
+      render();
+      updateStatusRight();
+    }
+
+    function undo() {
+      if (state.historyIndex <= 0) return;
+      state.historyIndex--;
+      restoreFromHistory(state.history[state.historyIndex]);
+      setStatus("Undo.", null);
+      emit("UNDO");
+      updateMenuDisabled();
+    }
+
+    function redo() {
+      if (state.historyIndex >= state.history.length - 1) return;
+      state.historyIndex++;
+      restoreFromHistory(state.history[state.historyIndex]);
+      setStatus("Redo.", null);
+      emit("REDO");
+      updateMenuDisabled();
+    }
+
+    function updateStatusRight() {
+      const visLayers = state.layers.length;
+      statusRight.textContent = `${state.docW}×${state.docH} • ${visLayers} layer${visLayers===1?"":"s"} • ${Math.round(state.zoom*100)}%`;
+      hudTool.textContent = state.tool;
+      hudLayer.textContent = state.layers[state.activeLayer]?.name ?? "—";
+    }
+
+    function rebuildLayerList() {
+      layerListEl.innerHTML = "";
+      state.layers.forEach((layer, idx) => {
+        const item = document.createElement("div");
+        item.className = "layerItem" + (idx===state.activeLayer ? " active" : "");
+        item.dataset.idx = idx;
+
+        const meta = document.createElement("div");
+        meta.className = "layerMeta";
+
+        const eye = document.createElement("div");
+        eye.className = "eye";
+        eye.title = layer.visible ? "Hide layer" : "Show layer";
+        eye.textContent = layer.visible ? "👁" : "—";
+        eye.addEventListener("click", (e) => {
+          e.stopPropagation();
+          layer.visible = !layer.visible;
+          rebuildLayerList();
+          render();
+          pushHistory(layer.visible ? "Show layer" : "Hide layer");
+        });
+
+        const name = document.createElement("div");
+        name.className = "lname";
+        name.textContent = layer.name;
+
+        name.addEventListener("dblclick", (e) => {
+          e.stopPropagation();
+          const n = prompt("Layer name:", layer.name);
+          if (n != null && n.trim()) {
+            layer.name = n.trim();
+            rebuildLayerList();
+            pushHistory("Rename layer");
+          }
+        });
+
+        const tag = document.createElement("div");
+        tag.className = "tag";
+        tag.textContent = `${Math.round(layer.opacity*100)}%`;
+
+        meta.appendChild(eye);
+        meta.appendChild(name);
+
+        item.appendChild(meta);
+        item.appendChild(tag);
+
+        item.addEventListener("click", () => {
+          state.activeLayer = idx;
+          opacityEl.value = Math.round(layer.opacity*100);
+          opacityLabel.textContent = `${opacityEl.value}%`;
+          rebuildLayerList();
+          updateStatusRight();
+          render();
+          emit("LAYER_SELECT", { idx });
+        });
+
+        layerListEl.appendChild(item);
+      });
+
+      const active = state.layers[state.activeLayer];
+      if (active) {
+        opacityEl.value = Math.round(active.opacity*100);
+        opacityLabel.textContent = `${opacityEl.value}%`;
+      }
+      updateStatusRight();
+    }
+
+    function setTool(tool) {
+      state.tool = tool;
+      toolButtons.forEach(b => b.classList.toggle("active", b.dataset.tool === tool));
+      hudHint.textContent =
+        tool === "move" ? "Drag to move layer • Space to pan • Ctrl+Z undo" :
+        tool === "text" ? "Click to place text • Enter to commit • Esc to cancel" :
+        tool === "fill" ? "Click to flood fill (may be slow on huge images)" :
+        "Drag to draw • Space to pan • Ctrl+Z undo";
+      setStatus(`Tool: ${tool}.`, null);
+      emit("TOOL_SET", { tool });
+    }
+
+    function setZoom(z) {
+      state.zoom = clamp(z, 0.10, 8.0);
+      zoomEl.value = Math.round(state.zoom*100);
+      zoomLabel.textContent = `${Math.round(state.zoom*100)}%`;
+      layoutViewCanvas();
+      render();
+      updateStatusRight();
+    }
+
+    function fitToView() {
+      const r = wrap.getBoundingClientRect();
+      const pad = 24;
+      const zx = (r.width - pad) / state.docW;
+      const zy = (r.height - pad) / state.docH;
+      setZoom(Math.min(zx, zy));
+      // center
+      state.panX = (r.width - state.docW*state.zoom) / 2;
+      state.panY = (r.height - state.docH*state.zoom) / 2;
+      layoutViewCanvas();
+      render();
+      emit("ZOOM_FIT");
+    }
+
+    function layoutViewCanvas() {
+      // keep view canvas sized to wrapper
+      const r = wrap.getBoundingClientRect();
+      const w = Math.max(1, Math.floor(r.width));
+      const h = Math.max(1, Math.floor(r.height));
+      if (view.width !== w || view.height !== h) {
+        view.width = w; view.height = h;
+      }
+    }
+
+    function screenToDoc(x, y) {
+      return {
+        x: (x - state.panX) / state.zoom,
+        y: (y - state.panY) / state.zoom
+      };
+    }
+
+    function render() {
+      layoutViewCanvas();
+      vctx.clearRect(0,0,view.width, view.height);
+
+      // draw layers into view
+      vctx.save();
+      vctx.translate(state.panX, state.panY);
+      vctx.scale(state.zoom, state.zoom);
+
+      // "paper" shadow
+      vctx.save();
+      vctx.shadowColor = "rgba(0,0,0,.18)";
+      vctx.shadowBlur = 18;
+      vctx.shadowOffsetX = 0;
+      vctx.shadowOffsetY = 10;
+      vctx.fillStyle = "rgba(255,255,255,.0)";
+      vctx.fillRect(0,0,state.docW,state.docH);
+      vctx.restore();
+
+      // draw composited layers
+      for (const layer of state.layers) {
+        if (!layer.visible) continue;
+        vctx.globalAlpha = layer.opacity;
+        vctx.drawImage(layer.canvas, 0,0);
+      }
+      vctx.globalAlpha = 1;
+
+      // temp overlay (shapes preview)
+      if (state.isDrawing && (state.tool === "line" || state.tool === "rect" || state.tool === "ellipse")) {
+        vctx.drawImage(state.tempOverlay, 0,0);
+      }
+
+      // text draft cursor box
+      if (state.textDraft && state.tool === "text") {
+        vctx.strokeStyle = state.color;
+        vctx.lineWidth = 1 / state.zoom;
+        vctx.setLineDash([4/state.zoom, 4/state.zoom]);
+        const {x,y,w,h} = state.textDraft.box;
+        vctx.strokeRect(x,y,w,h);
+        vctx.setLineDash([]);
+      }
+
+      vctx.restore();
+    }
+
+    function getActiveLayer() {
+      return state.layers[state.activeLayer];
+    }
+
+    function beginStroke(docX, docY) {
+      const layer = getActiveLayer();
+      if (!layer) return;
+
+      // shapes use overlay preview
+      state.tempOverlay.width = state.docW;
+      state.tempOverlay.height = state.docH;
+      const octx = state.tempOverlay.getContext("2d", { willReadFrequently: true });
+      octx.clearRect(0,0,state.docW,state.docH);
+
+      state.startX = docX;
+      state.startY = docY;
+      state.lastX = docX;
+      state.lastY = docY;
+
+      if (state.tool === "brush" || state.tool === "eraser") {
+        layer.ctx.lineCap = "round";
+        layer.ctx.lineJoin = "round";
+        layer.ctx.lineWidth = state.size;
+        layer.ctx.strokeStyle = state.tool === "eraser" ? "rgba(0,0,0,1)" : state.color;
+
+        if (state.tool === "eraser") {
+          layer.ctx.save();
+          layer.ctx.globalCompositeOperation = "destination-out";
+          layer.ctx.beginPath();
+          layer.ctx.moveTo(docX, docY);
+        } else {
+          layer.ctx.save();
+          layer.ctx.globalCompositeOperation = "source-over";
+          layer.ctx.beginPath();
+          layer.ctx.moveTo(docX, docY);
+        }
+      }
+    }
+
+    function continueStroke(docX, docY) {
+      const layer = getActiveLayer();
+      if (!layer) return;
+
+      if (state.tool === "brush" || state.tool === "eraser") {
+        layer.ctx.lineTo(docX, docY);
+        layer.ctx.stroke();
+        state.lastX = docX;
+        state.lastY = docY;
+        render();
+        return;
+      }
+
+      // preview shapes in overlay
+      if (state.tool === "line" || state.tool === "rect" || state.tool === "ellipse") {
+        const octx = state.tempOverlay.getContext("2d", { willReadFrequently: true });
+        octx.clearRect(0,0,state.docW,state.docH);
+        octx.lineWidth = Math.max(1, state.size * 0.25);
+        octx.strokeStyle = state.color;
+        octx.fillStyle = "transparent";
+
+        const x0 = state.startX, y0 = state.startY;
+        const x1 = docX, y1 = docY;
+        const x = Math.min(x0,x1), y = Math.min(y0,y1);
+        const w = Math.abs(x1-x0), h = Math.abs(y1-y0);
+
+        if (state.tool === "line") {
+          octx.beginPath();
+          octx.moveTo(x0,y0);
+          octx.lineTo(x1,y1);
+          octx.stroke();
+        } else if (state.tool === "rect") {
+          octx.strokeRect(x,y,w,h);
+        } else if (state.tool === "ellipse") {
+          octx.beginPath();
+          octx.ellipse(x + w/2, y + h/2, Math.max(1,w/2), Math.max(1,h/2), 0, 0, Math.PI*2);
+          octx.stroke();
+        }
+        render();
+      }
+    }
+
+    function endStroke(docX, docY) {
+      const layer = getActiveLayer();
+      if (!layer) return;
+
+      if (state.tool === "brush" || state.tool === "eraser") {
+        layer.ctx.restore();
+        pushHistory(state.tool === "eraser" ? "Erase" : "Brush stroke");
+        render();
+        return;
+      }
+
+      if (state.tool === "line" || state.tool === "rect" || state.tool === "ellipse") {
+        // commit overlay to active layer
+        layer.ctx.save();
+        layer.ctx.globalCompositeOperation = "source-over";
+        layer.ctx.drawImage(state.tempOverlay, 0,0);
+        layer.ctx.restore();
+
+        const label = state.tool === "line" ? "Line" : state.tool === "rect" ? "Rectangle" : "Ellipse";
+        pushHistory(label);
+        render();
+        return;
+      }
+    }
+
+    function floodFill(x, y) {
+      const layer = getActiveLayer();
+      if (!layer) return;
+
+      // fill on a flattened composite snapshot for expected behavior
+      const comp = document.createElement("canvas");
+      comp.width = state.docW; comp.height = state.docH;
+      const cctx = comp.getContext("2d", { willReadFrequently: true });
+
+      for (const l of state.layers) {
+        if (!l.visible) continue;
+        cctx.globalAlpha = l.opacity;
+        cctx.drawImage(l.canvas, 0,0);
+      }
+      cctx.globalAlpha = 1;
+
+      const img = cctx.getImageData(0,0,state.docW,state.docH);
+      const data = img.data;
+      const ix = clamp(Math.floor(x), 0, state.docW-1);
+      const iy = clamp(Math.floor(y), 0, state.docH-1);
+      const idx = (iy*state.docW + ix)*4;
+
+      const target = [data[idx], data[idx+1], data[idx+2], data[idx+3]];
+      const fill = hexToRgba(state.color);
+
+      // if same color, skip
+      if (target[0]===fill[0] && target[1]===fill[1] && target[2]===fill[2] && target[3]===fill[3]) {
+        toast("Fill: already that color.");
+        return;
+      }
+
+      const stack = [idx];
+      const visited = new Uint8Array(state.docW*state.docH);
+      const tol = 10; // tolerance
+
+      const match = (i) => {
+        return Math.abs(data[i]-target[0])<=tol &&
+               Math.abs(data[i+1]-target[1])<=tol &&
+               Math.abs(data[i+2]-target[2])<=tol &&
+               Math.abs(data[i+3]-target[3])<=tol;
+      };
+
+      const w = state.docW;
+      const h = state.docH;
+
+      let count = 0;
+      const MAX = w*h; // hard cap
+      while (stack.length) {
+        const i = stack.pop();
+        const p = (i/4)|0;
+        if (visited[p]) continue;
+        visited[p] = 1;
+
+        if (!match(i)) continue;
+
+        data[i] = fill[0];
+        data[i+1] = fill[1];
+        data[i+2] = fill[2];
+        data[i+3] = fill[3];
+
+        count++;
+        if (count > MAX) break;
+
+        const x = (p % w);
+        const y = (p / w) | 0;
+
+        if (x > 0) stack.push(i - 4);
+        if (x < w-1) stack.push(i + 4);
+        if (y > 0) stack.push(i - w*4);
+        if (y < h-1) stack.push(i + w*4);
+      }
+
+      // apply fill to active layer only:
+      // compute "diff" between before/after and paint onto layer.
+      // (Simpler: just paint the resulting image into active layer.)
+      // We'll paint only where the fill occurred by comparing visited + match result:
+      const layerImg = layer.ctx.getImageData(0,0,w,h);
+      const ld = layerImg.data;
+      for (let p=0; p<w*h; p++) {
+        if (!visited[p]) continue;
+        const ii = p*4;
+        // If composite pixel is fill color, write fill into active layer (source-over).
+        if (data[ii]===fill[0] && data[ii+1]===fill[1] && data[ii+2]===fill[2] && data[ii+3]===fill[3]) {
+          ld[ii]=fill[0]; ld[ii+1]=fill[1]; ld[ii+2]=fill[2]; ld[ii+3]=fill[3];
+        }
+      }
+      layer.ctx.putImageData(layerImg, 0,0);
+
+      pushHistory("Fill");
+      toast(`Fill painted ~${count.toLocaleString()} px`);
+      render();
+    }
+
+    function hexToRgba(hex) {
+      const s = hex.replace("#","").trim();
+      const r = parseInt(s.slice(0,2),16);
+      const g = parseInt(s.slice(2,4),16);
+      const b = parseInt(s.slice(4,6),16);
+      return [r,g,b,255];
+    }
+
+    function applyFilterToActive(fn, label) {
+      const layer = getActiveLayer();
+      if (!layer) return;
+      const img = layer.ctx.getImageData(0,0,state.docW,state.docH);
+      fn(img.data, state.docW, state.docH);
+      layer.ctx.putImageData(img, 0,0);
+      pushHistory(label);
+      render();
+    }
+
+    // Filters
+    const Filters = {
+      grayscale(data){
+        for (let i=0;i<data.length;i+=4){
+          const y = (0.2126*data[i] + 0.7152*data[i+1] + 0.0722*data[i+2])|0;
+          data[i]=data[i+1]=data[i+2]=y;
+        }
+      },
+      invert(data){
+        for (let i=0;i<data.length;i+=4){
+          data[i]=255-data[i];
+          data[i+1]=255-data[i+1];
+          data[i+2]=255-data[i+2];
+        }
+      },
+      brightness(data, amt){
+        for (let i=0;i<data.length;i+=4){
+          data[i]=clamp(data[i]+amt,0,255);
+          data[i+1]=clamp(data[i+1]+amt,0,255);
+          data[i+2]=clamp(data[i+2]+amt,0,255);
+        }
+      },
+      contrast(data, amt){
+        // amt in [-100,100]
+        const f = (259*(amt+255))/(255*(259-amt));
+        for (let i=0;i<data.length;i+=4){
+          data[i]=clamp(f*(data[i]-128)+128,0,255);
+          data[i+1]=clamp(f*(data[i+1]-128)+128,0,255);
+          data[i+2]=clamp(f*(data[i+2]-128)+128,0,255);
+        }
+      },
+      blur(data,w,h, radius=1){
+        // very small box blur (ok for demo)
+        const copy = new Uint8ClampedArray(data);
+        const r = radius|0;
+        const idx = (x,y)=> (y*w+x)*4;
+        for (let y=0;y<h;y++){
+          for (let x=0;x<w;x++){
+            let rs=0,gs=0,bs=0,as=0,c=0;
+            for (let yy=y-r; yy<=y+r; yy++){
+              if (yy<0||yy>=h) continue;
+              for (let xx=x-r; xx<=x+r; xx++){
+                if (xx<0||xx>=w) continue;
+                const i=idx(xx,yy);
+                rs+=copy[i]; gs+=copy[i+1]; bs+=copy[i+2]; as+=copy[i+3]; c++;
+              }
+            }
+            const o=idx(x,y);
+            data[o]=(rs/c)|0; data[o+1]=(gs/c)|0; data[o+2]=(bs/c)|0; data[o+3]=(as/c)|0;
+          }
+        }
+      }
+    };
+
+    // Menu definitions
+    const Menus = {
+      file: [
+        { label: "New", kbd: "Ctrl+N", action: () => $("#newDoc").click() },
+        { label: "Import…", kbd: "Ctrl+O", action: () => $("#importBtn").click() },
+        { sep: true },
+        { label: "Export PNG…", kbd: "Ctrl+S", action: () => $("#exportBtn").click() },
+        { sep: true },
+        { label: "Send Ping to OS", kbd: "", action: () => { emit("PING"); toast("Ping sent to OS"); } }
+      ],
+      edit: [
+        { label: "Undo", kbd: "Ctrl+Z", action: undo, id: "undo" },
+        { label: "Redo", kbd: "Ctrl+Shift+Z", action: redo, id: "redo" },
+        { sep: true },
+        { label: "Clear active layer", kbd: "", action: () => $("#clearLayer").click() }
+      ],
+      image: [
+        { label: "Grayscale (active layer)", kbd: "", action: () => applyFilterToActive(Filters.grayscale, "Grayscale") },
+        { label: "Invert (active layer)", kbd: "", action: () => applyFilterToActive(Filters.invert, "Invert") },
+        { sep: true },
+        { label: "Brightness +20", kbd: "", action: () => applyFilterToActive((d)=>Filters.brightness(d, 20), "Brightness +20") },
+        { label: "Brightness -20", kbd: "", action: () => applyFilterToActive((d)=>Filters.brightness(d, -20), "Brightness -20") },
+        { sep: true },
+        { label: "Contrast +20", kbd: "", action: () => applyFilterToActive((d)=>Filters.contrast(d, 20), "Contrast +20") },
+        { label: "Contrast -20", kbd: "", action: () => applyFilterToActive((d)=>Filters.contrast(d, -20), "Contrast -20") },
+        { sep: true },
+        { label: "Blur (radius 1)", kbd: "", action: () => applyFilterToActive((d,w,h)=>Filters.blur(d,w,h,1), "Blur r1") }
+      ],
+      view: [
+        { label: "Zoom to 100%", kbd: "0", action: () => setZoom(1) },
+        { label: "Fit to window", kbd: "Shift+0", action: fitToView },
+        { sep: true },
+        { label: "Reset pan", kbd: "", action: () => { state.panX = 20; state.panY = 20; render(); } }
+      ],
+      help: [
+        { label: "About PixelPad", kbd: "", action: () => alert("PixelPad\\n\\nA sandboxed mini image editor (layers, tools, filters, export/import).\\nNo network. No filesystem writes.") },
+        { label: "Shortcuts", kbd: "", action: () => alert("Tools: B Brush, E Eraser, L Line, R Rect, O Ellipse, F Fill, T Text, V Move\\nUndo/Redo: Ctrl+Z / Ctrl+Shift+Z\\nImport/Export: Ctrl+O / Ctrl+S\\nPan: hold Space and drag") }
+      ]
+    };
+
+    function updateMenuDisabled(){
+      // mark undo/redo enabled state
+      // (we apply these when opening the dropdown)
+    }
+
+    function openMenu(name, anchorEl){
+      // build dropdown
+      dd.innerHTML = "";
+      const items = Menus[name] || [];
+      items.forEach(it => {
+        if (it.sep) {
+          const sep = document.createElement("div");
+          sep.className = "dd-sep";
+          dd.appendChild(sep);
+          return;
+        }
+        const row = document.createElement("div");
+        row.className = "dd-item";
+        row.textContent = it.label;
+
+        const right = document.createElement("span");
+        right.className = "kbd";
+        right.textContent = it.kbd || "";
+        row.appendChild(right);
+
+        if (it.id === "undo") {
+          row.setAttribute("aria-disabled", state.historyIndex <= 0 ? "true" : "false");
+        }
+        if (it.id === "redo") {
+          row.setAttribute("aria-disabled", state.historyIndex >= state.history.length - 1 ? "true" : "false");
+        }
+
+        row.addEventListener("mousedown", (e) => e.preventDefault());
+        row.addEventListener("click", () => {
+          closeMenu();
+          it.action?.();
+        });
+        dd.appendChild(row);
+      });
+
+      const r = anchorEl.getBoundingClientRect();
+      dd.style.left = `${r.left}px`;
+      dd.style.top = `${r.bottom + 2}px`;
+      dd.style.display = "block";
+
+      $$(".menuitem").forEach(m => m.setAttribute("aria-expanded", m.dataset.menu === name ? "true" : "false"));
+    }
+
+    function closeMenu(){
+      dd.style.display = "none";
+      $$(".menuitem").forEach(m => m.setAttribute("aria-expanded","false"));
+    }
+
+    // Toolbar interactions
+    toolButtons.forEach(btn => {
+      btn.addEventListener("click", () => setTool(btn.dataset.tool));
+    });
+
+    // Sliders
+    sizeEl.addEventListener("input", () => {
+      state.size = parseInt(sizeEl.value,10);
+      sizeLabel.textContent = state.size;
+    });
+    colorEl.addEventListener("input", () => {
+      state.color = colorEl.value;
+    });
+    zoomEl.addEventListener("input", () => {
+      setZoom(parseInt(zoomEl.value,10)/100);
+    });
+    zoomFitBtn.addEventListener("click", fitToView);
+    zoom100Btn.addEventListener("click", () => setZoom(1));
+
+    resizeBtn.addEventListener("click", () => {
+      resizeDoc(parseInt(cwEl.value,10), parseInt(chEl.value,10));
+    });
+
+    opacityEl.addEventListener("input", () => {
+      const layer = getActiveLayer();
+      if (!layer) return;
+      layer.opacity = parseInt(opacityEl.value,10)/100;
+      opacityLabel.textContent = `${opacityEl.value}%`;
+      rebuildLayerList();
+      render();
+    });
+    opacityEl.addEventListener("change", () => pushHistory("Layer opacity"));
+
+    // Layer actions
+    $("#addLayer").addEventListener("click", () => {
+      const name = `Layer ${state.layers.length}`;
+      state.layers.unshift(makeLayer(name));
+      state.activeLayer = 0;
+      rebuildLayerList();
+      pushHistory("Add layer");
+      render();
+    });
+
+    $("#dupLayer").addEventListener("click", () => {
+      const src = getActiveLayer();
+      if (!src) return;
+      const l = makeLayer(src.name + " copy");
+      l.visible = src.visible;
+      l.opacity = src.opacity;
+      l.ctx.drawImage(src.canvas, 0,0);
+      state.layers.splice(state.activeLayer, 0, l);
+      rebuildLayerList();
+      pushHistory("Duplicate layer");
+      render();
+    });
+
+    $("#delLayer").addEventListener("click", () => {
+      if (state.layers.length <= 1) { toast("Can’t delete the last layer."); return; }
+      state.layers.splice(state.activeLayer, 1);
+      state.activeLayer = clamp(state.activeLayer, 0, state.layers.length-1);
+      rebuildLayerList();
+      pushHistory("Delete layer");
+      render();
+    });
+
+    $("#mergeDown").addEventListener("click", () => {
+      if (state.activeLayer >= state.layers.length - 1) { toast("No layer below to merge into."); return; }
+      const top = state.layers[state.activeLayer];
+      const below = state.layers[state.activeLayer + 1];
+      // merge top into below
+      below.ctx.save();
+      below.ctx.globalAlpha = top.opacity;
+      below.ctx.drawImage(top.canvas, 0,0);
+      below.ctx.restore();
+      below.opacity = 1; // typical merge behavior
+      state.layers.splice(state.activeLayer, 1);
+      rebuildLayerList();
+      pushHistory("Merge down");
+      render();
+    });
+
+    $("#flatten").addEventListener("click", () => {
+      const flat = makeLayer("Flattened");
+      for (const l of state.layers.slice().reverse()) {
+        if (!l.visible) continue;
+        flat.ctx.globalAlpha = l.opacity;
+        flat.ctx.drawImage(l.canvas, 0,0);
+      }
+      flat.ctx.globalAlpha = 1;
+      state.layers = [flat];
+      state.activeLayer = 0;
+      rebuildLayerList();
+      pushHistory("Flatten");
+      render();
+    });
+
+    $("#clearLayer").addEventListener("click", () => {
+      const l = getActiveLayer();
+      if (!l) return;
+      l.ctx.clearRect(0,0,state.docW,state.docH);
+      pushHistory("Clear layer");
+      render();
+    });
+
+    $("#newDoc").addEventListener("click", () => {
+      const ok = confirm("Start a new document? (This clears current work)");
+      if (!ok) return;
+      resetDoc(1024, 768);
+    });
+
+    // Import / Export
+    $("#importBtn").addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", async () => {
+      const f = fileInput.files?.[0];
+      fileInput.value = "";
+      if (!f) return;
+
+      const url = URL.createObjectURL(f);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+
+        // draw into a NEW top layer (so it feels like GIMP)
+        const l = makeLayer(f.name.replace(/\.(png|jpg|jpeg)$/i,"") || "Imported");
+        l.ctx.drawImage(img, 0,0, img.width, img.height, 0,0, img.width, img.height);
+        state.layers.unshift(l);
+        state.activeLayer = 0;
+        rebuildLayerList();
+        pushHistory("Import image");
+        render();
+        toast(`Imported ${f.name} (${img.width}×${img.height})`);
+        emit("IMPORT", { name: f.name, w: img.width, h: img.height, type: f.type });
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        toast("Import failed.");
+      };
+      img.src = url;
+    });
+
+    $("#exportBtn").addEventListener("click", () => {
+      // composite into a single canvas and download as PNG
+      const out = document.createElement("canvas");
+      out.width = state.docW;
+      out.height = state.docH;
+      const o = out.getContext("2d");
+
+      // transparent background by default (like many editors)
+      for (const l of state.layers.slice().reverse()) {
+        if (!l.visible) continue;
+        o.globalAlpha = l.opacity;
+        o.drawImage(l.canvas, 0,0);
+      }
+      o.globalAlpha = 1;
+
+      out.toBlob((blob) => {
+        if (!blob) return;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "pixelpad-export.png";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        toast("Exported PNG.");
+        emit("EXPORT_PNG", { w: state.docW, h: state.docH });
+      }, "image/png");
+    });
+
+    // Canvas pointer handling
+    function onPointerDown(e) {
+      if (state.pointerId != null) return;
+      state.pointerId = e.pointerId;
+      wrap.setPointerCapture(e.pointerId);
+
+      const rect = wrap.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+
+      // Space = pan
+      if (state.isPanning) {
+        state.isDrawing = true;
+        state.startX = sx; state.startY = sy;
+        return;
+      }
+
+      const d = screenToDoc(sx, sy);
+      hudPos.textContent = `${Math.floor(d.x)},${Math.floor(d.y)}`;
+
+      if (state.tool === "move") {
+        state.isDrawing = true;
+        state.startX = sx; state.startY = sy;
+        return;
+      }
+
+      if (state.tool === "fill") {
+        floodFill(d.x, d.y);
+        return;
+      }
+
+      if (state.tool === "text") {
+        const t = prompt("Text:", "Hello");
+        if (t == null) return;
+        const layer = getActiveLayer();
+        layer.ctx.save();
+        layer.ctx.globalCompositeOperation = "source-over";
+        layer.ctx.fillStyle = state.color;
+        layer.ctx.font = `${Math.max(10, Math.round(state.size*2))}px ${getComputedStyle(document.body).fontFamily}`;
+        layer.ctx.textBaseline = "top";
+        layer.ctx.fillText(t, d.x, d.y);
+        layer.ctx.restore();
+        pushHistory("Text");
+        render();
+        return;
+      }
+
+      state.isDrawing = true;
+      beginStroke(d.x, d.y);
+      render();
+    }
+
+    function onPointerMove(e) {
+      const rect = wrap.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+
+      const d = screenToDoc(sx, sy);
+      hudPos.textContent = `${Math.floor(d.x)},${Math.floor(d.y)}`;
+
+      if (!state.isDrawing) return;
+
+      if (state.isPanning) {
+        const dx = sx - state.startX;
+        const dy = sy - state.startY;
+        state.startX = sx; state.startY = sy;
+        state.panX += dx;
+        state.panY += dy;
+        render();
+        return;
+      }
+
+      if (state.tool === "move") {
+        // Move active layer pixels by dragging (simple: translate bitmap by dx,dy)
+        const dx = (sx - state.startX) / state.zoom;
+        const dy = (sy - state.startY) / state.zoom;
+        state.startX = sx; state.startY = sy;
+
+        const l = getActiveLayer();
+        const tmp = document.createElement("canvas");
+        tmp.width = state.docW; tmp.height = state.docH;
+        const tctx = tmp.getContext("2d");
+        tctx.drawImage(l.canvas, 0,0);
+
+        l.ctx.clearRect(0,0,state.docW,state.docH);
+        l.ctx.drawImage(tmp, dx, dy);
+        render();
+        return;
+      }
+
+      continueStroke(d.x, d.y);
+    }
+
+    function onPointerUp(e) {
+      if (state.pointerId !== e.pointerId) return;
+      wrap.releasePointerCapture(e.pointerId);
+      state.pointerId = null;
+
+      if (!state.isDrawing) return;
+      state.isDrawing = false;
+
+      if (state.isPanning) return;
+
+      const rect = wrap.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const d = screenToDoc(sx, sy);
+
+      if (state.tool === "move") {
+        pushHistory("Move layer");
+        render();
+        return;
+      }
+
+      endStroke(d.x, d.y);
+    }
+
+    wrap.addEventListener("pointerdown", onPointerDown);
+    wrap.addEventListener("pointermove", onPointerMove);
+    wrap.addEventListener("pointerup", onPointerUp);
+    wrap.addEventListener("pointercancel", onPointerUp);
+
+    // Wheel zoom (Ctrl+wheel)
+    wrap.addEventListener("wheel", (e) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      const delta = -Math.sign(e.deltaY) * 0.08;
+      const old = state.zoom;
+      const next = clamp(old * (1 + delta), 0.10, 8.0);
+
+      // zoom around cursor
+      const rect = wrap.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      const before = screenToDoc(cx, cy);
+
+      setZoom(next);
+
+      const after = screenToDoc(cx, cy);
+      state.panX += (after.x - before.x) * state.zoom;
+      state.panY += (after.y - before.y) * state.zoom;
+
+      render();
+    }, { passive: false });
+
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e) => {
+      const k = e.key.toLowerCase();
+
+      if (k === " " && !e.repeat) {
+        state.isPanning = true;
+        wrap.style.cursor = "grab";
+        return;
+      }
+
+      // menu shortcuts
+      if ((e.ctrlKey || e.metaKey) && k === "z" && !e.shiftKey) { e.preventDefault(); undo(); return; }
+      if ((e.ctrlKey || e.metaKey) && (k === "z" && e.shiftKey)) { e.preventDefault(); redo(); return; }
+      if ((e.ctrlKey || e.metaKey) && k === "y") { e.preventDefault(); redo(); return; }
+
+      if ((e.ctrlKey || e.metaKey) && k === "s") { e.preventDefault(); $("#exportBtn").click(); return; }
+      if ((e.ctrlKey || e.metaKey) && k === "o") { e.preventDefault(); $("#importBtn").click(); return; }
+      if ((e.ctrlKey || e.metaKey) && k === "n") { e.preventDefault(); $("#newDoc").click(); return; }
+
+      if (k === "0" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.shiftKey) fitToView();
+        else setZoom(1);
+        return;
+      }
+
+      // tools
+      const toolKeyMap = { b:"brush", e:"eraser", l:"line", r:"rect", o:"ellipse", f:"fill", t:"text", v:"move" };
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && toolKeyMap[k]) {
+        setTool(toolKeyMap[k]);
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (e.key === " ") {
+        state.isPanning = false;
+        wrap.style.cursor = "default";
+      }
+    });
+
+    // Menubar interactions
+    menubar.addEventListener("click", (e) => {
+      const m = e.target.closest(".menuitem");
+      if (!m) return;
+      const name = m.dataset.menu;
+      if (m.getAttribute("aria-expanded") === "true") closeMenu();
+      else openMenu(name, m);
+    });
+    window.addEventListener("mousedown", (e) => {
+      if (dd.style.display === "none") return;
+      if (e.target.closest("#dd") || e.target.closest("#menubar")) return;
+      closeMenu();
+    });
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMenu();
+    });
+
+    // init
+    (function init(){
+      state.tempOverlay.width = state.docW;
+      state.tempOverlay.height = state.docH;
+
+      state.size = parseInt(sizeEl.value,10);
+      state.color = colorEl.value;
+      sizeLabel.textContent = state.size;
+      opacityLabel.textContent = "100%";
+      layoutViewCanvas();
+
+      resetDoc(1024,768);
+      fitToView();
+
+      window.addEventListener("resize", () => { layoutViewCanvas(); render(); });
+
+      setStatus("Ready.", null);
+      emit("APP_READY", { version: "1.0.0" });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open95 Marketplace CMS</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body { background-color: #121212; color: #e5e5e5; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f1f1f; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Icons (Implemented manually to avoid external dependency issues) ---
+        
+        const Icon = ({ size = 24, className = "", children }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className}
+            >
+                {children}
+            </svg>
+        );
+
+        const HardDrive = (props) => (
+            <Icon {...props}>
+                <line x1="22" y1="12" x2="2" y2="12"></line>
+                <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                <line x1="6" y1="16" x2="6.01" y2="16"></line>
+                <line x1="10" y1="16" x2="10.01" y2="16"></line>
+            </Icon>
+        );
+
+        const FolderOpen = (props) => (
+            <Icon {...props}>
+                <path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"></path>
+            </Icon>
+        );
+
+        const Layers = (props) => (
+            <Icon {...props}>
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+            </Icon>
+        );
+
+        const RefreshCw = (props) => (
+            <Icon {...props}>
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+                <path d="M16 21h5v-5"></path>
+            </Icon>
+        );
+
+        const FileJson = (props) => (
+            <Icon {...props}>
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <path d="M10 13a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1 1 1 0 0 1 1 1v1a1 1 0 0 0 1 1"></path>
+                <path d="M14 20a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1 1 1 0 0 1-1-1v-1a1 1 0 0 0-1-1"></path>
+            </Icon>
+        );
+
+        const Save = (props) => (
+            <Icon {...props}>
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+            </Icon>
+        );
+
+        const Settings = (props) => (
+            <Icon {...props}>
+                <path d="M12.22 2h-.44a2 2 0 0 1-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </Icon>
+        );
+
+        const AlertCircle = (props) => (
+            <Icon {...props}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </Icon>
+        );
+
+
+        // --- Default Schemas based on your uploaded files ---
+
+        const DEFAULT_INDEX_CONFIG = {
+            marketplace: {
+                name: "Open95 Marketplace",
+                maintainer: "Stefone.com"
+            },
+            apps: []
+        };
+
+        const DEFAULT_APP_JSON = {
+            id: "",
+            name: "",
+            author: "Stefone",
+            version: "1.0.0",
+            entry: "index.html",
+            icon: {
+                type: "url",
+                value: "" // Default URL or placeholder
+            },
+            window: {
+                width: 800,
+                height: 600,
+                resizable: true
+            },
+            permissions: []
+        };
+
+        // --- Helper Components ---
+
+        const InputField = ({ label, value, onChange, placeholder, type = "text", help }) => (
+            <div className="mb-4">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</label>
+                <input 
+                    type={type} 
+                    className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                    value={value || ""}
+                    onChange={e => onChange(e.target.value)}
+                    placeholder={placeholder}
+                />
+                {help && <p className="text-xs text-gray-500 mt-1">{help}</p>}
+            </div>
+        );
+
+        const TextAreaField = ({ label, value, onChange, placeholder }) => (
+            <div className="mb-4">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</label>
+                <textarea 
+                    className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white focus:outline-none focus:border-blue-500 h-24 resize-none"
+                    value={value || ""}
+                    onChange={e => onChange(e.target.value)}
+                    placeholder={placeholder}
+                />
+            </div>
+        );
+
+        const Badge = ({ type }) => {
+            const styles = {
+                synced: "bg-green-900 text-green-200 border-green-700",
+                new: "bg-blue-900 text-blue-200 border-blue-700",
+                error: "bg-red-900 text-red-200 border-red-700",
+                modified: "bg-yellow-900 text-yellow-200 border-yellow-700"
+            };
+            const labels = {
+                synced: "Live",
+                new: "New Folder",
+                error: "Missing Config",
+                modified: "Unsaved"
+            };
+            return (
+                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${styles[type] || styles.new}`}>
+                    {labels[type]}
+                </span>
+            );
+        };
+
+        // --- Main Application ---
+
+        const App = () => {
+            const [rootHandle, setRootHandle] = useState(null);
+            const [status, setStatus] = useState("idle"); // idle, loading, ready, error
+            const [errorMsg, setErrorMsg] = useState("");
+            
+            // Data State
+            const [indexData, setIndexData] = useState(DEFAULT_INDEX_CONFIG);
+            const [scannedFolders, setScannedFolders] = useState([]); 
+            const [selectedFolder, setSelectedFolder] = useState(null);
+            
+            // Editing State
+            const [localAppConfig, setLocalAppConfig] = useState(null); // The app.json content
+            const [localIndexEntry, setLocalIndexEntry] = useState(null); // The entry inside index.json apps[]
+
+            // --- 1. File System Access ---
+
+            const openDirectory = async () => {
+                try {
+                    setStatus("loading");
+                    const handle = await window.showDirectoryPicker();
+                    setRootHandle(handle);
+                    await scanDirectory(handle);
+                } catch (err) {
+                    console.error(err);
+                    setErrorMsg("Access denied or cancelled. Please try again.");
+                    setStatus("error");
+                }
+            };
+
+            const scanDirectory = async (handle) => {
+                setStatus("loading");
+                const folders = [];
+                let currentIndexData = { ...DEFAULT_INDEX_CONFIG };
+
+                // 1. Read Main Index.json
+                try {
+                    const indexHandle = await handle.getFileHandle("index.json", { create: false });
+                    const file = await indexHandle.getFile();
+                    const text = await file.text();
+                    currentIndexData = JSON.parse(text);
+                } catch (e) {
+                    console.log("No index.json found, using default.");
+                }
+                setIndexData(currentIndexData);
+
+                // 2. Scan Subfolders
+                for await (const entry of handle.values()) {
+                    if (entry.kind === "directory") {
+                        let appConfig = null;
+                        let hasConfig = false;
+
+                        // Try to read app.json inside folder
+                        try {
+                            const appHandle = await entry.getFileHandle("app.json");
+                            const file = await appHandle.getFile();
+                            appConfig = JSON.parse(await file.text());
+                            hasConfig = true;
+                        } catch (e) {
+                            // No app.json found, initialize skeleton
+                            appConfig = { ...DEFAULT_APP_JSON, id: entry.name };
+                        }
+
+                        // Check if exists in global index
+                        const indexEntry = currentIndexData.apps.find(a => a.id === appConfig.id || a.path.includes(`/${entry.name}/`));
+
+                        folders.push({
+                            folderName: entry.name,
+                            handle: entry,
+                            hasConfig,
+                            appConfig,
+                            indexEntry: indexEntry || {
+                                id: entry.name,
+                                name: appConfig.name || entry.name,
+                                description: "",
+                                version: appConfig.version || "1.0.0",
+                                path: `/${entry.name}/app.json`,
+                                icon: "icon.png"
+                            }
+                        });
+                    }
+                }
+                
+                setScannedFolders(folders);
+                setStatus("ready");
+            };
+
+            // --- 2. Selection Logic ---
+
+            const handleSelectFolder = (folderItem) => {
+                setSelectedFolder(folderItem);
+                // Deep copy to break reference, allows canceling edits
+                setLocalAppConfig(JSON.parse(JSON.stringify(folderItem.appConfig)));
+                setLocalIndexEntry(JSON.parse(JSON.stringify(folderItem.indexEntry)));
+            };
+
+            // --- 3. Saving Logic ---
+
+            const saveCurrentApp = async () => {
+                if (!rootHandle || !selectedFolder) return;
+
+                try {
+                    // A. Write app.json to subfolder
+                    const appJsonString = JSON.stringify(localAppConfig, null, 2);
+                    const fileHandle = await selectedFolder.handle.getFileHandle("app.json", { create: true });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(appJsonString);
+                    await writable.close();
+
+                    // B. Update global index.json list
+                    const newIndexData = { ...indexData };
+                    
+                    // Remove existing entry if ID matches, push new one
+                    const filteredApps = newIndexData.apps.filter(a => a.id !== localAppConfig.id && !a.path.includes(`/${selectedFolder.folderName}/`));
+                    
+                    // Construct the index entry based on form data
+                    const newEntry = {
+                        ...localIndexEntry,
+                        id: localAppConfig.id, // Ensure IDs match
+                        path: `/${selectedFolder.folderName}/app.json` // Enforce correct path
+                    };
+
+                    filteredApps.push(newEntry);
+                    
+                    // Sort alphabetically by ID
+                    filteredApps.sort((a, b) => a.id.localeCompare(b.id));
+                    newIndexData.apps = filteredApps;
+
+                    // C. Write index.json to root
+                    const indexJsonString = JSON.stringify(newIndexData, null, 2);
+                    const indexHandle = await rootHandle.getFileHandle("index.json", { create: true });
+                    const indexWritable = await indexHandle.createWritable();
+                    await indexWritable.write(indexJsonString);
+                    await indexWritable.close();
+
+                    // D. Refresh View
+                    alert("Project Saved & Marketplace Index Updated!");
+                    await scanDirectory(rootHandle);
+                    setSelectedFolder(null); // Deselect to show list update
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Error saving files: " + err.message);
+                }
+            };
+
+            // --- Render Helpers ---
+
+            const getStatusType = (folder) => {
+                if (!folder.hasConfig) return "new";
+                if (!indexData.apps.find(a => a.id === folder.appConfig.id)) return "modified";
+                return "synced";
+            };
+
+            // --- Main Render ---
+
+            if (status === "idle" || status === "error") {
+                return (
+                    <div className="flex h-screen w-screen items-center justify-center bg-[#121212]">
+                        <div className="text-center p-8 border border-gray-800 rounded-xl bg-[#1a1a1a] shadow-2xl max-w-md">
+                            <div className="bg-blue-600/20 p-4 rounded-full inline-flex mb-4">
+                                <HardDrive size={48} className="text-blue-500" />
+                            </div>
+                            <h1 className="text-2xl font-bold mb-2">Open95 CMS</h1>
+                            <p className="text-gray-400 mb-6">
+                                Offline management tool for M:\My Website\Open95\marketplace. 
+                                Scans folders and generates JSON configs automatically.
+                            </p>
+                            {errorMsg && (
+                                <div className="bg-red-900/30 text-red-400 p-3 rounded mb-4 text-sm border border-red-800">
+                                    {errorMsg}
+                                </div>
+                            )}
+                            <button 
+                                onClick={openDirectory}
+                                className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center w-full transition-all"
+                            >
+                                <FolderOpen className="mr-2" size={20} />
+                                Open Marketplace Folder
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="flex h-screen overflow-hidden">
+                    {/* Sidebar: Folder List */}
+                    <div className="w-80 bg-[#1a1a1a] border-r border-gray-800 flex flex-col">
+                        <div className="p-4 border-b border-gray-800 flex justify-between items-center">
+                            <h2 className="font-bold text-gray-200 flex items-center">
+                                <Layers className="mr-2 text-blue-500" size={18} /> Projects
+                            </h2>
+                            <button onClick={() => scanDirectory(rootHandle)} className="text-gray-500 hover:text-white">
+                                <RefreshCw size={16} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-2">
+                            {scannedFolders.map((folder, idx) => {
+                                const type = getStatusType(folder);
+                                const isSelected = selectedFolder && selectedFolder.folderName === folder.folderName;
+                                
+                                return (
+                                    <div 
+                                        key={idx}
+                                        onClick={() => handleSelectFolder(folder)}
+                                        className={`p-3 rounded-lg mb-2 cursor-pointer transition-all border ${isSelected ? 'bg-blue-900/20 border-blue-600' : 'bg-gray-800/50 border-transparent hover:bg-gray-800 hover:border-gray-600'}`}
+                                    >
+                                        <div className="flex justify-between items-start mb-1">
+                                            <span className="font-mono text-sm font-semibold">{folder.folderName}</span>
+                                            <Badge type={type} />
+                                        </div>
+                                        <div className="text-xs text-gray-500 truncate">
+                                            {folder.appConfig.name || "No Name Set"}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            
+                            {scannedFolders.length === 0 && (
+                                <div className="text-center text-gray-500 mt-10 text-sm">
+                                    No folders found in marketplace.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Main Content: Editor */}
+                    <div className="flex-1 flex flex-col bg-[#121212] overflow-hidden">
+                        {selectedFolder ? (
+                            <>
+                                {/* Header */}
+                                <div className="h-16 border-b border-gray-800 flex items-center justify-between px-6 bg-[#1a1a1a]">
+                                    <div className="flex items-center">
+                                        <div className="mr-4 bg-gray-700 p-2 rounded">
+                                            <FileJson size={20} className="text-yellow-500" />
+                                        </div>
+                                        <div>
+                                            <h1 className="font-bold text-lg">{localAppConfig.name || selectedFolder.folderName}</h1>
+                                            <p className="text-xs text-gray-500 font-mono">/{selectedFolder.folderName}/app.json</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={saveCurrentApp}
+                                        className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded font-medium flex items-center"
+                                    >
+                                        <Save size={18} className="mr-2" />
+                                        Save & Sync
+                                    </button>
+                                </div>
+
+                                {/* Form Area */}
+                                <div className="flex-1 overflow-y-auto p-8">
+                                    <div className="grid grid-cols-2 gap-8 max-w-5xl mx-auto">
+                                        
+                                        {/* Left Col: app.json Config */}
+                                        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800">
+                                            <div className="flex items-center mb-6 text-yellow-500">
+                                                <Settings size={18} className="mr-2" />
+                                                <h3 className="font-bold uppercase text-sm tracking-wider">App Configuration (app.json)</h3>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <InputField 
+                                                    label="App ID" 
+                                                    value={localAppConfig.id} 
+                                                    onChange={(v) => setLocalAppConfig({...localAppConfig, id: v})} 
+                                                    help="Must be unique (e.g. pixelpad)"
+                                                />
+                                                <InputField 
+                                                    label="Version" 
+                                                    value={localAppConfig.version} 
+                                                    onChange={(v) => setLocalAppConfig({...localAppConfig, version: v})} 
+                                                />
+                                            </div>
+
+                                            <InputField 
+                                                label="App Name" 
+                                                value={localAppConfig.name} 
+                                                onChange={(v) => setLocalAppConfig({...localAppConfig, name: v})} 
+                                            />
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <InputField 
+                                                    label="Author" 
+                                                    value={localAppConfig.author} 
+                                                    onChange={(v) => setLocalAppConfig({...localAppConfig, author: v})} 
+                                                />
+                                                <InputField 
+                                                    label="Entry File" 
+                                                    value={localAppConfig.entry} 
+                                                    onChange={(v) => setLocalAppConfig({...localAppConfig, entry: v})} 
+                                                />
+                                            </div>
+
+                                            {/* Window Settings */}
+                                            <div className="mt-4 p-4 bg-gray-800/50 rounded border border-gray-700">
+                                                <label className="block text-xs font-bold text-gray-400 uppercase mb-3">Window Settings</label>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <InputField 
+                                                        label="Width" type="number"
+                                                        value={localAppConfig.window.width} 
+                                                        onChange={(v) => setLocalAppConfig({...localAppConfig, window: {...localAppConfig.window, width: parseInt(v)}})} 
+                                                    />
+                                                    <InputField 
+                                                        label="Height" type="number"
+                                                        value={localAppConfig.window.height} 
+                                                        onChange={(v) => setLocalAppConfig({...localAppConfig, window: {...localAppConfig.window, height: parseInt(v)}})} 
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Icon Config */}
+                                            <div className="mt-4">
+                                                 <InputField 
+                                                    label="App Icon URL (for app.json)" 
+                                                    value={localAppConfig.icon.value} 
+                                                    onChange={(v) => setLocalAppConfig({...localAppConfig, icon: {...localAppConfig.icon, value: v}})} 
+                                                    help="Full URL to icon (e.g. Wikimedia)"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Right Col: index.json Listing */}
+                                        <div className="bg-[#1a1a1a] p-6 rounded-xl border border-gray-800 h-fit">
+                                            <div className="flex items-center mb-6 text-blue-500">
+                                                <Layers size={18} className="mr-2" />
+                                                <h3 className="font-bold uppercase text-sm tracking-wider">Store Listing (index.json)</h3>
+                                            </div>
+
+                                            <InputField 
+                                                label="Display Name" 
+                                                value={localIndexEntry.name} 
+                                                onChange={(v) => setLocalIndexEntry({...localIndexEntry, name: v})} 
+                                            />
+
+                                            <TextAreaField 
+                                                label="Description" 
+                                                placeholder="Describe the app for the marketplace..."
+                                                value={localIndexEntry.description} 
+                                                onChange={(v) => setLocalIndexEntry({...localIndexEntry, description: v})} 
+                                            />
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <InputField 
+                                                    label="Store Icon" 
+                                                    value={localIndexEntry.icon} 
+                                                    onChange={(v) => setLocalIndexEntry({...localIndexEntry, icon: v})} 
+                                                    help="Usually just 'icon.png'"
+                                                />
+                                                 <div className="mb-4">
+                                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">JSON Path</label>
+                                                    <input 
+                                                        disabled
+                                                        className="w-full bg-gray-900 border border-gray-800 rounded p-2 text-gray-500 cursor-not-allowed"
+                                                        value={`/${selectedFolder.folderName}/app.json`}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-6 p-4 bg-blue-900/10 border border-blue-900/30 rounded text-sm text-blue-300">
+                                                <div className="flex items-start">
+                                                    <AlertCircle size={16} className="mt-1 mr-2 flex-shrink-0" />
+                                                    <p>Saving this project will automatically add it to the global <strong>index.json</strong> file in the marketplace root, ensuring it appears in the store.</p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-gray-600">
+                                <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                                    <Layers size={32} />
+                                </div>
+                                <p className="text-lg font-medium">Select a project from the sidebar</p>
+                                <p className="text-sm">Or create a new folder in Windows to start a new project</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

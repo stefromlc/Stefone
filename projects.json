@@ -1,5 +1,21 @@
 [
   {
+    "title": "Open95",
+    "slug": "open95",
+    "description": "Open95 is a browser-based retro operating system inspired by Windows 95, complete with a functional desktop, classic apps, and persistent storage. It includes a real built-in Marketplace where all apps are free, blending nostalgia with modern web technology in a playful, fully interactive experience.",
+    "thumbnail": "assets/thumbs/open95.png",
+    "tags": [
+      "Nostalgia",
+      "Retro",
+      "Windows 95"
+    ],
+    "category": "UI/UX",
+    "featured": true,
+    "date": "2026-02-08",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "Tune 3310",

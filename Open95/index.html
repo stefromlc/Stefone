@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Open95 OS</title>
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: none; /* Crisper text for retro feel */
+            user-select: none;
+            background-color: #008080; /* Classic Teal */
+            touch-action: none; /* Prevent browser zooming/scrolling globally */
+        }
+        /* Custom scrollbar to match 95 aesthetic */
+        ::-webkit-scrollbar {
+            width: 16px;
+            height: 16px;
+            background: #dfdfdf;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border-top: 1px solid #fff;
+            border-left: 1px solid #fff;
+            border-right: 1px solid #000;
+            border-bottom: 1px solid #000;
+            box-shadow: inset 1px 1px #dfdfdf;
+        }
+        ::-webkit-scrollbar-button {
+            background: #c0c0c0;
+            width: 16px;
+            height: 16px;
+            border-top: 1px solid #fff;
+            border-left: 1px solid #fff;
+            border-right: 1px solid #000;
+            border-bottom: 1px solid #000;
+        }
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+            background: white;
+            pointer-events: auto;
+        }
+        .win95-text-shadow {
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+        }
+        /* Boot screen cursor */
+        .cursor-dos {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+        /**
+         * ICONS & ASSETS
+         */
+        
+        const WinIcon = ({ name, size = 32, className = "" }) => {
+            const [imgError, setImgError] = useState(false);
+            useEffect(() => { setImgError(false); }, [name]);
+
+            if (!imgError && name && typeof name === 'object' && name.type === 'url') {
+                return <img src={name.value} width={size} height={size} className={className} alt="icon" style={{ objectFit: "contain", pointerEvents: "none" }} onError={() => setImgError(true)} />;
+            }
+            if (!imgError && typeof name === 'string' && (name.includes('.') || name.includes('/') || name.startsWith('http'))) {
+                 return <img src={name} width={size} height={size} className={className} alt="icon" style={{ objectFit: "contain", pointerEvents: "none" }} onError={() => setImgError(true)} />;
+            }
+
+            const props = { width: size, height: size, className, viewBox: "0 0 32 32", fill: "none", xmlns: "http://www.w3.org/2000/svg" };
+            const iconKey = imgError ? 'default' : (typeof name === 'string') ? name.toLowerCase() : 'default';
+
+            switch (iconKey) {
+                case 'win-minimize': return <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="8" width="8" height="2" fill="black"/></svg>;
+                case 'win-maximize': return <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M2 2H11V10H2V2ZM3 3V9H10V3H3Z" fill="black"/><rect x="3" y="3" width="7" height="1" fill="black"/></svg>;
+                case 'win-close': return <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M3 4L4 3L6 5L8 3L9 4L7 6L9 8L8 9L6 7L4 9L3 8L5 6L3 4Z" fill="black"/></svg>;
+                case 'folder': return <svg {...props}><path d="M2 6H14L16 9H30V26H2V6Z" fill="#FFD700" stroke="black" strokeWidth="1"/><rect x="3" y="10" width="26" height="15" fill="#FFEFB0"/><path d="M2 26H30" stroke="black" strokeWidth="1"/></svg>;
+                case 'computer': case 'hd': return <svg {...props}><rect x="6" y="4" width="20" height="16" fill="#C0C0C0" stroke="black"/><rect x="8" y="6" width="16" height="12" fill="#000080"/><rect x="7" y="21" width="18" height="2" fill="#C0C0C0" stroke="black"/><rect x="22" y="21" width="2" height="2" fill="#00FF00"/></svg>;
+                case 'recycle': case 'recycle-empty': return <svg {...props}><path d="M6 6H26V28H6V6Z" fill="white" stroke="black"/><path d="M4 6H28" stroke="black" strokeWidth="2"/><path d="M10 2L12 6H20L22 2H10Z" fill="#C0C0C0" stroke="black"/><path d="M9 10L14 24M18 24L23 10M16 10V24" stroke="#008000" strokeWidth="1"/></svg>;
+                case 'recycle-full': return <svg {...props}><path d="M6 6H26V28H6V6Z" fill="white" stroke="black"/><path d="M4 6H28" stroke="black" strokeWidth="2"/><path d="M10 2L12 6H20L22 2H10Z" fill="#C0C0C0" stroke="black"/><path d="M8 8H24V26H8V8Z" fill="#f0f0f0"/><path d="M9 10L23 24M23 10L9 24" stroke="gray" strokeWidth="1"/><path d="M11 14L21 20M21 14L11 20" stroke="black" strokeWidth="1"/></svg>;
+                case 'text': case 'notepad': return <svg {...props}><path d="M6 2H20L26 8V30H6V2Z" fill="white" stroke="black"/><polyline points="20 2 20 8 26 8" fill="#dfdfdf" stroke="black"/><line x1="10" y1="12" x2="22" y2="12" stroke="blue"/><line x1="10" y1="16" x2="22" y2="16" stroke="blue"/><line x1="10" y1="20" x2="22" y2="20" stroke="blue"/></svg>;
+                case 'image': case 'picture': return <svg {...props}><rect x="4" y="4" width="24" height="24" fill="white" stroke="black"/><circle cx="10" cy="10" r="3" fill="orange"/><path d="M4 22L12 14L18 20L22 16L28 22" fill="#87CEEB" stroke="black"/></svg>;
+                case 'calculator': case 'calc': return <svg {...props}><rect x="8" y="4" width="16" height="24" fill="#C0C0C0" stroke="black"/><rect x="10" y="7" width="12" height="6" fill="white" stroke="gray"/><rect x="10" y="16" width="3" height="3" fill="#FF0000"/><rect x="14" y="16" width="3" height="3" fill="#0000FF"/><rect x="18" y="16" width="3" height="3" fill="#0000FF"/><rect x="10" y="20" width="3" height="3" fill="#0000FF"/><rect x="14" y="20" width="3" height="3" fill="#0000FF"/><rect x="18" y="20" width="3" height="3" fill="#0000FF"/></svg>;
+                case 'paint': case 'palette': return <svg {...props}><rect x="4" y="6" width="20" height="20" fill="#C0C0C0" stroke="black"/><circle cx="10" cy="12" r="2" fill="red"/><circle cx="14" cy="12" r="2" fill="green"/><circle cx="18" cy="12" r="2" fill="blue"/><rect x="16" y="16" width="12" height="4" fill="#8B4513" transform="rotate(-45 20 20)"/></svg>;
+                case 'minesweeper': case 'bomb': return <svg {...props}><circle cx="16" cy="16" r="10" fill="black"/><circle cx="14" cy="14" r="2" fill="white"/><line x1="16" y1="6" x2="16" y2="2" stroke="black" strokeWidth="2"/><line x1="26" y1="16" x2="30" y2="16" stroke="black" strokeWidth="2"/><line x1="6" y1="16" x2="2" y2="16" stroke="black" strokeWidth="2"/><line x1="16" y1="26" x2="16" y2="30" stroke="black" strokeWidth="2"/></svg>;
+                case 'settings': return <svg {...props}><circle cx="16" cy="16" r="8" fill="gray" stroke="black" strokeWidth="4" strokeDasharray="4 2"/><circle cx="16" cy="16" r="3" fill="white"/></svg>;
+                case 'flag': return <svg {...props} viewBox="0 0 24 24"><path d="M2 11H10V3H2V11ZM11 3V11H22V3H11ZM2 21H10V12H2V21ZM11 21H22V12H11V21Z" fill="black"/><rect x="3" y="4" width="7" height="7" fill="#FF4500"/><rect x="12" y="4" width="9" height="7" fill="#32CD32"/><rect x="3" y="13" width="7" height="7" fill="#1E90FF"/><rect x="12" y="13" width="9" height="7" fill="#FFD700"/></svg>;
+                case 'terminal': return <svg {...props}><rect x="2" y="4" width="28" height="20" fill="black" stroke="gray" strokeWidth="2"/><text x="4" y="12" fill="white" fontFamily="monospace" fontSize="8">C:\_</text><rect x="2" y="4" width="28" height="4" fill="#C0C0C0"/></svg>;
+                case 'marketplace': case 'shop': return <svg {...props}><path d="M10 8V6C10 4 12 2 16 2C20 2 22 4 22 6V8H10Z" fill="none" stroke="brown" strokeWidth="2"/><rect x="6" y="8" width="20" height="20" fill="#F4A460" stroke="brown"/><line x1="16" y1="8" x2="16" y2="28" stroke="brown" strokeOpacity="0.5"/></svg>;
+                case 'run': case 'play': return <svg {...props}><rect x="2" y="6" width="24" height="18" rx="2" fill="white" stroke="black"/><polygon points="20,24 28,18 20,12" fill="blue" stroke="black"/></svg>;
+                case 'help': return <svg {...props}><circle cx="16" cy="16" r="12" fill="#8A2BE2"/><text x="11" y="22" fill="white" fontSize="20" fontWeight="bold">?</text></svg>;
+                case 'find': return <svg {...props}><circle cx="12" cy="12" r="8" fill="none" stroke="black" strokeWidth="2"/><rect x="18" y="18" width="10" height="4" transform="rotate(45 18 18)" fill="black"/><circle cx="12" cy="12" r="6" fill="#87CEEB" opacity="0.5"/></svg>;
+                case 'internet': case 'ie': case 'world': return <svg {...props}><circle cx="16" cy="16" r="14" fill="#87CEEB" stroke="black"/><path d="M2 16H30" stroke="black" strokeWidth="1"/><path d="M16 2V30" stroke="black" strokeWidth="1"/><ellipse cx="16" cy="16" rx="14" ry="6" stroke="black" fill="none"/><ellipse cx="16" cy="16" rx="6" ry="14" stroke="black" fill="none"/><text x="10" y="22" fontSize="18" fontWeight="bold" fill="white" stroke="black" strokeWidth="0.5">e</text></svg>;
+                case 'clock': return <svg {...props}><circle cx="16" cy="16" r="14" fill="white" stroke="black"/><line x1="16" y1="16" x2="16" y2="6" stroke="black" strokeWidth="2"/><line x1="16" y1="16" x2="22" y2="16" stroke="black" strokeWidth="2"/><circle cx="16" cy="16" r="2" fill="black"/></svg>;
+                case 'input-mouse': return <svg {...props}><path d="M12 2L2 22L8 20L12 28L16 26L12 18L18 18L12 2Z" fill="white" stroke="black"/></svg>;
+                case 'input-touch': return <svg {...props}><path d="M10 2C9 2 8 3 8 4V16H6C5 16 4 17 4 18V26C4 28 6 30 8 30H20C22 30 24 28 24 26V10C24 9 23 8 22 8C21 8 20 9 20 10V4C20 3 19 2 18 2C17 2 16 3 16 4V2H14V4C14 3 13 2 12 2C11 2 10 3 10 4V2Z" fill="white" stroke="black"/></svg>;
+                default: return <svg {...props}><circle cx="16" cy="16" r="14" fill="#C0C0C0" stroke="black"/><circle cx="16" cy="16" r="4" fill="white" stroke="black"/><path d="M16 2A14 14 0 0 1 30 16" fill="none" stroke="white" strokeWidth="1"/></svg>;
+            }
+        };
+
+        /**
+         * UTILS & CONSTANTS
+         */
+
+        const STORAGE_KEY_FS = 'open95_fs_v3'; // Bumped version for new schema
+        const STORAGE_KEY_APPS = 'open95_apps_v1';
+        const STORAGE_KEY_SETTINGS = 'open95_settings_v2'; // Bumped for input mode
+        const STORAGE_KEY_SHORTCUTS = 'open95_shortcuts_v1';
+        const STORAGE_KEY_POSITIONS = 'open95_icon_pos_v1';
+        const RECYCLE_BIN_NAME = 'recycle_bin';
+
+        const COLORS = { teal: '#008080', gray: '#C0C0C0', darkGray: '#808080', white: '#FFFFFF', black: '#000000', navy: '#000080' };
+
+        const bevel = (type = 'out') => {
+            if (type === 'out') return { boxShadow: `inset 1px 1px 0px ${COLORS.white}, inset -1px -1px 0px ${COLORS.black}, inset 2px 2px 0px ${COLORS.gray}, inset -2px -2px 0px ${COLORS.darkGray}`, backgroundColor: COLORS.gray };
+            if (type === 'in') return { boxShadow: `inset 1px 1px 0px ${COLORS.darkGray}, inset -1px -1px 0px ${COLORS.white}, inset 2px 2px 0px ${COLORS.black}, inset -2px -2px 0px ${COLORS.gray}`, backgroundColor: COLORS.white };
+            return {};
+        };
+
+        const DEFAULT_FS = {
+            root: {
+                type: 'folder',
+                children: {
+                    'readme.txt': { type: 'file', content: 'Welcome to Open95!\n\nNew Features:\n- Input Mode Toggle (Taskbar)\n- Switch between Mouse/Touch modes.\n- Recycling Bin added!\n- Drag icons to arrange them!' },
+                    'todo.txt': { type: 'file', content: '- Buy groceries\n- Fix the internet\n- Install Doom (maybe later)' },
+                    'documents': {
+                        type: 'folder',
+                        children: {
+                            'secret.txt': { type: 'file', content: 'The password is 12345' },
+                            'sketch.txt': { type: 'file', content: 'Use Paint to create images!' }
+                        }
+                    },
+                    'images': {
+                        type: 'folder',
+                        children: {}
+                    },
+                    [RECYCLE_BIN_NAME]: {
+                        type: 'folder',
+                        hidden: true, // Marker for explorer to hide it
+                        children: {}
+                    }
+                }
+            }
+        };
+
+        // File System Helper
+        const getFileFromPath = (fs, pathStr) => {
+            const parts = pathStr.split('/').filter(p => p && p !== '.');
+            let current = fs.root;
+            for (let part of parts) {
+                if (part === '..') return null;
+                if (!current.children || !current.children[part]) return null;
+                current = current.children[part];
+            }
+            return current;
+        };
+
+        const SYSTEM_APPS = {
+            explorer: { id: 'explorer', name: 'File Explorer', icon: "https://upload.wikimedia.org/wikipedia/commons/6/64/Windows_Chicago_My_Computer.png", component: 'Explorer', window: { width: 500, height: 400, resizable: true } },
+            recycle: { id: 'recycle', name: 'Recycle Bin', icon: 'recycle', component: 'RecycleBin', window: { width: 500, height: 400, resizable: true } },
+            notepad: { id: 'notepad', name: 'Notepad', icon: 'text', component: 'Notepad', window: { width: 400, height: 300, resizable: true } },
+            terminal: { id: 'terminal', name: 'MS-DOS Prompt', icon: 'terminal', component: 'Terminal', window: { width: 500, height: 320, resizable: true } },
+            marketplace: { id: 'marketplace', name: 'Marketplace', icon: "https://static.vecteezy.com/system/resources/previews/060/587/624/non_2x/microsoft-store-icon-logo-symbol-free-png.png", component: 'Marketplace', window: { width: 600, height: 450, resizable: true } },
+            calculator: { id: 'calculator', name: 'Calculator', icon: 'calculator', component: 'Calculator', window: { width: 260, height: 320, resizable: false } },
+            about: { id: 'about', name: 'About Open95', icon: "https://upload.wikimedia.org/wikipedia/commons/6/64/Windows_Chicago_My_Computer.png", component: 'About', window: { width: 300, height: 250, resizable: false } },
+            minesweeper: { id: 'minesweeper', name: 'Minesweeper', icon: 'minesweeper', component: 'Minesweeper', window: { width: 250, height: 300, resizable: false } },
+            controlpanel: { id: 'controlpanel', name: 'Control Panel', icon: 'settings', component: 'ControlPanel', window: { width: 400, height: 350, resizable: false } },
+            paint: { id: 'paint', name: 'Paint', icon: 'paint', component: 'Paint', window: { width: 500, height: 400, resizable: true } },
+            run: { id: 'run', name: 'Run', icon: 'run', component: 'Run', window: { width: 300, height: 160, resizable: false } },
+            clock: { id: 'clock', name: 'Clock', icon: 'clock', component: 'Clock', window: { width: 250, height: 250, resizable: false } },
+            ie: { id: 'ie', name: 'Internet Explorer', icon: "https://pngimg.com/d/ie_logo_PNG4.png", component: 'InternetExplorer', window: { width: 800, height: 600, resizable: true } },
+            help: { id: 'help', name: 'Windows Help', icon: 'help', component: 'HelpViewer', window: { width: 600, height: 450, resizable: true } },
+            find: { id: 'find', name: 'Find: All Files', icon: 'find', component: 'FindFiles', window: { width: 400, height: 300, resizable: false } },
+        };
+
+        /**
+         * COMMON UI COMPONENTS
+         */
+
+        // Error Boundary to catch crashes and prevent blank screen
+        class BSOD extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null };
+            }
+            static getDerivedStateFromError(error) {
+                return { hasError: true, error };
+            }
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="bg-blue-800 text-white font-mono p-4 w-full h-full flex flex-col justify-center items-center text-center">
+                            <h1 className="bg-gray-300 text-blue-800 font-bold px-2 mb-4">Windows</h1>
+                            <p>A fatal exception 0E has occurred at 0028:C0011E36 in VXD VMM(01) + 00010E36.</p>
+                            <p>The current application will be terminated.</p>
+                            <br/>
+                            <p>Press any key to continue _</p>
+                            <br/>
+                            <div className="text-xs text-left w-full mt-4 p-4 border border-white">
+                                <p>Technical Information:</p>
+                                <p>{this.state.error?.toString()}</p>
+                            </div>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
+
+        const BootScreen = ({ onBoot }) => {
+            const [step, setStep] = useState(0); 
+            const handleStart = () => {
+                const audio = new Audio('boot.wav');
+                audio.play().catch(e => console.log("Audio blocked:", e));
+                setStep(1);
+                setTimeout(onBoot, 3500); 
+            };
+            return (
+                <div className="fixed inset-0 bg-black font-mono text-white p-10 z-[10000] flex flex-col cursor-default select-none" style={{textShadow: "0 0 5px rgba(0,255,0,0.5)"}}>
+                    {step === 0 && (
+                        <div className="flex-1 flex flex-col items-center justify-center cursor-pointer" onClick={handleStart}>
+                            <h1 className="text-2xl mb-4 font-bold tracking-widest text-emerald-400">Open95 BIOS</h1>
+                            <div className="border-2 border-emerald-500 text-emerald-400 p-4 animate-pulse font-bold tracking-wider hover:bg-emerald-900/30 transition-colors">
+                                TAP TO POWER ON
+                            </div>
+                        </div>
+                    )}
+                    {step === 1 && (
+                        <div className="text-gray-300">
+                            <div>Award Modular BIOS v4.51PG, An Energy Star Ally</div>
+                            <div>Copyright (C) 1984-95, Award Software, Inc.</div>
+                            <br/>
+                            <div>PENTIUM-S CPU at 133MHz</div>
+                            <div>Memory Test: 32768K OK</div>
+                            <br/>
+                            <div>Award Plug and Play BIOS Extension v1.0A</div>
+                            <div>Detecting HDD Primary Master ... WDC AC2850</div>
+                            <br/>
+                            <div className="flex items-center gap-1">Starting Open95<span className="cursor-dos">_</span></div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const ContextMenu = ({ x, y, options, onClose }) => {
+            const menuRef = useRef(null);
+            const [adjustedPos, setAdjustedPos] = useState({ x, y });
+
+            useEffect(() => {
+                if (menuRef.current) {
+                    const rect = menuRef.current.getBoundingClientRect();
+                    let newX = x;
+                    let newY = y;
+                    if (x + rect.width > window.innerWidth) newX = window.innerWidth - rect.width - 5;
+                    if (y + rect.height > window.innerHeight) newY = window.innerHeight - rect.height - 5;
+                    setAdjustedPos({ x: newX, y: newY });
+                }
+            }, [x, y]);
+
+            return (
+                <div 
+                    ref={menuRef}
+                    className="absolute bg-gray-200 border-2 border-white border-b-black border-r-black shadow-xl z-[9999] flex flex-col min-w-[160px] text-sm"
+                    style={{ top: adjustedPos.y, left: adjustedPos.x }}
+                    onClick={(e) => { e.stopPropagation(); }}
+                    onPointerDown={(e) => e.stopPropagation()} 
+                >
+                     {options.map((opt, i) => {
+                         if(opt.separator) return <div key={i} className="h-px bg-gray-400 my-1 mx-2" />;
+                         return (
+                             <div 
+                                key={i} 
+                                className="px-4 py-2 hover:bg-blue-800 hover:text-white cursor-pointer flex justify-between group relative active:bg-blue-900"
+                                onClick={() => { if(!opt.children) { opt.action(); onClose(); } }}
+                             >
+                                 <span>{opt.label}</span>
+                                 {opt.children && (
+                                     <>
+                                         <span className="ml-2">▶</span>
+                                         <div className="absolute left-full top-0 bg-gray-200 border-2 border-white border-b-black border-r-black shadow-xl min-w-[160px] hidden group-hover:flex flex-col ml-[-2px]">
+                                             {opt.children.map((child, ci) => (
+                                                 <div key={ci} className="px-4 py-2 hover:bg-blue-800 hover:text-white text-black cursor-pointer truncate active:bg-blue-900" onClick={(e) => { e.stopPropagation(); child.action(); onClose(); }}>
+                                                     {child.label}
+                                                 </div>
+                                             ))}
+                                         </div>
+                                     </>
+                                 )}
+                             </div>
+                         )
+                     })}
+                </div>
+            );
+        };
+
+        const MenuBar = ({ menus }) => {
+            const [activeMenu, setActiveMenu] = useState(null);
+            useEffect(() => {
+                const handleClick = () => setActiveMenu(null);
+                window.addEventListener('click', handleClick);
+                return () => window.removeEventListener('click', handleClick);
+            }, []);
+            return (
+                <div className="flex bg-gray-200 border-b border-gray-400 select-none relative z-50">
+                    {Object.entries(menus).map(([name, items]) => (
+                        <div key={name} className="relative">
+                            <div className={`px-2 py-1 text-sm cursor-pointer hover:bg-blue-800 hover:text-white ${activeMenu === name ? 'bg-blue-800 text-white' : ''}`} onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === name ? null : name); }}>
+                                <span className="underline">{name.charAt(0)}</span>{name.slice(1)}
+                            </div>
+                            {activeMenu === name && (
+                                <div className="absolute left-0 top-full bg-gray-200 border-2 border-white border-b-black border-r-black shadow-lg min-w-[150px] flex flex-col z-50">
+                                    {items.map((item, i) => (
+                                        item.separator ? <div key={i} className="h-px bg-gray-400 my-1 mx-2"/> :
+                                        <div key={i} className="px-4 py-2 text-sm hover:bg-blue-800 hover:text-white cursor-pointer flex justify-between active:bg-blue-900" onClick={(e) => { e.stopPropagation(); setActiveMenu(null); item.action && item.action(); }}>
+                                            <span>{item.label}</span>
+                                            {item.shortcut && <span className="ml-4 text-xs opacity-75">{item.shortcut}</span>}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const FilePicker = ({ fs, onPick, onCancel, filter = 'all' }) => {
+            const getAllFiles = (dir, path = '') => {
+                let files = [];
+                Object.entries(dir.children).forEach(([name, item]) => {
+                    const fullPath = path ? `${path}/${name}` : name;
+                    if (item.type === 'file' || item.type === 'image') {
+                        if (filter === 'image' && item.type !== 'image') return;
+                        if (filter === 'text' && item.type !== 'file') return;
+                        files.push({ name: fullPath, ...item });
+                    } else if (item.type === 'folder' && !item.hidden) {
+                        files = [...files, ...getAllFiles(item, fullPath)];
+                    }
+                });
+                return files;
+            };
+            const files = useMemo(() => getAllFiles(fs.root), [fs]);
+            const [selected, setSelected] = useState(null);
+            return (
+                <div className="absolute inset-0 bg-gray-200 z-[60] flex flex-col p-2" style={bevel('out')}>
+                    <div className="flex justify-between items-center mb-2"><span className="font-bold text-sm">Open File...</span><button onClick={onCancel} className="px-2 border bg-gray-300">X</button></div>
+                    <div className="flex-1 bg-white border border-gray-600 overflow-auto mb-2 p-1">
+                        {files.map(f => (<div key={f.name} className={`px-1 cursor-pointer text-sm flex gap-2 items-center ${selected === f.name ? 'bg-blue-800 text-white' : 'hover:bg-blue-100'}`} onClick={() => setSelected(f.name)} onDoubleClick={() => onPick(f)}><WinIcon name={f.type === 'image' ? 'image' : 'text'} size={16} />{f.name}</div>))}
+                        {files.length === 0 && <div className="text-gray-500 text-sm italic p-2">No files found.</div>}
+                    </div>
+                    <div className="flex justify-end gap-2"><button className="px-4 py-1 border-2 border-white border-b-black border-r-black active:border-inset" onClick={() => selected && onPick(files.find(f => f.name === selected))}>Open</button><button className="px-4 py-1 border-2 border-white border-b-black border-r-black active:border-inset" onClick={onCancel}>Cancel</button></div>
+                </div>
+            );
+        };
+
+        const Toast = ({ id, title, message, type = 'info', onClose }) => {
+            useEffect(() => { const timer = setTimeout(() => { onClose(id); }, 4000); return () => clearTimeout(timer); }, [id, onClose]);
+            return (
+                <div className="w-72 flex flex-col mb-2 shadow-xl relative" style={{ ...bevel('out'), backgroundColor: COLORS.gray, animation: 'fadeIn 0.3s' }}>
+                    <div className="flex items-center justify-between px-1 py-0.5 select-none" style={{ backgroundColor: COLORS.navy, color: COLORS.white }}>
+                        <div className="flex items-center gap-1"><span className="text-xs font-bold truncate">{title}</span></div>
+                        <button onClick={() => onClose(id)} className="flex items-center justify-center bg-gray-300 w-4 h-4 ml-2 border-t-white border-l-white border-b-black border-r-black border text-black font-bold text-[10px] leading-none active:border-inset">X</button>
+                    </div>
+                    <div className="p-3 flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                            {type === 'error' && <div className="text-red-600 font-bold text-lg leading-none">X</div>}
+                            {type === 'info' && <WinIcon name="computer" size={20} />}
+                            {type === 'success' && <div className="text-green-600 font-bold text-lg leading-none">!</div>}
+                        </div>
+                        <p className="text-sm text-black leading-tight break-words">{message}</p>
+                    </div>
+                </div>
+            );
+        };
+
+        const ClippyAgent = () => {
+            const [visible, setVisible] = useState(true);
+
+            useEffect(() => {
+                const timer = setTimeout(() => setVisible(false), 10000);
+                return () => clearTimeout(timer);
+            }, []);
+
+            if (!visible) return null;
+
+            return (
+                <div className="fixed bottom-12 right-4 z-[9999] pointer-events-none" style={{ animation: 'slideUp 0.5s ease-out' }}>
+                    <img src="clippy.png" alt="Clippy" width={400} height={400} style={{ objectFit: 'contain' }} />
+                </div>
+            );
+        };
+
+        const WindowFrame = ({ app, windowState, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, children }) => {
+            const [isDragging, setIsDragging] = useState(false);
+            const dragOffset = useRef({ x: 0, y: 0 });
+            
+            // Pointer events for touch/mouse unify
+            const handlePointerDown = (e) => {
+                if(e.target.closest('.window-controls')) return;
+                if(windowState.maximized) return;
+                e.preventDefault(); // Prevent text selection/scroll
+                e.stopPropagation();
+                onFocus();
+                
+                // Capture pointer to track outside window bounds
+                e.target.setPointerCapture(e.pointerId);
+                
+                setIsDragging(true);
+                dragOffset.current = { 
+                    x: e.clientX - windowState.x, 
+                    y: e.clientY - windowState.y 
+                };
+            };
+
+            const handlePointerMove = (e) => {
+                if(!isDragging) return;
+                e.preventDefault();
+                onMove(windowState.instanceId, { 
+                    x: e.clientX - dragOffset.current.x, 
+                    y: e.clientY - dragOffset.current.y 
+                });
+            };
+
+            const handlePointerUp = (e) => {
+                if(isDragging) {
+                     setIsDragging(false);
+                     e.target.releasePointerCapture(e.pointerId);
+                }
+            };
+
+            const frameStyle = windowState.minimized 
+                ? { left: -10000, top: -10000, width: windowState.width, height: windowState.height, zIndex: windowState.zIndex, visibility: 'hidden' }
+                : (windowState.maximized 
+                    ? { left: 0, top: 0, width: '100%', height: '100%', zIndex: windowState.zIndex } 
+                    : { left: windowState.x, top: windowState.y, width: windowState.width, height: windowState.height, zIndex: windowState.zIndex, maxWidth: '98vw', maxHeight: '98vh' });
+
+            return (
+                <div 
+                    className="absolute flex flex-col p-1 shadow-2xl" 
+                    style={{ ...bevel('out'), ...frameStyle, display: 'flex' }} 
+                    onPointerDown={() => onFocus()}
+                >
+                    <div 
+                        className="flex items-center justify-between px-1 py-1 mb-1 select-none touch-none" 
+                        style={{ backgroundColor: isActive ? COLORS.navy : COLORS.darkGray, color: COLORS.white, touchAction: 'none' }} 
+                        onDoubleClick={(e) => { e.stopPropagation(); if (app.window.resizable !== false) onMaximize(windowState.instanceId); }} 
+                        onPointerDown={handlePointerDown}
+                        onPointerMove={handlePointerMove}
+                        onPointerUp={handlePointerUp}
+                    >
+                        <div className="flex items-center gap-2 font-bold text-sm truncate pl-1 pointer-events-none"><WinIcon name={app.icon || 'default'} size={16} /><span>{app.name}</span></div>
+                        <div className="window-controls flex items-center gap-[2px]">
+                            <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onMinimize(windowState.instanceId); }} className="w-5 h-5 flex items-center justify-center bg-gray-300 border-t-white border-l-white border-b-black border-r-black border active:border-t-black active:border-l-black active:border-b-white active:border-r-white"><WinIcon name="win-minimize" size={10} /></button>
+                            <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onMaximize(windowState.instanceId); }} disabled={app.window.resizable === false} className={`w-5 h-5 flex items-center justify-center bg-gray-300 border-t-white border-l-white border-b-black border-r-black border active:border-t-black active:border-l-black active:border-b-white active:border-r-white ${app.window.resizable === false ? 'opacity-50 cursor-not-allowed' : ''}`}><WinIcon name="win-maximize" size={10} /></button>
+                            <div className="w-0.5"></div>
+                            <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onClose(windowState.instanceId); }} className="w-5 h-5 flex items-center justify-center bg-gray-300 border-t-white border-l-white border-b-black border-r-black border active:border-t-black active:border-l-black active:border-b-white active:border-r-white"><WinIcon name="win-close" size={10} /></button>
+                        </div>
+                    </div>
+                    <div className="flex-1 bg-white overflow-hidden relative text-black text-sm" style={{ border: `1px solid ${COLORS.darkGray}`, borderBottom: `1px solid ${COLORS.white}`, borderRight: `1px solid ${COLORS.white}`, ...bevel('in') }}>
+                        {isDragging && <div className="absolute inset-0 z-50 bg-transparent" />}
+                        <BSOD>{children}</BSOD>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- IMPROVED APPS ---
+
+        const HelpViewer = () => {
+            const [section, setSection] = useState('intro');
+            const sections = {
+                intro: { title: 'Welcome to Open95', content: 'Welcome to Open95, a retro-styled operating system experience running in your browser.\n\nThis help guide will assist you in navigating the system.' },
+                start: { title: 'The Start Menu', content: 'Click the "Start" button in the bottom-left corner to access your programs, settings, and documents.\n\nFrom here you can:\n- Launch applications\n- Access system settings\n- Shut down the system' },
+                desktop: { title: 'Desktop & Touch', content: 'Use the Input Toggle in the taskbar!\n\nMouse Mode 🖱️:\n- Double-click icons to open\n- Right-click for menu\n\nTouch Mode 👆:\n- Double-tap to open\n- Long-press for menu' },
+                recycle: { title: 'Recycle Bin', content: 'Deleted items go to the Recycle Bin.\n\nOpen the bin to restore items or delete them permanently.' },
+                files: { title: 'Files & Explorer', content: 'Use "My Computer" or "File Explorer" to manage your files.\n\nYou can create files using Notepad or Paint and save them to the virtual file system.' }
+            };
+
+            return (
+                <div className="flex h-full bg-white flex-col md:flex-row">
+                    <div className="w-full md:w-48 bg-gray-200 border-r border-gray-400 flex flex-col p-2 gap-1 overflow-auto h-32 md:h-full border-b md:border-b-0">
+                        <div className="font-bold mb-2">Contents</div>
+                        {Object.entries(sections).map(([key, data]) => (
+                            <div 
+                                key={key} 
+                                className={`cursor-pointer px-2 py-1 text-sm hover:underline ${section === key ? 'bg-blue-800 text-white hover:no-underline' : 'text-blue-800'}`}
+                                onClick={() => setSection(key)}
+                            >
+                                {data.title}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex-1 p-4 overflow-auto">
+                        <h1 className="font-bold text-xl mb-4">{sections[section].title}</h1>
+                        <div className="whitespace-pre-wrap text-sm">{sections[section].content}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        const InternetExplorer = () => {
+            const [history, setHistory] = useState(['https://stefone.com']);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [inputUrl, setInputUrl] = useState('https://stefone.com');
+            
+            const currentSrc = history[currentIndex];
+            useEffect(() => { setInputUrl(history[currentIndex]); }, [currentIndex, history]);
+
+            const navigate = (url) => {
+                let dest = url;
+                if (!dest.startsWith('http')) dest = 'https://' + dest;
+                const newHistory = history.slice(0, currentIndex + 1);
+                newHistory.push(dest);
+                setHistory(newHistory);
+                setCurrentIndex(newHistory.length - 1);
+            };
+
+            return (
+                <div className="flex flex-col h-full bg-gray-200">
+                    <div className="flex flex-col gap-1 p-1 border-b border-gray-400">
+                        <div className="flex gap-2 hidden sm:flex">
+                            <div className="text-sm px-2">File</div>
+                            <div className="text-sm px-2">Edit</div>
+                            <div className="text-sm px-2">View</div>
+                            <div className="text-sm px-2">Go</div>
+                            <div className="text-sm px-2">Favorites</div>
+                        </div>
+                        <div className="h-px bg-gray-400 shadow-white shadow-sm" />
+                        <div className="flex gap-2 items-center py-1 overflow-x-auto">
+                            <button onClick={() => currentIndex > 0 && setCurrentIndex(p=>p-1)} disabled={currentIndex === 0} className="px-2 border text-xs disabled:text-gray-400 whitespace-nowrap">Back</button>
+                            <button onClick={() => currentIndex < history.length - 1 && setCurrentIndex(p=>p+1)} disabled={currentIndex === history.length - 1} className="px-2 border text-xs disabled:text-gray-400 whitespace-nowrap">Forward</button>
+                            <button onClick={() => {}} className="px-2 border text-xs whitespace-nowrap">Stop</button>
+                            <button onClick={() => {}} className="px-2 border text-xs whitespace-nowrap">Refresh</button>
+                            <button onClick={() => navigate('https://stefone.com')} className="px-2 border text-xs whitespace-nowrap">Home</button>
+                        </div>
+                        <div className="flex gap-2 items-center">
+                            <span className="text-xs hidden sm:block">Address:</span>
+                            <input 
+                                className="flex-1 bg-white border border-gray-500 px-1 text-sm h-6" 
+                                value={inputUrl} 
+                                onChange={(e) => setInputUrl(e.target.value)} 
+                                onKeyDown={(e) => e.key === 'Enter' && navigate(inputUrl)}
+                            />
+                            <button onClick={() => navigate(inputUrl)} className="px-2 text-xs border">Go</button>
+                        </div>
+                    </div>
+                    <div className="flex-1 bg-white relative">
+                        <iframe src={currentSrc} className="w-full h-full border-none" title="Browser" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
+                    </div>
+                </div>
+            );
+        };
+
+        const Clock = () => {
+            const [time, setTime] = useState(new Date());
+            useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
+            const secDeg = (time.getSeconds() / 60) * 360;
+            const minDeg = ((time.getMinutes() + time.getSeconds() / 60) / 60) * 360;
+            const hourDeg = ((time.getHours() % 12 + time.getMinutes() / 60) / 12) * 360;
+            return (
+                <div className="flex items-center justify-center h-full bg-gray-200">
+                    <div className="w-48 h-48 rounded-full bg-white border-4 border-gray-400 relative shadow-inner scale-75 sm:scale-100">
+                        {[...Array(12)].map((_, i) => ( <div key={i} className="absolute w-1 h-2 bg-black origin-bottom" style={{ left: 'calc(50% - 2px)', top: '4px', height: '10px', transformOrigin: '50% 92px', transform: `rotate(${i * 30}deg)` }} /> ))}
+                        <div className="absolute w-1.5 h-14 bg-black origin-bottom rounded-full" style={{ left: 'calc(50% - 3px)', top: '42px', transform: `rotate(${hourDeg}deg)`, transformOrigin: '50% 100%' }} />
+                        <div className="absolute w-1 h-20 bg-black origin-bottom rounded-full" style={{ left: 'calc(50% - 2px)', top: '18px', transform: `rotate(${minDeg}deg)`, transformOrigin: '50% 100%' }} />
+                        <div className="absolute w-0.5 h-20 bg-red-600 origin-bottom" style={{ left: 'calc(50% - 1px)', top: '18px', transform: `rotate(${secDeg}deg)`, transformOrigin: '50% 100%' }} />
+                        <div className="absolute w-3 h-3 bg-red-600 rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                    </div>
+                </div>
+            );
+        };
+
+        const ControlPanel = ({ settings, setSettings }) => {
+            const [tab, setTab] = useState('display');
+            const handleReset = () => { if (confirm("WARNING: This will delete all saved files, settings, and installed apps. Are you sure?")) { localStorage.clear(); window.location.reload(); } };
+            const wallpapers = ['#008080', '#000000', '#2E8B57', '#4682B4', '#800000', '#4B0082', '#696969'];
+            return (
+                <div className="flex flex-col h-full bg-gray-200">
+                    <div className="flex p-1 gap-1 border-b border-gray-400">
+                        <button className={`px-2 py-1 text-sm border-t border-l border-r ${tab==='display'?'bg-white -mb-2 z-10 font-bold':'bg-gray-200 border-transparent'}`} onClick={()=>setTab('display')}>Display</button>
+                        <button className={`px-2 py-1 text-sm border-t border-l border-r ${tab==='system'?'bg-white -mb-2 z-10 font-bold':'bg-gray-200 border-transparent'}`} onClick={()=>setTab('system')}>System</button>
+                    </div>
+                    <div className="p-4 border border-t-white border-l-white border-r-gray-500 border-b-gray-500 m-2 flex-1 bg-white overflow-auto">
+                        {tab === 'display' && (
+                            <>
+                                <h2 className="font-bold mb-4">Desktop Settings</h2>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <input type="checkbox" id="showMarketplace" checked={settings.showMarketplaceAppsOnDesktop} onChange={(e) => setSettings({...settings, showMarketplaceAppsOnDesktop: e.target.checked})} />
+                                    <label htmlFor="showMarketplace">Show Installed Apps on Desktop</label>
+                                </div>
+                                <div className="mt-4">
+                                    <h3 className="font-bold mb-2">Background Color</h3>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {wallpapers.map(c => (<div key={c} className={`w-8 h-8 cursor-pointer border-2 ${settings.wallpaper === c ? 'border-black' : 'border-gray-400'}`} style={{ backgroundColor: c }} onClick={() => setSettings({...settings, wallpaper: c})} />))}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                        {tab === 'system' && (
+                            <div className="flex flex-col gap-4">
+                                <h2 className="font-bold">System Maintenance</h2>
+                                <div className="p-2 border bg-red-100 text-xs"><p className="font-bold text-red-600 mb-1">Danger Zone</p><p>Resetting the system will remove all local files and installed apps.</p></div>
+                                <button onClick={handleReset} className="self-start px-4 py-2 bg-gray-200 border-2 border-white border-b-black border-r-black active:border-inset font-bold">Reset System / Clear Data</button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const Notepad = ({ fs, setFs, addToast, initialFile = null }) => {
+            const [content, setContent] = useState(initialFile ? initialFile.content : '');
+            const [showPicker, setShowPicker] = useState(false);
+            const handleSave = () => {
+                let path = prompt("Enter filename to save:", "untitled");
+                if (!path) return;
+                if (path.indexOf('.') === -1) path += '.txt';
+                if (path.indexOf('/') === -1) path = 'documents/' + path;
+                const parts = path.split('/'); 
+                const fileName = parts.pop(); 
+                let targetDir = fs.root; 
+                const newFs = { ...fs }; 
+                let writeDir = newFs.root;
+                for(let part of parts) { 
+                    if(!writeDir.children[part]) writeDir.children[part] = { type: 'folder', children: {} }; 
+                    writeDir = writeDir.children[part]; 
+                }
+                writeDir.children[fileName] = { type: 'file', content };
+                setFs(newFs); 
+                addToast('Notepad', `Saved to ${path}`, 'success');
+            };
+            const handleOpen = (file) => { if (file.type !== 'file') { addToast('Notepad', 'Not a text file', 'error'); return; } setContent(file.content); setShowPicker(false); };
+            const insertDate = () => { setContent(prev => prev + new Date().toLocaleString()); };
+            const menus = { File: [{ label: 'New', action: () => setContent('') }, { label: 'Open...', action: () => setShowPicker(true) }, { label: 'Save As...', action: handleSave }, { separator: true }, { label: 'Exit', action: () => {} }], Edit: [{ label: 'Undo', shortcut: 'Ctrl+Z', action: () => {} }, { separator: true }, { label: 'Time/Date', shortcut: 'F5', action: insertDate }] };
+            return (
+                <div className="flex flex-col h-full relative">
+                    {showPicker && <FilePicker fs={fs} onPick={handleOpen} onCancel={() => setShowPicker(false)} filter="text" />}
+                    <MenuBar menus={menus} />
+                    <textarea className="flex-1 w-full h-full p-2 resize-none outline-none font-mono text-sm" value={content} onChange={(e) => setContent(e.target.value)} spellCheck={false}/>
+                </div>
+            );
+        };
+
+        const Paint = ({ fs, setFs, addToast, initialFile }) => {
+            const canvasRef = useRef(null);
+            const [color, setColor] = useState('#000000');
+            const [isDrawing, setIsDrawing] = useState(false);
+            const [showPicker, setShowPicker] = useState(false);
+            const [loadedImage, setLoadedImage] = useState(initialFile);
+            useEffect(() => {
+                const canvas = canvasRef.current; const ctx = canvas.getContext('2d');
+                if (loadedImage && loadedImage.content) { const img = new Image(); img.onload = () => ctx.drawImage(img, 0, 0); img.src = loadedImage.content; } 
+                else { ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0,0,canvas.width, canvas.height); }
+            }, [loadedImage]);
+            
+            // Pointer events for drawing to support touch
+            const getCoords = (e) => {
+                const rect = canvasRef.current.getBoundingClientRect();
+                const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+                const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+                return { x, y };
+            };
+            
+            const startDraw = (e) => { e.preventDefault(); setIsDrawing(true); draw(e); };
+            const stopDraw = () => setIsDrawing(false);
+            const draw = (e) => { 
+                if (!isDrawing) return; 
+                e.preventDefault(); // Stop scrolling
+                const {x, y} = getCoords(e);
+                const ctx = canvasRef.current.getContext('2d'); 
+                ctx.fillStyle = color; 
+                ctx.fillRect(x, y, 4, 4); 
+            };
+            
+            const handleSave = () => {
+                let name = prompt("Save Image As:", "drawing");
+                if (!name) return;
+                if (name.indexOf('.') === -1) name += '.png';
+                let path = name;
+                if (path.indexOf('/') === -1) path = 'images/' + path;
+                const dataUrl = canvasRef.current.toDataURL("image/png");
+                const parts = path.split('/');
+                const fileName = parts.pop();
+                const newFs = { ...fs };
+                let writeDir = newFs.root;
+                for (let part of parts) {
+                    if (!writeDir.children[part]) writeDir.children[part] = { type: 'folder', children: {} };
+                    writeDir = writeDir.children[part];
+                }
+                writeDir.children[fileName] = { type: 'image', content: dataUrl };
+                setFs(newFs);
+                addToast('Paint', `Saved to ${path}`, 'success');
+            };
+
+            const handleOpen = (file) => { if (file.type !== 'image') { addToast('Paint', 'Not an image file', 'error'); return; } setLoadedImage(file); setShowPicker(false); };
+            const menus = { File: [{ label: 'New', action: () => { const ctx = canvasRef.current.getContext('2d'); ctx.fillStyle="#FFFFFF"; ctx.fillRect(0,0,500,400); setLoadedImage(null); }}, { label: 'Open...', action: () => setShowPicker(true) }, { label: 'Save As...', action: handleSave }] };
+            return (
+                <div className="flex flex-col h-full bg-gray-200 relative">
+                     {showPicker && <FilePicker fs={fs} onPick={handleOpen} onCancel={() => setShowPicker(false)} filter="image" />}
+                     <MenuBar menus={menus} />
+                     <div className="flex gap-1 p-1 bg-gray-300 border-b border-gray-400 overflow-x-auto">
+                        {['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFFFFF'].map(c => (<div key={c} onClick={() => setColor(c)} className={`w-6 h-6 border-2 flex-shrink-0 cursor-pointer ${color === c ? 'border-gray-800' : 'border-transparent'}`} style={{ backgroundColor: c }} />))}
+                    </div>
+                    <div className="flex-1 overflow-auto p-4 bg-gray-500 flex justify-center touch-none">
+                        <canvas 
+                            ref={canvasRef} 
+                            width={500} 
+                            height={400} 
+                            className="bg-white cursor-crosshair shadow-lg touch-none" 
+                            onMouseDown={startDraw} onMouseUp={stopDraw} onMouseMove={draw} onMouseLeave={stopDraw}
+                            onTouchStart={startDraw} onTouchEnd={stopDraw} onTouchMove={draw}
+                        />
+                    </div>
+                </div>
+            );
+        };
+
+        const Terminal = ({ fs, setFs, onCommand }) => {
+            const [history, setHistory] = useState(['Open95 MS-DOS Prompt', 'Copyright (C) Open95', 'Type "help" for commands.', '']);
+            const [input, setInput] = useState(''); const [cwd, setCwd] = useState(['root']); const bottomRef = useRef(null);
+            useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [history]);
+            const getDir = (currentFs, pathStack) => { let target = currentFs.root; for (let i = 1; i < pathStack.length; i++) { if (target.children && target.children[pathStack[i]]) { target = target.children[pathStack[i]]; } else { return null; } } return target; };
+            const execute = (cmdStr) => {
+                const parts = cmdStr.trim().split(' '); const cmd = parts[0].toLowerCase(); const args = parts.slice(1);
+                const currentDirObj = getDir(fs, cwd);
+                if (cmd === 'cls' || cmd === 'clear') { setHistory([]); return null; }
+                if (cmd === 'help') return 'Commands: ls, dir, cd, pwd, cat, mkdir, touch, rm, open, clean';
+                if (cmd === 'ls' || cmd === 'dir') { if (!currentDirObj || !currentDirObj.children) return 'Error: Invalid directory'; const items = Object.entries(currentDirObj.children).filter(([k, v]) => !v.hidden).map(([name, item]) => { return item.type === 'folder' ? `[DIR]  ${name}` : `       ${name}`; }); return items.length > 0 ? items.join('\n') : '(empty)'; }
+                if (cmd === 'pwd') return 'C:\\' + cwd.slice(1).join('\\');
+                if (cmd === 'cd') { if (!args[0]) return null; if (args[0] === '..') { if (cwd.length > 1) setCwd(prev => prev.slice(0, -1)); return null; } if (currentDirObj.children && currentDirObj.children[args[0]] && currentDirObj.children[args[0]].type === 'folder') { setCwd(prev => [...prev, args[0]]); return null; } return 'System cannot find the path specified.'; }
+                if (cmd === 'touch') { if (!args[0]) return 'usage: touch [name]'; const newFs = { ...fs }; const dir = getDir(newFs, cwd); dir.children[args[0]] = { type: 'file', content: '' }; setFs(newFs); return 'File created.'; }
+                return onCommand(cmdStr);
+            };
+            const handleKeyDown = (e) => { if (e.key === 'Enter') { const cmdLine = `C:\\${cwd.slice(1).join('\\')}> ${input}`; setHistory(prev => [...prev, cmdLine]); const output = execute(input); if (output) setHistory(prev => [...prev, output]); setInput(''); } };
+            return (
+                <div className="bg-black text-gray-300 font-mono text-sm p-2 h-full overflow-auto flex flex-col" onClick={() => document.getElementById('term-input').focus()}>
+                    {history.map((line, i) => <div key={i} className="whitespace-pre-wrap">{line}</div>)}
+                    <div className="flex"><span>C:\{cwd.slice(1).join('\\')}{'>'}</span><input id="term-input" autoFocus className="bg-transparent border-none outline-none text-gray-300 ml-1 flex-1" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} /></div>
+                    <div ref={bottomRef} />
+                </div>
+            );
+        };
+
+        const Explorer = ({ fs, launchApp, onContextMenu }) => {
+            const [currentPath, setCurrentPath] = useState(['root']);
+            const currentDir = useMemo(() => { let target = fs.root; if (currentPath.length > 1) { for(let i=1; i<currentPath.length; i++) { if (target.children[currentPath[i]]) target = target.children[currentPath[i]]; } } return target; }, [fs, currentPath]);
+            const handleItemClick = (name, item) => { if (item.type === 'folder') { setCurrentPath([...currentPath, name]); } else if (item.type === 'file') { launchApp('notepad', item); } else if (item.type === 'image') { launchApp('paint', item); } };
+            return (
+                <div className="flex flex-col h-full">
+                    <div className="p-1 border-b border-gray-400 text-xs flex gap-2 items-center"><span>Address:</span><div className="bg-white border border-gray-500 px-1 flex-1 truncate" style={bevel('in')}>C:\{currentPath.join('\\')}</div></div>
+                    <div className="flex-1 bg-white p-2 grid grid-cols-3 sm:grid-cols-4 content-start gap-4 overflow-auto">
+                        {currentPath.length > 1 && (<div className="flex flex-col items-center gap-1 cursor-pointer hover:bg-blue-100 p-2 border border-transparent hover:border-blue-300 border-dashed" onDoubleClick={() => setCurrentPath(prev => prev.slice(0, -1))}><WinIcon name="folder" size={32} /><span className="text-xs text-center truncate w-full">..</span></div>)}
+                        {currentDir && currentDir.children && Object.entries(currentDir.children).filter(([_, i]) => !i.hidden).map(([name, item]) => (
+                            <div 
+                                key={name} 
+                                className="flex flex-col items-center gap-1 cursor-pointer hover:bg-blue-100 p-2 border border-transparent hover:border-blue-300 border-dashed group" 
+                                onDoubleClick={() => handleItemClick(name, item)}
+                                onContextMenu={(e) => onContextMenu(e, 'explorer-item', { name, item, pathStack: currentPath })}
+                            >
+                                <WinIcon name={item.type === 'folder' ? 'folder' : (item.type === 'image' ? 'image' : 'text')} size={32} /><span className="text-xs text-center truncate w-full group-hover:text-blue-800">{name}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const RecycleBin = ({ fs, setFs, addToast }) => {
+            const binItems = fs.root.children[RECYCLE_BIN_NAME]?.children || {};
+            const isEmpty = Object.keys(binItems).length === 0;
+
+            const handleRestore = (id) => {
+                const itemWrapper = binItems[id];
+                if (!itemWrapper) return;
+
+                const newFs = { ...fs };
+                
+                // Try to reconstruct path
+                let targetDir = newFs.root;
+                const pathParts = itemWrapper.originalPath.slice(1); // Skip 'root'
+                
+                // Verify path still exists, otherwise dump in C:/
+                let pathValid = true;
+                for (let part of pathParts) {
+                    if (targetDir.children && targetDir.children[part]) {
+                        targetDir = targetDir.children[part];
+                    } else {
+                        pathValid = false;
+                        break;
+                    }
+                }
+                
+                // Fallback to root if folder deleted
+                if (!pathValid) {
+                     targetDir = newFs.root;
+                     addToast("Restore", "Original folder missing. Restored to Root.", "info");
+                }
+
+                // Handle Name Collision
+                let finalName = itemWrapper.originalName;
+                if (targetDir.children[finalName]) {
+                    finalName = `${finalName} (Restored)`;
+                    let i = 1;
+                    while (targetDir.children[finalName]) {
+                        finalName = `${itemWrapper.originalName} (Restored ${i})`;
+                        i++;
+                    }
+                }
+
+                // Move back
+                targetDir.children[finalName] = itemWrapper.item;
+                
+                // Remove from bin
+                delete newFs.root.children[RECYCLE_BIN_NAME].children[id];
+                
+                setFs(newFs);
+                addToast("Recycle Bin", "Item restored.", "success");
+            };
+
+            const handleDeletePerm = (id) => {
+                const newFs = { ...fs };
+                delete newFs.root.children[RECYCLE_BIN_NAME].children[id];
+                setFs(newFs);
+            };
+
+            const emptyBin = () => {
+                const newFs = { ...fs };
+                newFs.root.children[RECYCLE_BIN_NAME].children = {};
+                setFs(newFs);
+                addToast("Recycle Bin", "Bin emptied.", "success");
+            };
+
+            const menus = { File: [{ label: 'Empty Recycle Bin', action: emptyBin }, { label: 'Close', action: () => {} }] };
+
+            return (
+                <div className="flex flex-col h-full bg-white">
+                    <MenuBar menus={menus} />
+                    <div className="flex-1 overflow-auto p-2">
+                         <div className="grid grid-cols-1 text-sm">
+                            <div className="grid grid-cols-4 border-b border-gray-300 font-bold bg-gray-100 p-1">
+                                <div className="col-span-2">Name</div>
+                                <div>Original Location</div>
+                                <div>Deleted</div>
+                            </div>
+                            {isEmpty && <div className="p-4 text-center italic text-gray-500">Recycle Bin is empty.</div>}
+                            {Object.entries(binItems).map(([id, wrapper]) => (
+                                <div key={id} className="grid grid-cols-4 p-1 hover:bg-blue-100 cursor-pointer group items-center border-b border-gray-100">
+                                    <div className="col-span-2 flex items-center gap-2 truncate">
+                                        <WinIcon name={wrapper.item.type === 'folder' ? 'folder' : (wrapper.item.type === 'image' ? 'image' : 'text')} size={16}/>
+                                        <span>{wrapper.originalName}</span>
+                                    </div>
+                                    <div className="truncate text-gray-500">{wrapper.originalPath.join('\\')}</div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs">{new Date(wrapper.deletedAt).toLocaleDateString()}</span>
+                                        <div className="opacity-0 group-hover:opacity-100 flex gap-1">
+                                            <button onClick={()=>handleRestore(id)} className="border px-1 text-xs bg-gray-200 hover:bg-white" title="Restore">R</button>
+                                            <button onClick={()=>handleDeletePerm(id)} className="border px-1 text-xs bg-gray-200 hover:bg-red-200" title="Delete">X</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                         </div>
+                    </div>
+                    <div className="bg-gray-200 border-t p-1 text-xs">{Object.keys(binItems).length} object(s)</div>
+                </div>
+            );
+        };
+
+        const FindFiles = ({ fs, launchApp }) => {
+            const [query, setQuery] = useState('');
+            const [results, setResults] = useState([]);
+
+            const search = () => {
+                if (!query) { setResults([]); return; }
+                const found = [];
+                const traverse = (dir, path) => {
+                    Object.entries(dir.children).forEach(([name, item]) => {
+                        const fullPath = path ? `${path}/${name}` : name;
+                        if(name === RECYCLE_BIN_NAME) return; // Skip bin
+                        if (name.toLowerCase().includes(query.toLowerCase())) {
+                            found.push({ ...item, name, fullPath });
+                        }
+                        if (item.type === 'folder') {
+                            traverse(item, fullPath);
+                        }
+                    });
+                };
+                traverse(fs.root, '');
+                setResults(found);
+            };
+
+            return (
+                <div className="flex flex-col h-full bg-gray-200 p-2 gap-2">
+                    <div className="flex gap-2 items-center">
+                        <span>Named:</span>
+                        <input className="flex-1 p-1" value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && search()} />
+                        <button className="px-4 border" onClick={search}>Find Now</button>
+                    </div>
+                    <div className="flex-1 bg-white border p-1 overflow-auto">
+                        {results.map(r => (
+                            <div key={r.fullPath} className="cursor-pointer hover:bg-blue-800 hover:text-white flex gap-2" onDoubleClick={() => {
+                                if (r.type === 'file') launchApp('notepad', r);
+                                else if (r.type === 'image') launchApp('paint', r);
+                            }}>
+                                <WinIcon name={r.type === 'folder' ? 'folder' : (r.type === 'image' ? 'image' : 'text')} size={16} />
+                                <span>{r.name}</span> <span className="text-gray-400 text-xs ml-auto">{r.fullPath}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const Minesweeper = () => {
+            const ROWS = 9; const COLS = 9; const MINES = 10;
+            const [grid, setGrid] = useState([]); const [gameOver, setGameOver] = useState(false); const [win, setWin] = useState(false);
+            const initGame = () => {
+                let newGrid = Array(ROWS).fill().map(() => Array(COLS).fill().map(() => ({ isMine: false, isOpen: false, isFlagged: false, count: 0 })));
+                let minesPlaced = 0; while (minesPlaced < MINES) { let r = Math.floor(Math.random() * ROWS); let c = Math.floor(Math.random() * COLS); if (!newGrid[r][c].isMine) { newGrid[r][c].isMine = true; minesPlaced++; }}
+                for (let r = 0; r < ROWS; r++) { for (let c = 0; c < COLS; c++) { if (!newGrid[r][c].isMine) { let count = 0; for (let i = -1; i <= 1; i++) { for (let j = -1; j <= 1; j++) { if (r + i >= 0 && r + i < ROWS && c + j >= 0 && c + j < COLS && newGrid[r + i][c + j].isMine) count++; }} newGrid[r][c].count = count; }}}
+                setGrid(newGrid); setGameOver(false); setWin(false);
+            };
+            useEffect(() => { initGame(); }, []);
+            const openCell = (r, c) => {
+                if (gameOver || win || grid[r][c].isOpen || grid[r][c].isFlagged) return;
+                let newGrid = [...grid]; if (newGrid[r][c].isMine) { newGrid[r][c].isOpen = true; setGameOver(true); setGrid(newGrid); return; }
+                const floodFill = (row, col) => { 
+                    if (row < 0 || row >= ROWS || col < 0 || col >= COLS || newGrid[row][col].isOpen) return; 
+                    newGrid[row][col].isOpen = true; 
+                    if (newGrid[row][col].count === 0) { 
+                        for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) floodFill(row + i, col + j); 
+                    }
+                };
+                floodFill(r, c); setGrid(newGrid); checkWin(newGrid);
+            };
+            const toggleFlag = (e, r, c) => { e.preventDefault(); if (gameOver || win || grid[r][c].isOpen) return; let newGrid = [...grid]; newGrid[r][c].isFlagged = !newGrid[r][c].isFlagged; setGrid(newGrid); };
+            const checkWin = (currentGrid) => { let openCount = 0; for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (currentGrid[r][c].isOpen) openCount++; if (openCount === (ROWS * COLS - MINES)) setWin(true); };
+            return (
+                <div className="flex flex-col items-center p-2 bg-gray-200 h-full">
+                    <div className="mb-2 p-1 border-2 border-gray-400 inset bg-gray-300 flex justify-between w-full items-center"><span className="text-red-600 font-bold font-mono bg-black px-1">0{Math.max(0, MINES - grid.flat().filter(c => c.isFlagged).length)}</span><button onClick={initGame} className="w-6 h-6 border-2 border-gray-100 flex items-center justify-center text-xs active:border-inset">{gameOver ? 'X(' : win ? 'B)' : ':)'}</button><span className="text-red-600 font-bold font-mono bg-black px-1">000</span></div>
+                    <div className="grid grid-cols-9 gap-0 border-4 border-gray-400" style={{ borderStyle: 'inset' }}>{grid.map((row, r) => row.map((cell, c) => (<div key={`${r}-${c}`} className={`w-5 h-5 flex items-center justify-center text-xs font-bold cursor-default ${cell.isOpen ? 'border border-gray-400' : 'border-2 border-white border-b-gray-600 border-r-gray-600 bg-gray-300'}`} onClick={() => openCell(r, c)} onContextMenu={(e) => toggleFlag(e, r, c)}>{cell.isOpen ? (cell.isMine ? 'X' : (cell.count > 0 ? <span style={{color: ['blue', 'green', 'red', 'purple'][cell.count-1]}}>{cell.count}</span> : '')) : (cell.isFlagged ? '!' : '')}</div>)))}</div>
+                </div>
+            );
+        };
+
+        const Run = ({ onRun, onClose }) => {
+            const [cmd, setCmd] = useState('');
+            return (
+                <div className="p-4 flex flex-col gap-4 bg-gray-200 h-full">
+                    <div className="flex gap-2 items-center"><WinIcon name="run" size={32}/><div className="text-sm">Type the name of a program, folder, or document, and Windows will open it for you.</div></div>
+                    <div className="flex gap-2 items-center"><span className="text-sm font-bold">Open:</span><input className="flex-1 p-1 border inset" value={cmd} onChange={e => setCmd(e.target.value)} autoFocus onKeyDown={e => e.key === 'Enter' && onRun(cmd)} /></div>
+                    <div className="flex justify-end gap-2 mt-auto"><button className="px-4 py-1 border-2 border-white border-b-black border-r-black active:border-inset" onClick={() => onRun(cmd)}>OK</button><button className="px-4 py-1 border-2 border-white border-b-black border-r-black active:border-inset" onClick={onClose}>Cancel</button></div>
+                </div>
+            );
+        };
+
+        const Calculator = () => {
+            const [display, setDisplay] = useState('0');
+            const [prevValue, setPrevValue] = useState(null);
+            const [operator, setOperator] = useState(null);
+            const [waitingForOperand, setWaitingForOperand] = useState(false);
+            const inputDigit = (digit) => { if (waitingForOperand) { setDisplay(String(digit)); setWaitingForOperand(false); } else { setDisplay(display === '0' ? String(digit) : display + digit); } };
+            const inputDot = () => { if (waitingForOperand) { setDisplay('0.'); setWaitingForOperand(false); } else if (display.indexOf('.') === -1) { setDisplay(display + '.'); } };
+            const clear = () => { setDisplay('0'); setPrevValue(null); setOperator(null); setWaitingForOperand(false); };
+            const performOperation = (nextOperator) => { const inputValue = parseFloat(display); if (prevValue == null) { setPrevValue(inputValue); } else if (operator) { const currentValue = prevValue || 0; const newValue = calculate(currentValue, inputValue, operator); setPrevValue(newValue); setDisplay(String(newValue)); } setWaitingForOperand(true); setOperator(nextOperator); };
+            const calculate = (prev, next, op) => { switch (op) { case '+': return prev + next; case '-': return prev - next; case '*': return prev * next; case '/': return prev / next; case '=': return next; default: return next; } };
+            return (
+                <div className="flex flex-col h-full bg-gray-200 p-2 gap-2 select-none">
+                    <div className="bg-white text-right p-2 font-mono text-lg mb-2 h-10 truncate" style={bevel('in')}>{display}</div>
+                    <div className="grid grid-cols-4 gap-1 flex-1">
+                        <button onClick={clear} className="col-span-1 p-2 text-xs font-bold text-red-800 active:border-inset border active:bg-gray-400 flex items-center justify-center" style={bevel('out')}>C</button>
+                        <button onClick={() => performOperation('=')} className="col-span-1 p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center" style={bevel('out')}>=</button>
+                        <button onClick={() => performOperation('/')} className="col-span-1 p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center" style={bevel('out')}>/</button>
+                        <button onClick={() => performOperation('*')} className="col-span-1 p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center" style={bevel('out')}>*</button>
+                        <button onClick={() => inputDigit(7)} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center text-blue-900" style={bevel('out')}>7</button>
+                        <button onClick={() => inputDigit(8)} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center text-blue-900" style={bevel('out')}>8</button>
+                        <button onClick={() => inputDigit(9)} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center text-blue-900" style={bevel('out')}>9</button>
+                        <button onClick={() => performOperation('-')} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center" style={bevel('out')}>-</button>
+                        <button onClick={() => inputDigit(4)} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center text-blue-900" style={bevel('out')}>4</button>
+                        <button onClick={() => inputDigit(5)} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center text-blue-900" style={bevel('out')}>5</button>
+                        <button onClick={() => inputDigit(6)} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center text-blue-900" style={bevel('out')}>6</button>
+                        <button onClick={() => performOperation('+')} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center" style={bevel('out')}>+</button>
+                        <button onClick={() => inputDigit(1)} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center text-blue-900" style={bevel('out')}>1</button>
+                        <button onClick={() => inputDigit(2)} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center text-blue-900" style={bevel('out')}>2</button>
+                        <button onClick={() => inputDigit(3)} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center text-blue-900" style={bevel('out')}>3</button>
+                        <button onClick={inputDot} className="p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center" style={bevel('out')}>.</button>
+                         <button onClick={() => inputDigit(0)} className="col-span-4 p-2 text-xs font-bold active:border-inset border active:bg-gray-400 flex items-center justify-center text-blue-900" style={bevel('out')}>0</button>
+                    </div>
+                </div>
+            );
+        };
+        
+        const About = () => <div className="p-4 bg-gray-200 h-full flex flex-col items-center justify-center text-center"><WinIcon name="computer" size={48} /><h1 className="font-bold text-xl mb-2">Open95</h1><div className="text-xs border p-2 bg-white w-full text-left overflow-auto h-24" style={bevel('in')}>Version 3.0 (Touch & Recycle Update)<br/>(C) 2026 Open Systems</div></div>;
+
+        const Marketplace = ({ installedApps, onInstall, onUninstall }) => {
+            const [index, setIndex] = useState(null); const [loading, setLoading] = useState(true);
+            useEffect(() => { fetch('marketplace/index.json').then(r=>r.json()).then(d=>{setIndex(d);setLoading(false)}).catch(e=>setLoading(false)); }, []);
+            const getIconForMarketplace = (appEntry) => { if (!appEntry.icon) return 'default'; if (typeof appEntry.icon === 'object') return appEntry.icon; if (!appEntry.icon.includes('.') && !appEntry.icon.includes('/') && !appEntry.icon.startsWith('http')) return appEntry.icon; let directory = appEntry.path; if (directory.endsWith('.json')) { directory = directory.substring(0, directory.lastIndexOf('/') + 1); } if (directory && !directory.endsWith('/')) directory += '/'; let fullPath = directory + appEntry.icon; if (fullPath.startsWith('/')) fullPath = fullPath.substring(1); if (!fullPath.startsWith('http') && !fullPath.startsWith('marketplace')) { fullPath = 'marketplace/' + fullPath; } return { type: 'url', value: fullPath }; }
+            if(loading) return <div className="p-4">Loading...</div>; if(!index) return <div className="p-4">Error loading marketplace.</div>;
+            return (
+                <div className="flex flex-col h-full bg-white">
+                    <div className="p-4 bg-gray-100 border-b flex items-center gap-4">
+                        <WinIcon name={SYSTEM_APPS.marketplace.icon} size={32} />
+                        <div><h1 className="font-bold">{index.marketplace.name}</h1></div>
+                    </div>
+
+                    <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 overflow-auto">
+                        {index.apps.map(app => {
+                            const isInstalled = installedApps.some(i => i.id === app.id); const iconToUse = getIconForMarketplace(app);
+                            return (
+                                <div key={app.id} className="flex flex-col items-center gap-2 border p-2 bg-gray-50 hover:bg-blue-50 text-center h-full">
+                                    <div className="w-16 h-16 bg-gray-200 border flex items-center justify-center p-1"><WinIcon name={iconToUse} size={48} className="max-w-full max-h-full"/></div>
+                                    <div className="flex-1 w-full"><h3 className="font-bold text-sm truncate">{app.name}</h3><div className="text-xs text-gray-500 line-clamp-2 h-8">{app.description}</div></div>
+                                    <button onClick={() => isInstalled ? onUninstall(app.id) : onInstall(app)} className="w-full px-2 py-1 text-xs font-bold border-2 border-white border-b-black border-r-black bg-gray-200 active:border-inset">{isInstalled ? 'Uninstall' : 'Install'}</button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- START MENU ---
+        const StartMenu = ({ installedApps, launchApp, onShutDown, onClose, fs }) => {
+            const [activeSub, setActiveSub] = useState(null);
+            const [activeNested, setActiveNested] = useState(null); 
+            useEffect(() => { setActiveNested(null); }, [activeSub]);
+
+            const getDocumentFiles = () => {
+                const docs = fs.root.children['documents'];
+                if (docs && docs.children) {
+                    return Object.entries(docs.children).map(([name, item]) => ({ name, item }));
+                }
+                return [];
+            };
+            const docFiles = getDocumentFiles();
+
+            const MenuItem = ({ iconName, label, hasSub, subId, onClick }) => (
+                <div 
+                    className="flex items-center justify-between px-2 py-2 md:py-1 hover:bg-blue-800 hover:text-white cursor-pointer relative group active:bg-blue-900" 
+                    onMouseEnter={() => window.innerWidth > 768 && hasSub && setActiveSub(subId)} 
+                    onClick={(e) => { 
+                        if(hasSub) { 
+                             e.stopPropagation(); 
+                             setActiveSub(activeSub === subId ? null : subId); 
+                        } 
+                        else onClick(); 
+                    }}
+                >
+                    <div className="flex items-center gap-2"><WinIcon name={iconName} size={24} /><span className="text-sm font-bold">{label}</span></div>
+                    {hasSub && <span className="ml-2 text-black group-hover:text-white">▶</span>}
+                    {hasSub && activeSub === subId && (
+                        <div 
+                            className="absolute left-full w-48 bg-gray-300 border-2 border-white border-b-black border-r-black shadow-xl flex flex-col z-[150] ml-[-2px] bottom-auto top-0"
+                            style={{ 
+                                bottom: subId === 'programs' ? '0' : 'auto', 
+                                top: subId === 'programs' ? 'auto' : '0',
+                                /* FIXED: Removed overflow/maxHeight to prevent clipping nested menus */
+                            }}
+                        >
+                            {/* Submenu Logic */}
+                            {subId === 'programs' && (
+                                <>
+                                    <div 
+                                        className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer relative"
+                                        onMouseEnter={() => setActiveNested('accessories')}
+                                        onClick={(e) => {e.stopPropagation(); setActiveNested(activeNested === 'accessories' ? null : 'accessories');}}
+                                    >
+                                        <WinIcon name="folder" size={16}/> <span>Accessories</span><span className="ml-auto text-xs">▶</span>
+                                        {activeNested === 'accessories' && (
+                                            <div className="absolute left-full top-0 w-40 bg-gray-300 border-2 border-white border-b-black border-r-black shadow-xl flex flex-col ml-[-2px] z-[160]">
+                                                <div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onClick={(e)=>{e.stopPropagation(); launchApp('calculator'); onClose();}}><WinIcon name="calculator" size={16}/> Calculator</div>
+                                                <div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onClick={(e)=>{e.stopPropagation(); launchApp('notepad'); onClose();}}><WinIcon name="text" size={16}/> Notepad</div>
+                                                <div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onClick={(e)=>{e.stopPropagation(); launchApp('paint'); onClose();}}><WinIcon name="paint" size={16}/> Paint</div>
+                                                <div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onClick={(e)=>{e.stopPropagation(); launchApp('minesweeper'); onClose();}}><WinIcon name="minesweeper" size={16}/> Minesweeper</div>
+                                                <div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onClick={(e)=>{e.stopPropagation(); launchApp('clock'); onClose();}}><WinIcon name="clock" size={16}/> Clock</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onMouseEnter={() => setActiveNested(null)} onClick={()=>{launchApp('ie'); onClose();}}><WinIcon name="ie" size={16}/> Internet Explorer</div>
+                                    <div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onMouseEnter={() => setActiveNested(null)} onClick={()=>{launchApp('marketplace'); onClose();}}><WinIcon name={SYSTEM_APPS.marketplace.icon} size={16}/> Marketplace</div>
+                                    <div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onMouseEnter={() => setActiveNested(null)} onClick={()=>{launchApp('terminal'); onClose();}}><WinIcon name="terminal" size={16}/> MS-DOS Prompt</div>
+                                    <div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onMouseEnter={() => setActiveNested(null)} onClick={()=>{launchApp('explorer'); onClose();}}><WinIcon name="computer" size={16}/> Windows Explorer</div>
+                                    <div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onMouseEnter={() => setActiveNested(null)} onClick={()=>{launchApp('recycle'); onClose();}}><WinIcon name="recycle" size={16}/> Recycle Bin</div>
+                                    {installedApps.length > 0 && <div className="h-px bg-gray-400 my-1 mx-2" />}
+                                    {installedApps.map(app => (<div key={app.id} className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onMouseEnter={() => setActiveNested(null)} onClick={()=>{launchApp(app.id); onClose();}}><div className="w-4 h-4 flex items-center justify-center"><WinIcon name={app.icon || 'default'} size={14}/></div><span className="truncate">{app.name}</span></div>))}
+                                </>
+                            )}
+                            {subId === 'settings' && (<div className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer" onClick={()=>{launchApp('controlpanel'); onClose();}}><WinIcon name="settings" size={16}/> Control Panel</div>)}
+                            {subId === 'documents' && (
+                                <>
+                                    {docFiles.length === 0 && <div className="px-2 py-2 text-gray-500 italic text-sm">(Empty)</div>}
+                                    {docFiles.map(({name, item}) => (
+                                        <div key={name} className="px-2 py-2 hover:bg-blue-800 hover:text-white flex items-center gap-2 cursor-pointer text-sm" onClick={() => {
+                                            if(item.type === 'file') launchApp('notepad', item);
+                                            else if(item.type === 'image') launchApp('paint', item);
+                                            onClose();
+                                        }}>
+                                            <div className="w-4 h-4 flex items-center justify-center"><WinIcon name={item.type === 'image' ? 'image' : 'text'} size={14}/></div>
+                                            <span className="truncate">{name}</span>
+                                        </div>
+                                    ))}
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+            return (
+                <div 
+                    className="absolute bottom-10 left-1 w-56 bg-gray-300 flex flex-row z-[100] shadow-xl border-2 border-white border-b-black border-r-black"
+                    onPointerDown={(e) => e.stopPropagation()} // FIX: Prevent menu close on touch
+                >
+                    <div className="w-8 flex flex-col justify-end items-center pb-2 shadow-inner" style={{background: 'linear-gradient(to bottom, #000040 0%, #000000 100%)'}}>
+                        <div className="mb-2 text-white text-xl tracking-widest drop-shadow-md select-none flex gap-1" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                            <span className="font-extrabold text-gray-100">Open</span><span className="font-light text-gray-300">95</span>
+                        </div>
+                    </div>
+                    <div className="flex-1 py-1 flex flex-col"><MenuItem iconName="folder" label="Programs" hasSub subId="programs" /><MenuItem iconName="folder" label="Documents" hasSub subId="documents" /><MenuItem iconName="settings" label="Settings" hasSub subId="settings" /><MenuItem iconName="find" label="Find" onClick={() => { launchApp('find'); onClose(); }} /><MenuItem iconName="help" label="Help" onClick={() => { launchApp('help'); onClose(); }} /><MenuItem iconName="run" label="Run..." onClick={() => { launchApp('run'); onClose(); }} /><div className="h-px bg-gray-400 my-1 mx-2 shadow-[0_1px_0_white]" /><MenuItem iconName="computer" label="Shut Down..." onClick={onShutDown} /></div>
+                </div>
+            );
+        };
+
+        // --- MAIN APP ---
+        const App = () => {
+            const [isBooted, setIsBooted] = useState(false);
+            const [fs, setFs] = useState(DEFAULT_FS);
+            const [installedApps, setInstalledApps] = useState([]);
+            const [windows, setWindows] = useState([]);
+            const [activeWindowId, setActiveWindowId] = useState(null);
+            const [startOpen, setStartOpen] = useState(false);
+            const [zIndexCounter, setZIndexCounter] = useState(10);
+            const [time, setTime] = useState(new Date());
+            const [toasts, setToasts] = useState([]);
+            const [settings, setSettings] = useState({ showMarketplaceAppsOnDesktop: true, wallpaper: '#008080', inputMode: 'mouse' });
+            
+            // Context Menu, Shortcuts & Icons
+            const [contextMenu, setContextMenu] = useState(null);
+            const [shortcuts, setShortcuts] = useState([]);
+            const [iconPositions, setIconPositions] = useState({});
+            
+            // Drag State (Pointer)
+            const [draggedIcon, setDraggedIcon] = useState(null); 
+            const dragOffset = useRef({ x:0, y:0 });
+
+            // Touch State
+            const longPressTimer = useRef(null);
+            const lastTapTime = useRef(0);
+
+            const addToast = (title, message, type='info') => { const id = Date.now(); setToasts(prev => [...prev, { id, title, message, type }]); };
+            const removeToast = useCallback((id) => setToasts(prev => prev.filter(t => t.id !== id)), []);
+
+            // File System Persistence
+            useEffect(() => {
+                const savedFs = localStorage.getItem(STORAGE_KEY_FS);
+                if (savedFs) {
+                    const parsed = JSON.parse(savedFs);
+                    // Ensure bin exists in legacy saves
+                    if (!parsed.root.children[RECYCLE_BIN_NAME]) {
+                        parsed.root.children[RECYCLE_BIN_NAME] = { type: 'folder', hidden: true, children: {} };
+                    }
+                    setFs(parsed);
+                }
+                const savedApps = localStorage.getItem(STORAGE_KEY_APPS);
+                if (savedApps) setInstalledApps(JSON.parse(savedApps) || []);
+                const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+                if (savedSettings) {
+                    const parsed = JSON.parse(savedSettings);
+                    setSettings(prev => ({...prev, ...parsed})); // Merge defaults
+                }
+                const savedShortcuts = localStorage.getItem(STORAGE_KEY_SHORTCUTS);
+                if (savedShortcuts) setShortcuts(JSON.parse(savedShortcuts));
+                const savedPos = localStorage.getItem(STORAGE_KEY_POSITIONS);
+                if (savedPos) setIconPositions(JSON.parse(savedPos));
+                
+                fetch('marketplace/index.json').then(res => res.json()).then(data => { if (data && Array.isArray(data.apps)) { const validAppIds = new Set(data.apps.map(a => a.id)); setInstalledApps(currentInstalled => currentInstalled.filter(app => !app.isExternal || validAppIds.has(app.id))); }}).catch(e => console.log("Offline mode"));
+            }, []);
+
+            useEffect(() => { localStorage.setItem(STORAGE_KEY_FS, JSON.stringify(fs)); }, [fs]);
+            useEffect(() => { localStorage.setItem(STORAGE_KEY_APPS, JSON.stringify(installedApps)); }, [installedApps]);
+            useEffect(() => { localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings)); }, [settings]);
+            useEffect(() => { localStorage.setItem(STORAGE_KEY_SHORTCUTS, JSON.stringify(shortcuts)); }, [shortcuts]);
+            useEffect(() => { localStorage.setItem(STORAGE_KEY_POSITIONS, JSON.stringify(iconPositions)); }, [iconPositions]);
+
+            // Recycle Bin Check
+            const isBinFull = useMemo(() => {
+                return fs.root.children[RECYCLE_BIN_NAME]?.children && Object.keys(fs.root.children[RECYCLE_BIN_NAME].children).length > 0;
+            }, [fs]);
+
+            // Toggle Input Mode
+            const toggleInputMode = () => {
+                const newMode = settings.inputMode === 'mouse' ? 'touch' : 'mouse';
+                setSettings(prev => ({ ...prev, inputMode: newMode }));
+                addToast("Input Mode", `Switched to ${newMode === 'mouse' ? 'Mouse' : 'Touch'} mode`, 'info');
+            };
+
+            // Window Management
+            const launchApp = (appId, initialFile = null) => {
+                let appDef = Object.values(SYSTEM_APPS).find(a => a.id === appId) || installedApps.find(a => a.id === appId);
+                if (!appDef) { addToast("System Error", `Cannot find '${appId}'.`, "error"); return; }
+                const instanceId = Date.now();
+                
+                // Responsive default width
+                const screenW = window.innerWidth;
+                const defW = appDef.window.width;
+                const finalW = Math.min(defW, screenW - 20);
+                
+                const newWindow = { 
+                    instanceId, 
+                    appId: appDef.id, 
+                    initialFile, 
+                    x: 20 + (windows.length * 20), 
+                    y: 20 + (windows.length * 20), 
+                    width: finalW, 
+                    height: appDef.window.height, 
+                    zIndex: zIndexCounter + 1, 
+                    minimized: false, 
+                    maximized: false, 
+                    resizable: appDef.window.resizable 
+                };
+                setZIndexCounter(prev => prev + 1); setWindows(prev => [...prev, newWindow]); setActiveWindowId(instanceId);
+            };
+
+            const installApp = (appInfo) => {
+                const MARKETPLACE_DIR = 'marketplace'; let rawPath = appInfo.path; let configUrl = ''; if (rawPath.startsWith('/')) rawPath = rawPath.substring(1); if (!rawPath.startsWith('marketplace') && !rawPath.startsWith('http')) { configUrl = `${MARKETPLACE_DIR}/${rawPath}`; } else { configUrl = rawPath; } if (!configUrl.endsWith('.json')) configUrl = configUrl.endsWith('/') ? `${configUrl}app.json` : `${configUrl}/app.json`;
+                fetch(configUrl).then(res => res.json()).then(config => { const appDir = configUrl.substring(0, configUrl.lastIndexOf('/') + 1); const newAppStruct = { id: config.id, name: config.name, icon: config.icon || 'default', sourcePath: appDir, entryPoint: config.entry, window: config.window || { width: 400, height: 300, resizable: true }, isExternal: true }; setInstalledApps(prev => [...prev, newAppStruct]); addToast("Installer", `${config.name} installed successfully!`, 'success'); }).catch(err => addToast("Failed", err.message, "error"));
+            };
+            const uninstallApp = (id) => setInstalledApps(prev => prev.filter(a => a.id !== id));
+            const closeWindow = (id) => setWindows(prev => prev.filter(w => w.instanceId !== id));
+            const minimizeWindow = (id) => { setWindows(prev => prev.map(w => w.instanceId === id ? { ...w, minimized: true } : w)); setActiveWindowId(null); };
+            const maximizeWindow = (id) => { setWindows(prev => prev.map(w => w.instanceId === id ? { ...w, maximized: !w.maximized } : w)); setActiveWindowId(id); };
+            const focusWindow = (id) => { const maxZ = Math.max(...windows.map(w => w.zIndex), 0); setWindows(prev => prev.map(w => w.instanceId === id ? { ...w, zIndex: maxZ + 1, minimized: false } : w)); setZIndexCounter(maxZ + 1); setActiveWindowId(id); };
+            const moveWindow = (id, pos) => setWindows(prev => prev.map(w => w.instanceId === id ? { ...w, x: pos.x, y: pos.y } : w));
+
+            const renderAppContent = (win) => {
+                let appDef = Object.values(SYSTEM_APPS).find(a => a.id === win.appId);
+                if (appDef) {
+                    switch (appDef.component) {
+                        case 'Notepad': return <Notepad fs={fs} setFs={setFs} addToast={addToast} initialFile={win.initialFile} />;
+                        case 'Explorer': return <Explorer fs={fs} launchApp={launchApp} onContextMenu={handleContextMenu} />;
+                        case 'Terminal': return <Terminal fs={fs} setFs={setFs} onCommand={() => {}} />;
+                        case 'Calculator': return <Calculator />;
+                        case 'Marketplace': return <Marketplace installedApps={installedApps} onInstall={installApp} onUninstall={uninstallApp} />;
+                        case 'About': return <About />;
+                        case 'Minesweeper': return <Minesweeper />;
+                        case 'ControlPanel': return <ControlPanel settings={settings} setSettings={setSettings} />;
+                        case 'Paint': return <Paint fs={fs} setFs={setFs} addToast={addToast} initialFile={win.initialFile} />;
+                        case 'Run': return <Run onRun={(cmd) => { launchApp(cmd.toLowerCase()); closeWindow(win.instanceId); }} onClose={() => closeWindow(win.instanceId)} />;
+                        case 'Clock': return <Clock />;
+                        case 'InternetExplorer': return <InternetExplorer />;
+                        case 'HelpViewer': return <HelpViewer />;
+                        case 'FindFiles': return <FindFiles fs={fs} launchApp={launchApp} />;
+                        case 'RecycleBin': return <RecycleBin fs={fs} setFs={setFs} addToast={addToast} />;
+                        default: return <div>Unknown System App</div>;
+                    }
+                }
+                appDef = installedApps.find(a => a.id === win.appId);
+                if (appDef && appDef.isExternal) { return <iframe src={appDef.sourcePath + appDef.entryPoint} title={appDef.name} />; }
+                return <div>Error loading app.</div>;
+            };
+
+            const moveToRecycleBin = (name, item, pathStack) => {
+                const newFs = { ...fs };
+                // Remove from original
+                let target = newFs.root;
+                for(let i=1; i<pathStack.length; i++) {
+                    if(target.children[pathStack[i]]) target = target.children[pathStack[i]];
+                }
+                if(target.children[name]) {
+                    delete target.children[name];
+                    
+                    // Add to bin wrapper
+                    const deletedId = Date.now().toString();
+                    newFs.root.children[RECYCLE_BIN_NAME].children[deletedId] = {
+                        type: 'recycled_item',
+                        originalPath: pathStack,
+                        originalName: name,
+                        deletedAt: Date.now(),
+                        item: item
+                    };
+                    
+                    setFs(newFs);
+                    addToast('System', `Moved ${name} to Recycle Bin`, 'success');
+                }
+            };
+
+            const desktopIcons = [
+                { id: 'explorer', name: 'My Computer', icon: "https://upload.wikimedia.org/wikipedia/commons/6/64/Windows_Chicago_My_Computer.png" },
+                { id: 'marketplace', name: 'Marketplace', icon: "https://static.vecteezy.com/system/resources/previews/060/587/624/non_2x/microsoft-store-icon-logo-symbol-free-png.png" },
+                { id: 'ie', name: 'Internet Explorer', icon: "https://pngimg.com/d/ie_logo_PNG4.png" },
+                { id: 'recycle', name: 'Recycle Bin', icon: isBinFull ? 'recycle-full' : 'recycle-empty' },
+                ...(settings.showMarketplaceAppsOnDesktop ? installedApps.map(app => ({ id: app.id, name: app.name, icon: app.icon || 'default', isApp: true })) : []),
+                ...shortcuts.filter(s => {
+                    if (settings.showMarketplaceAppsOnDesktop && installedApps.some(i => i.id === s.id)) return false;
+                    return true;
+                })
+            ];
+
+            const handleContextMenu = (e, type, data) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                let options = [];
+                if (type === 'desktop') {
+                    options = [
+                        { label: 'Refresh', action: () => window.location.reload() },
+                        { label: 'Properties', action: () => launchApp('controlpanel') },
+                        { separator: true },
+                        {
+                            label: 'Snap to Grid',
+                            action: () => {
+                                setIconPositions(prev => {
+                                    const newPos = {};
+                                    const allIconIds = desktopIcons.map(i => i.id);
+                                    allIconIds.forEach((id, idx) => {
+                                        let x = prev[id]?.x;
+                                        let y = prev[id]?.y;
+                                        if (x === undefined) {
+                                             x = 10 + Math.floor(idx / 6) * 80;
+                                             y = 10 + (idx % 6) * 90;
+                                        }
+                                        newPos[id] = {
+                                            x: Math.round(x / 80) * 80 + 10,
+                                            y: Math.round(y / 90) * 90 + 10
+                                        };
+                                    });
+                                    return newPos;
+                                });
+                                addToast('Desktop', 'Icons aligned to grid.', 'success');
+                            }
+                        },
+                        { 
+                            label: 'New Shortcut', 
+                            children: [
+                                ...Object.values(SYSTEM_APPS).filter(a => !['explorer','marketplace','run','about','controlpanel'].includes(a.id)).map(app => ({
+                                    label: app.name,
+                                    action: () => {
+                                        if(!shortcuts.some(s => s.id === app.id)) {
+                                            setShortcuts(prev => [...prev, { id: app.id, name: app.name, icon: app.icon }]);
+                                            addToast('Desktop', `Shortcut to ${app.name} added.`, 'success');
+                                        } else {
+                                            addToast('Desktop', 'Shortcut already exists.', 'error');
+                                        }
+                                    }
+                                })),
+                                ...installedApps.map(app => ({
+                                    label: app.name,
+                                    action: () => {
+                                        if(!shortcuts.some(s => s.id === app.id)) {
+                                            setShortcuts(prev => [...prev, { id: app.id, name: app.name, icon: app.icon || 'default' }]);
+                                            addToast('Desktop', `Shortcut to ${app.name} added.`, 'success');
+                                        }
+                                    }
+                                }))
+                            ]
+                        }
+                    ];
+                } else if (type === 'icon') {
+                    options = [
+                        { label: 'Open', action: () => data.action ? data.action() : launchApp(data.id) },
+                        { separator: true },
+                    ];
+                    // Special case for Recycle Bin
+                    if (data.id === 'recycle') {
+                         options.push({ 
+                            label: 'Empty Recycle Bin', 
+                            action: () => {
+                                const newFs = {...fs};
+                                newFs.root.children[RECYCLE_BIN_NAME].children = {};
+                                setFs(newFs);
+                                addToast("Recycle Bin", "Bin emptied.", "success");
+                            } 
+                         });
+                    }
+                    if (shortcuts.some(s => s.id === data.id)) {
+                        options.push({ label: 'Delete Shortcut', action: () => { setShortcuts(prev => prev.filter(s => s.id !== data.id)); } });
+                    }
+                } else if (type === 'explorer-item') {
+                    options = [
+                        { label: 'Open', action: () => { if(data.item.type === 'file') launchApp('notepad', data.item); else if(data.item.type === 'image') launchApp('paint', data.item); } },
+                        { separator: true },
+                        { label: 'Delete', action: () => moveToRecycleBin(data.name, data.item, data.pathStack) }
+                    ];
+                }
+                setContextMenu({ x: e.clientX || e.touches?.[0]?.clientX, y: e.clientY || e.touches?.[0]?.clientY, options });
+            };
+
+            // Unified Pointer Handler for Desktop Icons (Touch & Mouse)
+            const handleIconPointerDown = (e, icon) => {
+                // Prevent default touch actions (scrolling)
+                // e.preventDefault(); // removed to allow scrolling desktop? No, fixed layout.
+                e.stopPropagation();
+
+                const el = e.currentTarget;
+                el.setPointerCapture(e.pointerId);
+
+                const rect = el.getBoundingClientRect();
+                const clientX = e.clientX;
+                const clientY = e.clientY;
+
+                setDraggedIcon({
+                    id: icon.id,
+                    startX: clientX,
+                    startY: clientY,
+                    initialLeft: rect.left,
+                    initialTop: rect.top,
+                    hasMoved: false
+                });
+                dragOffset.current = { x: clientX, y: clientY };
+
+                // Long Press Logic - Only in Touch Mode
+                if (settings.inputMode === 'touch') {
+                    longPressTimer.current = setTimeout(() => {
+                        handleContextMenu({ 
+                            preventDefault: ()=>{}, 
+                            stopPropagation: ()=>{}, 
+                            clientX: clientX, 
+                            clientY: clientY 
+                        }, 'icon', icon);
+                        setDraggedIcon(null); // Cancel drag if context menu opens
+                    }, 500);
+                }
+            };
+
+            const handleIconPointerMove = (e) => {
+                if (!draggedIcon) return;
+                
+                const dx = Math.abs(e.clientX - dragOffset.current.x);
+                const dy = Math.abs(e.clientY - dragOffset.current.y);
+
+                // Threshold for drag
+                if (dx > 5 || dy > 5) {
+                    clearTimeout(longPressTimer.current);
+                    
+                    setIconPositions(prev => ({
+                        ...prev,
+                        [draggedIcon.id]: {
+                            x: draggedIcon.initialLeft + (e.clientX - draggedIcon.startX),
+                            y: draggedIcon.initialTop + (e.clientY - draggedIcon.startY)
+                        }
+                    }));
+                }
+            };
+
+            const handleIconPointerUp = (e, icon) => {
+                clearTimeout(longPressTimer.current);
+                if (draggedIcon) {
+                    e.currentTarget.releasePointerCapture(e.pointerId);
+                    setDraggedIcon(null);
+                    
+                    // Double Tap Logic - Only in Touch Mode
+                    if (settings.inputMode === 'touch') {
+                        const dx = Math.abs(e.clientX - dragOffset.current.x);
+                        const dy = Math.abs(e.clientY - dragOffset.current.y);
+                        
+                        if (dx < 5 && dy < 5) {
+                            const now = Date.now();
+                            if (now - lastTapTime.current < 300) {
+                                icon.action ? icon.action() : launchApp(icon.id);
+                            }
+                            lastTapTime.current = now;
+                        }
+                    }
+                }
+            };
+
+            const handleShutDown = () => {
+                addToast("System", "Shutting down...", "info");
+                setTimeout(() => { window.location.reload(); }, 1500);
+            };
+
+            if (!isBooted) return <BootScreen onBoot={() => setIsBooted(true)} />;
+
+            return (
+                <div 
+                    className="h-screen w-screen overflow-hidden flex flex-col font-sans select-none relative touch-none" 
+                    style={{ backgroundColor: settings.wallpaper }} 
+                    onContextMenu={(e) => handleContextMenu(e, 'desktop')} 
+                    onPointerDown={() => { setStartOpen(false); setContextMenu(null); }}
+                >
+                    <ClippyAgent />
+                    {contextMenu && <ContextMenu x={contextMenu.x} y={contextMenu.y} options={contextMenu.options} onClose={() => setContextMenu(null)} />}
+                    
+                    <div className="flex-1 relative z-0">
+                        {desktopIcons.map((icon, index) => {
+                            const pos = iconPositions[icon.id] || { 
+                                x: 10 + Math.floor(index / 6) * 80, 
+                                y: 10 + (index % 6) * 90 
+                            };
+
+                            return (
+                                <div 
+                                    key={icon.id} 
+                                    className="absolute flex flex-col items-center w-20 gap-1 group cursor-pointer touch-none"
+                                    style={{ left: pos.x, top: pos.y }}
+                                    onDoubleClick={() => {
+                                        // Only standard dblclick in mouse mode
+                                        if(settings.inputMode === 'mouse') {
+                                            icon.action ? icon.action() : launchApp(icon.id);
+                                        }
+                                    }} 
+                                    onContextMenu={(e) => handleContextMenu(e, 'icon', icon)}
+                                    onPointerDown={(e) => handleIconPointerDown(e, icon)}
+                                    onPointerMove={handleIconPointerMove}
+                                    onPointerUp={(e) => handleIconPointerUp(e, icon)}
+                                >
+                                    <div className="w-10 h-10 flex items-center justify-center relative pointer-events-none"><WinIcon name={icon.icon} size={32} /></div>
+                                    <span className="text-white text-xs text-center drop-shadow-md bg-teal-800/50 px-1 rounded-sm group-hover:bg-blue-800 group-hover:text-white group-hover:bg-opacity-100 select-none pointer-events-none">{icon.name}</span>
+                                </div>
+                            );
+                        })}
+                        
+                        {windows.map(win => {
+                             let appDef = Object.values(SYSTEM_APPS).find(a => a.id === win.appId) || installedApps.find(a => a.id === win.appId);
+                             if(!appDef) return null;
+                             return <WindowFrame key={win.instanceId} app={appDef} windowState={win} isActive={activeWindowId === win.instanceId} onClose={closeWindow} onMinimize={minimizeWindow} onMaximize={maximizeWindow} onFocus={() => focusWindow(win.instanceId)} onMove={moveWindow}>{renderAppContent(win)}</WindowFrame>;
+                        })}
+                    </div>
+
+                    <div className="absolute bottom-12 right-4 flex flex-col-reverse gap-2 z-[9999] pointer-events-none">{toasts.map(t => <div key={t.id} className="pointer-events-auto"><Toast {...t} onClose={removeToast} /></div>)}</div>
+                    
+                    {startOpen && <StartMenu installedApps={installedApps} launchApp={launchApp} onShutDown={handleShutDown} onClose={() => setStartOpen(false)} fs={fs} />}
+                    
+                    <div className="h-10 md:h-9 bg-gray-300 flex items-center px-1 gap-1 z-50 relative border-t-2 border-white">
+                        <button className={`flex items-center gap-1 px-3 py-1 font-bold ${startOpen ? 'bg-gray-400' : ''}`} style={startOpen ? bevel('in') : bevel('out')} onClick={(e) => { e.stopPropagation(); setStartOpen(!startOpen); }}><WinIcon name="flag" size={16}/> Start</button>
+                        <div className="w-px h-6 bg-gray-400 mx-1" />
+                        <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar">{windows.map(win => { let appDef = Object.values(SYSTEM_APPS).find(a => a.id === win.appId) || installedApps.find(a => a.id === win.appId); return <button key={win.instanceId} className={`flex items-center gap-1 px-2 py-1 max-w-[150px] min-w-[80px] truncate text-xs ${activeWindowId === win.instanceId && !win.minimized ? 'bg-gray-200 font-bold' : ''}`} style={activeWindowId === win.instanceId && !win.minimized ? bevel('in') : bevel('out')} onClick={() => win.minimized ? focusWindow(win.instanceId) : (activeWindowId === win.instanceId ? minimizeWindow(win.instanceId) : focusWindow(win.instanceId))}>{appDef?.name}</button>; })}</div>
+                        <div className="px-2 py-1 bg-gray-200 border border-gray-400 flex items-center justify-center cursor-pointer active:bg-gray-400" style={bevel('in')} onClick={toggleInputMode} title={`Switch to ${settings.inputMode === 'mouse' ? 'Touch' : 'Mouse'} Mode`}>
+                            <WinIcon name={settings.inputMode === 'mouse' ? 'input-mouse' : 'input-touch'} size={14} />
+                        </div>
+                        <div className="px-3 py-1 text-xs flex items-center gap-2 bg-gray-200 hidden sm:flex" style={bevel('in')}><div className="w-4 h-4">🔊</div><span>{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
+                    </div>
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
