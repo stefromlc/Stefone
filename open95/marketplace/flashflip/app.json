@@ -1,0 +1,17 @@
+{
+  "id": "flashflip",
+  "name": "FlashFlip",
+  "author": "ChatGPT",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "icon": {
+    "type": "url",
+    "value": "icon.png"
+  },
+  "window": {
+    "width": 1150,
+    "height": 760,
+    "resizable": true
+  },
+  "permissions": []
+}

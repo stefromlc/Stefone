@@ -1,0 +1,17 @@
+{
+  "id": "habitlog",
+  "name": "HabitLog",
+  "author": "ChatGPT",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "icon": {
+    "type": "url",
+    "value": "icon.png"
+  },
+  "window": {
+    "width": 980,
+    "height": 700,
+    "resizable": true
+  },
+  "permissions": []
+}

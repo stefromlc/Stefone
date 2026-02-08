@@ -1,0 +1,17 @@
+{
+  "id": "pomodoro",
+  "name": "Pomodoro+",
+  "author": "ChatGPT",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "icon": {
+    "type": "url",
+    "value": "icon.png"
+  },
+  "window": {
+    "width": 900,
+    "height": 650,
+    "resizable": true
+  },
+  "permissions": []
+}

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FlashFlip</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+
+:root{
+  --bg:#c0c0c0;
+  --panel:#d7d7d7;
+  --panel2:#efefef;
+  --borderDark:#7a7a7a;
+  --borderLight:#ffffff;
+  --text:#111;
+  --accent:#0b57d0;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: "MS Sans Serif", Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+}
+.bevel{
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  background:var(--panel);
+}
+.sunken{
+  border:1px solid var(--borderDark);
+  box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;
+  background:var(--panel2);
+}
+.app{height:100%; display:flex; flex-direction:column; gap:6px; padding:6px; min-height:0;}
+.header{display:flex; align-items:center; justify-content:space-between; padding:6px 8px;}
+.header h1{margin:0; font-size:14px; font-weight:700;}
+.header .subtitle{font-size:12px; opacity:.85;}
+.content{flex:1; padding:8px; min-height:0; overflow:auto;}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.col{display:flex; flex-direction:column; gap:6px;}
+.grid{display:grid; gap:8px;}
+.btn{
+  padding:4px 10px;
+  background:var(--panel);
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  cursor:pointer;
+  font-size:12px;
+}
+.btn:active{box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;}
+.btn.primary{background: #dbe8ff;}
+.btn.danger{background: #ffe0e0;}
+input,select,textarea{
+  font-family:var(--sans);
+  font-size:12px;
+}
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  width:100%;
+  padding:4px 6px;
+}
+textarea{min-height:120px; resize:vertical;}
+.status{padding:4px 8px; font-size:12px; display:flex; justify-content:space-between; gap:10px;}
+.badge{font-size:11px; padding:2px 6px; border-radius:3px; background:#000; color:#fff;}
+hr{border:none; border-top:1px solid #b4b4b4; margin:8px 0;}
+.small{font-size:11px; opacity:.85;}
+.kbd{font-family:var(--mono); font-size:11px; padding:1px 4px; background:#000; color:#fff; border-radius:3px;}
+
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="bevel header">
+      <div>
+        <h1>FlashFlip</h1>
+        <div class="subtitle">Flashcards with decks and study mode (saved locally).</div>
+      </div>
+      <div class="row">
+        <span class="badge">LOCAL</span>
+      </div>
+    </div>
+    <div class="bevel content">
+      <div class="grid" style="grid-template-columns: 260px 1fr; min-height:0;">
+  <div class="sunken" style="padding:8px; min-height:0; display:flex; flex-direction:column; gap:8px;">
+    <div class="row" style="justify-content:space-between;">
+      <b>Decks</b>
+      <button class="btn primary" id="newDeckBtn">New</button>
+    </div>
+    <div id="deckList" style="overflow:auto; flex:1; min-height:0;"></div>
+    <div class="row">
+      <button class="btn" id="exportBtn">Export</button>
+      <button class="btn" id="importBtn">Import</button>
+      <input type="file" id="file" accept="application/json" style="display:none"/>
+    </div>
+  </div>
+
+  <div class="col" style="min-height:0;">
+    <div class="row" style="justify-content:space-between;">
+      <div>
+        <b id="deckTitle">Deck</b>
+        <div class="small" id="deckMeta"></div>
+      </div>
+      <div class="row">
+        <button class="btn" id="addCardBtn">Add card</button>
+        <button class="btn danger" id="delDeckBtn">Delete deck</button>
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 1fr 320px; gap:8px; min-height:0; margin-top:8px;">
+      <div class="sunken" style="padding:10px; min-height:0; overflow:auto;">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <b>Cards</b>
+          <button class="btn primary" id="studyBtn">Study</button>
+        </div>
+        <div id="cardList" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="sunken" style="padding:10px; min-height:0; display:flex; flex-direction:column; gap:8px;">
+        <b>Study mode</b>
+        <div class="small">Shuffle and test yourself.</div>
+        <div class="sunken" id="studyCard" style="padding:12px; min-height:160px; display:flex; flex-direction:column; justify-content:center; gap:10px;">
+          <div class="small" id="studyLabel">Press “Study” to begin</div>
+          <div id="studyText" style="font-size:14px; font-weight:700;"></div>
+        </div>
+        <div class="row">
+          <button class="btn" id="showBtn" disabled>Show answer</button>
+          <button class="btn primary" id="rightBtn" disabled>Right</button>
+          <button class="btn danger" id="wrongBtn" disabled>Wrong</button>
+        </div>
+        <div class="sunken" style="padding:8px;">
+          <div class="row" style="justify-content:space-between;">
+            <div><span class="small">Progress</span><div><b id="prog">0/0</b></div></div>
+            <div style="text-align:right;"><span class="small">Score</span><div><b id="score">0</b></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    </div>
+    <div class="bevel status" id="status">
+      <span id="statusLeft">Ready.</span>
+      <span id="statusRight" class="small"></span>
+    </div>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const statusLeft = $("#statusLeft");
+const statusRight = $("#statusRight");
+const KEY = "flashcards_v1";
+
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"{}"); }catch{ return {}; } }
+function saveAll(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function uid(){ return Math.random().toString(16).slice(2)+Date.now().toString(16); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+const state = Object.assign({ decks: [] }, load());
+if(state.decks.length===0){
+  state.decks.push({
+    id: uid(),
+    title: "Sample deck",
+    cards: [
+      {id:uid(), front:"What is 2 + 2?", back:"4"},
+      {id:uid(), front:"Capital of France?", back:"Paris"}
+    ],
+    updated: Date.now()
+  });
+}
+
+let currentDeckId = state.decks[0].id;
+
+function deck(){ return state.decks.find(d=>d.id===currentDeckId); }
+
+function renderDeckList(){
+  const list = $("#deckList");
+  list.innerHTML = "";
+  for(const d of state.decks.slice().sort((a,b)=>b.updated-a.updated)){
+    const btn = document.createElement("button");
+    btn.className="btn";
+    btn.style.width="100%";
+    btn.style.textAlign="left";
+    btn.style.marginBottom="6px";
+    btn.innerHTML = `<b>${esc(d.title||"Untitled")}</b><div class="small">${d.cards.length} card(s)</div>`;
+    if(d.id===currentDeckId) btn.style.outline = "2px solid var(--accent)";
+    btn.addEventListener("click", ()=>{
+      currentDeckId = d.id;
+      renderAll();
+    });
+    list.appendChild(btn);
+  }
+}
+
+function renderCards(){
+  const d = deck();
+  $("#deckTitle").textContent = d.title || "Untitled";
+  $("#deckMeta").textContent = "Updated " + new Date(d.updated).toLocaleString();
+
+  const list = $("#cardList");
+  list.innerHTML = "";
+  if(d.cards.length===0){
+    list.innerHTML = "<i>No cards yet. Add one.</i>";
+    return;
+  }
+  for(const c of d.cards){
+    const card = document.createElement("div");
+    card.className="sunken";
+    card.style.padding="8px";
+    card.style.marginBottom="8px";
+    card.innerHTML = `
+      <div class="row" style="justify-content:space-between; align-items:flex-start;">
+        <div style="min-width:0;">
+          <div><b>Q:</b> ${esc(c.front)}</div>
+          <div class="small"><b>A:</b> ${esc(c.back)}</div>
+        </div>
+        <button class="btn danger" data-del="${c.id}">Del</button>
+      </div>
+    `;
+    list.appendChild(card);
+  }
+  list.querySelectorAll("[data-del]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.getAttribute("data-del");
+      const d = deck();
+      d.cards = d.cards.filter(x=>x.id!==id);
+      d.updated = Date.now();
+      saveAll();
+      renderAll();
+      statusLeft.textContent = "Card deleted.";
+    });
+  });
+}
+
+$("#newDeckBtn").addEventListener("click", ()=>{
+  const title = prompt("Deck name:", "New deck");
+  if(title===null) return;
+  const d = { id:uid(), title:title.trim()||"Untitled", cards:[], updated:Date.now() };
+  state.decks.push(d);
+  currentDeckId = d.id;
+  saveAll();
+  renderAll();
+  statusLeft.textContent = "Deck created.";
+});
+
+$("#delDeckBtn").addEventListener("click", ()=>{
+  const d = deck();
+  if(!confirm(`Delete deck "${d.title}"?`)) return;
+  state.decks = state.decks.filter(x=>x.id!==d.id);
+  if(state.decks.length===0){
+    const dd = { id:uid(), title:"New deck", cards:[], updated:Date.now() };
+    state.decks.push(dd);
+  }
+  currentDeckId = state.decks[0].id;
+  saveAll();
+  renderAll();
+});
+
+$("#addCardBtn").addEventListener("click", ()=>{
+  const d = deck();
+  const front = prompt("Front (question):", "");
+  if(front===null) return;
+  const back = prompt("Back (answer):", "");
+  if(back===null) return;
+  d.cards.push({id:uid(), front:front.trim(), back:back.trim()});
+  d.updated = Date.now();
+  saveAll();
+  renderAll();
+  statusLeft.textContent = "Card added.";
+});
+
+// Study mode
+let study = { on:false, order:[], idx:0, show:false, score:0 };
+function setStudyEnabled(enabled){
+  $("#showBtn").disabled = !enabled;
+  $("#rightBtn").disabled = !enabled;
+  $("#wrongBtn").disabled = !enabled;
+}
+
+function startStudy(){
+  const d = deck();
+  if(d.cards.length===0){ alert("No cards to study."); return; }
+  study.on = true;
+  study.order = d.cards.map(c=>c.id).sort(()=>Math.random()-0.5);
+  study.idx = 0;
+  study.show = false;
+  study.score = 0;
+  renderStudy();
+  setStudyEnabled(true);
+  statusLeft.textContent = "Study started.";
+}
+
+function currentCard(){
+  const d = deck();
+  const id = study.order[study.idx];
+  return d.cards.find(c=>c.id===id);
+}
+
+function renderStudy(){
+  const d = deck();
+  $("#prog").textContent = `${study.idx+1}/${study.order.length}`;
+  $("#score").textContent = String(study.score);
+  const c = currentCard();
+  $("#studyLabel").textContent = study.show ? "Answer" : "Question";
+  $("#studyText").textContent = study.show ? (c?.back||"") : (c?.front||"");
+}
+
+function advance(correct){
+  if(correct) study.score++;
+  study.idx++;
+  study.show = false;
+  if(study.idx >= study.order.length){
+    $("#studyLabel").textContent = "Done!";
+    $("#studyText").textContent = `Score: ${study.score}/${study.order.length}`;
+    setStudyEnabled(false);
+    study.on=false;
+    statusLeft.textContent = "Study finished.";
+    return;
+  }
+  renderStudy();
+}
+
+$("#studyBtn").addEventListener("click", startStudy);
+$("#showBtn").addEventListener("click", ()=>{
+  if(!study.on) return;
+  study.show = !study.show;
+  renderStudy();
+});
+$("#rightBtn").addEventListener("click", ()=>advance(true));
+$("#wrongBtn").addEventListener("click", ()=>advance(false));
+
+$("#exportBtn").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "flashcards-export.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  statusLeft.textContent = "Exported.";
+});
+
+$("#importBtn").addEventListener("click", ()=>$("#file").click());
+$("#file").addEventListener("change", async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  try{
+    const txt = await f.text();
+    const d = JSON.parse(txt);
+    if(!d || !Array.isArray(d.decks)) throw new Error("bad");
+    state.decks = d.decks;
+    currentDeckId = state.decks[0]?.id || uid();
+    saveAll();
+    renderAll();
+    statusLeft.textContent = "Imported.";
+  }catch{ alert("Import failed: invalid file."); }
+  $("#file").value="";
+});
+
+function renderAll(){
+  renderDeckList();
+  renderCards();
+  // reset study UI when deck changes
+  study.on=false;
+  $("#studyLabel").textContent="Press “Study” to begin";
+  $("#studyText").textContent="";
+  $("#prog").textContent="0/0";
+  $("#score").textContent="0";
+  setStudyEnabled(false);
+}
+
+function tick(){ statusRight.textContent = new Date().toLocaleString(); requestAnimationFrame(tick); }
+renderAll();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

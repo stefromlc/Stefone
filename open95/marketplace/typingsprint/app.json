@@ -1,0 +1,17 @@
+{
+  "id": "typingsprint",
+  "name": "Typing Sprint",
+  "author": "ChatGPT",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "icon": {
+    "type": "url",
+    "value": "icon.png"
+  },
+  "window": {
+    "width": 1050,
+    "height": 720,
+    "resizable": true
+  },
+  "permissions": []
+}

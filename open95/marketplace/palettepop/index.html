@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PalettePop</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+
+:root{
+  --bg:#c0c0c0;
+  --panel:#d7d7d7;
+  --panel2:#efefef;
+  --borderDark:#7a7a7a;
+  --borderLight:#ffffff;
+  --text:#111;
+  --accent:#0b57d0;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: "MS Sans Serif", Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+}
+.bevel{
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  background:var(--panel);
+}
+.sunken{
+  border:1px solid var(--borderDark);
+  box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;
+  background:var(--panel2);
+}
+.app{height:100%; display:flex; flex-direction:column; gap:6px; padding:6px; min-height:0;}
+.header{display:flex; align-items:center; justify-content:space-between; padding:6px 8px;}
+.header h1{margin:0; font-size:14px; font-weight:700;}
+.header .subtitle{font-size:12px; opacity:.85;}
+.content{flex:1; padding:8px; min-height:0; overflow:auto;}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.col{display:flex; flex-direction:column; gap:6px;}
+.grid{display:grid; gap:8px;}
+.btn{
+  padding:4px 10px;
+  background:var(--panel);
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  cursor:pointer;
+  font-size:12px;
+}
+.btn:active{box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;}
+.btn.primary{background: #dbe8ff;}
+.btn.danger{background: #ffe0e0;}
+input,select,textarea{
+  font-family:var(--sans);
+  font-size:12px;
+}
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  width:100%;
+  padding:4px 6px;
+}
+textarea{min-height:120px; resize:vertical;}
+.status{padding:4px 8px; font-size:12px; display:flex; justify-content:space-between; gap:10px;}
+.badge{font-size:11px; padding:2px 6px; border-radius:3px; background:#000; color:#fff;}
+hr{border:none; border-top:1px solid #b4b4b4; margin:8px 0;}
+.small{font-size:11px; opacity:.85;}
+.kbd{font-family:var(--mono); font-size:11px; padding:1px 4px; background:#000; color:#fff; border-radius:3px;}
+
+.swatches{display:grid; grid-template-columns: repeat(5, 1fr); gap:8px;}
+.swatch{height:140px; position:relative; padding:8px; display:flex; flex-direction:column; justify-content:space-between;}
+.swatch .code{font-family:var(--mono); font-size:12px; background:rgba(0,0,0,.6); color:#fff; padding:2px 6px; border-radius:3px; width:max-content;}
+.swatch .lock{position:absolute; top:8px; right:8px;}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="bevel header">
+      <div>
+        <h1>PalettePop</h1>
+        <div class="subtitle">Generate & lock palettes (click to copy hex).</div>
+      </div>
+      <div class="row">
+        <span class="badge">LOCAL</span>
+      </div>
+    </div>
+    <div class="bevel content">
+      <div class="row" style="justify-content:space-between; align-items:flex-end;">
+  <div>
+    <b>PalettePop</b>
+    <div class="small">Generate and lock colors. Click a code to copy.</div>
+  </div>
+  <div class="row">
+    <button class="btn primary" id="genBtn">Generate</button>
+    <label class="row small" style="gap:6px;"><input type="checkbox" id="pastel" />Pastel</label>
+    <button class="btn" id="saveBtn">Save</button>
+    <button class="btn" id="loadBtn">Load</button>
+    <button class="btn danger" id="clearBtn">Clear saved</button>
+  </div>
+</div>
+
+<hr/>
+
+<div class="swatches" id="swatches"></div>
+
+<div class="sunken" style="padding:10px; margin-top:8px;">
+  <div class="row" style="justify-content:space-between;">
+    <div class="small">Harmony: base hue + offsets, with optional pastel saturation.</div>
+    <div class="small">Tip: press <span class="kbd">G</span> to generate.</div>
+  </div>
+</div>
+    </div>
+    <div class="bevel status" id="status">
+      <span id="statusLeft">Ready.</span>
+      <span id="statusRight" class="small"></span>
+    </div>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const statusLeft = $("#statusLeft");
+const statusRight = $("#statusRight");
+const KEY = "palettepop_v1";
+
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"{}"); }catch{ return {}; } }
+function saveAll(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+const state = Object.assign({ colors: [], locks: [false,false,false,false,false], saved: null }, load());
+if(!Array.isArray(state.colors) || state.colors.length!==5) state.colors = ["#0b57d0","#d00b57","#57d00b","#d0b70b","#0bd0b7"];
+
+function hslToHex(h,s,l){
+  s/=100; l/=100;
+  const k = n => (n + h/30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  const r = Math.round(255 * f(0));
+  const g = Math.round(255 * f(8));
+  const b = Math.round(255 * f(4));
+  return "#" + [r,g,b].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+
+function gen(){
+  const base = Math.floor(Math.random()*360);
+  const offsets = [0, 30, 150, 210, 330];
+  const pastel = $("#pastel").checked;
+  const s = pastel ? 45 : 70;
+  const l = pastel ? 78 : 55;
+
+  const next = state.colors.slice();
+  for(let i=0;i<5;i++){
+    if(state.locks[i]) continue;
+    const hue = (base + offsets[i])%360;
+    next[i] = hslToHex(hue, s, l);
+  }
+  state.colors = next;
+  saveAll();
+  render();
+  statusLeft.textContent = "Generated.";
+}
+
+function render(){
+  const el = $("#swatches");
+  el.innerHTML = "";
+  for(let i=0;i<5;i++){
+    const c = state.colors[i];
+    const sw = document.createElement("div");
+    sw.className = "sunken swatch";
+    sw.style.background = c;
+    sw.innerHTML = `
+      <button class="btn lock" data-lock="${i}">${state.locks[i] ? "🔒" : "🔓"}</button>
+      <div class="code" data-copy="${i}">${esc(c.toUpperCase())}</div>
+      <div class="row" style="justify-content:space-between;">
+        <button class="btn" data-copybtn="${i}">Copy</button>
+        <div class="small" style="color:rgba(0,0,0,.65)">${state.locks[i] ? "Locked" : "Unlocked"}</div>
+      </div>
+    `;
+    el.appendChild(sw);
+  }
+
+  el.querySelectorAll("[data-lock]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const i = Number(btn.getAttribute("data-lock"));
+      state.locks[i] = !state.locks[i];
+      saveAll();
+      render();
+    });
+  });
+
+  const copy = async (i)=>{
+    const text = state.colors[i].toUpperCase();
+    try{
+      await navigator.clipboard.writeText(text);
+      statusLeft.textContent = "Copied " + text;
+    }catch{
+      alert("Copy failed. Your browser may block clipboard access.");
+    }
+  };
+
+  el.querySelectorAll("[data-copy],[data-copybtn]").forEach(node=>{
+    node.addEventListener("click", ()=>{
+      const i = Number(node.getAttribute("data-copy") ?? node.getAttribute("data-copybtn"));
+      copy(i);
+    });
+  });
+}
+
+$("#genBtn").addEventListener("click", gen);
+$("#saveBtn").addEventListener("click", ()=>{
+  state.saved = { colors: state.colors, locks: state.locks };
+  saveAll();
+  statusLeft.textContent = "Saved palette.";
+});
+$("#loadBtn").addEventListener("click", ()=>{
+  if(!state.saved){ alert("Nothing saved yet."); return; }
+  state.colors = state.saved.colors;
+  state.locks = state.saved.locks;
+  saveAll();
+  render();
+  statusLeft.textContent = "Loaded saved palette.";
+});
+$("#clearBtn").addEventListener("click", ()=>{
+  if(!confirm("Clear saved palette?")) return;
+  state.saved = null;
+  saveAll();
+  statusLeft.textContent = "Cleared.";
+});
+
+window.addEventListener("keydown",(e)=>{
+  if(e.target && ["INPUT","TEXTAREA","SELECT"].includes(e.target.tagName)) return;
+  if(e.key.toLowerCase()==="g"){ gen(); }
+});
+
+function tick(){ statusRight.textContent = new Date().toLocaleString(); requestAnimationFrame(tick); }
+render();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QuoteJar</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+
+:root{
+  --bg:#c0c0c0;
+  --panel:#d7d7d7;
+  --panel2:#efefef;
+  --borderDark:#7a7a7a;
+  --borderLight:#ffffff;
+  --text:#111;
+  --accent:#0b57d0;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: "MS Sans Serif", Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+}
+.bevel{
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  background:var(--panel);
+}
+.sunken{
+  border:1px solid var(--borderDark);
+  box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;
+  background:var(--panel2);
+}
+.app{height:100%; display:flex; flex-direction:column; gap:6px; padding:6px; min-height:0;}
+.header{display:flex; align-items:center; justify-content:space-between; padding:6px 8px;}
+.header h1{margin:0; font-size:14px; font-weight:700;}
+.header .subtitle{font-size:12px; opacity:.85;}
+.content{flex:1; padding:8px; min-height:0; overflow:auto;}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.col{display:flex; flex-direction:column; gap:6px;}
+.grid{display:grid; gap:8px;}
+.btn{
+  padding:4px 10px;
+  background:var(--panel);
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  cursor:pointer;
+  font-size:12px;
+}
+.btn:active{box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;}
+.btn.primary{background: #dbe8ff;}
+.btn.danger{background: #ffe0e0;}
+input,select,textarea{
+  font-family:var(--sans);
+  font-size:12px;
+}
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  width:100%;
+  padding:4px 6px;
+}
+textarea{min-height:120px; resize:vertical;}
+.status{padding:4px 8px; font-size:12px; display:flex; justify-content:space-between; gap:10px;}
+.badge{font-size:11px; padding:2px 6px; border-radius:3px; background:#000; color:#fff;}
+hr{border:none; border-top:1px solid #b4b4b4; margin:8px 0;}
+.small{font-size:11px; opacity:.85;}
+.kbd{font-family:var(--mono); font-size:11px; padding:1px 4px; background:#000; color:#fff; border-radius:3px;}
+
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="bevel header">
+      <div>
+        <h1>QuoteJar</h1>
+        <div class="subtitle">Your personal quote library (saved locally).</div>
+      </div>
+      <div class="row">
+        <span class="badge">LOCAL</span>
+      </div>
+    </div>
+    <div class="bevel content">
+      <div class="row" style="justify-content:space-between; align-items:flex-end;">
+  <div>
+    <b>QuoteJar</b>
+    <div class="small">Save quotes, pick one at random, and export your collection.</div>
+  </div>
+  <div class="row">
+    <input class="sunken" type="text" id="q" placeholder="Quote…" style="min-width:260px;" />
+    <input class="sunken" type="text" id="a" placeholder="Author (optional)" style="min-width:180px;" />
+    <button class="btn primary" id="addBtn">Add</button>
+    <button class="btn" id="randomBtn">Random</button>
+    <button class="btn" id="exportBtn">Export</button>
+    <button class="btn" id="importBtn">Import</button>
+    <input type="file" id="file" accept="application/json" style="display:none"/>
+  </div>
+</div>
+
+<hr/>
+
+<div class="grid" style="grid-template-columns: 1fr 320px; gap:8px; min-height:0;">
+  <div class="sunken" style="padding:10px; min-height:0;">
+    <div class="row" style="justify-content:space-between; align-items:center;">
+      <div class="row" style="gap:8px;">
+        <b>Library</b>
+        <input class="sunken" id="search" type="text" placeholder="Search…" style="min-width:220px;" />
+      </div>
+      <div class="small" id="count"></div>
+    </div>
+    <div id="list" style="margin-top:8px; overflow:auto; max-height:420px;"></div>
+  </div>
+
+  <div class="sunken" style="padding:10px; min-height:0;">
+    <b>Now reading</b>
+    <div class="sunken" style="padding:12px; margin-top:8px; min-height:160px;">
+      <div id="nowQuote" style="font-size:14px; font-weight:700;"></div>
+      <div id="nowAuthor" class="small" style="margin-top:8px;"></div>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn" id="copyBtn">Copy</button>
+      <button class="btn danger" id="clearBtn">Clear all</button>
+    </div>
+  </div>
+</div>
+    </div>
+    <div class="bevel status" id="status">
+      <span id="statusLeft">Ready.</span>
+      <span id="statusRight" class="small"></span>
+    </div>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const statusLeft = $("#statusLeft");
+const statusRight = $("#statusRight");
+const KEY = "quotejar_v1";
+
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"{}"); }catch{ return {}; } }
+function saveAll(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function uid(){ return Math.random().toString(16).slice(2)+Date.now().toString(16); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+const state = Object.assign({ quotes: [], nowId: null }, load());
+if(state.quotes.length===0){
+  state.quotes.push({id:uid(), q:"Make it work, make it right, make it fast.", a:"Kent Beck", fav:true, created:Date.now()});
+  state.quotes.push({id:uid(), q:"Simplicity is the ultimate sophistication.", a:"(often attributed to Leonardo da Vinci)", fav:false, created:Date.now()});
+  state.nowId = state.quotes[0].id;
+  saveAll();
+}
+if(!state.nowId && state.quotes[0]) state.nowId = state.quotes[0].id;
+
+function current(){ return state.quotes.find(x=>x.id===state.nowId); }
+
+function renderNow(){
+  const c = current();
+  $("#nowQuote").textContent = c ? `“${c.q}”` : "—";
+  $("#nowAuthor").textContent = c && c.a ? "— " + c.a : "";
+}
+
+function renderList(){
+  const q = $("#search").value.trim().toLowerCase();
+  const items = state.quotes
+    .filter(x=>!q || (x.q+" "+(x.a||"")).toLowerCase().includes(q))
+    .sort((a,b)=> (b.fav-a.fav) || (b.created-a.created));
+
+  $("#count").textContent = `${items.length} / ${state.quotes.length}`;
+
+  const list = $("#list");
+  list.innerHTML = "";
+  if(items.length===0){
+    list.innerHTML = "<i>No matches.</i>";
+    return;
+  }
+
+  for(const x of items){
+    const row = document.createElement("div");
+    row.className="sunken";
+    row.style.padding="8px";
+    row.style.marginBottom="8px";
+    row.innerHTML = `
+      <div class="row" style="justify-content:space-between; align-items:flex-start;">
+        <div style="min-width:0;">
+          <div><b>${esc(x.q.slice(0,90))}${x.q.length>90?"…":""}</b></div>
+          <div class="small">${esc(x.a||"")}</div>
+        </div>
+        <div class="row" style="gap:6px;">
+          <button class="btn" data-fav="${x.id}">${x.fav?"★":"☆"}</button>
+          <button class="btn" data-open="${x.id}">Open</button>
+          <button class="btn danger" data-del="${x.id}">Del</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  }
+
+  list.querySelectorAll("[data-open]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.nowId = btn.getAttribute("data-open");
+      saveAll();
+      renderNow();
+      statusLeft.textContent = "Opened.";
+    });
+  });
+
+  list.querySelectorAll("[data-fav]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.getAttribute("data-fav");
+      const x = state.quotes.find(q=>q.id===id);
+      if(x){ x.fav = !x.fav; saveAll(); renderList(); }
+    });
+  });
+
+  list.querySelectorAll("[data-del]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.getAttribute("data-del");
+      state.quotes = state.quotes.filter(q=>q.id!==id);
+      if(state.nowId===id) state.nowId = state.quotes[0]?.id || null;
+      saveAll();
+      renderList();
+      renderNow();
+      statusLeft.textContent = "Deleted.";
+    });
+  });
+}
+
+$("#addBtn").addEventListener("click", ()=>{
+  const q = $("#q").value.trim();
+  const a = $("#a").value.trim();
+  if(!q) return;
+  const x = {id:uid(), q, a, fav:false, created:Date.now()};
+  state.quotes.push(x);
+  state.nowId = x.id;
+  $("#q").value=""; $("#a").value="";
+  saveAll();
+  renderList();
+  renderNow();
+  statusLeft.textContent = "Added.";
+});
+
+$("#randomBtn").addEventListener("click", ()=>{
+  if(state.quotes.length===0) return;
+  const x = state.quotes[Math.floor(Math.random()*state.quotes.length)];
+  state.nowId = x.id;
+  saveAll();
+  renderNow();
+  statusLeft.textContent = "Random pick.";
+});
+
+$("#copyBtn").addEventListener("click", async ()=>{
+  const c = current();
+  if(!c) return;
+  const text = `“${c.q}”` + (c.a ? ` — ${c.a}` : "");
+  try{
+    await navigator.clipboard.writeText(text);
+    statusLeft.textContent = "Copied.";
+  }catch{
+    alert("Copy failed. Your browser may block clipboard access.");
+  }
+});
+
+$("#clearBtn").addEventListener("click", ()=>{
+  if(!confirm("Delete ALL quotes?")) return;
+  state.quotes = [];
+  state.nowId = null;
+  saveAll();
+  renderList();
+  renderNow();
+  statusLeft.textContent = "Cleared.";
+});
+
+$("#search").addEventListener("input", renderList);
+
+$("#exportBtn").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "quotejar-export.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  statusLeft.textContent = "Exported.";
+});
+
+$("#importBtn").addEventListener("click", ()=>$("#file").click());
+$("#file").addEventListener("change", async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  try{
+    const txt = await f.text();
+    const d = JSON.parse(txt);
+    if(!d || !Array.isArray(d.quotes)) throw new Error("bad");
+    state.quotes = d.quotes;
+    state.nowId = d.nowId || state.quotes[0]?.id || null;
+    saveAll();
+    renderList();
+    renderNow();
+    statusLeft.textContent = "Imported.";
+  }catch{ alert("Import failed: invalid file."); }
+  $("#file").value="";
+});
+
+function tick(){ statusRight.textContent = new Date().toLocaleString(); requestAnimationFrame(tick); }
+renderList();
+renderNow();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

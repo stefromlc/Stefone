@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UnitBuddy</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+
+:root{
+  --bg:#c0c0c0;
+  --panel:#d7d7d7;
+  --panel2:#efefef;
+  --borderDark:#7a7a7a;
+  --borderLight:#ffffff;
+  --text:#111;
+  --accent:#0b57d0;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: "MS Sans Serif", Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+}
+.bevel{
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  background:var(--panel);
+}
+.sunken{
+  border:1px solid var(--borderDark);
+  box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;
+  background:var(--panel2);
+}
+.app{height:100%; display:flex; flex-direction:column; gap:6px; padding:6px; min-height:0;}
+.header{display:flex; align-items:center; justify-content:space-between; padding:6px 8px;}
+.header h1{margin:0; font-size:14px; font-weight:700;}
+.header .subtitle{font-size:12px; opacity:.85;}
+.content{flex:1; padding:8px; min-height:0; overflow:auto;}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.col{display:flex; flex-direction:column; gap:6px;}
+.grid{display:grid; gap:8px;}
+.btn{
+  padding:4px 10px;
+  background:var(--panel);
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  cursor:pointer;
+  font-size:12px;
+}
+.btn:active{box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;}
+.btn.primary{background: #dbe8ff;}
+.btn.danger{background: #ffe0e0;}
+input,select,textarea{
+  font-family:var(--sans);
+  font-size:12px;
+}
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  width:100%;
+  padding:4px 6px;
+}
+textarea{min-height:120px; resize:vertical;}
+.status{padding:4px 8px; font-size:12px; display:flex; justify-content:space-between; gap:10px;}
+.badge{font-size:11px; padding:2px 6px; border-radius:3px; background:#000; color:#fff;}
+hr{border:none; border-top:1px solid #b4b4b4; margin:8px 0;}
+.small{font-size:11px; opacity:.85;}
+.kbd{font-family:var(--mono); font-size:11px; padding:1px 4px; background:#000; color:#fff; border-radius:3px;}
+
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="bevel header">
+      <div>
+        <h1>UnitBuddy</h1>
+        <div class="subtitle">Fast unit converter (length, mass, temperature).</div>
+      </div>
+      <div class="row">
+        <span class="badge">LOCAL</span>
+      </div>
+    </div>
+    <div class="bevel content">
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap:8px;">
+  <div class="sunken" style="padding:10px;">
+    <b>Convert</b>
+    <div class="small" style="margin-bottom:6px;">Choose a category and units.</div>
+
+    <label class="small">Category
+      <select class="sunken" id="cat">
+        <option value="length">Length</option>
+        <option value="mass">Mass</option>
+        <option value="temp">Temperature</option>
+      </select>
+    </label>
+
+    <div class="grid" style="grid-template-columns: 1fr 1fr;">
+      <label class="small">From
+        <select class="sunken" id="from"></select>
+      </label>
+      <label class="small">To
+        <select class="sunken" id="to"></select>
+      </label>
+    </div>
+
+    <label class="small">Value
+      <input class="sunken" type="number" id="val" step="any" value="1" />
+    </label>
+
+    <div class="row" style="margin-top:8px;">
+      <button class="btn primary" id="swapBtn">Swap</button>
+      <button class="btn" id="copyBtn">Copy result</button>
+    </div>
+  </div>
+
+  <div class="sunken" style="padding:10px;">
+    <b>Result</b>
+    <div class="sunken" style="padding:12px; margin-top:8px;">
+      <div class="small" id="desc">—</div>
+      <div id="out" style="font-family:var(--mono); font-size:34px; margin-top:8px;">—</div>
+    </div>
+    <div class="small" style="margin-top:8px;">
+      Tip: temperature uses exact formulas; length/mass uses standard factors.
+    </div>
+  </div>
+</div>
+    </div>
+    <div class="bevel status" id="status">
+      <span id="statusLeft">Ready.</span>
+      <span id="statusRight" class="small"></span>
+    </div>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const statusLeft = $("#statusLeft");
+const statusRight = $("#statusRight");
+
+const units = {
+  length: [
+    ["mm","Millimetre", 0.001],
+    ["cm","Centimetre", 0.01],
+    ["m","Metre", 1],
+    ["km","Kilometre", 1000],
+    ["in","Inch", 0.0254],
+    ["ft","Foot", 0.3048],
+    ["yd","Yard", 0.9144],
+    ["mi","Mile", 1609.344],
+  ],
+  mass: [
+    ["g","Gram", 0.001],
+    ["kg","Kilogram", 1],
+    ["oz","Ounce", 0.028349523125],
+    ["lb","Pound", 0.45359237],
+    ["st","Stone", 6.35029318],
+  ],
+  temp: [
+    ["C","Celsius"],
+    ["F","Fahrenheit"],
+    ["K","Kelvin"],
+  ]
+};
+
+function fillSelect(sel, items){
+  sel.innerHTML="";
+  for(const u of items){
+    const opt = document.createElement("option");
+    opt.value = u[0];
+    opt.textContent = `${u[1]} (${u[0]})`;
+    sel.appendChild(opt);
+  }
+}
+
+function convert(){
+  const cat = $("#cat").value;
+  const from = $("#from").value;
+  const to = $("#to").value;
+  const v = Number($("#val").value);
+  if(Number.isNaN(v)){
+    $("#out").textContent = "—";
+    return;
+  }
+
+  let result = v;
+  if(cat==="temp"){
+    result = tempToTemp(v, from, to);
+  }else{
+    const map = new Map(units[cat].map(u=>[u[0], u[2]]));
+    const f = map.get(from), t = map.get(to);
+    result = (v * f) / t;
+  }
+
+  $("#desc").textContent = `${v} ${from} → ${to}`;
+  $("#out").textContent = format(result) + " " + to;
+  statusLeft.textContent = "Converted.";
+}
+
+function format(n){
+  if(!isFinite(n)) return "—";
+  const abs = Math.abs(n);
+  if(abs>=1000) return n.toFixed(3);
+  if(abs>=1) return n.toFixed(4);
+  return n.toFixed(6);
+}
+
+function tempToTemp(v, from, to){
+  let c;
+  if(from==="C") c = v;
+  if(from==="F") c = (v-32) * 5/9;
+  if(from==="K") c = v - 273.15;
+
+  if(to==="C") return c;
+  if(to==="F") return c * 9/5 + 32;
+  if(to==="K") return c + 273.15;
+  return v;
+}
+
+function refreshUnits(){
+  const cat = $("#cat").value;
+  fillSelect($("#from"), units[cat]);
+  fillSelect($("#to"), units[cat]);
+  if(cat==="temp"){
+    $("#from").value = "C";
+    $("#to").value = "F";
+  }else{
+    $("#from").selectedIndex = 2; // base unit
+    $("#to").selectedIndex = 3;
+  }
+  convert();
+}
+
+$("#cat").addEventListener("change", refreshUnits);
+["from","to","val"].forEach(id=> $("#"+id).addEventListener("input", convert));
+$("#swapBtn").addEventListener("click", ()=>{
+  const a = $("#from").value;
+  $("#from").value = $("#to").value;
+  $("#to").value = a;
+  convert();
+});
+$("#copyBtn").addEventListener("click", async ()=>{
+  try{
+    await navigator.clipboard.writeText($("#out").textContent);
+    statusLeft.textContent = "Copied.";
+  }catch{
+    alert("Copy failed. Your browser may block clipboard access.");
+  }
+});
+
+function tick(){ statusRight.textContent = new Date().toLocaleString(); requestAnimationFrame(tick); }
+refreshUnits();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

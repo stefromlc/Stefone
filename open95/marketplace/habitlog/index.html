@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HabitLog</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+
+:root{
+  --bg:#c0c0c0;
+  --panel:#d7d7d7;
+  --panel2:#efefef;
+  --borderDark:#7a7a7a;
+  --borderLight:#ffffff;
+  --text:#111;
+  --accent:#0b57d0;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: "MS Sans Serif", Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+}
+.bevel{
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  background:var(--panel);
+}
+.sunken{
+  border:1px solid var(--borderDark);
+  box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;
+  background:var(--panel2);
+}
+.app{height:100%; display:flex; flex-direction:column; gap:6px; padding:6px; min-height:0;}
+.header{display:flex; align-items:center; justify-content:space-between; padding:6px 8px;}
+.header h1{margin:0; font-size:14px; font-weight:700;}
+.header .subtitle{font-size:12px; opacity:.85;}
+.content{flex:1; padding:8px; min-height:0; overflow:auto;}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.col{display:flex; flex-direction:column; gap:6px;}
+.grid{display:grid; gap:8px;}
+.btn{
+  padding:4px 10px;
+  background:var(--panel);
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  cursor:pointer;
+  font-size:12px;
+}
+.btn:active{box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;}
+.btn.primary{background: #dbe8ff;}
+.btn.danger{background: #ffe0e0;}
+input,select,textarea{
+  font-family:var(--sans);
+  font-size:12px;
+}
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  width:100%;
+  padding:4px 6px;
+}
+textarea{min-height:120px; resize:vertical;}
+.status{padding:4px 8px; font-size:12px; display:flex; justify-content:space-between; gap:10px;}
+.badge{font-size:11px; padding:2px 6px; border-radius:3px; background:#000; color:#fff;}
+hr{border:none; border-top:1px solid #b4b4b4; margin:8px 0;}
+.small{font-size:11px; opacity:.85;}
+.kbd{font-family:var(--mono); font-size:11px; padding:1px 4px; background:#000; color:#fff; border-radius:3px;}
+
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="bevel header">
+      <div>
+        <h1>HabitLog</h1>
+        <div class="subtitle">Weekly habit tracker with streaks (saved locally).</div>
+      </div>
+      <div class="row">
+        <span class="badge">LOCAL</span>
+      </div>
+    </div>
+    <div class="bevel content">
+      <div class="row" style="justify-content:space-between; align-items:flex-end;">
+  <div class="col" style="min-width:280px;">
+    <label class="small">Add habit</label>
+    <div class="row">
+      <input class="sunken" type="text" id="newHabit" placeholder="e.g., Stretch, Read, Water" />
+      <button class="btn primary" id="addBtn">Add</button>
+    </div>
+  </div>
+  <div class="row">
+    <button class="btn" id="prevBtn">◀</button>
+    <div class="sunken" style="padding:6px 8px; min-width:220px; text-align:center;">
+      <b id="rangeLabel"></b>
+    </div>
+    <button class="btn" id="nextBtn">▶</button>
+    <button class="btn" id="todayBtn">Today</button>
+  </div>
+</div>
+
+<hr/>
+
+<div class="sunken" style="padding:8px; overflow:auto;">
+  <table id="table" style="width:100%; border-collapse:collapse; font-size:12px;">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="row" style="margin-top:8px; justify-content:space-between;">
+  <div class="small">Click a square to toggle. Habits are saved locally.</div>
+  <div class="row">
+    <button class="btn" id="exportBtn">Export</button>
+    <button class="btn" id="importBtn">Import</button>
+    <input type="file" id="file" accept="application/json" style="display:none"/>
+  </div>
+</div>
+    </div>
+    <div class="bevel status" id="status">
+      <span id="statusLeft">Ready.</span>
+      <span id="statusRight" class="small"></span>
+    </div>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const statusLeft = $("#statusLeft");
+const statusRight = $("#statusRight");
+const KEY = "habitlog_v1";
+
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY)||"{}");
+    return {
+      habits: Array.isArray(d.habits)? d.habits : [],
+      checks: d.checks && typeof d.checks==="object" ? d.checks : {}
+    };
+  }catch{ return {habits:[], checks:{}}; }
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+function uid(){ return Math.random().toString(16).slice(2)+Date.now().toString(16); }
+function iso(d){ return d.toISOString().slice(0,10); }
+function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+
+const state = load();
+let anchor = new Date(); // rightmost day in view (inclusive)
+
+function visibleDays(){
+  const days = [];
+  for(let i=6;i>=0;i--){
+    const d = addDays(anchor, -i);
+    days.push(d);
+  }
+  return days;
+}
+
+function ensureDay(key){
+  if(!state.checks[key]) state.checks[key] = {};
+  return state.checks[key];
+}
+
+function render(){
+  const days = visibleDays();
+  const start = days[0], end = days[6];
+  $("#rangeLabel").textContent = start.toLocaleDateString(undefined,{month:"short", day:"numeric"}) +
+    " – " + end.toLocaleDateString(undefined,{month:"short", day:"numeric"});
+
+  // header
+  const thead = $("#table thead");
+  thead.innerHTML = "";
+  const trh = document.createElement("tr");
+  const th0 = document.createElement("th");
+  th0.textContent = "Habit";
+  th0.style.textAlign="left";
+  th0.style.padding="6px";
+  trh.appendChild(th0);
+  for(const d of days){
+    const th = document.createElement("th");
+    th.style.padding="6px";
+    th.style.textAlign="center";
+    th.textContent = d.toLocaleDateString(undefined,{weekday:"short"}).slice(0,2);
+    const sub = document.createElement("div");
+    sub.className="small";
+    sub.textContent = d.getDate();
+    th.appendChild(sub);
+    trh.appendChild(th);
+  }
+  const thX = document.createElement("th");
+  thX.textContent = "";
+  trh.appendChild(thX);
+  thead.appendChild(trh);
+
+  // body
+  const tbody = $("#table tbody");
+  tbody.innerHTML = "";
+  if(state.habits.length===0){
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 1+days.length+1;
+    td.style.padding="10px";
+    td.innerHTML = "<i>No habits yet. Add one above.</i>";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
+  for(const h of state.habits){
+    const tr = document.createElement("tr");
+    tr.style.borderTop="1px solid #b4b4b4";
+
+    const nameTd = document.createElement("td");
+    nameTd.style.padding="6px";
+    nameTd.innerHTML = `<b>${escapeHtml(h.name)}</b><div class="small">Streak: ${calcStreak(h.id)} day(s)</div>`;
+    tr.appendChild(nameTd);
+
+    for(const d of days){
+      const key = iso(d);
+      const td = document.createElement("td");
+      td.style.padding="6px";
+      td.style.textAlign="center";
+      const box = document.createElement("button");
+      box.className="btn";
+      box.style.width="26px";
+      box.style.height="22px";
+      const checked = !!(state.checks[key] && state.checks[key][h.id]);
+      box.textContent = checked ? "✓" : "";
+      box.title = key;
+      box.addEventListener("click", ()=>{
+        const dayMap = ensureDay(key);
+        dayMap[h.id] = !dayMap[h.id];
+        save();
+        render();
+      });
+      td.appendChild(box);
+      tr.appendChild(td);
+    }
+
+    const delTd = document.createElement("td");
+    delTd.style.padding="6px";
+    const del = document.createElement("button");
+    del.className="btn danger";
+    del.textContent="Delete";
+    del.addEventListener("click", ()=>{
+      if(!confirm(`Delete habit "${h.name}"?`)) return;
+      state.habits = state.habits.filter(x=>x.id!==h.id);
+      // leave history data; harmless
+      save();
+      render();
+      statusLeft.textContent = "Habit deleted.";
+    });
+    delTd.appendChild(del);
+    tr.appendChild(delTd);
+
+    tbody.appendChild(tr);
+  }
+}
+
+function calcStreak(habitId){
+  // count consecutive checked days ending today
+  let d = new Date();
+  let streak = 0;
+  for(let i=0;i<365;i++){
+    const key = iso(addDays(d, -i));
+    if(state.checks[key] && state.checks[key][habitId]){
+      streak++;
+    }else{
+      break;
+    }
+  }
+  return streak;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+$("#addBtn").addEventListener("click", ()=>{
+  const name = $("#newHabit").value.trim();
+  if(!name) return;
+  state.habits.push({id: uid(), name});
+  $("#newHabit").value="";
+  save();
+  render();
+  statusLeft.textContent = "Habit added.";
+});
+$("#newHabit").addEventListener("keydown",(e)=>{ if(e.key==="Enter") $("#addBtn").click(); });
+
+$("#prevBtn").addEventListener("click", ()=>{ anchor = addDays(anchor,-7); render(); });
+$("#nextBtn").addEventListener("click", ()=>{ anchor = addDays(anchor, 7); render(); });
+$("#todayBtn").addEventListener("click", ()=>{ anchor = new Date(); render(); });
+
+$("#exportBtn").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "habitlog-export.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  statusLeft.textContent = "Exported.";
+});
+
+$("#importBtn").addEventListener("click", ()=>$("#file").click());
+$("#file").addEventListener("change", async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  try{
+    const txt = await f.text();
+    const d = JSON.parse(txt);
+    if(!d || !Array.isArray(d.habits) || typeof d.checks!=="object") throw new Error("bad");
+    state.habits = d.habits;
+    state.checks = d.checks;
+    save();
+    render();
+    statusLeft.textContent = "Imported.";
+  }catch{
+    alert("Import failed: invalid file.");
+  }finally{
+    $("#file").value="";
+  }
+});
+
+function tick(){
+  statusRight.textContent = new Date().toLocaleString();
+  requestAnimationFrame(tick);
+}
+render();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

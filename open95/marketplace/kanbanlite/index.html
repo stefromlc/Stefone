@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kanban Lite</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+
+:root{
+  --bg:#c0c0c0;
+  --panel:#d7d7d7;
+  --panel2:#efefef;
+  --borderDark:#7a7a7a;
+  --borderLight:#ffffff;
+  --text:#111;
+  --accent:#0b57d0;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: "MS Sans Serif", Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+}
+.bevel{
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  background:var(--panel);
+}
+.sunken{
+  border:1px solid var(--borderDark);
+  box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;
+  background:var(--panel2);
+}
+.app{height:100%; display:flex; flex-direction:column; gap:6px; padding:6px; min-height:0;}
+.header{display:flex; align-items:center; justify-content:space-between; padding:6px 8px;}
+.header h1{margin:0; font-size:14px; font-weight:700;}
+.header .subtitle{font-size:12px; opacity:.85;}
+.content{flex:1; padding:8px; min-height:0; overflow:auto;}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.col{display:flex; flex-direction:column; gap:6px;}
+.grid{display:grid; gap:8px;}
+.btn{
+  padding:4px 10px;
+  background:var(--panel);
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  cursor:pointer;
+  font-size:12px;
+}
+.btn:active{box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;}
+.btn.primary{background: #dbe8ff;}
+.btn.danger{background: #ffe0e0;}
+input,select,textarea{
+  font-family:var(--sans);
+  font-size:12px;
+}
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  width:100%;
+  padding:4px 6px;
+}
+textarea{min-height:120px; resize:vertical;}
+.status{padding:4px 8px; font-size:12px; display:flex; justify-content:space-between; gap:10px;}
+.badge{font-size:11px; padding:2px 6px; border-radius:3px; background:#000; color:#fff;}
+hr{border:none; border-top:1px solid #b4b4b4; margin:8px 0;}
+.small{font-size:11px; opacity:.85;}
+.kbd{font-family:var(--mono); font-size:11px; padding:1px 4px; background:#000; color:#fff; border-radius:3px;}
+
+.cols{display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; min-height:0;}
+.colhead{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+.lane{min-height:260px; padding:8px; display:flex; flex-direction:column; gap:8px;}
+.card{padding:8px; cursor:grab; user-select:none;}
+.card.dragging{opacity:.5;}
+.lane.over{outline:2px dashed var(--accent);}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="bevel header">
+      <div>
+        <h1>Kanban Lite</h1>
+        <div class="subtitle">Drag cards between columns (saved locally).</div>
+      </div>
+      <div class="row">
+        <span class="badge">LOCAL</span>
+      </div>
+    </div>
+    <div class="bevel content">
+      <div class="row" style="justify-content:space-between; align-items:flex-end;">
+  <div>
+    <b>Kanban Lite</b>
+    <div class="small">Drag cards between columns. Saved locally.</div>
+  </div>
+  <div class="row">
+    <input class="sunken" type="text" id="newTitle" placeholder="New task title…" style="min-width:260px;" />
+    <button class="btn primary" id="addBtn">Add</button>
+    <button class="btn" id="exportBtn">Export</button>
+    <button class="btn" id="importBtn">Import</button>
+    <input type="file" id="file" accept="application/json" style="display:none"/>
+  </div>
+</div>
+
+<hr/>
+
+<div class="cols" style="min-height:0;">
+  <div class="sunken" style="padding:8px; min-height:0;">
+    <div class="colhead"><b>To Do</b><span class="small" id="cTodo"></span></div>
+    <div class="sunken lane" data-lane="todo"></div>
+  </div>
+  <div class="sunken" style="padding:8px; min-height:0;">
+    <div class="colhead"><b>Doing</b><span class="small" id="cDoing"></span></div>
+    <div class="sunken lane" data-lane="doing"></div>
+  </div>
+  <div class="sunken" style="padding:8px; min-height:0;">
+    <div class="colhead"><b>Done</b><span class="small" id="cDone"></span></div>
+    <div class="sunken lane" data-lane="done"></div>
+  </div>
+</div>
+    </div>
+    <div class="bevel status" id="status">
+      <span id="statusLeft">Ready.</span>
+      <span id="statusRight" class="small"></span>
+    </div>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const $$ = (s)=>Array.from(document.querySelectorAll(s));
+const statusLeft = $("#statusLeft");
+const statusRight = $("#statusRight");
+const KEY = "kanban_v1";
+
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"{}"); }catch{ return {}; } }
+function saveAll(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function uid(){ return Math.random().toString(16).slice(2)+Date.now().toString(16); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+const state = Object.assign({ cards: [] }, load());
+if(state.cards.length===0){
+  state.cards.push({id:uid(), title:"Drag me to Doing →", lane:"todo", created:Date.now()});
+  state.cards.push({id:uid(), title:"…then to Done ✓", lane:"doing", created:Date.now()});
+}
+
+function laneCards(lane){ return state.cards.filter(c=>c.lane===lane).sort((a,b)=>a.created-b.created); }
+
+function render(){
+  const lanes = { todo: laneCards("todo"), doing: laneCards("doing"), done: laneCards("done") };
+  $("#cTodo").textContent = lanes.todo.length;
+  $("#cDoing").textContent = lanes.doing.length;
+  $("#cDone").textContent = lanes.done.length;
+
+  $$("[data-lane]").forEach(el=>{
+    const lane = el.getAttribute("data-lane");
+    el.innerHTML = "";
+    for(const c of lanes[lane]){
+      const card = document.createElement("div");
+      card.className = "sunken card";
+      card.draggable = true;
+      card.dataset.id = c.id;
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
+          <div style="min-width:0;"><b>${esc(c.title)}</b><div class="small">${new Date(c.created).toLocaleDateString()}</div></div>
+          <button class="btn danger" data-del="${c.id}">Del</button>
+        </div>
+      `;
+      card.addEventListener("dragstart", (e)=>{
+        card.classList.add("dragging");
+        e.dataTransfer.setData("text/plain", c.id);
+      });
+      card.addEventListener("dragend", ()=>card.classList.remove("dragging"));
+      el.appendChild(card);
+    }
+  });
+
+  $$("[data-del]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.getAttribute("data-del");
+      state.cards = state.cards.filter(c=>c.id!==id);
+      saveAll();
+      render();
+      statusLeft.textContent = "Card deleted.";
+    });
+  });
+}
+
+function setupDnD(){
+  $$("[data-lane]").forEach(laneEl=>{
+    laneEl.addEventListener("dragover", (e)=>{ e.preventDefault(); laneEl.classList.add("over"); });
+    laneEl.addEventListener("dragleave", ()=>laneEl.classList.remove("over"));
+    laneEl.addEventListener("drop", (e)=>{
+      e.preventDefault();
+      laneEl.classList.remove("over");
+      const id = e.dataTransfer.getData("text/plain");
+      const lane = laneEl.getAttribute("data-lane");
+      const c = state.cards.find(x=>x.id===id);
+      if(c){
+        c.lane = lane;
+        saveAll();
+        render();
+        statusLeft.textContent = "Moved.";
+      }
+    });
+  });
+}
+
+$("#addBtn").addEventListener("click", ()=>{
+  const t = $("#newTitle").value.trim();
+  if(!t) return;
+  state.cards.push({id:uid(), title:t, lane:"todo", created:Date.now()});
+  $("#newTitle").value="";
+  saveAll();
+  render();
+  statusLeft.textContent = "Added to To Do.";
+});
+$("#newTitle").addEventListener("keydown",(e)=>{ if(e.key==="Enter") $("#addBtn").click(); });
+
+$("#exportBtn").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "kanban-export.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  statusLeft.textContent = "Exported.";
+});
+
+$("#importBtn").addEventListener("click", ()=>$("#file").click());
+$("#file").addEventListener("change", async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  try{
+    const txt = await f.text();
+    const d = JSON.parse(txt);
+    if(!d || !Array.isArray(d.cards)) throw new Error("bad");
+    state.cards = d.cards;
+    saveAll();
+    render();
+    statusLeft.textContent = "Imported.";
+  }catch{ alert("Import failed: invalid file."); }
+  $("#file").value="";
+});
+
+function tick(){ statusRight.textContent = new Date().toLocaleString(); requestAnimationFrame(tick); }
+
+render();
+setupDnD();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

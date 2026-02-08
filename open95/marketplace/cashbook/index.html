@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CashBook</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+
+:root{
+  --bg:#c0c0c0;
+  --panel:#d7d7d7;
+  --panel2:#efefef;
+  --borderDark:#7a7a7a;
+  --borderLight:#ffffff;
+  --text:#111;
+  --accent:#0b57d0;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: "MS Sans Serif", Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+}
+.bevel{
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  background:var(--panel);
+}
+.sunken{
+  border:1px solid var(--borderDark);
+  box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;
+  background:var(--panel2);
+}
+.app{height:100%; display:flex; flex-direction:column; gap:6px; padding:6px; min-height:0;}
+.header{display:flex; align-items:center; justify-content:space-between; padding:6px 8px;}
+.header h1{margin:0; font-size:14px; font-weight:700;}
+.header .subtitle{font-size:12px; opacity:.85;}
+.content{flex:1; padding:8px; min-height:0; overflow:auto;}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.col{display:flex; flex-direction:column; gap:6px;}
+.grid{display:grid; gap:8px;}
+.btn{
+  padding:4px 10px;
+  background:var(--panel);
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  cursor:pointer;
+  font-size:12px;
+}
+.btn:active{box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;}
+.btn.primary{background: #dbe8ff;}
+.btn.danger{background: #ffe0e0;}
+input,select,textarea{
+  font-family:var(--sans);
+  font-size:12px;
+}
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  width:100%;
+  padding:4px 6px;
+}
+textarea{min-height:120px; resize:vertical;}
+.status{padding:4px 8px; font-size:12px; display:flex; justify-content:space-between; gap:10px;}
+.badge{font-size:11px; padding:2px 6px; border-radius:3px; background:#000; color:#fff;}
+hr{border:none; border-top:1px solid #b4b4b4; margin:8px 0;}
+.small{font-size:11px; opacity:.85;}
+.kbd{font-family:var(--mono); font-size:11px; padding:1px 4px; background:#000; color:#fff; border-radius:3px;}
+
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="bevel header">
+      <div>
+        <h1>CashBook</h1>
+        <div class="subtitle">Track income & expenses by month (saved locally).</div>
+      </div>
+      <div class="row">
+        <span class="badge">LOCAL</span>
+      </div>
+    </div>
+    <div class="bevel content">
+      <div class="grid" style="grid-template-columns: 320px 1fr; align-items:start;">
+  <div class="col">
+    <div class="sunken" style="padding:10px;">
+      <div style="font-weight:700; margin-bottom:6px;">Add entry</div>
+
+      <div class="grid" style="grid-template-columns: 1fr 1fr;">
+        <label class="small">Date
+          <input class="sunken" type="date" id="date" />
+        </label>
+        <label class="small">Type
+          <select class="sunken" id="type">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="small">Category
+        <input class="sunken" type="text" id="cat" placeholder="e.g., Groceries, Rent, Salary" />
+      </label>
+
+      <label class="small">Note (optional)
+        <input class="sunken" type="text" id="note" placeholder="Short description" />
+      </label>
+
+      <label class="small">Amount
+        <input class="sunken" type="number" id="amt" step="0.01" placeholder="0.00" />
+      </label>
+
+      <div class="row" style="margin-top:8px;">
+        <button class="btn primary" id="addBtn">Add</button>
+        <button class="btn" id="clearBtn">Clear</button>
+      </div>
+
+      <hr/>
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <div class="small">This month balance</div>
+          <div style="font-size:16px;"><b id="bal">£0.00</b></div>
+        </div>
+        <div style="text-align:right;">
+          <div class="small">Income / Expense</div>
+          <div><span id="inc">£0.00</span> / <span id="exp">£0.00</span></div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <label class="small">Month
+          <input class="sunken" type="month" id="month" />
+        </label>
+        <button class="btn" id="exportBtn">Export</button>
+        <button class="btn" id="importBtn">Import</button>
+        <input type="file" id="file" accept="application/json" style="display:none"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="col" style="min-width:320px;">
+    <div class="sunken" style="padding:10px;">
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <div style="font-weight:700;">Entries</div>
+        <div class="small" id="countLabel"></div>
+      </div>
+      <div style="overflow:auto; max-height:420px; margin-top:8px;">
+        <table style="width:100%; border-collapse:collapse; font-size:12px;" id="table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sunken" style="padding:10px; margin-top:8px;">
+      <div style="font-weight:700; margin-bottom:6px;">Category snapshot</div>
+      <canvas id="chart" width="640" height="180" style="width:100%; height:180px;" class="sunken"></canvas>
+      <div class="small" style="margin-top:6px;">Bar chart shows expenses by category for the selected month.</div>
+    </div>
+  </div>
+</div>
+    </div>
+    <div class="bevel status" id="status">
+      <span id="statusLeft">Ready.</span>
+      <span id="statusRight" class="small"></span>
+    </div>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const statusLeft = $("#statusLeft");
+const statusRight = $("#statusRight");
+const KEY = "cashbook_v1";
+const fmtMoney = (n)=> (n<0?"-":"") + "£" + Math.abs(n).toFixed(2);
+
+function load(){
+  try{ return JSON.parse(localStorage.getItem(KEY)||"{}"); }catch{ return {}; }
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function uid(){ return Math.random().toString(16).slice(2)+Date.now().toString(16); }
+
+const state = Object.assign({ entries: [] }, load());
+
+const today = new Date().toISOString().slice(0,10);
+$("#date").value = today;
+
+const mNow = new Date();
+$("#month").value = mNow.toISOString().slice(0,7);
+
+function parseMonth(v){ return {y:Number(v.slice(0,4)), m:Number(v.slice(5,7))}; }
+function inMonth(e, ym){
+  const y = Number(e.date.slice(0,4)), m = Number(e.date.slice(5,7));
+  return y===ym.y && m===ym.m;
+}
+
+function render(){
+  const ym = parseMonth($("#month").value);
+  const list = state.entries.filter(e=>inMonth(e,ym)).sort((a,b)=>b.date.localeCompare(a.date));
+  $("#countLabel").textContent = `${list.length} item(s)`;
+
+  // totals
+  let inc=0, exp=0;
+  for(const e of list){
+    if(e.type==="income") inc += e.amount;
+    else exp += e.amount;
+  }
+  const bal = inc - exp;
+  $("#inc").textContent = fmtMoney(inc);
+  $("#exp").textContent = fmtMoney(exp);
+  $("#bal").textContent = fmtMoney(bal);
+
+  // table
+  const thead = $("#table thead");
+  thead.innerHTML = "<tr><th style='text-align:left; padding:6px;'>Date</th><th style='text-align:left; padding:6px;'>Category</th><th style='text-align:left; padding:6px;'>Note</th><th style='text-align:right; padding:6px;'>Amount</th><th style='padding:6px;'></th></tr>";
+  const tbody = $("#table tbody");
+  tbody.innerHTML = "";
+  if(list.length===0){
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 5;
+    td.style.padding="10px";
+    td.innerHTML = "<i>No entries for this month.</i>";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+  for(const e of list){
+    const tr = document.createElement("tr");
+    tr.style.borderTop = "1px solid #b4b4b4";
+    tr.innerHTML = `
+      <td style="padding:6px;">${e.date}</td>
+      <td style="padding:6px;">${escapeHtml(e.cat||"")}</td>
+      <td style="padding:6px;" class="small">${escapeHtml(e.note||"")}</td>
+      <td style="padding:6px; text-align:right;"><b>${fmtMoney(e.type==="income"? e.amount : -e.amount)}</b></td>
+      <td style="padding:6px; text-align:right;"><button class="btn danger" data-del="${e.id}">Del</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll("[data-del]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.getAttribute("data-del");
+      state.entries = state.entries.filter(x=>x.id!==id);
+      save();
+      render();
+      statusLeft.textContent = "Entry deleted.";
+    });
+  });
+
+  drawChart(list);
+}
+
+function drawChart(list){
+  const canvas = $("#chart");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  // aggregate expenses by category
+  const map = new Map();
+  for(const e of list){
+    if(e.type!=="expense") continue;
+    const k = (e.cat||"Uncategorised").trim() || "Uncategorised";
+    map.set(k, (map.get(k)||0)+e.amount);
+  }
+  const items = Array.from(map.entries()).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(items.length===0){
+    ctx.font = "12px sans-serif";
+    ctx.fillText("No expense data to chart.", 12, 24);
+    return;
+  }
+  const maxV = Math.max(...items.map(x=>x[1]));
+  const padL=120, padR=20, padT=18, padB=18;
+  const barH = (H-padT-padB)/items.length;
+  ctx.font="12px sans-serif";
+  ctx.fillStyle="#111";
+  items.forEach((it, i)=>{
+    const [cat, val] = it;
+    const y = padT + i*barH + 6;
+    ctx.fillText(cat.slice(0,18), 10, y+10);
+    const w = Math.round((W-padL-padR) * (val/maxV));
+    ctx.fillStyle = "#0b57d0";
+    ctx.fillRect(padL, y, w, Math.max(10, barH-12));
+    ctx.fillStyle = "#111";
+    ctx.fillText("£"+val.toFixed(2), padL + w + 6, y+10);
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+$("#addBtn").addEventListener("click", ()=>{
+  const date = $("#date").value || new Date().toISOString().slice(0,10);
+  const type = $("#type").value;
+  const cat = $("#cat").value.trim();
+  const note = $("#note").value.trim();
+  const amt = Number($("#amt").value);
+  if(!amt || amt<=0){ alert("Enter a positive amount."); return; }
+  state.entries.push({ id:uid(), date, type, cat, note, amount: Math.round(amt*100)/100 });
+  save();
+  $("#note").value=""; $("#amt").value="";
+  render();
+  statusLeft.textContent = "Entry added.";
+});
+
+$("#clearBtn").addEventListener("click", ()=>{
+  $("#cat").value=""; $("#note").value=""; $("#amt").value="";
+  statusLeft.textContent = "Cleared.";
+});
+
+$("#month").addEventListener("change", render);
+
+$("#exportBtn").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "cashbook-export.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  statusLeft.textContent = "Exported.";
+});
+
+$("#importBtn").addEventListener("click", ()=>$("#file").click());
+$("#file").addEventListener("change", async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  try{
+    const txt = await f.text();
+    const d = JSON.parse(txt);
+    if(!d || !Array.isArray(d.entries)) throw new Error("bad");
+    state.entries = d.entries;
+    save();
+    render();
+    statusLeft.textContent = "Imported.";
+  }catch{
+    alert("Import failed: invalid file.");
+  }finally{
+    $("#file").value="";
+  }
+});
+
+function tick(){
+  statusRight.textContent = new Date().toLocaleString();
+  requestAnimationFrame(tick);
+}
+render();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

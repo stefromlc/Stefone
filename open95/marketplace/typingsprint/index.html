@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Typing Sprint</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+
+:root{
+  --bg:#c0c0c0;
+  --panel:#d7d7d7;
+  --panel2:#efefef;
+  --borderDark:#7a7a7a;
+  --borderLight:#ffffff;
+  --text:#111;
+  --accent:#0b57d0;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: "MS Sans Serif", Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+}
+.bevel{
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  background:var(--panel);
+}
+.sunken{
+  border:1px solid var(--borderDark);
+  box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;
+  background:var(--panel2);
+}
+.app{height:100%; display:flex; flex-direction:column; gap:6px; padding:6px; min-height:0;}
+.header{display:flex; align-items:center; justify-content:space-between; padding:6px 8px;}
+.header h1{margin:0; font-size:14px; font-weight:700;}
+.header .subtitle{font-size:12px; opacity:.85;}
+.content{flex:1; padding:8px; min-height:0; overflow:auto;}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.col{display:flex; flex-direction:column; gap:6px;}
+.grid{display:grid; gap:8px;}
+.btn{
+  padding:4px 10px;
+  background:var(--panel);
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  cursor:pointer;
+  font-size:12px;
+}
+.btn:active{box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;}
+.btn.primary{background: #dbe8ff;}
+.btn.danger{background: #ffe0e0;}
+input,select,textarea{
+  font-family:var(--sans);
+  font-size:12px;
+}
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  width:100%;
+  padding:4px 6px;
+}
+textarea{min-height:120px; resize:vertical;}
+.status{padding:4px 8px; font-size:12px; display:flex; justify-content:space-between; gap:10px;}
+.badge{font-size:11px; padding:2px 6px; border-radius:3px; background:#000; color:#fff;}
+hr{border:none; border-top:1px solid #b4b4b4; margin:8px 0;}
+.small{font-size:11px; opacity:.85;}
+.kbd{font-family:var(--mono); font-size:11px; padding:1px 4px; background:#000; color:#fff; border-radius:3px;}
+
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="bevel header">
+      <div>
+        <h1>Typing Sprint</h1>
+        <div class="subtitle">Typing test with WPM & accuracy.</div>
+      </div>
+      <div class="row">
+        <span class="badge">LOCAL</span>
+      </div>
+    </div>
+    <div class="bevel content">
+      <div class="row" style="justify-content:space-between; align-items:flex-end;">
+  <div>
+    <b>Typing Sprint</b>
+    <div class="small">Measure WPM and accuracy. Saved locally.</div>
+  </div>
+  <div class="row">
+    <label class="small">Duration
+      <select class="sunken" id="dur">
+        <option value="15">15s</option>
+        <option value="30">30s</option>
+        <option value="60" selected>60s</option>
+      </select>
+    </label>
+    <button class="btn" id="newTextBtn">New text</button>
+    <button class="btn primary" id="startBtn">Start</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+</div>
+
+<hr/>
+
+<div class="sunken" style="padding:10px;">
+  <div class="small">Prompt</div>
+  <div class="sunken" id="prompt" style="padding:10px; margin-top:6px; min-height:70px; white-space:pre-wrap;"></div>
+</div>
+
+<div class="sunken" style="padding:10px; margin-top:8px;">
+  <div class="small">Type here</div>
+  <textarea class="sunken" id="input" style="margin-top:6px; min-height:120px;" placeholder="Press Start, then type the prompt…"></textarea>
+</div>
+
+<div class="grid" style="grid-template-columns: repeat(4, 1fr); gap:8px; margin-top:8px;">
+  <div class="sunken" style="padding:10px;"><div class="small">Time left</div><div style="font-family:var(--mono); font-size:22px;" id="time">60.0s</div></div>
+  <div class="sunken" style="padding:10px;"><div class="small">WPM</div><div style="font-family:var(--mono); font-size:22px;" id="wpm">0</div></div>
+  <div class="sunken" style="padding:10px;"><div class="small">Accuracy</div><div style="font-family:var(--mono); font-size:22px;" id="acc">0%</div></div>
+  <div class="sunken" style="padding:10px;"><div class="small">Best (60s)</div><div style="font-family:var(--mono); font-size:22px;" id="best">0</div></div>
+</div>
+    </div>
+    <div class="bevel status" id="status">
+      <span id="statusLeft">Ready.</span>
+      <span id="statusRight" class="small"></span>
+    </div>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const statusLeft = $("#statusLeft");
+const statusRight = $("#statusRight");
+const KEY = "typingsprint_v1";
+const corpus = [
+  "The quick brown fox jumps over the lazy dog.",
+  "Good tools feel invisible: they get out of your way and let you work.",
+  "Small habits, practiced daily, add up to big results over time.",
+  "Keep your eyes on the road and your hands on the keyboard.",
+  "A calm mind writes clean code. A clean codebase keeps the mind calm.",
+  "When in doubt, simplify the next step until it becomes obvious."
+];
+
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"{}"); }catch{ return {}; } }
+function saveAll(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+const state = Object.assign({ best60: 0 }, load());
+
+let running=false;
+let startTs=0;
+let duration=60;
+let promptText=corpus[0];
+
+function newPrompt(){
+  promptText = corpus[Math.floor(Math.random()*corpus.length)];
+  $("#prompt").textContent = promptText;
+  $("#input").value = "";
+  compute();
+}
+
+function start(){
+  duration = Number($("#dur").value);
+  running=true;
+  startTs = performance.now();
+  $("#input").focus();
+  statusLeft.textContent = "Go!";
+}
+
+function stop(){
+  running=false;
+  statusLeft.textContent = "Finished.";
+  const wpm = Number($("#wpm").textContent)||0;
+  if(duration===60 && wpm > state.best60){
+    state.best60 = wpm;
+    saveAll();
+    $("#best").textContent = String(state.best60);
+  }
+}
+
+function reset(){
+  running=false;
+  $("#input").value="";
+  compute();
+  statusLeft.textContent = "Reset.";
+}
+
+function compute(){
+  const typed = $("#input").value;
+  const timeElapsed = running ? (performance.now()-startTs)/1000 : 0;
+  const timeLeft = Math.max(0, duration - timeElapsed);
+  $("#time").textContent = timeLeft.toFixed(1) + "s";
+
+  // accuracy: compare per-character up to typed length
+  let correct=0;
+  for(let i=0;i<typed.length;i++){
+    if(promptText[i]===typed[i]) correct++;
+  }
+  const acc = typed.length ? Math.round(100*correct/typed.length) : 0;
+  $("#acc").textContent = acc + "%";
+
+  // WPM: (characters/5) / minutes
+  const minutes = Math.max(1e-6, timeElapsed/60);
+  const wpm = running ? Math.round((typed.length/5) / minutes) : 0;
+  $("#wpm").textContent = String(wpm);
+
+  if(running && timeLeft<=0){
+    stop();
+  }
+}
+
+$("#newTextBtn").addEventListener("click", newPrompt);
+$("#startBtn").addEventListener("click", ()=>{
+  if(running) return;
+  newPrompt();
+  start();
+});
+$("#resetBtn").addEventListener("click", reset);
+$("#dur").addEventListener("change", ()=>{
+  if(running) return;
+  duration = Number($("#dur").value);
+  $("#time").textContent = duration.toFixed(1)+"s";
+});
+$("#input").addEventListener("input", ()=>{
+  if(!running) return;
+  compute();
+});
+
+function loop(){
+  if(running) compute();
+  $("#best").textContent = String(state.best60||0);
+  statusRight.textContent = new Date().toLocaleString();
+  requestAnimationFrame(loop);
+}
+
+newPrompt();
+$("#best").textContent = String(state.best60||0);
+$("#time").textContent = duration.toFixed(1)+"s";
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

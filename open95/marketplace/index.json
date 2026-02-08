@@ -19,6 +19,86 @@
       "version": "1.0.0",
       "path": "/tunebox/app.json",
       "icon": "icon.png"
+    },
+    {
+      "id": "pomodoro",
+      "name": "Pomodoro+",
+      "description": "Pomodoro+ is a fast, distraction-free focus timer with breaks, long breaks, sound, and local stats.",
+      "version": "1.0.0",
+      "path": "/pomodoro/app.json",
+      "icon": "icon.png"
+    },
+    {
+      "id": "habitlog",
+      "name": "HabitLog",
+      "description": "HabitLog is a simple weekly habit tracker with streaks, import/export, and local saving.",
+      "version": "1.0.0",
+      "path": "/habitlog/app.json",
+      "icon": "icon.png"
+    },
+    {
+      "id": "cashbook",
+      "name": "CashBook",
+      "description": "CashBook is a lightweight income/expense tracker with monthly totals, category chart, and export/import.",
+      "version": "1.0.0",
+      "path": "/cashbook/app.json",
+      "icon": "icon.png"
+    },
+    {
+      "id": "mdnotes",
+      "name": "Markdown Memo",
+      "description": "Markdown Memo is a small note app with a live markdown preview, search, and local storage.",
+      "version": "1.0.0",
+      "path": "/mdnotes/app.json",
+      "icon": "icon.png"
+    },
+    {
+      "id": "flashflip",
+      "name": "FlashFlip",
+      "description": "FlashFlip is a flashcard app with decks, study mode, scoring, and import/export.",
+      "version": "1.0.0",
+      "path": "/flashflip/app.json",
+      "icon": "icon.png"
+    },
+    {
+      "id": "kanbanlite",
+      "name": "Kanban Lite",
+      "description": "Kanban Lite is a drag-and-drop task board with To Do / Doing / Done columns and local saving.",
+      "version": "1.0.0",
+      "path": "/kanbanlite/app.json",
+      "icon": "icon.png"
+    },
+    {
+      "id": "unitbuddy",
+      "name": "UnitBuddy",
+      "description": "UnitBuddy converts common units (length, mass, temperature) instantly and can copy results.",
+      "version": "1.0.0",
+      "path": "/unitbuddy/app.json",
+      "icon": "icon.png"
+    },
+    {
+      "id": "palettepop",
+      "name": "PalettePop",
+      "description": "PalettePop generates 5-color palettes with locking, pastel mode, and one-click copy.",
+      "version": "1.0.0",
+      "path": "/palettepop/app.json",
+      "icon": "icon.png"
+    },
+    {
+      "id": "typingsprint",
+      "name": "Typing Sprint",
+      "description": "Typing Sprint is a typing test (15/30/60s) that shows WPM, accuracy, and best score.",
+      "version": "1.0.0",
+      "path": "/typingsprint/app.json",
+      "icon": "icon.png"
+    },
+    {
+      "id": "quotejar",
+      "name": "QuoteJar",
+      "description": "QuoteJar stores your favourite quotes with search, random pick, and export/import.",
+      "version": "1.0.0",
+      "path": "/quotejar/app.json",
+      "icon": "icon.png"
     }
   ]
 }

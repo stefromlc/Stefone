@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Markdown Memo</title>
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+
+:root{
+  --bg:#c0c0c0;
+  --panel:#d7d7d7;
+  --panel2:#efefef;
+  --borderDark:#7a7a7a;
+  --borderLight:#ffffff;
+  --text:#111;
+  --accent:#0b57d0;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: "MS Sans Serif", Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+}
+.bevel{
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  background:var(--panel);
+}
+.sunken{
+  border:1px solid var(--borderDark);
+  box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;
+  background:var(--panel2);
+}
+.app{height:100%; display:flex; flex-direction:column; gap:6px; padding:6px; min-height:0;}
+.header{display:flex; align-items:center; justify-content:space-between; padding:6px 8px;}
+.header h1{margin:0; font-size:14px; font-weight:700;}
+.header .subtitle{font-size:12px; opacity:.85;}
+.content{flex:1; padding:8px; min-height:0; overflow:auto;}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.col{display:flex; flex-direction:column; gap:6px;}
+.grid{display:grid; gap:8px;}
+.btn{
+  padding:4px 10px;
+  background:var(--panel);
+  border:1px solid var(--borderDark);
+  box-shadow: inset 1px 1px 0 var(--borderLight), inset -1px -1px 0 #9a9a9a;
+  cursor:pointer;
+  font-size:12px;
+}
+.btn:active{box-shadow: inset -1px -1px 0 var(--borderLight), inset 1px 1px 0 #9a9a9a;}
+.btn.primary{background: #dbe8ff;}
+.btn.danger{background: #ffe0e0;}
+input,select,textarea{
+  font-family:var(--sans);
+  font-size:12px;
+}
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  width:100%;
+  padding:4px 6px;
+}
+textarea{min-height:120px; resize:vertical;}
+.status{padding:4px 8px; font-size:12px; display:flex; justify-content:space-between; gap:10px;}
+.badge{font-size:11px; padding:2px 6px; border-radius:3px; background:#000; color:#fff;}
+hr{border:none; border-top:1px solid #b4b4b4; margin:8px 0;}
+.small{font-size:11px; opacity:.85;}
+.kbd{font-family:var(--mono); font-size:11px; padding:1px 4px; background:#000; color:#fff; border-radius:3px;}
+
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="bevel header">
+      <div>
+        <h1>Markdown Memo</h1>
+        <div class="subtitle">Notes with live markdown preview (saved locally).</div>
+      </div>
+      <div class="row">
+        <span class="badge">LOCAL</span>
+      </div>
+    </div>
+    <div class="bevel content">
+      <div class="grid" style="grid-template-columns: 220px 1fr; min-height:0;">
+  <div class="sunken" style="padding:8px; min-height:0; display:flex; flex-direction:column; gap:8px;">
+    <div class="row" style="justify-content:space-between;">
+      <b>Notes</b>
+      <button class="btn primary" id="newBtn">New</button>
+    </div>
+    <input class="sunken" type="text" id="search" placeholder="Search…" />
+    <div id="list" style="overflow:auto; flex:1; min-height:0;"></div>
+    <div class="row">
+      <button class="btn" id="exportBtn">Export</button>
+      <button class="btn" id="importBtn">Import</button>
+      <input type="file" id="file" accept="application/json" style="display:none"/>
+    </div>
+  </div>
+
+  <div class="col" style="min-height:0;">
+    <div class="row" style="justify-content:space-between;">
+      <div class="row" style="gap:8px; align-items:center;">
+        <b id="titleLabel">Untitled</b>
+        <span class="small" id="metaLabel"></span>
+      </div>
+      <div class="row">
+        <button class="btn" id="renameBtn">Rename</button>
+        <button class="btn danger" id="delBtn">Delete</button>
+        <button class="btn primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns: 1fr 1fr; gap:8px; flex:1; min-height:0; margin-top:8px;">
+      <div class="col" style="min-height:0;">
+        <div class="small">Markdown</div>
+        <textarea class="sunken" id="editor" style="flex:1; min-height:260px;"></textarea>
+      </div>
+      <div class="col" style="min-height:0;">
+        <div class="small">Preview</div>
+        <div class="sunken" id="preview" style="padding:10px; overflow:auto; flex:1; min-height:260px;"></div>
+      </div>
+    </div>
+
+    <div class="small" style="margin-top:8px;">
+      Basic: <span class="kbd">#</span> headings, <span class="kbd">**bold**</span>, <span class="kbd">*italic*</span>, <span class="kbd">`code`</span>, lists, links.
+    </div>
+  </div>
+</div>
+    </div>
+    <div class="bevel status" id="status">
+      <span id="statusLeft">Ready.</span>
+      <span id="statusRight" class="small"></span>
+    </div>
+  </div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const statusLeft = $("#statusLeft");
+const statusRight = $("#statusRight");
+const KEY = "mdnotes_v1";
+
+function load(){
+  try{ return JSON.parse(localStorage.getItem(KEY)||"{}"); }catch{ return {}; }
+}
+function saveAll(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function uid(){ return Math.random().toString(16).slice(2)+Date.now().toString(16); }
+
+const state = Object.assign({ notes: [] }, load());
+if(state.notes.length===0){
+  state.notes.push({id:uid(), title:"Welcome", updated:Date.now(),
+    body:"# Markdown Memo\n\n- Your notes live in **local storage**.\n- Create multiple notes and search them.\n\nTry editing this note, then click **Save**."});
+}
+let currentId = state.notes[0].id;
+
+function current(){ return state.notes.find(n=>n.id===currentId); }
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+function mdToHtml(md){
+  // minimal markdown; safe: we escape first
+  md = String(md||"");
+  // code fences
+  const fences = [];
+  md = md.replace(/```([\s\S]*?)```/g, (_, code)=>{
+    const token = `__FENCE_${fences.length}__`;
+    fences.push("<pre><code>"+escapeHtml(code)+"</code></pre>");
+    return token;
+  });
+
+  let out = escapeHtml(md);
+
+  // headings
+  out = out.replace(/^###\s+(.*)$/gm, "<h3>$1</h3>");
+  out = out.replace(/^##\s+(.*)$/gm, "<h2>$1</h2>");
+  out = out.replace(/^#\s+(.*)$/gm, "<h1>$1</h1>");
+
+  // bold / italic / inline code
+  out = out.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+  out = out.replace(/\*(.+?)\*/g, "<i>$1</i>");
+  out = out.replace(/`([^`]+?)`/g, "<code>$1</code>");
+
+  // links [text](url)
+  out = out.replace(/\[([^\]]+?)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  // unordered lists
+  out = out.replace(/^(?:\s*[-*]\s+.+\n)+/gm, (block)=>{
+    const items = block.trim().split(/\n/).map(line=>line.replace(/^\s*[-*]\s+/, ""));
+    return "<ul>"+items.map(i=>"<li>"+i+"</li>").join("")+"</ul>";
+  });
+
+  // ordered lists
+  out = out.replace(/^(?:\s*\d+\.\s+.+\n)+/gm, (block)=>{
+    const items = block.trim().split(/\n/).map(line=>line.replace(/^\s*\d+\.\s+/, ""));
+    return "<ol>"+items.map(i=>"<li>"+i+"</li>").join("")+"</ol>";
+  });
+
+  // paragraphs: split by blank lines
+  out = out.split(/\n\n+/).map(p=>{
+    if(/^<h\d|^<ul|^<ol|^<pre/.test(p.trim())) return p;
+    return "<p>"+p.replace(/\n/g,"<br/>")+"</p>";
+  }).join("\n");
+
+  // restore fences
+  fences.forEach((html, i)=>{
+    out = out.replace(`__FENCE_${i}__`, html);
+  });
+  return out;
+}
+
+function renderList(){
+  const q = $("#search").value.trim().toLowerCase();
+  const list = $("#list");
+  list.innerHTML = "";
+  const items = state.notes
+    .slice()
+    .sort((a,b)=>b.updated-a.updated)
+    .filter(n=>!q || (n.title+"\n"+n.body).toLowerCase().includes(q));
+
+  for(const n of items){
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.style.width = "100%";
+    btn.style.textAlign = "left";
+    btn.style.marginBottom = "6px";
+    btn.innerHTML = `<b>${escapeHtml(n.title||"Untitled")}</b><div class="small">${new Date(n.updated).toLocaleString()}</div>`;
+    if(n.id===currentId) btn.style.outline = "2px solid var(--accent)";
+    btn.addEventListener("click", ()=>{
+      currentId = n.id;
+      loadCurrent();
+      renderList();
+    });
+    list.appendChild(btn);
+  }
+}
+
+function loadCurrent(){
+  const n = current();
+  if(!n) return;
+  $("#titleLabel").textContent = n.title || "Untitled";
+  $("#metaLabel").textContent = "Updated " + new Date(n.updated).toLocaleString();
+  $("#editor").value = n.body || "";
+  $("#preview").innerHTML = mdToHtml($("#editor").value);
+}
+
+$("#editor").addEventListener("input", ()=>{
+  $("#preview").innerHTML = mdToHtml($("#editor").value);
+});
+
+$("#saveBtn").addEventListener("click", ()=>{
+  const n = current();
+  if(!n) return;
+  n.body = $("#editor").value;
+  n.updated = Date.now();
+  saveAll();
+  renderList();
+  loadCurrent();
+  statusLeft.textContent = "Saved.";
+});
+
+$("#newBtn").addEventListener("click", ()=>{
+  const id = uid();
+  state.notes.push({id, title:"New note", updated:Date.now(), body:""});
+  currentId = id;
+  saveAll();
+  renderList();
+  loadCurrent();
+  statusLeft.textContent = "New note created.";
+});
+
+$("#renameBtn").addEventListener("click", ()=>{
+  const n = current();
+  if(!n) return;
+  const name = prompt("New title:", n.title||"Untitled");
+  if(name===null) return;
+  n.title = name.trim() || "Untitled";
+  n.updated = Date.now();
+  saveAll();
+  renderList();
+  loadCurrent();
+});
+
+$("#delBtn").addEventListener("click", ()=>{
+  const n = current();
+  if(!n) return;
+  if(!confirm(`Delete "${n.title}"?`)) return;
+  state.notes = state.notes.filter(x=>x.id!==n.id);
+  if(state.notes.length===0){
+    const id = uid();
+    state.notes.push({id, title:"New note", updated:Date.now(), body:""});
+    currentId = id;
+  }else{
+    currentId = state.notes[0].id;
+  }
+  saveAll();
+  renderList();
+  loadCurrent();
+  statusLeft.textContent = "Deleted.";
+});
+
+$("#search").addEventListener("input", renderList);
+
+$("#exportBtn").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "mdnotes-export.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  statusLeft.textContent = "Exported.";
+});
+
+$("#importBtn").addEventListener("click", ()=>$("#file").click());
+$("#file").addEventListener("change", async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  try{
+    const txt = await f.text();
+    const d = JSON.parse(txt);
+    if(!d || !Array.isArray(d.notes)) throw new Error("bad");
+    state.notes = d.notes;
+    currentId = state.notes[0]?.id || uid();
+    saveAll();
+    renderList();
+    loadCurrent();
+    statusLeft.textContent = "Imported.";
+  }catch{
+    alert("Import failed: invalid file.");
+  }finally{
+    $("#file").value="";
+  }
+});
+
+function tick(){
+  statusRight.textContent = new Date().toLocaleString();
+  requestAnimationFrame(tick);
+}
+
+renderList();
+loadCurrent();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
