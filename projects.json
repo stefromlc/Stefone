@@ -87,5 +87,23 @@
     "category": "Tools",
     "featured": true,
     "date": "2026-02-07"
+  },
+  {
+    "demoUrl": "",
+    "repoUrl": "",
+    "title": "LifeStats",
+    "slug": "lifestats",
+    "description": "LifeStats is a fun, interactive way to see your life from a different angle. You enter your birth date, and it turns time into relatable numbers—how many heartbeats you’ve had, how much you’ve slept, how many steps you’ve walked, and more. It’s not about being exact, but about making time feel real, a little surprising, and even a bit playful. Think of it as a gentle reminder of how much you’ve already lived—and how much is still ahead.",
+    "thumbnail": "assets/thumbs/lifestats.png",
+    "tags": [
+      "Data",
+      "Interactive",
+      "Life",
+      "Reflection",
+      "Time"
+    ],
+    "category": "Apps",
+    "featured": false,
+    "date": "2026-02-08"
   }
 ]
