@@ -4,7 +4,7 @@
     "repoUrl": "",
     "title": "Tune 3310",
     "slug": "tune-3310",
-    "description": "Ever miss the classic Nokia days? Tone 3310 lets you quickly make your own old-school 3310-style ringtone—tap out a melody, tweak it until it feels right, and save it as a fun little throwback.",
+    "description": "Ever miss the classic Nokia days? Tune 3310 lets you create your own old-school 3310-style ringtone by tapping out a melody, tweaking the notes, and saving the result. It’s simple, playful, and designed as a small throwback to an era of monochrome screens and iconic beeps.",
     "thumbnail": "assets/thumbs/tune-3310.png",
     "tags": [
       "Fun",
@@ -22,7 +22,7 @@
     "repoUrl": "",
     "title": "Sonar",
     "slug": "sonar",
-    "description": "A slick, retro-style naval tactics game where you command a fleet, hunt enemy ships, and listen for that satisfying sonar ping. It’s classic Battleship vibes wrapped in a glowing CRT interface with smart AI, punchy sound effects, and lots of tactical tension. Easy to pick up, hard to stop playing. ",
+    "description": "Sonar is a retro-inspired naval tactics game with classic Battleship vibes. Command your fleet, hunt enemy ships, and rely on sonar pings to guide each move. Wrapped in a glowing CRT-style interface with smart AI and punchy sound effects, it’s easy to learn but packed with strategic tension.",
     "thumbnail": "assets/thumbs/sonar.png",
     "tags": [
       "Arcade",
@@ -37,9 +37,11 @@
     "date": "2026-02-07"
   },
   {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "PromptVault",
     "slug": "promptvault",
-    "description": "PromptVault is a clean, focused app for writing and reusing AI prompts. It’s built for people who work with prompts often and want everything organized, searchable, and available offline. The layout keeps writing front and center, with helpful tools close by but never in the way. Simple, calm, and reliable—PromptVault is a place to save prompts you’ll actually come back to.",
+    "description": "PromptVault is a clean, focused app for writing, saving, and reusing AI prompts. Built for people who work with prompts often, it keeps everything organized, searchable, and available offline. The calm layout keeps writing front and center, with helpful tools nearby but never distracting.",
     "thumbnail": "assets/thumbs/promptvault.png",
     "tags": [
       "AI Tools",
@@ -50,16 +52,14 @@
     ],
     "category": "Tools",
     "featured": true,
-    "date": "2026-02-07",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-02-07"
   },
   {
     "demoUrl": "",
     "repoUrl": "",
     "title": "Sound Canvas",
     "slug": "sound-canvas",
-    "description": "Sound Canvas transforms sound into living visuals. Experiment with styles, tweak the look, and export eye-catching audio art with ease.",
+    "description": "Sound Canvas turns audio into living, animated visuals. Explore different styles, adjust the look in real time, and export eye-catching audio art with ease. It’s a playful space for experimenting with sound and visuals, whether you’re exploring ideas or creating something worth sharing.",
     "thumbnail": "assets/thumbs/sound-canvas.png",
     "tags": [
       "Audio",
@@ -77,7 +77,7 @@
     "repoUrl": "",
     "title": "Split PDF",
     "slug": "split-pdf",
-    "description": "A simple, friendly PDF splitter that lets you break large PDFs into smaller files right in your browser. Choose to split by page count or into equal parts—no uploads, no sign-ups, and your files never leave your device. Fast, free, and private.",
+    "description": "Split PDF is a simple, friendly tool for breaking large PDFs into smaller files directly in your browser. Split by page count or into equal parts with no uploads, no sign-ups, and no tracking. Everything stays on your device, making it fast, private, and easy to use.",
     "thumbnail": "assets/thumbs/split-pdf.png",
     "tags": [
       "PDF",
@@ -93,7 +93,7 @@
     "repoUrl": "",
     "title": "LifeStats",
     "slug": "lifestats",
-    "description": "LifeStats is a fun, interactive way to see your life from a different angle. You enter your birth date, and it turns time into relatable numbers—how many heartbeats you’ve had, how much you’ve slept, how many steps you’ve walked, and more. It’s not about being exact, but about making time feel real, a little surprising, and even a bit playful. Think of it as a gentle reminder of how much you’ve already lived—and how much is still ahead.",
+    "description": "LifeStats offers a playful way to see your life from a different perspective. Enter your birth date and watch time turn into relatable numbers—heartbeats, sleep, steps, and more. It’s not about precision, but about making time feel tangible, surprising, and quietly meaningful.",
     "thumbnail": "assets/thumbs/lifestats.png",
     "tags": [
       "Data",
