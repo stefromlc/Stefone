@@ -5,6 +5,14 @@
   },
   "apps": [
     {
+      "id": "bro-tools",
+      "name": "Bro Tools",
+      "description": "Music production app that combines a drum step sequencer, piano roll synth, mixer, and song arranger into a single retro-inspired beat-making tool. ",
+      "version": "1.0.0",
+      "path": "/bro-tools/app.json",
+      "icon": "icon.png"
+    },
+    {
       "id": "pixelpad",
       "name": "PixelPad",
       "description": "PixelPad is a free, image editing program that offers powerful tools for photo retouching, graphic design, and digital art, making it a alternative to Adobe Photoshop.",
