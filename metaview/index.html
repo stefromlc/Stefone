@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaView</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        background: '#030712', 
+                        surface: '#111827', 
+                        surfaceHighlight: '#1f2937', 
+                        primary: '#3b82f6', /* Changed to Blue-500 */
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #030712; color: #f3f4f6; }
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-input {
+            background: rgba(3, 7, 18, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .glass-input:focus { border-color: #3b82f6; }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #030712; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+        
+        .tab-btn.active {
+            color: white;
+            border-bottom: 2px solid #3b82f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-blue-500/30 selection:text-blue-200">
+
+    <!-- Background -->
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[120px] animate-blob"></div>
+        <div class="absolute top-[20%] -right-[10%] w-[40%] h-[40%] bg-cyan-900/20 rounded-full blur-[120px] animate-blob animation-delay-2000"></div>
+        <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 w-full z-50 border-b border-white/5 bg-[#030712]/80 backdrop-blur-md">
+        <div class="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-500/10 w-8 h-8 rounded-lg flex items-center justify-center border border-blue-500/20">
+                    <i class="fa-solid fa-layer-group text-blue-400 text-sm"></i>
+                </div>
+                <h1 class="text-lg font-bold tracking-tight text-white">Meta<span class="text-blue-400">View</span></h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                 <button onclick="app.loadExample()" class="text-xs text-gray-400 hover:text-white transition-colors">Load Example</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <main class="relative z-10 flex-grow pt-24 pb-12 px-4 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-6rem)]">
+        
+        <!-- LEFT COLUMN: Input & Editor & Tools (Scrollable) -->
+        <div class="lg:col-span-4 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 custom-scroll">
+            
+            <!-- URL Input -->
+            <div class="glass-panel p-4 rounded-xl">
+                <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Target URL</label>
+                <form id="fetchForm" class="relative flex items-center">
+                    <input type="url" id="urlInput" required placeholder="https://example.com" 
+                        class="glass-input w-full rounded-lg pl-3 pr-12 py-2.5 text-sm text-white placeholder-gray-600 outline-none">
+                    <button type="submit" id="submitBtn" class="absolute right-1.5 p-1.5 bg-blue-600 hover:bg-blue-500 rounded text-white transition-colors">
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
+                <div id="errorMsg" class="hidden mt-3 text-xs text-red-400 bg-red-400/10 p-2 rounded border border-red-400/20 flex items-start gap-2">
+                    <i class="fa-solid fa-circle-exclamation mt-0.5"></i> <span id="errorText">Error fetching URL.</span>
+                </div>
+            </div>
+
+            <!-- Editor / Tools Tabs -->
+            <div class="glass-panel rounded-xl flex-1 flex flex-col min-h-[500px]">
+                <div class="flex border-b border-white/5 px-4">
+                    <button class="tab-btn active px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" onclick="app.switchToolTab('editor')">Editor</button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors relative" onclick="app.switchToolTab('audit')">
+                        Audit <span id="auditBadge" class="hidden absolute top-2 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" onclick="app.switchToolTab('code')">Code</button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" onclick="app.switchToolTab('history')">History</button>
+                </div>
+
+                <!-- Tab: Editor -->
+                <div id="tab-editor" class="p-5 space-y-5 tool-content">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-xs text-gray-400 font-medium">Title</label>
+                            <span class="text-[10px] text-gray-500" id="countTitle">0/60</span>
+                        </div>
+                        <input type="text" id="editTitle" class="glass-input w-full rounded p-2 text-sm text-white" placeholder="Page Title">
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-xs text-gray-400 font-medium">Description</label>
+                            <span class="text-[10px] text-gray-500" id="countDesc">0/160</span>
+                        </div>
+                        <textarea id="editDesc" rows="4" class="glass-input w-full rounded p-2 text-sm text-white resize-none" placeholder="Page Description"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-400 font-medium mb-1">Image URL</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="editImage" class="glass-input w-full rounded p-2 text-sm text-white" placeholder="https://...">
+                            <div class="w-10 h-10 rounded bg-gray-800 border border-white/10 flex-shrink-0 overflow-hidden">
+                                <img id="editImagePreview" class="w-full h-full object-cover opacity-50">
+                            </div>
+                        </div>
+                        <button onclick="app.toggleLargeImage()" class="text-xs text-blue-400 mt-1 hover:text-blue-300 underline cursor-pointer">Check full size</button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 font-medium mb-1">Domain</label>
+                            <input type="text" id="editDomain" class="glass-input w-full rounded p-2 text-sm text-white text-gray-400" placeholder="example.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 font-medium mb-1">Site Name</label>
+                            <input type="text" id="editSiteName" class="glass-input w-full rounded p-2 text-sm text-white" placeholder="My Site">
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-white/5">
+                        <button onclick="app.resetToOriginal()" class="w-full py-2 rounded border border-white/10 text-xs text-gray-400 hover:bg-white/5 transition-colors">
+                            <i class="fa-solid fa-rotate-left mr-2"></i> Reset to Original Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab: Audit -->
+                <div id="tab-audit" class="hidden p-0 tool-content h-full flex flex-col">
+                    <div class="p-4 border-b border-white/5 bg-blue-500/10">
+                        <h3 class="text-sm font-semibold text-white">Quality Check</h3>
+                        <p class="text-xs text-gray-400 mt-1">Optimization tips for better CTR.</p>
+                    </div>
+                    <div id="auditList" class="flex-1 overflow-y-auto p-4 space-y-3">
+                        <!-- Populated via JS -->
+                        <div class="text-center text-gray-500 text-sm mt-10">No data to audit yet.</div>
+                    </div>
+                </div>
+
+                <!-- Tab: Code -->
+                <div id="tab-code" class="hidden p-0 tool-content h-full flex flex-col">
+                    <div class="p-4 flex justify-between items-center border-b border-white/5">
+                        <span class="text-xs font-mono text-gray-400">head-tags.html</span>
+                        <button onclick="app.copyCode()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded transition-colors">
+                            <i class="fa-regular fa-copy mr-1"></i> Copy
+                        </button>
+                    </div>
+                    <div class="relative flex-1 bg-[#0d1117] overflow-hidden">
+                        <textarea id="codeOutput" readonly class="w-full h-full bg-transparent text-gray-300 font-mono text-xs p-4 resize-none outline-none border-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- Tab: History -->
+                <div id="tab-history" class="hidden tool-content p-4">
+                     <h3 class="text-xs font-bold text-gray-500 uppercase mb-3">Recent Scans</h3>
+                     <div id="historyList" class="space-y-2">
+                        <!-- JS -->
+                     </div>
+                     <button onclick="app.clearHistory()" class="mt-4 text-xs text-red-400 hover:text-red-300">Clear History</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Previews (Scrollable) -->
+        <div class="lg:col-span-8 h-full flex flex-col overflow-hidden">
+            
+            <!-- Preview Tabs -->
+            <div class="flex items-center space-x-1 mb-4 overflow-x-auto pb-2 no-scrollbar">
+                <button onclick="app.switchPreview('social')" class="preview-tab active px-4 py-2 rounded-full text-sm bg-white/5 border border-white/10 hover:bg-white/10 transition text-gray-300 whitespace-nowrap">
+                    <i class="fa-solid fa-share-nodes mr-2"></i> Social Cards
+                </button>
+                <button onclick="app.switchPreview('search')" class="preview-tab px-4 py-2 rounded-full text-sm bg-transparent border border-transparent hover:bg-white/5 transition text-gray-500 whitespace-nowrap">
+                    <i class="fa-brands fa-google mr-2"></i> Search
+                </button>
+                <button onclick="app.switchPreview('chat')" class="preview-tab px-4 py-2 rounded-full text-sm bg-transparent border border-transparent hover:bg-white/5 transition text-gray-500 whitespace-nowrap">
+                    <i class="fa-regular fa-comments mr-2"></i> Messaging
+                </button>
+            </div>
+
+            <!-- Previews Container -->
+            <div class="flex-1 overflow-y-auto pr-2 pb-20 custom-scroll space-y-8" id="previewsContainer">
+                
+                <!-- GROUP: SOCIAL -->
+                <div id="group-social" class="preview-group grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    
+                    <!-- Facebook -->
+                    <div class="preview-card">
+                        <div class="flex justify-between mb-2">
+                            <div class="flex items-center space-x-2 text-gray-400 text-xs font-bold uppercase tracking-wide">
+                                <i class="fa-brands fa-facebook text-[#1877F2]"></i> <span>Facebook</span>
+                            </div>
+                            <span class="text-[10px] text-gray-600 border border-gray-700 px-1 rounded">1.91:1</span>
+                        </div>
+                        <div class="bg-white rounded border border-gray-300 overflow-hidden select-none max-w-[500px]">
+                            <div class="relative pt-[52.25%] bg-gray-100 overflow-hidden">
+                                <img data-bind="image" class="absolute top-0 left-0 w-full h-full object-cover">
+                            </div>
+                            <div class="bg-[#F0F2F5] px-3 py-2.5 border-t border-gray-100">
+                                <div data-bind="domain" class="text-[12px] text-gray-600 uppercase font-sans truncate mb-0.5"></div>
+                                <div data-bind="title" class="text-[16px] font-bold text-[#050505] leading-tight mb-1 line-clamp-2 font-sans h-auto"></div>
+                                <div data-bind="description" class="text-[14px] text-gray-600 line-clamp-1 font-sans h-auto"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Twitter Large -->
+                    <div class="preview-card">
+                        <div class="flex justify-between mb-2">
+                            <div class="flex items-center space-x-2 text-gray-400 text-xs font-bold uppercase tracking-wide">
+                                <i class="fa-brands fa-x-twitter text-white"></i> <span>X / Twitter (Large)</span>
+                            </div>
+                             <span class="text-[10px] text-gray-600 border border-gray-700 px-1 rounded">2:1</span>
+                        </div>
+                        <div class="max-w-[500px]">
+                            <div class="rounded-xl border border-gray-700/60 overflow-hidden bg-black select-none">
+                                <div class="relative pt-[52%] bg-gray-900 overflow-hidden">
+                                    <img data-bind="image" class="absolute top-0 left-0 w-full h-full object-cover">
+                                </div>
+                                <div class="p-3">
+                                    <div data-bind="domain" class="text-[13px] text-gray-500 mb-0.5 truncate"></div>
+                                    <div data-bind="title" class="text-[15px] text-white font-medium leading-5 mb-1 line-clamp-2"></div>
+                                    <div data-bind="description" class="text-[14px] text-gray-500 leading-5 line-clamp-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LinkedIn -->
+                    <div class="preview-card">
+                         <div class="flex justify-between mb-2">
+                            <div class="flex items-center space-x-2 text-gray-400 text-xs font-bold uppercase tracking-wide">
+                                <i class="fa-brands fa-linkedin text-[#0A66C2]"></i> <span>LinkedIn</span>
+                            </div>
+                             <span class="text-[10px] text-gray-600 border border-gray-700 px-1 rounded">1.91:1</span>
+                        </div>
+                        <div class="bg-white rounded border border-gray-300 overflow-hidden select-none max-w-[500px]">
+                            <div class="relative pt-[52.25%] bg-gray-200 overflow-hidden">
+                                <img data-bind="image" class="absolute top-0 left-0 w-full h-full object-cover">
+                            </div>
+                            <div class="px-4 py-2 bg-white">
+                                <div data-bind="title" class="text-sm font-semibold text-gray-900 line-clamp-2 mb-0.5 font-sans"></div>
+                                <div data-bind="domain" class="text-xs text-gray-500 truncate font-sans"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                     <!-- Pinterest -->
+                     <div class="preview-card">
+                         <div class="flex justify-between mb-2">
+                            <div class="flex items-center space-x-2 text-gray-400 text-xs font-bold uppercase tracking-wide">
+                                <i class="fa-brands fa-pinterest text-[#E60023]"></i> <span>Pinterest</span>
+                            </div>
+                            <span class="text-[10px] text-gray-600 border border-gray-700 px-1 rounded">Portrait</span>
+                        </div>
+                        <div class="bg-white rounded-2xl overflow-hidden max-w-[236px] shadow-md select-none">
+                             <div class="relative">
+                                <img data-bind="image" class="w-full h-auto object-cover min-h-[150px]">
+                                <div class="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors"></div>
+                             </div>
+                             <div class="p-2">
+                                <div data-bind="title" class="text-[14px] font-bold text-gray-900 leading-tight mb-1 font-sans"></div>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <div class="w-6 h-6 rounded-full bg-gray-200"></div>
+                                    <span data-bind="site_name" class="text-xs text-gray-700 truncate"></span>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- GROUP: SEARCH -->
+                <div id="group-search" class="preview-group hidden space-y-6">
+                    
+                    <!-- Google -->
+                    <div class="preview-card max-w-[600px]">
+                        <div class="flex items-center space-x-2 text-gray-400 text-xs font-bold uppercase tracking-wide mb-2">
+                            <i class="fa-brands fa-google"></i> <span>Google Mobile SERP</span>
+                        </div>
+                        <div class="bg-[#202124] p-4 rounded-lg font-sans select-none border border-white/5">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <div class="w-7 h-7 bg-gray-700 rounded-full overflow-hidden flex items-center justify-center text-[10px] text-white">
+                                    <img data-bind="favicon" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                    <i class="fa-solid fa-globe" onerror="this.style.display='block'"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span data-bind="site_name" class="text-[#dadce0] text-sm leading-4"></span>
+                                    <span data-bind="url" class="text-[#bdc1c6] text-xs truncate max-w-[200px]"></span>
+                                </div>
+                                <i class="fa-solid fa-ellipsis-vertical text-gray-500 ml-auto text-xs"></i>
+                            </div>
+                            <div data-bind="title" class="text-[#8ab4f8] text-xl leading-6 truncate mb-1 cursor-pointer hover:underline"></div>
+                            <div class="text-[#bdc1c6] text-sm leading-6 line-clamp-2">
+                                <span class="text-gray-400 text-xs mr-1">May 12, 2025 —</span>
+                                <span data-bind="description"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- GROUP: CHAT -->
+                <div id="group-chat" class="preview-group hidden grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    
+                    <!-- Discord -->
+                    <div class="preview-card">
+                        <div class="flex items-center space-x-2 text-gray-400 text-xs font-bold uppercase tracking-wide mb-2">
+                            <i class="fa-brands fa-discord text-[#5865F2]"></i> <span>Discord</span>
+                        </div>
+                        <div class="bg-[#313338] p-3 rounded border border-[#2b2d31] select-none max-w-[432px] font-sans">
+                            <div class="pl-1 border-l-[4px] border-[#2b2d31] rounded" style="border-left-color: #00b0f4;">
+                                <div class="pl-3">
+                                   <div data-bind="site_name" class="text-xs text-gray-400 mb-1 font-medium mt-1"></div>
+                                   <div data-bind="title" class="text-[#00b0f4] font-medium hover:underline cursor-pointer mb-1 line-clamp-2 text-sm"></div>
+                                   <div data-bind="description" class="text-[12px] text-gray-300 mb-3 line-clamp-4"></div>
+                                   <div class="rounded overflow-hidden">
+                                       <img data-bind="image" class="max-w-full h-auto max-h-[300px] object-cover rounded">
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slack -->
+                    <div class="preview-card">
+                        <div class="flex items-center space-x-2 text-gray-400 text-xs font-bold uppercase tracking-wide mb-2">
+                            <i class="fa-brands fa-slack text-white"></i> <span>Slack</span>
+                        </div>
+                        <div class="bg-white p-4 rounded border border-gray-300 select-none max-w-[500px] font-sans">
+                             <div class="flex items-start space-x-3">
+                                 <div class="w-1 rounded-full h-full bg-gray-200 self-stretch min-h-[50px]"></div>
+                                 <div class="flex-1 min-w-0">
+                                     <div class="flex items-center space-x-2 mb-1">
+                                         <img data-bind="favicon" class="w-4 h-4 rounded-sm" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PC9zdmc+'">
+                                         <span data-bind="site_name" class="text-xs font-bold text-gray-900"></span>
+                                     </div>
+                                     <div data-bind="title" class="text-[#1264a3] font-bold text-[15px] leading-5 mb-1 truncate"></div>
+                                     <div data-bind="description" class="text-gray-800 text-[15px] leading-6 mb-2 line-clamp-3"></div>
+                                     <div class="rounded-lg overflow-hidden border border-gray-200 max-w-[360px]">
+                                         <img data-bind="image" class="w-full h-auto object-cover">
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp -->
+                    <div class="preview-card">
+                        <div class="flex items-center space-x-2 text-gray-400 text-xs font-bold uppercase tracking-wide mb-2">
+                            <i class="fa-brands fa-whatsapp text-[#25D366]"></i> <span>WhatsApp</span>
+                        </div>
+                        <div class="bg-[#efeae2] p-4 rounded-lg select-none max-w-[350px] font-sans border border-black/10">
+                            <div class="bg-[#dcf8c6] p-1.5 rounded-lg rounded-tr-none shadow-sm inline-block max-w-full">
+                                <div class="bg-[#0000000d] rounded flex overflow-hidden">
+                                     <!-- WhatsApp usually shows small square thumb or full depending on aspect, simplified here -->
+                                     <div class="w-20 h-20 bg-gray-300 flex-shrink-0">
+                                         <img data-bind="image" class="w-full h-full object-cover">
+                                     </div>
+                                     <div class="flex-1 p-2 min-w-0 flex flex-col justify-center">
+                                         <div data-bind="title" class="text-sm font-bold text-gray-900 leading-4 line-clamp-2 mb-1"></div>
+                                         <div data-bind="description" class="text-xs text-gray-600 leading-4 line-clamp-2"></div>
+                                         <div data-bind="domain" class="text-[10px] text-gray-500 mt-1 truncate lowercase"></div>
+                                     </div>
+                                </div>
+                                <div class="text-[10px] text-gray-500 text-right mt-1 px-1 flex items-end justify-end gap-1">
+                                    10:30 <i class="fa-solid fa-check-double text-[#53bdeb]"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JS Logic -->
+    <script>
+        const app = {
+            state: {
+                original: {
+                    title: '', description: '', image: '', url: '', site_name: '', favicon: ''
+                },
+                edited: {
+                    title: '', description: '', image: '', url: '', site_name: '', favicon: ''
+                },
+                history: []
+            },
+            
+            init() {
+                // Load history
+                const saved = localStorage.getItem('metaview_history');
+                if (saved) this.state.history = JSON.parse(saved);
+                this.renderHistory();
+
+                // Listeners
+                document.getElementById('fetchForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.fetchData(document.getElementById('urlInput').value.trim());
+                });
+
+                // Live Editing
+                ['Title', 'Desc', 'Image', 'Domain', 'SiteName'].forEach(field => {
+                    const el = document.getElementById(`edit${field}`);
+                    if(!el) return;
+                    el.addEventListener('input', (e) => {
+                        let key = field.toLowerCase();
+                        if(key === 'desc') key = 'description';
+                        if(key === 'domain') key = 'url'; // Visual hack: we display domain, but input is mapped to URL prop for logic
+                        if(key === 'sitename') key = 'site_name';
+
+                        this.state.edited[key] = e.target.value;
+                        this.updateUI();
+                        this.updateAudit();
+                        this.generateCode();
+                    });
+                });
+            },
+
+            async fetchData(url) {
+                if (!url) return;
+                
+                // UX
+                const btn = document.getElementById('submitBtn');
+                const err = document.getElementById('errorMsg');
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                btn.disabled = true;
+                err.classList.add('hidden');
+
+                if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+                try {
+                    // Try AllOrigins (more permissive)
+                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+                    if(!res.ok) throw new Error("Network");
+                    const data = await res.json();
+                    
+                    this.parseHTML(data.contents, url);
+                    this.addToHistory(url);
+                    
+                } catch (e) {
+                    // Fallback to CORS proxy
+                    try {
+                        const res2 = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+                        if(!res2.ok) throw new Error("Backup failed");
+                        const html = await res2.text();
+                        this.parseHTML(html, url);
+                        this.addToHistory(url);
+                    } catch (finalError) {
+                        console.error(finalError);
+                        err.classList.remove('hidden');
+                        document.getElementById('errorText').innerText = "Could not access site. It might be blocking scrapers.";
+                    }
+                } finally {
+                    btn.innerHTML = '<i class="fa-solid fa-arrow-right"></i>';
+                    btn.disabled = false;
+                }
+            },
+
+            parseHTML(html, baseUrl) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const getMeta = (props) => {
+                    for (let p of props) {
+                        let el = doc.querySelector(`meta[property="${p}"]`) || doc.querySelector(`meta[name="${p}"]`);
+                        if (el) return el.getAttribute('content');
+                    }
+                    return '';
+                };
+
+                const resolveUrl = (path) => {
+                    if (!path) return '';
+                    try { return new URL(path, baseUrl).href; } catch(e) { return path; }
+                };
+
+                // Extract Data
+                const data = {
+                    title: getMeta(['og:title', 'twitter:title']) || doc.title || 'No Title',
+                    description: getMeta(['og:description', 'twitter:description', 'description']) || 'No description found.',
+                    image: resolveUrl(getMeta(['og:image', 'twitter:image'])),
+                    url: getMeta(['og:url']) || baseUrl,
+                    site_name: getMeta(['og:site_name']) || new URL(baseUrl).hostname,
+                    favicon: resolveUrl(doc.querySelector('link[rel="icon"]')?.href || doc.querySelector('link[rel="shortcut icon"]')?.href || new URL('/favicon.ico', baseUrl).href)
+                };
+
+                // Update State
+                this.state.original = { ...data };
+                this.state.edited = { ...data };
+
+                // Populate Inputs
+                document.getElementById('editTitle').value = data.title;
+                document.getElementById('editDesc').value = data.description;
+                document.getElementById('editImage').value = data.image;
+                document.getElementById('editDomain').value = new URL(data.url).hostname;
+                document.getElementById('editSiteName').value = data.site_name;
+
+                this.updateUI();
+                this.updateAudit();
+                this.generateCode();
+                this.switchToolTab('editor'); // Auto switch to editor
+            },
+
+            updateUI() {
+                const data = this.state.edited;
+                
+                // Character Counters
+                const titleLen = data.title.length;
+                const descLen = data.description.length;
+                
+                const cTitle = document.getElementById('countTitle');
+                cTitle.innerText = `${titleLen}/60`;
+                cTitle.className = titleLen > 60 ? 'text-[10px] text-red-400 font-bold' : 'text-[10px] text-gray-500';
+
+                const cDesc = document.getElementById('countDesc');
+                cDesc.innerText = `${descLen}/160`;
+                cDesc.className = descLen > 160 ? 'text-[10px] text-red-400 font-bold' : 'text-[10px] text-gray-500';
+
+                // Editor Image Preview
+                document.getElementById('editImagePreview').src = data.image || '';
+
+                // Domain Parsing
+                let displayDomain = data.url;
+                try { displayDomain = new URL(data.url).hostname.replace('www.',''); } catch(e) {}
+
+                // Update All Preview Cards
+                document.querySelectorAll('[data-bind="title"]').forEach(el => el.textContent = data.title || "Page Title");
+                document.querySelectorAll('[data-bind="description"]').forEach(el => el.textContent = data.description || "Page description goes here...");
+                document.querySelectorAll('[data-bind="domain"]').forEach(el => el.textContent = displayDomain);
+                document.querySelectorAll('[data-bind="site_name"]').forEach(el => el.textContent = data.site_name || displayDomain);
+                document.querySelectorAll('[data-bind="url"]').forEach(el => el.textContent = data.url);
+                
+                document.querySelectorAll('[data-bind="image"]').forEach(el => {
+                    if(data.image) {
+                        el.src = data.image;
+                        el.style.display = 'block';
+                        el.onerror = () => { el.src = 'https://via.placeholder.com/600x315/1f2937/4b5563?text=Image+Load+Error'; };
+                    } else {
+                        el.src = 'https://via.placeholder.com/600x315/1f2937/4b5563?text=No+Image';
+                    }
+                });
+
+                document.querySelectorAll('[data-bind="favicon"]').forEach(el => {
+                     if(data.favicon) el.src = data.favicon;
+                });
+            },
+
+            updateAudit() {
+                const data = this.state.edited;
+                const issues = [];
+                const warnings = [];
+                const good = [];
+
+                // Rules
+                if(!data.title) issues.push("Missing Title tag.");
+                else if(data.title.length > 60) warnings.push(`Title is ${data.title.length} chars. Google truncates at ~60.`);
+                else good.push("Title length is optimal.");
+
+                if(!data.description) issues.push("Missing Description.");
+                else if(data.description.length < 50) warnings.push("Description is too short (<50 chars).");
+                else if(data.description.length > 160) warnings.push("Description > 160 chars. Will be truncated in search.");
+                else good.push("Description length is optimal.");
+
+                if(!data.image) issues.push("No OG Image detected. Social cards will look broken.");
+                else if(!data.image.startsWith('https')) warnings.push("Image URL should use HTTPS.");
+
+                // Render
+                const list = document.getElementById('auditList');
+                list.innerHTML = '';
+
+                const renderItem = (text, type) => {
+                    const colors = {
+                        err: 'text-red-400 bg-red-400/10 border-red-400/20',
+                        warn: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
+                        good: 'text-green-400 bg-green-400/10 border-green-400/20'
+                    };
+                    const icons = {
+                        err: 'fa-circle-xmark',
+                        warn: 'fa-triangle-exclamation',
+                        good: 'fa-circle-check'
+                    };
+                    
+                    list.innerHTML += `
+                        <div class="p-2.5 rounded border text-xs flex items-start gap-2 ${colors[type]}">
+                            <i class="fa-solid ${icons[type]} mt-0.5"></i>
+                            <span>${text}</span>
+                        </div>
+                    `;
+                };
+
+                issues.forEach(i => renderItem(i, 'err'));
+                warnings.forEach(i => renderItem(i, 'warn'));
+                good.forEach(i => renderItem(i, 'good'));
+
+                // Badge
+                const badge = document.getElementById('auditBadge');
+                if(issues.length > 0) {
+                    badge.className = 'absolute top-2 right-0 w-2 h-2 bg-red-500 rounded-full block';
+                } else if (warnings.length > 0) {
+                    badge.className = 'absolute top-2 right-0 w-2 h-2 bg-yellow-500 rounded-full block';
+                } else {
+                    badge.classList.add('hidden');
+                }
+            },
+
+            generateCode() {
+                const d = this.state.edited;
+                const code = `
+<!-- Primary Meta Tags -->
+<title>${d.title}</title>
+<meta name="title" content="${d.title}" />
+<meta name="description" content="${d.description}" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="${d.url}" />
+<meta property="og:title" content="${d.title}" />
+<meta property="og:description" content="${d.description}" />
+<meta property="og:image" content="${d.image}" />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content="${d.url}" />
+<meta property="twitter:title" content="${d.title}" />
+<meta property="twitter:description" content="${d.description}" />
+<meta property="twitter:image" content="${d.image}" />
+`.trim();
+                document.getElementById('codeOutput').value = code;
+            },
+
+            copyCode() {
+                const el = document.getElementById('codeOutput');
+                el.select();
+                document.execCommand('copy');
+                // Could add toast notification here
+            },
+
+            resetToOriginal() {
+                this.state.edited = { ...this.state.original };
+                document.getElementById('editTitle').value = this.state.original.title;
+                document.getElementById('editDesc').value = this.state.original.description;
+                document.getElementById('editImage').value = this.state.original.image;
+                document.getElementById('editDomain').value = new URL(this.state.original.url).hostname;
+                document.getElementById('editSiteName').value = this.state.original.site_name;
+                
+                this.updateUI();
+                this.updateAudit();
+                this.generateCode();
+            },
+
+            // History Logic
+            addToHistory(url) {
+                // Remove if exists (to move to top)
+                this.state.history = this.state.history.filter(i => i !== url);
+                // Add to front
+                this.state.history.unshift(url);
+                // Limit to 10
+                if(this.state.history.length > 10) this.state.history.pop();
+                
+                localStorage.setItem('metaview_history', JSON.stringify(this.state.history));
+                this.renderHistory();
+            },
+
+            renderHistory() {
+                const list = document.getElementById('historyList');
+                list.innerHTML = '';
+                this.state.history.forEach(url => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center justify-between p-2 rounded bg-white/5 hover:bg-white/10 cursor-pointer group transition-colors';
+                    div.innerHTML = `
+                        <span class="text-xs text-gray-400 truncate w-48">${url}</span>
+                        <i class="fa-solid fa-arrow-right text-[10px] text-gray-600 group-hover:text-blue-400"></i>
+                    `;
+                    div.onclick = () => {
+                        document.getElementById('urlInput').value = url;
+                        this.fetchData(url);
+                    };
+                    list.appendChild(div);
+                });
+            },
+            
+            clearHistory() {
+                this.state.history = [];
+                localStorage.removeItem('metaview_history');
+                this.renderHistory();
+            },
+
+            // Utils
+            switchToolTab(id) {
+                document.querySelectorAll('.tool-content').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`tab-${id}`).classList.remove('hidden');
+                
+                document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active', 'border-b-2', 'border-[#6366f1]', 'text-white'));
+                // Simple active state logic
+                const index = ['editor', 'audit', 'code', 'history'].indexOf(id);
+                document.querySelectorAll('.tab-btn')[index].classList.add('active');
+            },
+
+            switchPreview(group) {
+                document.querySelectorAll('.preview-group').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`group-${group}`).classList.remove('hidden');
+                
+                document.querySelectorAll('.preview-tab').forEach(el => {
+                    el.classList.remove('bg-white/5', 'border-white/10', 'text-gray-300');
+                    el.classList.add('bg-transparent', 'border-transparent', 'text-gray-500');
+                });
+                // Find clicked button based on onclick attribute text is dirty, using event target is better but trying to keep it simple in one object
+                const btn = event.currentTarget;
+                btn.classList.remove('bg-transparent', 'border-transparent', 'text-gray-500');
+                btn.classList.add('bg-white/5', 'border-white/10', 'text-gray-300');
+            },
+            
+            toggleLargeImage() {
+                const img = this.state.edited.image;
+                if(img) window.open(img, '_blank');
+            },
+
+            loadExample() {
+                document.getElementById('urlInput').value = 'https://github.com';
+                this.fetchData('https://github.com');
+            }
+        };
+
+        // Start
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>

@@ -121,5 +121,24 @@
     "category": "Apps",
     "featured": false,
     "date": "2026-02-08"
+  },
+  {
+    "title": "MetaView",
+    "slug": "metaview",
+    "description": "MetaView is a clean, visual tool for exploring and refining a page’s metadata. Paste in any URL to see how it appears across social platforms, search results, and messaging apps, then tweak titles, descriptions, and images in real time. With instant previews, simple audits, and copy-ready meta tags, it makes polishing link previews feel fast, calm, and a little satisfying.",
+    "thumbnail": "assets/thumbs/metaview.png",
+    "tags": [
+      "Audit",
+      "Productivity",
+      "SEO",
+      "Social Preview",
+      "Tools",
+      "Web"
+    ],
+    "category": "Tools",
+    "featured": false,
+    "date": "2026-02-08",
+    "demoUrl": "",
+    "repoUrl": ""
   }
 ]
