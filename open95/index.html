@@ -1527,8 +1527,11 @@
 
             const handleShutDown = () => {
                 addToast("System", "Shutting down...", "info");
-                setTimeout(() => { window.location.reload(); }, 1500);
+                setTimeout(() => {
+                    window.location.href = "/projects/";
+                }, 1500);
             };
+
 
             if (!isBooted) return <BootScreen onBoot={() => setIsBooted(true)} />;
 
