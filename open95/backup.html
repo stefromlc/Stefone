@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Open95 OS</title>
     <link rel="icon" href="/favicon.png" type="image/png">
     <!-- Tailwind CSS -->
@@ -23,20 +23,6 @@
             background-color: #008080; /* Classic Teal */
             touch-action: none; /* Prevent browser zooming/scrolling globally */
         }
-
-        html, body { height: 100%; }
-
-        /* iOS/iPad Safari: keep the taskbar visible (100vh can be wrong when the URL bar is showing) */
-        :root { --app-height: 100vh; }
-        .app-viewport { height: var(--app-height); width: 100vw; overflow: hidden; }
-
-        /* Newer browsers (including modern iPadOS) support dynamic viewport units */
-        @supports (height: 100dvh) { .app-viewport { height: 100dvh; } }
-
-        /* Safe-area padding (mainly for iPhone home bar, harmless on iPad) */
-        .taskbar-safe { padding-bottom: env(safe-area-inset-bottom); }
-
-
         /* Custom scrollbar to match 95 aesthetic */
         ::-webkit-scrollbar {
             width: 16px;
@@ -1189,28 +1175,6 @@
             const addToast = (title, message, type='info') => { const id = Date.now(); setToasts(prev => [...prev, { id, title, message, type }]); };
             const removeToast = useCallback((id) => setToasts(prev => prev.filter(t => t.id !== id)), []);
 
-            // iPad/iPhone Safari fix: 100vh can be taller than the visible area.
-            // This sets a CSS variable (--app-height) to the real visible height.
-            useEffect(() => {
-                const setAppHeight = () => {
-                    const h = (window.visualViewport && window.visualViewport.height)
-                        ? window.visualViewport.height
-                        : window.innerHeight;
-                    document.documentElement.style.setProperty('--app-height', `${h}px`);
-                };
-                setAppHeight();
-                window.addEventListener('resize', setAppHeight);
-                window.addEventListener('orientationchange', setAppHeight);
-                if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppHeight);
-
-                return () => {
-                    window.removeEventListener('resize', setAppHeight);
-                    window.removeEventListener('orientationchange', setAppHeight);
-                    if (window.visualViewport) window.visualViewport.removeEventListener('resize', setAppHeight);
-                };
-            }, []);
-
-            
             // File System Persistence
             useEffect(() => {
                 const savedFs = localStorage.getItem(STORAGE_KEY_FS);
@@ -1534,7 +1498,7 @@
 
             return (
                 <div 
-                    className="app-viewport overflow-hidden flex flex-col font-sans select-none relative touch-none" 
+                    className="h-screen w-screen overflow-hidden flex flex-col font-sans select-none relative touch-none" 
                     style={{ backgroundColor: settings.wallpaper }} 
                     onContextMenu={(e) => handleContextMenu(e, 'desktop')} 
                     onPointerDown={() => { setStartOpen(false); setContextMenu(null); }}
@@ -1582,7 +1546,7 @@
                     
                     {startOpen && <StartMenu installedApps={installedApps} launchApp={launchApp} onShutDown={handleShutDown} onClose={() => setStartOpen(false)} fs={fs} />}
                     
-                    <div className="taskbar-safe h-10 md:h-9 bg-gray-300 flex items-center px-1 gap-1 z-50 relative border-t-2 border-white">
+                    <div className="h-10 md:h-9 bg-gray-300 flex items-center px-1 gap-1 z-50 relative border-t-2 border-white">
                         <button className={`flex items-center gap-1 px-3 py-1 font-bold ${startOpen ? 'bg-gray-400' : ''}`} style={startOpen ? bevel('in') : bevel('out')} onClick={(e) => { e.stopPropagation(); setStartOpen(!startOpen); }}><WinIcon name="flag" size={16}/> Start</button>
                         <div className="w-px h-6 bg-gray-400 mx-1" />
                         <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar">{windows.map(win => { let appDef = Object.values(SYSTEM_APPS).find(a => a.id === win.appId) || installedApps.find(a => a.id === win.appId); return <button key={win.instanceId} className={`flex items-center gap-1 px-2 py-1 max-w-[150px] min-w-[80px] truncate text-xs ${activeWindowId === win.instanceId && !win.minimized ? 'bg-gray-200 font-bold' : ''}`} style={activeWindowId === win.instanceId && !win.minimized ? bevel('in') : bevel('out')} onClick={() => win.minimized ? focusWindow(win.instanceId) : (activeWindowId === win.instanceId ? minimizeWindow(win.instanceId) : focusWindow(win.instanceId))}>{appDef?.name}</button>; })}</div>
