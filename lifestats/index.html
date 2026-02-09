@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Primary Meta Tags -->
 <title>LifeStats – See Your Life in Numbers</title>
 <meta name="title" content="LifeStats – See Your Life in Numbers" />
@@ -29,7 +29,7 @@
 <meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/lifestats.png" />
 
 <!-- Optional -->
-<meta name="theme-color" content="#f59e0b" />
+<meta name="theme-color" content="#0f172a" />
 
     <script>
         tailwind.config = {
@@ -44,6 +44,16 @@
                             800: '#1e293b',
                             700: '#334155',
                         },
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'shimmer': 'shimmer 2s linear infinite',
+                    },
+                    keyframes: {
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' }
+                        }
                     }
                 }
             }
@@ -54,6 +64,7 @@
             background: radial-gradient(circle at top left, #1e293b 0%, #0f172a 100%);
             min-height: 100vh;
             color: #f8fafc;
+            overflow-x: hidden;
         }
         
         /* Smooth scrolling & Custom Scrollbar */
@@ -73,31 +84,53 @@
         }
 
         .stat-card {
-            background: rgba(30, 41, 59, 0.4);
+            background: rgba(30, 41, 59, 0.2);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.03);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             overflow: hidden;
+            transform: translateZ(0); 
         }
 
-        .stat-card::before {
+        /* Completed Stat Styling */
+        .stat-card.completed {
+            border-color: rgba(245, 158, 11, 0.5); /* Amber 500 */
+            background: rgba(245, 158, 11, 0.05);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
+        }
+
+        /* Hover Glow */
+        .stat-card::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 4px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            inset: 0;
+            background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%);
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        
+        .stat-card.completed::after {
+            background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(251, 191, 36, 0.1), transparent 40%);
         }
 
         .stat-card:hover {
             transform: translateY(-8px);
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(30, 41, 59, 0.6);
             border-color: rgba(255, 255, 255, 0.1);
             box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+            z-index: 10;
         }
-
-        .stat-card:hover::before { opacity: 1; }
+        
+        .stat-card.completed:hover {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.7);
+        }
+        
+        .stat-card:hover::after {
+            opacity: 1;
+        }
 
         /* Input styling */
         .date-input-wrapper {
@@ -110,7 +143,7 @@
             -webkit-appearance: none;
             color: #f8fafc;
             background: rgba(15, 23, 42, 0.6);
-            border: 2px solid #334155;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 1rem;
             padding: 1rem 1.5rem;
             font-family: 'Outfit', sans-serif;
@@ -120,9 +153,14 @@
             transition: all 0.3s ease;
             text-align: center;
             cursor: pointer;
-            color-scheme: dark; /* Dark calendar popup */
+            color-scheme: dark; 
         }
         
+        input[type="date"]:hover {
+            border-color: rgba(255,255,255,0.2);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
         input[type="date"]:focus {
             border-color: #38bdf8;
             box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
@@ -136,6 +174,11 @@
             -webkit-text-fill-color: transparent;
             background-image: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
         }
+        
+        /* Tabular nums for stable counters */
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
 
         /* Animations */
         @keyframes fadeUp {
@@ -147,15 +190,28 @@
             opacity: 0; /* Start hidden */
         }
         
-        /* Stagger delays */
         .delay-100 { animation-delay: 100ms; }
         .delay-200 { animation-delay: 200ms; }
         .delay-300 { animation-delay: 300ms; }
 
         /* Icon backgrounds */
         .icon-box {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Gold Progress for completed milestones */
+        .bg-gold-gradient {
+            background-image: linear-gradient(45deg, #fbbf24, #f59e0b, #d97706, #f59e0b);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
         }
     </style>
 </head>
@@ -180,11 +236,11 @@
             Life<span class="text-gradient">Stats</span>
         </h1>
         <p class="text-lg text-slate-400 mb-10 font-light max-w-xl mx-auto leading-relaxed">
-            Visualize your existence through data. Select your birth date below to begin the analysis.
+            Visualize your existence through data. Select your birth date to see your life in numbers, updated in real-time.
         </p>
 
         <!-- Input Section -->
-        <div class="glass-panel p-2 rounded-2xl shadow-2xl max-w-sm mx-auto date-input-wrapper hover:scale-[1.02] transition-transform">
+        <div class="p-1 rounded-2xl shadow-2xl max-w-sm mx-auto date-input-wrapper hover:scale-[1.02] transition-transform bg-gradient-to-br from-slate-700/30 to-slate-900/30 border border-white/5">
             <input type="date" id="birthdate" required>
         </div>
     </header>
@@ -194,399 +250,615 @@
         <div class="mb-6 opacity-30">
             <i class="fa-regular fa-calendar-days text-6xl"></i>
         </div>
-        <p class="text-xl font-light">Waiting for input...</p>
+        <p class="text-xl font-light">Select your birth date above</p>
     </div>
 
     <!-- Main Content Area -->
-    <main id="stats-container" class="w-full max-w-6xl hidden">
+    <main id="stats-container" class="w-full max-w-7xl hidden">
         
         <!-- Hero Stat: Exact Age -->
-        <div class="glass-panel rounded-3xl p-8 mb-10 text-center relative overflow-hidden animate-entry">
+        <div class="glass-panel rounded-3xl p-6 md:p-8 mb-10 text-center relative overflow-hidden animate-entry">
             <!-- Background glow effect -->
             <div class="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1 bg-sky-500/50 blur-[50px]"></div>
             
-            <h2 class="text-sm uppercase tracking-[0.2em] text-slate-400 font-semibold mb-8">Current Timeline</h2>
+            <h2 class="text-xs md:text-sm uppercase tracking-[0.2em] text-slate-400 font-semibold mb-8">Current Timeline</h2>
             
             <div id="hero-time" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
                 <!-- Populated by JS -->
             </div>
         </div>
 
-        <!-- Grid of Fun Facts -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            <!-- Heartbeats -->
-            <div class="stat-card rounded-3xl p-6 animate-entry delay-100 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-rose-400 group-hover:text-rose-300 transition-colors">
-                        <i class="fa-solid fa-heart-pulse text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Vitality</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-heartbeats">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Heartbeats</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime heartbeats used">
-                    <div id="bar-heartbeats" class="bg-rose-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Breaths -->
-            <div class="stat-card rounded-3xl p-6 animate-entry delay-100 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-sky-400 group-hover:text-sky-300 transition-colors">
-                        <i class="fa-solid fa-wind text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Respiration</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-breaths">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Breaths Taken</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime breaths used">
-                    <div id="bar-breaths" class="bg-sky-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Steps -->
-            <div class="stat-card rounded-3xl p-6 animate-entry delay-200 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors">
-                        <i class="fa-solid fa-shoe-prints text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Distance</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-steps">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Steps Walked</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime steps walked">
-                    <div id="bar-steps" class="bg-emerald-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Sleep -->
-            <div class="stat-card rounded-3xl p-6 animate-entry delay-200 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-indigo-400 group-hover:text-indigo-300 transition-colors">
-                        <i class="fa-solid fa-moon text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Dormancy</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-sleep">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Time Asleep</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime sleep used">
-                    <div id="bar-sleep" class="bg-indigo-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Dreams -->
-            <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-amber-400 group-hover:text-amber-300 transition-colors">
-                        <i class="fa-solid fa-cloud-moon text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Subconscious</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-dreams">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Dreams Experienced</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime dreams dreamed">
-                    <div id="bar-dreams" class="bg-amber-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Words Spoken -->
-            <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-fuchsia-400 group-hover:text-fuchsia-300 transition-colors">
-                        <i class="fa-solid fa-comments text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Communication</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-words">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Words Spoken</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime words spoken">
-                    <div id="bar-words" class="bg-fuchsia-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Food Consumed -->
-            <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-lime-400 group-hover:text-lime-300 transition-colors">
-                        <i class="fa-solid fa-utensils text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Fuel</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-food">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Kg Food Eaten</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime food consumed">
-                    <div id="bar-food" class="bg-lime-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Orbit -->
-            <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-violet-400 group-hover:text-violet-300 transition-colors">
-                        <i class="fa-solid fa-earth-americas text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Cosmic Journey</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-orbit">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Km Orbiting Sun</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime orbit traveled">
-                    <div id="bar-orbit" class="bg-violet-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-             <!-- Mondays -->
-             <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-red-400 group-hover:text-red-300 transition-colors">
-                        <i class="fa-solid fa-calendar-xmark text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Resilience</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-mondays">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Mondays Survived</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime Mondays endured">
-                    <div id="bar-mondays" class="bg-red-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Blinks -->
-            <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-purple-400 group-hover:text-purple-300 transition-colors">
-                        <i class="fa-solid fa-eye text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Vision</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-blinks">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Total Blinks</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime blinks used">
-                    <div id="bar-blinks" class="bg-purple-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Water -->
-            <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-cyan-400 group-hover:text-cyan-300 transition-colors">
-                        <i class="fa-solid fa-glass-water text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Hydration</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-water">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Liters Consumed</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime water consumed">
-                    <div id="bar-water" class="bg-cyan-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-             <!-- Bathing -->
-             <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-teal-400 group-hover:text-teal-300 transition-colors">
-                        <i class="fa-solid fa-shower text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Hygiene</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-baths">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Showers Taken</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime showers taken">
-                    <div id="bar-baths" class="bg-teal-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-             <!-- Hair -->
-             <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-orange-400 group-hover:text-orange-300 transition-colors">
-                        <i class="fa-solid fa-scissors text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Growth</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-hair">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Meters of Hair</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime hair growth">
-                    <div id="bar-hair" class="bg-orange-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Skin -->
-             <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-stone-400 group-hover:text-stone-300 transition-colors">
-                        <i class="fa-solid fa-recycle text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Renewal</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-skin">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Kg Skin Shed</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime skin shed">
-                    <div id="bar-skin" class="bg-stone-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Saliva -->
-             <div class="stat-card rounded-3xl p-6 animate-entry delay-300 group">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="icon-box w-12 h-12 rounded-xl flex items-center justify-center text-blue-400 group-hover:text-blue-300 transition-colors">
-                        <i class="fa-solid fa-droplet text-xl"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded-full">Digestion</span>
-                </div>
-                <h3 class="text-3xl lg:text-4xl font-bold text-white mb-2 tracking-tight" id="stat-saliva">0</h3>
-                <p class="text-slate-400 text-sm font-medium">Liters of Saliva</p>
-                <div class="w-full bg-slate-800 h-1 mt-4 rounded-full overflow-hidden" title="Percentage of lifetime saliva produced">
-                    <div id="bar-saliva" class="bg-blue-500/50 h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                </div>
-            </div>
-
+        <!-- Dynamic Grid of Stats -->
+        <div id="grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Populated by JS -->
         </div>
 
-        <div class="text-center mt-12 mb-6">
-            <p class="text-slate-600 text-xs tracking-wider uppercase opacity-70">
-                Estimations based on global averages and an 80-year lifespan.
+        <div class="text-center mt-12 mb-6 animate-entry delay-300">
+             <button id="open-sources" class="text-slate-500 text-xs tracking-wider uppercase opacity-70 hover:opacity-100 hover:text-sky-400 transition-all border-b border-transparent hover:border-sky-400 pb-0.5">
+                Sources & Assumptions (Global Averages)
+            </button>
+            <p class="text-slate-600 text-[10px] mt-2">
+                Note: These are statistical averages and do not reflect personal medical history.
             </p>
         </div>
     </main>
 
+    <!-- Sources Modal -->
+    <div id="sources-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 md:p-6">
+        <!-- Overlay -->
+        <div class="absolute inset-0 modal-overlay" id="close-overlay"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative w-full max-w-2xl max-h-[85vh] flex flex-col glass-panel rounded-2xl shadow-2xl animate-entry border border-white/10 bg-slate-900/95">
+            <div class="flex justify-between items-center p-6 border-b border-white/5 shrink-0 bg-slate-900/50 backdrop-blur-xl rounded-t-2xl">
+                <div>
+                    <h3 class="text-xl md:text-2xl font-bold text-white">Data Sources & Rates</h3>
+                    <p class="text-xs text-slate-400 font-light mt-1 uppercase tracking-wide">Based on Global Averages</p>
+                </div>
+                <button id="close-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="overflow-y-auto p-6 space-y-4 text-sm text-slate-300" id="sources-list">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
     <script>
+        /* -------------------------------------------------------------------------
+         * CONFIGURATION & DATA
+         * ------------------------------------------------------------------------- */
+        const AVG_LIFESPAN_YEARS = 80;
+        
+        // Stats Config with "Milestone" Logic
+        // milestone: { val: number, label: string }
+        
+        const statsConfig = [
+            // --- VITAL SIGNS ---
+            {
+                id: 'heartbeats',
+                label: 'Heartbeats',
+                category: 'Vitality',
+                icon: 'fa-heart-pulse',
+                color: 'text-rose-500',
+                unit: '',
+                rate: 115200, 
+                milestone: { val: 3000000000, label: '3 Billion (Lifetime)' },
+                source: 'Mayo Clinic (Avg 80 bpm)',
+                confidence: 'High'
+            },
+            {
+                id: 'breaths',
+                label: 'Breaths Taken',
+                category: 'Respiration',
+                icon: 'fa-lungs',
+                color: 'text-sky-400',
+                unit: '',
+                rate: 23040, 
+                milestone: { val: 600000000, label: '600 Million' },
+                source: 'EPA / Healthline (12-20 bpm)',
+                confidence: 'High'
+            },
+            {
+                id: 'blood',
+                label: 'Blood Pumped',
+                category: 'Circulation',
+                icon: 'fa-droplet',
+                color: 'text-red-600',
+                unit: 'Liters',
+                rate: 7200, 
+                milestone: { val: 2500000, label: 'Olympic Pool' }, // 2.5ML
+                source: 'Mayo Clinic (5 L/min)',
+                confidence: 'High'
+            },
+            {
+                id: 'rbc',
+                label: 'Red Blood Cells',
+                category: 'Biology',
+                icon: 'fa-dna',
+                color: 'text-red-400',
+                unit: 'Cells',
+                rate: 172800000000, 
+                format: 'compact', 
+                milestone: { val: 4000000000000000, label: '4 Quadrillion' },
+                source: 'NIH (2 million/sec)',
+                confidence: 'Medium'
+            },
+            
+            // --- BRAIN & SENSES ---
+            {
+                id: 'blinks',
+                label: 'Blinks',
+                category: 'Vision',
+                icon: 'fa-eye',
+                color: 'text-purple-400',
+                unit: '',
+                rate: 21600, 
+                customCalc: (days) => days * 15 * 60 * 16,
+                milestone: { val: 500000000, label: '500 Million' },
+                source: 'Smithsonian',
+                confidence: 'High'
+            },
+            {
+                id: 'saccades',
+                label: 'Eye Movements',
+                category: 'Vision',
+                icon: 'fa-eye-low-vision',
+                color: 'text-fuchsia-400',
+                unit: '',
+                rate: 180000, 
+                milestone: { val: 5000000000, label: '5 Billion' },
+                source: 'PubMed (PMC10979857)',
+                confidence: 'Medium'
+            },
+            {
+                id: 'thoughts',
+                label: 'Thoughts Had',
+                category: 'Mind',
+                icon: 'fa-brain',
+                color: 'text-pink-400',
+                unit: '',
+                rate: 6000, 
+                milestone: { val: 200000000, label: '200 Million' },
+                source: 'Nature Human Behaviour (2020)',
+                confidence: 'Low'
+            },
+            {
+                id: 'sleep',
+                label: 'Time Asleep',
+                category: 'Dormancy',
+                icon: 'fa-moon',
+                color: 'text-indigo-400',
+                unit: 'Years',
+                customCalc: (days) => (days * 8) / 24 / 365.25,
+                format: 'float',
+                milestone: { val: 25, label: '25 Years Asleep' },
+                source: 'CDC (8 hrs/day rec)',
+                confidence: 'High'
+            },
+            
+            // --- PHYSICAL OUTPUT ---
+            {
+                id: 'steps',
+                label: 'Steps Walked',
+                category: 'Motion',
+                icon: 'fa-shoe-prints',
+                color: 'text-emerald-400',
+                unit: '',
+                rate: 4000, 
+                // ~50M steps to walk around earth at equator approx
+                milestone: { val: 50000000, label: 'Equator Walk' }, 
+                source: 'Stanford Study (Global Avg)',
+                confidence: 'Medium'
+            },
+             {
+                id: 'calories',
+                label: 'Energy Burned',
+                category: 'Metabolism',
+                icon: 'fa-fire',
+                color: 'text-orange-500',
+                unit: 'M kcal',
+                rate: 0.0022, // in millions 
+                format: 'float',
+                milestone: { val: 65, label: '65 Million Calories' },
+                source: 'NHS (2000F/2500M avg)',
+                confidence: 'High'
+            },
+            {
+                id: 'urine',
+                label: 'Urine Produced',
+                category: 'Excretion',
+                icon: 'fa-flask',
+                color: 'text-yellow-300',
+                unit: 'Liters',
+                rate: 1.4, 
+                milestone: { val: 40000, label: 'Tanker Truck' },
+                source: 'MedlinePlus',
+                confidence: 'High'
+            },
+            {
+                id: 'poop',
+                label: 'Waste Produced',
+                category: 'Excretion',
+                icon: 'fa-poop',
+                color: 'text-amber-700',
+                unit: 'kg',
+                rate: 0.128, 
+                milestone: { val: 4000, label: 'Hippo Weight' },
+                source: 'Medical News Today',
+                confidence: 'Medium'
+            },
+
+            // --- GROWTH & REPAIR ---
+            {
+                id: 'skin',
+                label: 'Skin Shed',
+                category: 'Renewal',
+                icon: 'fa-recycle',
+                color: 'text-stone-400',
+                unit: 'kg',
+                rate: 0.002, 
+                format: 'float',
+                milestone: { val: 60, label: 'Adult Weight' },
+                source: 'Vital Record',
+                confidence: 'Medium'
+            },
+            {
+                id: 'hair',
+                label: 'Hair Grown',
+                category: 'Growth',
+                icon: 'fa-scissors',
+                color: 'text-amber-200',
+                unit: 'Meters',
+                rate: 0.00041, 
+                customCalc: (days) => (days * 15 / 365.25) / 100, 
+                format: 'float',
+                milestone: { val: 12, label: 'Bus Length' },
+                source: 'Healthera',
+                confidence: 'High'
+            },
+            {
+                id: 'nails',
+                label: 'Nails Grown',
+                category: 'Growth',
+                icon: 'fa-hand',
+                color: 'text-rose-200',
+                unit: 'cm',
+                rate: 0.011, 
+                format: 'float',
+                milestone: { val: 300, label: 'Room Height' },
+                source: 'UNC School of Medicine',
+                confidence: 'High'
+            },
+
+            // --- CONSUMPTION ---
+            {
+                id: 'water',
+                label: 'Water Drank',
+                category: 'Hydration',
+                icon: 'fa-glass-water',
+                color: 'text-cyan-400',
+                unit: 'Liters',
+                rate: 2,
+                milestone: { val: 50000, label: 'Swimming Pool' },
+                source: 'National Academies',
+                confidence: 'Medium'
+            },
+            {
+                id: 'food',
+                label: 'Food Eaten',
+                category: 'Fuel',
+                icon: 'fa-utensils',
+                color: 'text-lime-400',
+                unit: 'kg',
+                rate: 1.8,
+                milestone: { val: 50000, label: 'Boeing 737 Empty' },
+                source: 'CDC / EPA estimates',
+                confidence: 'Medium'
+            },
+
+            // --- TIME USE ---
+            {
+                id: 'eating',
+                label: 'Time Eating',
+                category: 'Lifestyle',
+                icon: 'fa-bowl-food',
+                color: 'text-orange-300',
+                unit: 'Years',
+                customCalc: (days) => (days * 1.1) / 24 / 365.25, 
+                format: 'float',
+                milestone: { val: 3.5, label: '3.5 Years at Table' },
+                source: 'USDA ERS',
+                confidence: 'Medium'
+            },
+            {
+                id: 'screen',
+                label: 'Screen Time',
+                category: 'Lifestyle',
+                icon: 'fa-mobile-screen',
+                color: 'text-blue-500',
+                unit: 'Years',
+                customCalc: (days) => (days * 3.5) / 24 / 365.25,
+                format: 'float',
+                milestone: { val: 12, label: '12 Years on Screens' },
+                source: 'DataReportal',
+                confidence: 'Low'
+            },
+            {
+                id: 'mondays',
+                label: 'Mondays',
+                category: 'Resilience',
+                icon: 'fa-calendar-xmark',
+                color: 'text-red-400',
+                unit: '',
+                customCalc: (days) => days / 7,
+                milestone: { val: 4160, label: 'Avg Life Mondays' },
+                source: 'Calendar',
+                confidence: 'High'
+            },
+
+            // --- COSMIC ---
+            {
+                id: 'orbit',
+                label: 'Around Sun',
+                category: 'Cosmic',
+                icon: 'fa-earth-americas',
+                color: 'text-blue-400',
+                unit: 'M km',
+                rate: 2.57, 
+                format: 'float',
+                milestone: { val: 5900, label: 'Distance to Pluto' }, // ~5.9 Billion km
+                source: 'NASA',
+                confidence: 'High'
+            },
+            {
+                id: 'galaxy',
+                label: 'Thru Galaxy',
+                category: 'Cosmic',
+                icon: 'fa-user-astronaut',
+                color: 'text-violet-400',
+                unit: 'M km',
+                rate: 19.87, 
+                format: 'compact',
+                // Voyager 1 is ~24B km away. 
+                milestone: { val: 24000, label: 'Dist. of Voyager 1' },
+                source: 'NASA',
+                confidence: 'High'
+            },
+            {
+                id: 'rotation',
+                label: 'Earth Spins',
+                category: 'Cosmic',
+                icon: 'fa-arrows-spin',
+                color: 'text-indigo-400',
+                unit: '',
+                customCalc: (days) => days,
+                milestone: { val: 29200, label: '80 Years of Spins' },
+                source: 'Physics',
+                confidence: 'High'
+            },
+
+            // --- MISC ---
+             {
+                id: 'words',
+                label: 'Words Spoken',
+                category: 'Communication',
+                icon: 'fa-comments',
+                color: 'text-fuchsia-400',
+                unit: '',
+                rate: 16000,
+                format: 'compact',
+                milestone: { val: 40000000, label: 'Britannica (Vol)' },
+                source: 'Univ. of Arizona Study',
+                confidence: 'Medium'
+            },
+            {
+                id: 'dreams',
+                label: 'Dreams',
+                category: 'Subconscious',
+                icon: 'fa-cloud-moon',
+                color: 'text-indigo-300',
+                unit: '',
+                rate: 4, 
+                milestone: { val: 115000, label: 'Lifetime Dreams' },
+                source: 'National Sleep Foundation',
+                confidence: 'Medium'
+            },
+        ];
+
+        /* -------------------------------------------------------------------------
+         * DOM ELEMENTS & STATE
+         * ------------------------------------------------------------------------- */
         const dateInput = document.getElementById('birthdate');
         const emptyState = document.getElementById('empty-state');
         const statsContainer = document.getElementById('stats-container');
         const heroTimeContainer = document.getElementById('hero-time');
-
-        // Stats elements
-        const els = {
-            heartbeats: document.getElementById('stat-heartbeats'),
-            breaths: document.getElementById('stat-breaths'),
-            blinks: document.getElementById('stat-blinks'),
-            sleep: document.getElementById('stat-sleep'),
-            steps: document.getElementById('stat-steps'),
-            dreams: document.getElementById('stat-dreams'),
-            water: document.getElementById('stat-water'),
-            baths: document.getElementById('stat-baths'),
-            hair: document.getElementById('stat-hair'),
-            words: document.getElementById('stat-words'),
-            food: document.getElementById('stat-food'),
-            orbit: document.getElementById('stat-orbit'),
-            mondays: document.getElementById('stat-mondays'),
-            skin: document.getElementById('stat-skin'),
-            saliva: document.getElementById('stat-saliva'),
-        };
-
-        // Progress Bar Elements
-        const bars = {
-            heartbeats: document.getElementById('bar-heartbeats'),
-            breaths: document.getElementById('bar-breaths'),
-            blinks: document.getElementById('bar-blinks'),
-            sleep: document.getElementById('bar-sleep'),
-            steps: document.getElementById('bar-steps'),
-            dreams: document.getElementById('bar-dreams'),
-            water: document.getElementById('bar-water'),
-            baths: document.getElementById('bar-baths'),
-            hair: document.getElementById('bar-hair'),
-            words: document.getElementById('bar-words'),
-            food: document.getElementById('bar-food'),
-            orbit: document.getElementById('bar-orbit'),
-            mondays: document.getElementById('bar-mondays'),
-            skin: document.getElementById('bar-skin'),
-            saliva: document.getElementById('bar-saliva'),
-        };
-
-        // Constants for calculations
-        const STATS = {
-            heartRatePerMin: 80,
-            breathsPerMin: 16,
-            blinksPerMin: 15,
-            sleepHoursPerDay: 8,
-            stepsPerDay: 4000,
-            dreamsPerNight: 4,
-            waterLitersPerDay: 2,
-            bathsPerDay: 0.8,
-            hairCmPerYear: 15,
-            wordsPerDay: 16000,
-            foodKgPerDay: 1.8,
-            orbitKmPerDay: 2570000,
-            skinKgPerDay: 0.002, // approx 0.75kg/year
-            salivaLitersPerDay: 1
-        };
-
-        const AVG_LIFESPAN_YEARS = 80;
+        const gridContainer = document.getElementById('grid-container');
+        const sourcesModal = document.getElementById('sources-modal');
+        const sourcesList = document.getElementById('sources-list');
+        const btnOpenSources = document.getElementById('open-sources');
+        const btnCloseModal = document.getElementById('close-modal');
+        const closeOverlay = document.getElementById('close-overlay');
+        
+        let liveUpdateTimer = null;
 
         // Set Max date to today
         const today = new Date();
         dateInput.max = today.toISOString().split("T")[0];
 
-        function formatNumber(num) {
-            return new Intl.NumberFormat().format(Math.floor(num));
+        /* -------------------------------------------------------------------------
+         * INITIALIZATION & RENDERING
+         * ------------------------------------------------------------------------- */
+        
+        function initGrid() {
+            gridContainer.innerHTML = statsConfig.map(stat => {
+                // Use background-current class to automatically use text color as background
+                // This ensures we don't need a fragile JS color map.
+                return `
+                <div class="stat-card rounded-3xl p-6 group flex flex-col justify-between transition-colors duration-500" id="card-${stat.id}">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="icon-box w-10 h-10 rounded-xl flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform duration-300">
+                                <i class="fa-solid ${stat.icon} text-lg"></i>
+                            </div>
+                            <span class="category-badge text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-700/50 px-2 py-1 rounded-full bg-slate-800/30 transition-all duration-500">
+                                ${stat.category}
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-baseline gap-2 mt-2">
+                            <h3 class="text-2xl lg:text-3xl font-bold text-white tracking-tight font-sans value-display tabular-nums" data-id="${stat.id}">0</h3>
+                            <span class="text-xs text-slate-500 font-medium uppercase tracking-wider">${stat.unit}</span>
+                        </div>
+                        <p class="text-slate-400 text-sm font-medium mt-1 mb-6">${stat.label}</p>
+                    </div>
+                    
+                    <div class="mt-auto">
+                        <div class="flex justify-between text-[10px] text-slate-500 mb-1.5 uppercase tracking-wider font-semibold">
+                            <span class="progress-label transition-colors duration-300">To ${stat.milestone ? stat.milestone.label : 'Life Expectancy'}</span>
+                            <span class="progress-pct transition-colors duration-300">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800/50 h-1.5 rounded-full overflow-hidden border border-white/5">
+                            <!-- We use bg-current and set the text color to the stat color to inherit safely -->
+                            <div class="bar-fill h-full rounded-full transition-all duration-300 ease-out relative ${stat.color} bg-current opacity-90" 
+                                 style="width: 0%;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // Mouse move effect for cards
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.addEventListener('mousemove', e => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                });
+            });
         }
 
-        function calculateStats() {
-            const birthDate = new Date(dateInput.value);
-            if (!dateInput.value || birthDate > new Date()) return;
+        function populateSources() {
+            sourcesList.innerHTML = statsConfig.map(stat => `
+                <div class="border-b border-slate-700/50 pb-3 last:border-0">
+                    <div class="flex justify-between items-start">
+                        <span class="font-semibold text-sky-400">${stat.label}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 ${stat.confidence === 'High' ? 'text-green-400' : stat.confidence === 'Medium' ? 'text-yellow-400' : 'text-red-400'} border border-slate-700">
+                            ${stat.confidence} Conf.
+                        </span>
+                    </div>
+                    <div class="mt-1 flex justify-between text-xs text-slate-400">
+                        <span>Rate: ${stat.rate ? new Intl.NumberFormat().format(stat.rate) + '/day' : 'Custom Calc'}</span>
+                        <span class="italic max-w-[50%] text-right text-slate-500">${stat.source}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-            // Manage visibility
-            emptyState.classList.add('hidden');
-            statsContainer.classList.remove('hidden');
-            
+        /* -------------------------------------------------------------------------
+         * CALCULATION LOGIC
+         * ------------------------------------------------------------------------- */
+        
+        function calculateAndRender() {
+            const val = dateInput.value;
+            if (!val) return;
+            const birthDate = new Date(val);
+            if (birthDate > new Date()) return; 
+
+            if(emptyState.classList.contains('animate-entry')) {
+                emptyState.classList.add('hidden');
+                statsContainer.classList.remove('hidden');
+            }
+
             const now = new Date();
-            const diffTime = Math.abs(now - birthDate);
-            
-            const diffDays = diffTime / (1000 * 60 * 60 * 24);
-            const diffMinutes = diffTime / (1000 * 60);
+            const timeDiff = now - birthDate;
+            const diffDays = timeDiff / (1000 * 60 * 60 * 24);
             const diffYears = diffDays / 365.25;
 
-            // Update Hero
             updateHeroTime(birthDate, now);
 
-            // Update Stats
-            els.heartbeats.textContent = formatNumber(diffMinutes * STATS.heartRatePerMin);
-            els.breaths.textContent = formatNumber(diffMinutes * STATS.breathsPerMin);
-            els.blinks.textContent = formatNumber(diffMinutes * STATS.blinksPerMin);
-            
-            const yearsAsleep = (diffDays * STATS.sleepHoursPerDay) / 24 / 365.25;
-            els.sleep.textContent = yearsAsleep < 1 
-                ? formatNumber(diffDays * STATS.sleepHoursPerDay) + " Hours"
-                : yearsAsleep.toFixed(1) + " Years";
+            statsConfig.forEach(stat => {
+                const card = document.getElementById(`card-${stat.id}`);
+                const valueEl = card.querySelector('.value-display');
+                const barEl = card.querySelector('.bar-fill');
+                const pctEl = card.querySelector('.progress-pct');
+                const labelEl = card.querySelector('.progress-label');
+                const badgeEl = card.querySelector('.category-badge');
 
-            els.steps.textContent = formatNumber(diffDays * STATS.stepsPerDay);
-            els.dreams.textContent = formatNumber(diffDays * STATS.dreamsPerNight);
-            els.water.textContent = formatNumber(diffDays * STATS.waterLitersPerDay);
-            els.baths.textContent = formatNumber(diffDays * STATS.bathsPerDay);
-            
-            const hairMeters = (diffYears * STATS.hairCmPerYear) / 100;
-            els.hair.textContent = hairMeters.toFixed(2) + " m";
+                let rawValue = 0;
+                if (stat.customCalc) {
+                    rawValue = stat.customCalc(diffDays);
+                } else {
+                    rawValue = diffDays * stat.rate;
+                }
 
-            // New Stats
-            els.words.textContent = formatNumber(diffDays * STATS.wordsPerDay);
-            els.food.textContent = formatNumber(diffDays * STATS.foodKgPerDay);
-            els.orbit.textContent = formatNumber(diffDays * STATS.orbitKmPerDay);
-            els.mondays.textContent = formatNumber(Math.floor(diffDays / 7));
-            els.skin.textContent = (diffDays * STATS.skinKgPerDay).toFixed(1) + " kg";
-            els.saliva.textContent = formatNumber(diffDays * STATS.salivaLitersPerDay);
+                // Render Value
+                if (stat.format === 'compact' && rawValue > 1000000) {
+                     valueEl.textContent = new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 2 }).format(rawValue);
+                } else if (stat.format === 'float') {
+                     valueEl.textContent = rawValue.toFixed(2);
+                } else {
+                     valueEl.textContent = new Intl.NumberFormat().format(Math.floor(rawValue));
+                }
 
-            // Update Progress Bars
-            updateProgressBars(diffYears);
-        }
+                // Progress Bar Logic
+                let multiplier = 0;
+                let isCompleted = false;
 
-        function updateProgressBars(currentAgeYears) {
-            // Calculate percentage of 80 year lifespan
-            // Cap at 100% so bars don't overflow if user is > 80
-            let percentage = (currentAgeYears / AVG_LIFESPAN_YEARS) * 100;
-            percentage = Math.min(percentage, 100);
-            const formattedPct = percentage.toFixed(1);
-
-            // Apply to all bars
-            Object.keys(bars).forEach(key => {
-                const bar = bars[key];
-                // Set width
-                bar.style.width = `${percentage}%`;
+                if (stat.milestone && stat.milestone.val) {
+                    multiplier = rawValue / stat.milestone.val;
+                } else {
+                    multiplier = (diffYears / AVG_LIFESPAN_YEARS);
+                }
                 
-                // Set Tooltip Text
-                const parent = bar.parentElement;
-                // Get the readable name from the label in HTML (sibling of h3)
-                const label = bar.parentElement.parentElement.querySelector('p').textContent;
-                parent.title = `You have used ${formattedPct}% of your estimated lifetime ${label.toLowerCase()}.`;
+                const percentage = multiplier * 100;
+                
+                // Visual Logic for Lapping Bars
+                let visualWidth = percentage;
+                if (multiplier > 1) {
+                    // If over 100%, we want to show the progress towards the NEXT 100%.
+                    let decimal = multiplier % 1;
+                    if (decimal === 0 && multiplier > 0) decimal = 1;
+                    visualWidth = decimal * 100;
+                    isCompleted = true; 
+                }
+                
+                // Cap visually at 100 just in case
+                visualWidth = Math.min(Math.max(visualWidth, 0), 100);
+                barEl.style.width = `${visualWidth}%`;
+                
+                // Text Logic
+                if (multiplier >= 1) {
+                    pctEl.textContent = `${multiplier.toFixed(2)}x`;
+                    labelEl.textContent = `${stat.milestone ? stat.milestone.label : 'Lifespan'} (Multiplied)`;
+                } else {
+                    pctEl.textContent = `${percentage.toFixed(1)}%`;
+                    labelEl.textContent = `To ${stat.milestone ? stat.milestone.label : 'Life Expectancy'}`;
+                }
+                
+                // --- COMPLETED STATE VISUALS ---
+                if (isCompleted) {
+                    // 1. Progress Bar Gold
+                    barEl.classList.add('bg-gold-gradient');
+                    barEl.classList.remove('bg-current', stat.color); 
+                    
+                    // 2. Text Gold
+                    labelEl.classList.add('text-amber-400');
+                    pctEl.classList.add('text-amber-400');
+                    
+                    // 3. Card Gold Border & Tint (Visual distinction)
+                    card.classList.add('completed');
+                    card.classList.remove('border-white/5'); // Remove default border
+                    
+                    // 4. Badge Gold Checkmark
+                    if (badgeEl && !badgeEl.innerHTML.includes('fa-check')) {
+                        badgeEl.classList.remove('bg-slate-800/30', 'text-slate-500', 'border-slate-700/50');
+                        badgeEl.classList.add('bg-amber-500/20', 'text-amber-400', 'border-amber-500/30');
+                        badgeEl.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i>${stat.category}`;
+                    }
+                    
+                } else {
+                    // Reset to Default
+                    barEl.classList.remove('bg-gold-gradient');
+                    barEl.classList.add('bg-current', stat.color);
+                    
+                    labelEl.classList.remove('text-amber-400');
+                    pctEl.classList.remove('text-amber-400');
+                    
+                    card.classList.remove('completed');
+                    card.classList.add('border-white/5'); // Restore default border
+                    
+                    if (badgeEl && badgeEl.innerHTML.includes('fa-check')) {
+                         badgeEl.classList.add('bg-slate-800/30', 'text-slate-500', 'border-slate-700/50');
+                         badgeEl.classList.remove('bg-amber-500/20', 'text-amber-400', 'border-amber-500/30');
+                         badgeEl.textContent = stat.category;
+                    }
+                }
             });
         }
 
@@ -609,19 +881,54 @@
                 { val: years, label: 'Years', color: 'text-white' },
                 { val: months, label: 'Months', color: 'text-slate-300' },
                 { val: days, label: 'Days', color: 'text-slate-300' },
-                { val: formatNumber(Math.floor((now - birthDate) / (1000 * 60 * 60))), label: 'Total Hours', color: 'text-sky-400' }
+                { val: new Intl.NumberFormat().format(Math.floor((now - birthDate) / (1000 * 60 * 60))), label: 'Total Hours', color: 'text-sky-400' }
             ];
 
             heroTimeContainer.innerHTML = timeUnits.map(unit => `
-                <div class="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-800/30 border border-slate-700/50">
-                    <div class="text-4xl md:text-5xl font-bold ${unit.color} mb-2">${unit.val}</div>
-                    <div class="text-xs text-slate-500 uppercase tracking-widest font-semibold">${unit.label}</div>
+                <div class="flex flex-col items-center justify-center p-3 md:p-4 rounded-2xl bg-slate-800/30 border border-slate-700/50 hover:bg-slate-800/50 transition-colors duration-300">
+                    <div class="text-3xl md:text-5xl font-bold ${unit.color} mb-1 tabular-nums">${unit.val}</div>
+                    <div class="text-[10px] md:text-xs text-slate-500 uppercase tracking-widest font-semibold">${unit.label}</div>
                 </div>
             `).join('');
         }
 
-        dateInput.addEventListener('input', calculateStats);
-        if(dateInput.value) calculateStats();
+        /* -------------------------------------------------------------------------
+         * EVENT LISTENERS
+         * ------------------------------------------------------------------------- */
+        
+        function startLiveUpdate() {
+            if (liveUpdateTimer) clearInterval(liveUpdateTimer);
+            calculateAndRender(); 
+            liveUpdateTimer = setInterval(calculateAndRender, 100); 
+        }
+
+        dateInput.addEventListener('input', () => {
+            if(dateInput.value) startLiveUpdate();
+        });
+
+        initGrid();
+        populateSources();
+        if(dateInput.value) startLiveUpdate();
+
+        const toggleModal = (show) => {
+            if (show) {
+                sourcesModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                sourcesModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        };
+
+        btnOpenSources.addEventListener('click', () => toggleModal(true));
+        btnCloseModal.addEventListener('click', () => toggleModal(false));
+        closeOverlay.addEventListener('click', () => toggleModal(false));
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !sourcesModal.classList.contains('hidden')) {
+                toggleModal(false);
+            }
+        });
 
     </script>
 </body>
