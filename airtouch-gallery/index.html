@@ -1,34 +1,34 @@
-
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Updated Viewport for Mobile: viewport-fit=cover handles the notch, user-scalable=no prevents tap zoom interference -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-<!-- Primary Meta Tags -->
-<title>AirTouch Gallery – Hands-Free Gesture Image Viewer</title>
-<link rel="icon" href="/favicon.png" type="image/png">
-<meta name="title" content="AirTouch Gallery – Hands-Free Gesture Image Viewer" />
-<meta name="description" content="Browse photos hands-free using your webcam. Glide, pinch, pan, zoom, and switch to cinema mode in this local, gesture-controlled image gallery." />
+    <!-- Primary Meta Tags -->
+    <title>AirTouch Gallery – Hands-Free Gesture Image Viewer</title>
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <meta name="title" content="AirTouch Gallery – Hands-Free Gesture Image Viewer" />
+    <meta name="description" content="Browse photos hands-free using your webcam. Glide, pinch, pan, zoom, and switch to cinema mode in this local, gesture-controlled image gallery." />
 
-<!-- Open Graph -->
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://www.stefone.com/airtouch-gallery/" />
-<meta property="og:title" content="AirTouch Gallery – Hands-Free Gesture Image Viewer" />
-<meta property="og:description" content="Browse photos hands-free using your webcam. Glide, pinch, pan, zoom, and switch to cinema mode in this local, gesture-controlled image gallery." />
-<meta property="og:image" content="https://www.stefone.com/assets/thumbs/airtouch-gallery.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="AirTouch Gallery gesture-controlled image viewer preview" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.stefone.com/airtouch-gallery/" />
+    <meta property="og:title" content="AirTouch Gallery – Hands-Free Gesture Image Viewer" />
+    <meta property="og:description" content="Browse photos hands-free using your webcam. Glide, pinch, pan, zoom, and switch to cinema mode in this local, gesture-controlled image gallery." />
+    <meta property="og:image" content="https://www.stefone.com/assets/thumbs/airtouch-gallery.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="AirTouch Gallery gesture-controlled image viewer preview" />
 
-<!-- Twitter / X -->
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="AirTouch Gallery – Hands-Free Gesture Image Viewer" />
-<meta name="twitter:description" content="Browse photos hands-free using your webcam. Glide, pinch, pan, zoom, and switch to cinema mode in this local, gesture-controlled image gallery." />
-<meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/airtouch-gallery.png" />
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AirTouch Gallery – Hands-Free Gesture Image Viewer" />
+    <meta name="twitter:description" content="Browse photos hands-free using your webcam. Glide, pinch, pan, zoom, and switch to cinema mode in this local, gesture-controlled image gallery." />
+    <meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/airtouch-gallery.png" />
 
-<!-- Optional -->
-<meta name="theme-color" content="#0ea5e9" />
+    <!-- Optional -->
+    <meta name="theme-color" content="#0ea5e9" />
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -51,6 +51,9 @@
             background-color: #0f172a; /* Slate 900 */
             overflow: hidden;
             user-select: none;
+            /* Use dynamic viewport height for mobile browsers */
+            height: 100dvh; 
+            width: 100vw;
         }
 
         /* Glassmorphism Utilities */
@@ -65,6 +68,8 @@
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(4px);
             transition: all 0.2s ease;
+            /* Important for mobile touch response */
+            touch-action: manipulation;
         }
         .glass-button:hover {
             background: rgba(255, 255, 255, 0.2);
@@ -129,122 +134,136 @@
             background: rgba(255,255,255,0.2);
             border-radius: 2px;
         }
+
+        /* Safe Area Utilities for Mobile (Notch/Home Bar) */
+        .safe-pt {
+            padding-top: max(1.5rem, env(safe-area-inset-top));
+        }
+        .safe-pb {
+            padding-bottom: max(2rem, env(safe-area-inset-bottom));
+        }
+        /* Ensure modals sit above everything but stay within viewport */
+        .fullscreen-modal {
+            height: 100dvh;
+            width: 100vw;
+        }
     </style>
 </head>
-<body class="h-screen w-screen relative text-white" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+<body ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
 
     <!-- 1. TOP BAR -->
-    <div id="ui-top" class="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-40 transition-opacity duration-300">
-        <!-- Back Button -->
-        <a href="/projects/" class="glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group">
+    <!-- Added safe-pt for notch support -->
+    <div id="ui-top" class="fixed top-0 left-0 w-full px-4 md:px-6 safe-pt flex justify-between items-start z-40 transition-opacity duration-300 pointer-events-none">
+        <!-- Back Button (pointer-events-auto needed because parent is none) -->
+        <a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10">
             <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
-            <span>Back to Projects</span>
+            <span class="hidden md:inline">Back to Projects</span>
         </a>
 
         <!-- Status & Camera Wrapper -->
-        <div class="flex flex-col items-end gap-4">
+        <div class="flex flex-col items-end gap-4 pointer-events-auto">
             <!-- Status Pill -->
             <div id="status-pill" class="glass-panel px-4 py-2 rounded-full flex items-center gap-3 text-xs font-semibold uppercase tracking-wider">
                 <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]"></div>
-                <span id="status-text" class="text-gray-300">Initializing AI...</span>
+                <span id="status-text" class="text-gray-300">Initializing...</span>
             </div>
 
-            <!-- Camera Feed -->
+            <!-- Camera Feed (Smaller on mobile) -->
             <div class="relative group">
-                <div class="w-40 h-32 rounded-xl overflow-hidden glass-panel shadow-2xl relative transition-all duration-300 hover:scale-105">
-                    <video id="input_video" class="hidden"></video>
+                <div class="w-28 md:w-40 h-20 md:h-32 rounded-xl overflow-hidden glass-panel shadow-2xl relative transition-all duration-300 hover:scale-105">
+                    <!-- Added playsinline for iOS support -->
+                    <video id="input_video" class="hidden" playsinline webkit-playsinline></video>
                     <canvas id="output_canvas" class="w-full h-full object-cover"></canvas>
-                    <div class="absolute bottom-1 right-2 text-[10px] text-white/50">DEBUG VIEW</div>
+                    <div class="absolute bottom-1 right-2 text-[10px] text-white/50">DEBUG</div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- 2. MAIN WORKSPACE -->
-    <div id="workspace" class="absolute inset-0 flex items-center justify-center overflow-hidden z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div id="workspace" class="absolute inset-0 flex items-center justify-center overflow-hidden z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 cursor-pointer">
         
         <!-- Placeholder State -->
-        <div id="empty-state" class="text-center p-10 border-2 border-dashed border-white/10 rounded-3xl text-white/40 flex flex-col items-center gap-4">
-            <i class="fa-solid fa-images text-6xl mb-2"></i>
-            <h2 class="text-2xl font-bold text-white">No Images Loaded</h2>
-            <p>Drag & Drop files here or use the toolbar</p>
-            <button onclick="document.getElementById('fileInput').click()" class="mt-4 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-full transition-colors shadow-lg shadow-cyan-500/20">
+        <div id="empty-state" class="text-center p-6 md:p-10 border-2 border-dashed border-white/10 rounded-3xl text-white/40 flex flex-col items-center gap-4 mx-4">
+            <i class="fa-solid fa-images text-5xl md:text-6xl mb-2"></i>
+            <h2 class="text-xl md:text-2xl font-bold text-white">No Images Loaded</h2>
+            <p class="text-sm md:text-base">Drag & Drop files or use the folder icon</p>
+            <button onclick="document.getElementById('fileInput').click()" class="mt-4 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-full transition-colors shadow-lg shadow-cyan-500/20 pointer-events-auto">
                 Select Files
             </button>
         </div>
 
         <!-- Image Container -->
         <div id="image-wrapper" class="w-full h-full flex items-center justify-center relative hidden opacity-0 transition-opacity duration-500">
-            <img id="main-image" src="" alt="Gallery View" class="max-w-[90%] max-h-[90%] rounded-lg shadow-2xl select-none pointer-events-none">
+            <img id="main-image" src="" alt="Gallery View" class="max-w-[95%] max-h-[90%] md:max-w-[90%] md:max-h-[90%] rounded-lg shadow-2xl select-none pointer-events-none">
         </div>
 
         <!-- Edge Navigation Zones with Progress Bars -->
-        <div id="zone-prev" class="absolute left-0 top-0 bottom-0 w-32 z-30 flex items-center justify-start pl-8 nav-zone opacity-0">
+        <div id="zone-prev" class="absolute left-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-start pl-4 md:pl-8 nav-zone opacity-0 pointer-events-none">
             <!-- Progress Bar -->
             <div class="absolute left-0 top-0 bottom-0 w-2 bg-white/5 backdrop-blur-sm">
                 <div id="prog-prev" class="w-full bg-cyan-400 absolute bottom-0 left-0 transition-all duration-75" style="height: 0%"></div>
             </div>
-            <i class="fa-solid fa-chevron-left text-4xl text-cyan-400 shadow-glow ml-4"></i>
+            <i class="fa-solid fa-chevron-left text-3xl md:text-4xl text-cyan-400 shadow-glow ml-2 md:ml-4"></i>
         </div>
 
-        <div id="zone-next" class="absolute right-0 top-0 bottom-0 w-32 z-30 flex items-center justify-end pr-8 nav-zone opacity-0">
+        <div id="zone-next" class="absolute right-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-end pr-4 md:pr-8 nav-zone opacity-0 pointer-events-none">
              <!-- Progress Bar -->
              <div class="absolute right-0 top-0 bottom-0 w-2 bg-white/5 backdrop-blur-sm">
                 <div id="prog-next" class="w-full bg-cyan-400 absolute bottom-0 right-0 transition-all duration-75" style="height: 0%"></div>
             </div>
-            <i class="fa-solid fa-chevron-right text-4xl text-cyan-400 shadow-glow mr-4"></i>
+            <i class="fa-solid fa-chevron-right text-3xl md:text-4xl text-cyan-400 shadow-glow mr-2 md:mr-4"></i>
         </div>
     </div>
 
     <!-- 3. BOTTOM DOCK (Controls) -->
-    <div id="ui-bottom" class="absolute bottom-8 left-1/2 -translate-x-1/2 z-40 transition-transform duration-300">
-        <div class="glass-panel px-6 py-3 rounded-2xl flex items-center gap-6 shadow-2xl">
+    <!-- Added safe-pb for Home indicator support -->
+    <div id="ui-bottom" class="fixed bottom-0 left-0 w-full flex justify-center z-40 transition-transform duration-300 safe-pb pointer-events-none">
+        <!-- Inner container pointer-events-auto so clicks pass through margins -->
+        <div class="glass-panel px-4 py-3 md:px-6 md:py-3 rounded-2xl flex items-center gap-4 md:gap-6 shadow-2xl pointer-events-auto mb-4 mx-4">
             
             <!-- File Upload -->
             <div class="tooltip-container relative group">
-                <button onclick="document.getElementById('fileInput').click()" class="glass-button w-12 h-12 rounded-xl flex items-center justify-center text-xl text-white">
+                <button onclick="document.getElementById('fileInput').click()" class="glass-button w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl text-white">
                     <i class="fa-solid fa-folder-open"></i>
                 </button>
-                <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">Open</span>
+                <span class="hidden md:block absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">Open</span>
             </div>
             <input type="file" id="fileInput" hidden multiple accept="image/*" onchange="handleFiles(this.files)">
 
-            <div class="w-px h-8 bg-white/10"></div>
+            <div class="w-px h-6 md:h-8 bg-white/10"></div>
 
             <!-- Navigation Controls -->
-            <button onclick="prevImage()" class="text-white/70 hover:text-white transition-colors text-xl px-2"><i class="fa-solid fa-backward-step"></i></button>
-            <span id="counter" class="font-mono text-cyan-400 min-w-[60px] text-center font-bold">0 / 0</span>
-            <button onclick="nextImage()" class="text-white/70 hover:text-white transition-colors text-xl px-2"><i class="fa-solid fa-forward-step"></i></button>
+            <button onclick="prevImage()" class="text-white/70 hover:text-white transition-colors text-lg md:text-xl px-1 md:px-2"><i class="fa-solid fa-backward-step"></i></button>
+            <span id="counter" class="font-mono text-cyan-400 min-w-[50px] md:min-w-[60px] text-center font-bold text-sm md:text-base">0 / 0</span>
+            <button onclick="nextImage()" class="text-white/70 hover:text-white transition-colors text-lg md:text-xl px-1 md:px-2"><i class="fa-solid fa-forward-step"></i></button>
 
-            <div class="w-px h-8 bg-white/10"></div>
+            <div class="w-px h-6 md:h-8 bg-white/10"></div>
 
             <!-- View Controls -->
             <div class="tooltip-container relative group">
-                <button onclick="resetView()" class="glass-button w-12 h-12 rounded-xl flex items-center justify-center text-xl text-white">
+                <button onclick="resetView()" class="glass-button w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl text-white">
                     <i class="fa-solid fa-compress"></i>
                 </button>
-                <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">Reset View</span>
             </div>
 
             <div class="tooltip-container relative group">
-                <button onclick="toggleCinemaMode()" class="glass-button w-12 h-12 rounded-xl flex items-center justify-center text-xl text-yellow-400">
+                <button onclick="toggleCinemaMode()" class="glass-button w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl text-yellow-400">
                     <i id="cinema-icon" class="fa-solid fa-expand"></i>
                 </button>
-                <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">Cinema Mode</span>
             </div>
             
             <!-- Settings & Help -->
-            <div class="w-px h-8 bg-white/10"></div>
+            <div class="w-px h-6 md:h-8 bg-white/10"></div>
 
             <div class="tooltip-container relative group">
-                <button onclick="toggleSettings()" class="glass-button w-12 h-12 rounded-xl flex items-center justify-center text-xl text-white/80 hover:text-white">
+                <button onclick="toggleSettings()" class="glass-button w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl text-white/80 hover:text-white">
                     <i class="fa-solid fa-gear"></i>
                 </button>
-                <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">Settings</span>
             </div>
 
             <div class="tooltip-container relative group">
-                <button onclick="toggleHelp()" class="glass-button w-12 h-12 rounded-xl flex items-center justify-center text-xl text-cyan-400 border border-cyan-400/30">
+                <button onclick="toggleHelp()" class="glass-button w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl text-cyan-400 border border-cyan-400/30">
                     <i class="fa-solid fa-question"></i>
                 </button>
             </div>
@@ -252,16 +271,17 @@
     </div>
 
     <!-- 4. SETTINGS MODAL -->
-    <div id="settings-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="glass-panel p-8 rounded-3xl max-w-md w-full mx-4 shadow-2xl transform scale-100 transition-transform">
+    <!-- Added onclick check to close on background tap -->
+    <div id="settings-modal" onclick="if(event.target === this) toggleSettings()" class="fullscreen-modal fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-md w-full shadow-2xl transform scale-100 transition-transform">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-white flex items-center gap-3">
                     <i class="fa-solid fa-sliders text-cyan-400"></i> Settings
                 </h2>
-                <button onclick="toggleSettings()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                <button onclick="toggleSettings()" class="text-white/50 hover:text-white p-2"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-5 md:space-y-6 max-h-[60vh] overflow-y-auto pr-2">
                 <!-- Pan Sensitivity -->
                 <div>
                     <div class="flex justify-between mb-2 text-sm">
@@ -281,7 +301,7 @@
                     <p class="text-[10px] text-gray-500 mt-1">Lower = Smoother/Laggy. Higher = Faster/Jittery.</p>
                 </div>
 
-                <!-- Pinch Threshold (RESTORED) -->
+                <!-- Pinch Threshold -->
                 <div>
                     <div class="flex justify-between mb-2 text-sm">
                         <span class="text-gray-300">Pinch Distance Threshold</span>
@@ -290,7 +310,7 @@
                     <input type="range" id="inp-pinch" min="0.02" max="0.15" step="0.005" class="w-full" oninput="updateSetting('pinchThreshold', this.value)">
                 </div>
 
-                <!-- Nav Delay (NEW) -->
+                <!-- Nav Delay -->
                 <div>
                     <div class="flex justify-between mb-2 text-sm">
                         <span class="text-gray-300">Hold Timer (Frames)</span>
@@ -310,7 +330,7 @@
                 </div>
 
                 <div class="pt-4 border-t border-white/10 flex justify-between items-center">
-                    <button onclick="restoreDefaults()" class="text-xs text-red-400 hover:text-red-300 underline">Restore Defaults</button>
+                    <button onclick="restoreDefaults()" class="text-xs text-red-400 hover:text-red-300 underline p-2">Restore Defaults</button>
                     <button onclick="toggleSettings()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm transition-colors">Done</button>
                 </div>
             </div>
@@ -318,36 +338,37 @@
     </div>
 
     <!-- 5. HELP MODAL -->
-    <div id="help-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300">
-        <div class="glass-panel p-8 rounded-3xl max-w-2xl w-full mx-4 shadow-2xl transform scale-100 transition-transform">
+    <!-- Added onclick check to close on background tap -->
+    <div id="help-modal" onclick="if(event.target === this) toggleHelp()" class="fullscreen-modal fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300 px-4">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-2xl w-full shadow-2xl transform scale-100 transition-transform overflow-y-auto max-h-[90dvh]">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">AirTouch Gestures</h2>
-                <button onclick="toggleHelp()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                <h2 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">AirTouch Gestures</h2>
+                <button onclick="toggleHelp()" class="text-white/50 hover:text-white p-2"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
                 <!-- Card 1 -->
                 <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 hover:border-cyan-500/50 transition-colors">
-                    <div class="h-16 flex items-center justify-center mb-2">
-                        <i class="fa-regular fa-hand-pointer text-4xl text-cyan-400"></i>
+                    <div class="h-14 md:h-16 flex items-center justify-center mb-2">
+                        <i class="fa-regular fa-hand-pointer text-3xl md:text-4xl text-cyan-400"></i>
                     </div>
                     <h3 class="font-bold mb-1">Navigate</h3>
                     <p class="text-sm text-gray-400">Hold hand at edge to fill timer.</p>
                 </div>
                 <!-- Card 2 -->
                 <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 hover:border-cyan-500/50 transition-colors">
-                    <div class="h-16 flex items-center justify-center mb-2">
-                        <i class="fa-solid fa-hand-fist text-4xl text-yellow-400"></i>
+                    <div class="h-14 md:h-16 flex items-center justify-center mb-2">
+                        <i class="fa-solid fa-hand-fist text-3xl md:text-4xl text-yellow-400"></i>
                     </div>
                     <h3 class="font-bold mb-1">Pan / Drag</h3>
                     <p class="text-sm text-gray-400">Pinch ONE hand + Keep one open.</p>
                 </div>
                 <!-- Card 3 -->
                 <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 hover:border-cyan-500/50 transition-colors">
-                    <div class="h-16 flex items-center justify-center mb-2">
+                    <div class="h-14 md:h-16 flex items-center justify-center mb-2">
                         <div class="flex gap-2 justify-center">
-                            <i class="fa-solid fa-hand text-2xl text-purple-400"></i>
-                            <i class="fa-solid fa-hand text-2xl text-purple-400"></i>
+                            <i class="fa-solid fa-hand text-xl md:text-2xl text-purple-400"></i>
+                            <i class="fa-solid fa-hand text-xl md:text-2xl text-purple-400"></i>
                         </div>
                     </div>
                     <h3 class="font-bold mb-1">Zoom</h3>
@@ -355,7 +376,7 @@
                 </div>
             </div>
 
-            <div class="text-center">
+            <div class="text-center pb-4 md:pb-0">
                 <button onclick="toggleHelp()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-cyan-500/30 transition-all transform hover:scale-105">
                     Start Experiencing
                 </button>
@@ -488,7 +509,8 @@
             zonePrev: document.getElementById('zone-prev'),
             zoneNext: document.getElementById('zone-next'),
             progPrev: document.getElementById('prog-prev'),
-            progNext: document.getElementById('prog-next')
+            progNext: document.getElementById('prog-next'),
+            workspace: document.getElementById('workspace')
         };
 
         // Utility: Linear Interpolation for smoothing
@@ -502,6 +524,14 @@
         
         // Initialize UI with saved settings
         syncSettingsUI();
+
+        // Add workspace listener to toggle UI (essential for mobile reliability)
+        els.workspace.addEventListener('click', (e) => {
+            // Only trigger if clicking the workspace itself, not the image if image has events (though image is pointer-events-none here)
+            if (state.isCinemaMode) {
+                toggleCinemaMode();
+            }
+        });
 
         function handleFiles(fileList) {
             if (!fileList.length) return;
@@ -643,7 +673,7 @@
             const handCount = results.multiHandLandmarks ? results.multiHandLandmarks.length : 0;
 
             if (handCount === 2) {
-                setStatus("2 Hands Detected", "bg-purple-500");
+                setStatus("2 Hands", "bg-purple-500");
                 handleTwoHandGestures(results.multiHandLandmarks);
                 
                 // Clear single hand feedback
@@ -657,7 +687,7 @@
 
             } else {
                 // No hands / Idle
-                setStatus("Show hands to control", "bg-yellow-500");
+                setStatus("Wait", "bg-yellow-500");
                 state.navLocked = false;
                 state.isPanning = false;
                 state.smoothedHandX = null;
@@ -695,7 +725,7 @@
                 state.isPanning = false;
                 state.smoothedHandX = null;
                 
-                setStatus("Zooming...", "bg-purple-500");
+                setStatus("Zooming", "bg-purple-500");
 
                 const handDistance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
                 
@@ -709,7 +739,7 @@
             } 
             // CASE 2: One Pinching + One Open -> PAN (Drag Logic)
             else if (p1.isPinching || p2.isPinching) {
-                setStatus("Panning / Dragging", "bg-yellow-400");
+                setStatus("Panning", "bg-yellow-400");
                 
                 let navHand = p1.isPinching ? landmarksArray[1] : landmarksArray[0];
                 const rawNavX = navHand[9].x;
@@ -742,7 +772,7 @@
             else {
                 state.isPanning = false;
                 state.smoothedHandX = null;
-                setStatus("Pinch both: Zoom, One: Pan", "bg-blue-400");
+                setStatus("Two Hands", "bg-blue-400");
             }
         }
 
@@ -841,7 +871,7 @@
 
         hands.setOptions({
             maxNumHands: 2,
-            modelComplexity: 1,
+            modelComplexity: 1, // Keep light for mobile
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
         });
@@ -858,11 +888,11 @@
         });
 
         camera.start().then(() => {
-            setStatus("Ready - Show Hands", "bg-green-500");
+            setStatus("Ready", "bg-green-500");
         }).catch(err => {
             console.error(err);
-            setStatus("Camera Error", "bg-red-500");
-            alert("Please allow camera access.");
+            setStatus("Cam Error", "bg-red-500");
+            // Only alert if truly needed to avoid spamming
         });
 
         // Set Resolution
