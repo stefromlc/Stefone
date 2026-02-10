@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Updated Viewport for Mobile: viewport-fit=cover handles the notch, user-scalable=no prevents tap zoom interference -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
     <!-- Primary Meta Tags -->
@@ -30,11 +29,35 @@
     <!-- Optional -->
     <meta name="theme-color" content="#0ea5e9" />
 
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        neon: {
+                            cyan: '#06b6d4',
+                            purple: '#d946ef',
+                            bg: '#0f172a'
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <!-- MediaPipe Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -42,424 +65,378 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* Slate 900 */
+            background-color: #020617; /* Deep Slate */
             overflow: hidden;
             user-select: none;
-            /* Use dynamic viewport height for mobile browsers */
             height: 100dvh; 
             width: 100vw;
+            color: white;
         }
 
-        /* Glassmorphism Utilities */
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        /* HUD Aesthetics */
+        .hud-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
 
-        .glass-button {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(4px);
-            transition: all 0.2s ease;
-            /* Important for mobile touch response */
-            touch-action: manipulation;
+        .hud-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .glass-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        .glass-button:active {
-            transform: translateY(0);
-        }
+        .hud-btn:active { transform: scale(0.95); }
+        .hud-btn:hover { background: rgba(255,255,255,0.1); color: #22d3ee; }
 
-        /* Cursor & Interactions */
+        /* Custom Cursor */
         #virtual-cursor {
             pointer-events: none;
-            z-index: 50;
-            transition: width 0.1s, height 0.1s, background-color 0.2s;
-            mix-blend-mode: difference;
+            z-index: 100;
+            transition: width 0.15s, height 0.15s, background-color 0.2s, transform 0.1s;
+            mix-blend-mode: exclusion;
         }
+        
+        .cursor-default { width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; }
+        .cursor-hover { width: 40px; height: 40px; border-color: #22d3ee; background: rgba(34, 211, 238, 0.2); }
+        .cursor-grab { width: 20px; height: 20px; background: #fbbf24; border: none; border-radius: 4px; transform: rotate(45deg); }
+        .cursor-hidden { opacity: 0; }
 
         /* Navigation Zones */
         .nav-zone {
             transition: background 0.3s ease, opacity 0.3s ease;
+            background: linear-gradient(90deg, rgba(6,182,212,0.15) 0%, transparent 100%);
+        }
+        .nav-zone.right {
+            background: linear-gradient(-90deg, rgba(6,182,212,0.15) 0%, transparent 100%);
         }
         
-        .nav-zone.active {
-            background: rgba(34, 211, 238, 0.2); /* Cyan tint */
-            opacity: 1 !important;
-        }
+        /* Canvas Mirror */
+        #output_canvas { transform: scaleX(-1); border-radius: 0.75rem; }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        /* Toast Notifications */
+        #toast-container { pointer-events: none; }
+        .toast-enter { transform: translateY(20px); opacity: 0; }
+        .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .toast-exit { opacity: 0; transform: scale(0.9); transition: all 0.2s ease; }
 
-        /* Smooth Image Transitions */
-        #main-image {
-            will-change: transform;
-        }
-
-        /* Camera Mirroring */
-        #output_canvas {
-            transform: scaleX(-1);
-        }
-
-        /* Range Slider Styling */
-        input[type=range] {
-            -webkit-appearance: none; 
-            background: transparent; 
-        }
+        /* Range Sliders */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: #22d3ee;
-            cursor: pointer;
-            margin-top: -6px; 
-            box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+            -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%;
+            background: #22d3ee; cursor: pointer; margin-top: -5px; 
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
         }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: rgba(255,255,255,0.2);
-            border-radius: 2px;
+            width: 100%; height: 4px; cursor: pointer;
+            background: rgba(255,255,255,0.1); border-radius: 2px;
+        }
+        
+        /* Mobile Safe Areas */
+        .safe-pb { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
+        .safe-pt { padding-top: max(1rem, env(safe-area-inset-top)); }
+
+        /* --- TRANSITION ANIMATIONS (Only Fade Kept) --- */
+        /* Use !important to override inline gesture transforms during transition */
+        .anim-base {
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Safe Area Utilities for Mobile (Notch/Home Bar) */
-        .safe-pt {
-            padding-top: max(1.5rem, env(safe-area-inset-top));
-        }
-        .safe-pb {
-            padding-bottom: max(2rem, env(safe-area-inset-bottom));
-        }
-        /* Ensure modals sit above everything but stay within viewport */
-        .fullscreen-modal {
-            height: 100dvh;
-            width: 100vw;
-        }
+        /* Fade Effect */
+        .anim-fade-out { opacity: 0 !important; }
+        .anim-fade-in { opacity: 0 !important; } /* Starting state for enter */
     </style>
 </head>
 <body ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
 
-    <!-- 1. TOP BAR -->
-    <!-- Added safe-pt for notch support -->
-    <div id="ui-top" class="fixed top-0 left-0 w-full px-4 md:px-6 safe-pt flex justify-between items-start z-40 transition-opacity duration-300 pointer-events-none">
-        <!-- Back Button (pointer-events-auto needed because parent is none) -->
-        <a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10">
-            <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
-            <span class="hidden md:inline">Back to Projects</span>
-        </a>
-
-        <!-- Status & Camera Wrapper -->
-        <div class="flex flex-col items-end gap-4 pointer-events-auto">
-            <!-- Status Pill -->
-            <div id="status-pill" class="glass-panel px-4 py-2 rounded-full flex items-center gap-3 text-xs font-semibold uppercase tracking-wider">
-                <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]"></div>
-                <span id="status-text" class="text-gray-300">Initializing...</span>
-            </div>
-
-            <!-- Camera Feed (Smaller on mobile) -->
-            <div class="relative group">
-                <div class="w-28 md:w-40 h-20 md:h-32 rounded-xl overflow-hidden glass-panel shadow-2xl relative transition-all duration-300 hover:scale-105">
-                    <!-- Added playsinline for iOS support -->
-                    <video id="input_video" class="hidden" playsinline webkit-playsinline></video>
-                    <canvas id="output_canvas" class="w-full h-full object-cover"></canvas>
-                    <div class="absolute bottom-1 right-2 text-[10px] text-white/50">DEBUG</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. MAIN WORKSPACE -->
-    <div id="workspace" class="absolute inset-0 flex items-center justify-center overflow-hidden z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 cursor-pointer">
+    <!-- BACKGROUND / WORKSPACE -->
+    <div id="workspace" class="absolute inset-0 flex items-center justify-center overflow-hidden z-0 bg-slate-950 cursor-crosshair">
         
-        <!-- Placeholder State -->
-        <div id="empty-state" class="text-center p-6 md:p-10 border-2 border-dashed border-white/10 rounded-3xl text-white/40 flex flex-col items-center gap-4 mx-4">
-            <i class="fa-solid fa-images text-5xl md:text-6xl mb-2"></i>
-            <h2 class="text-xl md:text-2xl font-bold text-white">No Images Loaded</h2>
-            <p class="text-sm md:text-base">Drag & Drop files or use the folder icon</p>
-            <button onclick="document.getElementById('fileInput').click()" class="mt-4 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-full transition-colors shadow-lg shadow-cyan-500/20 pointer-events-auto">
-                Select Files
-            </button>
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-20 pointer-events-none" 
+             style="background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 32px 32px;">
         </div>
 
         <!-- Image Container -->
-        <div id="image-wrapper" class="w-full h-full flex items-center justify-center relative hidden opacity-0 transition-opacity duration-500">
-            <img id="main-image" src="" alt="Gallery View" class="max-w-[95%] max-h-[90%] md:max-w-[90%] md:max-h-[90%] rounded-lg shadow-2xl select-none pointer-events-none">
+        <div id="image-wrapper" class="w-full h-full flex items-center justify-center relative opacity-0 transition-opacity duration-700 p-4 md:p-8">
+            <img id="main-image" src="" alt="Gallery View" class="max-w-full max-h-full object-contain shadow-2xl select-none pointer-events-none origin-center will-change-transform rounded-sm">
         </div>
 
-        <!-- Edge Navigation Zones with Progress Bars -->
-        <div id="zone-prev" class="absolute left-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-start pl-4 md:pl-8 nav-zone opacity-0 pointer-events-none">
-            <!-- Progress Bar -->
-            <div class="absolute left-0 top-0 bottom-0 w-2 bg-white/5 backdrop-blur-sm">
+        <!-- Edge Navigation Zones -->
+        <div id="zone-prev" class="absolute left-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-start pl-6 nav-zone opacity-0 pointer-events-none">
+            <div class="h-32 w-1 bg-white/20 rounded-full overflow-hidden relative">
                 <div id="prog-prev" class="w-full bg-cyan-400 absolute bottom-0 left-0 transition-all duration-75" style="height: 0%"></div>
             </div>
-            <i class="fa-solid fa-chevron-left text-3xl md:text-4xl text-cyan-400 shadow-glow ml-2 md:ml-4"></i>
+            <i class="fa-solid fa-chevron-left text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] ml-6"></i>
         </div>
 
-        <div id="zone-next" class="absolute right-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-end pr-4 md:pr-8 nav-zone opacity-0 pointer-events-none">
-             <!-- Progress Bar -->
-             <div class="absolute right-0 top-0 bottom-0 w-2 bg-white/5 backdrop-blur-sm">
+        <div id="zone-next" class="absolute right-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-end pr-6 nav-zone right opacity-0 pointer-events-none">
+            <i class="fa-solid fa-chevron-right text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] mr-6"></i>
+            <div class="h-32 w-1 bg-white/20 rounded-full overflow-hidden relative">
                 <div id="prog-next" class="w-full bg-cyan-400 absolute bottom-0 right-0 transition-all duration-75" style="height: 0%"></div>
             </div>
-            <i class="fa-solid fa-chevron-right text-3xl md:text-4xl text-cyan-400 shadow-glow mr-2 md:mr-4"></i>
         </div>
     </div>
 
-    <!-- 3. BOTTOM DOCK (Controls) -->
-    <!-- Added safe-pb for Home indicator support -->
-    <div id="ui-bottom" class="fixed bottom-0 left-0 w-full flex justify-center z-40 transition-transform duration-300 safe-pb pointer-events-none">
-        <!-- Inner container pointer-events-auto so clicks pass through margins -->
-        <div class="glass-panel px-4 py-3 md:px-6 md:py-3 rounded-2xl flex items-center gap-4 md:gap-6 shadow-2xl pointer-events-auto mb-4 mx-4">
-            
-            <!-- File Upload -->
-            <div class="tooltip-container relative group">
-                <button onclick="document.getElementById('fileInput').click()" class="glass-button w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl text-white">
-                    <i class="fa-solid fa-folder-open"></i>
-                </button>
-                <span class="hidden md:block absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">Open</span>
-            </div>
-            <input type="file" id="fileInput" hidden multiple accept="image/*" onchange="handleFiles(this.files)">
-
-            <div class="w-px h-6 md:h-8 bg-white/10"></div>
-
-            <!-- Navigation Controls -->
-            <button onclick="prevImage()" class="text-white/70 hover:text-white transition-colors text-lg md:text-xl px-1 md:px-2"><i class="fa-solid fa-backward-step"></i></button>
-            <span id="counter" class="font-mono text-cyan-400 min-w-[50px] md:min-w-[60px] text-center font-bold text-sm md:text-base">0 / 0</span>
-            <button onclick="nextImage()" class="text-white/70 hover:text-white transition-colors text-lg md:text-xl px-1 md:px-2"><i class="fa-solid fa-forward-step"></i></button>
-
-            <div class="w-px h-6 md:h-8 bg-white/10"></div>
-
-            <!-- View Controls -->
-            <div class="tooltip-container relative group">
-                <button onclick="resetView()" class="glass-button w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl text-white">
-                    <i class="fa-solid fa-compress"></i>
-                </button>
+    <!-- UI LAYER -->
+    <div id="ui-layer" class="absolute inset-0 z-40 pointer-events-none flex flex-col justify-between safe-pt safe-pb transition-opacity duration-300">
+        
+        <!-- TOP BAR -->
+        <div class="flex justify-between items-start px-4 md:px-6">
+            <!-- Logo / Branding -->
+            <div class="pointer-events-auto flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <i class="fa-solid fa-hand-sparkles text-white text-lg"></i>
+                </div>
+                <div class="hidden md:block">
+                    <h1 class="font-bold text-lg tracking-tight">AirTouch<span class="text-cyan-400">Pro</span></h1>
+                    <div class="text-[10px] uppercase tracking-widest text-slate-400 font-mono" id="gesture-state">Initializing...</div>
+                </div>
             </div>
 
-            <div class="tooltip-container relative group">
-                <button onclick="toggleCinemaMode()" class="glass-button w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl text-yellow-400">
+            <!-- Camera Widget (Collapsible) -->
+            <div class="pointer-events-auto flex flex-col items-end gap-2">
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleCameraView()" class="hud-panel px-3 py-1.5 rounded-lg text-xs font-mono text-cyan-400 hover:bg-white/5 border-cyan-500/30 flex items-center gap-2">
+                        <span id="cam-toggle-text">HIDE CAM</span>
+                        <div id="status-dot" class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,1)] animate-pulse"></div>
+                    </button>
+                </div>
+                
+                <div id="camera-container" class="relative group transition-all duration-300 origin-top-right">
+                    <div class="w-32 h-24 md:w-48 md:h-36 rounded-xl overflow-hidden hud-panel p-1 shadow-2xl">
+                        <video id="input_video" class="hidden" playsinline webkit-playsinline></video>
+                        <canvas id="output_canvas" class="w-full h-full object-cover rounded-lg bg-black/50"></canvas>
+                    </div>
+                    <!-- Skeleton Overlay Hint -->
+                    <div class="absolute bottom-2 left-2 text-[9px] text-white/50 font-mono bg-black/40 px-1 rounded backdrop-blur-sm">
+                        FPS: <span id="fps-counter">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER TOASTS -->
+        <div id="toast-container" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 w-full max-w-xs text-center z-50">
+            <!-- Dynamic toasts inserted here -->
+        </div>
+
+        <!-- BOTTOM DOCK -->
+        <div class="flex justify-center px-4 mb-2">
+            <div class="hud-panel px-2 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 md:gap-4 pointer-events-auto shadow-2xl">
+                
+                <!-- File Input -->
+                <div class="tooltip-wrapper relative group">
+                    <button onclick="document.getElementById('fileInput').click()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white/80">
+                        <i class="fa-solid fa-folder-plus text-lg"></i>
+                    </button>
+                    <input type="file" id="fileInput" hidden multiple accept="image/*" onchange="handleFiles(this.files)">
+                </div>
+
+                <div class="w-px h-8 bg-white/10 mx-1"></div>
+
+                <!-- Nav -->
+                <button onclick="prevImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-backward-step"></i></button>
+                <div class="font-mono text-cyan-400 text-sm md:text-base font-bold min-w-[60px] text-center" id="counter">-- / --</div>
+                <button onclick="nextImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-forward-step"></i></button>
+
+                <div class="w-px h-8 bg-white/10 mx-1"></div>
+
+                <!-- Tools -->
+                <button onclick="resetView()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Fit to Screen">
+                    <i class="fa-solid fa-maximize"></i>
+                </button>
+                
+                <button onclick="toggleCinemaMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-yellow-400" title="Cinema Mode (Space)">
                     <i id="cinema-icon" class="fa-solid fa-expand"></i>
                 </button>
-            </div>
-            
-            <!-- Settings & Help -->
-            <div class="w-px h-6 md:h-8 bg-white/10"></div>
 
-            <div class="tooltip-container relative group">
-                <button onclick="toggleSettings()" class="glass-button w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl text-white/80 hover:text-white">
-                    <i class="fa-solid fa-gear"></i>
+                <div class="w-px h-8 bg-white/10 mx-1"></div>
+
+                <button onclick="toggleSettings()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/60">
+                    <i class="fa-solid fa-sliders"></i>
                 </button>
-            </div>
 
-            <div class="tooltip-container relative group">
-                <button onclick="toggleHelp()" class="glass-button w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-lg md:text-xl text-cyan-400 border border-cyan-400/30">
+                <button onclick="toggleHelp()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-cyan-400 border border-cyan-500/30 bg-cyan-500/10">
                     <i class="fa-solid fa-question"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- 4. SETTINGS MODAL -->
-    <!-- Added onclick check to close on background tap -->
-    <div id="settings-modal" onclick="if(event.target === this) toggleSettings()" class="fullscreen-modal fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
-        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-md w-full shadow-2xl transform scale-100 transition-transform">
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" onclick="if(event.target === this) toggleSettings()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="hud-panel p-6 md:p-8 rounded-3xl max-w-md w-full transform scale-100 transition-transform overflow-y-auto max-h-[85vh]">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-white flex items-center gap-3">
-                    <i class="fa-solid fa-sliders text-cyan-400"></i> Settings
+                <h2 class="text-xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-sliders text-cyan-400"></i> Calibration
                 </h2>
-                <button onclick="toggleSettings()" class="text-white/50 hover:text-white p-2"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                <button onclick="toggleSettings()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
 
-            <div class="space-y-5 md:space-y-6 max-h-[60vh] overflow-y-auto pr-2">
-                <!-- Pan Sensitivity -->
-                <div>
-                    <div class="flex justify-between mb-2 text-sm">
-                        <span class="text-gray-300">Pan Sensitivity (Speed)</span>
-                        <span id="val-sensitivity" class="text-cyan-400 font-mono">2500</span>
+            <div class="space-y-6">
+                
+                <!-- Visual Settings -->
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                    <div class="flex justify-between mb-3 text-xs uppercase tracking-wider font-semibold text-slate-300">
+                        <span>Visual Experience</span>
                     </div>
-                    <input type="range" id="inp-sensitivity" min="500" max="5000" step="100" class="w-full" oninput="updateSetting('sensitivity', this.value)">
+                    
+                    <div>
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Fade Speed</span>
+                            <span id="val-transitionSpeed" class="text-cyan-400 font-mono text-xs">300ms</span>
+                        </div>
+                        <input type="range" id="inp-transitionSpeed" min="100" max="1000" step="50" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('transitionSpeed', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">How fast one photo melts into the next.</p>
+                    </div>
                 </div>
 
-                <!-- Smoothing -->
+                <!-- Gesture Settings -->
                 <div>
-                    <div class="flex justify-between mb-2 text-sm">
-                        <span class="text-gray-300">Motion Smoothing</span>
-                        <span id="val-smoothing" class="text-cyan-400 font-mono">0.2</span>
+                     <div class="flex justify-between mb-3 text-xs uppercase tracking-wider font-semibold text-slate-300">
+                        <span>Gesture Control</span>
                     </div>
-                    <input type="range" id="inp-smoothing" min="0.01" max="0.5" step="0.01" class="w-full" oninput="updateSetting('smoothing', this.value)">
-                    <p class="text-[10px] text-gray-500 mt-1">Lower = Smoother/Laggy. Higher = Faster/Jittery.</p>
-                </div>
 
-                <!-- Pinch Threshold -->
-                <div>
-                    <div class="flex justify-between mb-2 text-sm">
-                        <span class="text-gray-300">Pinch Distance Threshold</span>
-                        <span id="val-pinch" class="text-cyan-400 font-mono">0.08</span>
+                    <!-- Sensitivity -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Drag Speed</span>
+                            <span id="val-sensitivity" class="text-cyan-400 font-mono text-xs">2500</span>
+                        </div>
+                        <input type="range" id="inp-sensitivity" min="500" max="5000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('sensitivity', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">Make the image move faster or slower when you drag.</p>
                     </div>
-                    <input type="range" id="inp-pinch" min="0.02" max="0.15" step="0.005" class="w-full" oninput="updateSetting('pinchThreshold', this.value)">
-                </div>
 
-                <!-- Nav Delay -->
-                <div>
-                    <div class="flex justify-between mb-2 text-sm">
-                        <span class="text-gray-300">Hold Timer (Frames)</span>
-                        <span id="val-delay" class="text-cyan-400 font-mono">20</span>
+                    <!-- Smoothing -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Jitter Reducer</span>
+                            <span id="val-smoothing" class="text-cyan-400 font-mono text-xs">0.2</span>
+                        </div>
+                        <input type="range" id="inp-smoothing" min="0.01" max="0.5" step="0.01" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('smoothing', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">Higher = smoother cursor. Lower = faster response.</p>
                     </div>
-                    <input type="range" id="inp-delay" min="5" max="60" step="5" class="w-full" oninput="updateSetting('navDelay', this.value)">
-                    <p class="text-[10px] text-gray-500 mt-1">Prevents accidental swipes. Higher = Hold Longer.</p>
-                </div>
 
-                <!-- Edge Zone Size -->
-                <div>
-                    <div class="flex justify-between mb-2 text-sm">
-                        <span class="text-gray-300">Edge Zone Size</span>
-                        <span id="val-edge" class="text-cyan-400 font-mono">15%</span>
+                    <!-- Pinch -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Pinch Ease</span>
+                            <span id="val-pinchThreshold" class="text-cyan-400 font-mono text-xs">0.08</span>
+                        </div>
+                        <input type="range" id="inp-pinchThreshold" min="0.02" max="0.15" step="0.005" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('pinchThreshold', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">Adjusts how close fingers need to be to "grab".</p>
                     </div>
-                    <input type="range" id="inp-edge" min="0.05" max="0.30" step="0.01" class="w-full" oninput="updateSetting('edgeZone', this.value)">
+
+                     <!-- Nav Delay -->
+                     <div>
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Edge Hold Time</span>
+                            <span id="val-navDelay" class="text-cyan-400 font-mono text-xs">20</span>
+                        </div>
+                        <input type="range" id="inp-navDelay" min="5" max="60" step="5" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('navDelay', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">How long to hold at the side to switch photos.</p>
+                    </div>
                 </div>
 
                 <div class="pt-4 border-t border-white/10 flex justify-between items-center">
-                    <button onclick="restoreDefaults()" class="text-xs text-red-400 hover:text-red-300 underline p-2">Restore Defaults</button>
-                    <button onclick="toggleSettings()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm transition-colors">Done</button>
+                    <button onclick="restoreDefaults()" class="text-xs text-red-400 hover:text-red-300">Reset Everything</button>
+                    <button onclick="toggleSettings()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-cyan-500/20">Done</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 5. HELP MODAL -->
-    <!-- Added onclick check to close on background tap -->
-    <div id="help-modal" onclick="if(event.target === this) toggleHelp()" class="fullscreen-modal fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300 px-4">
-        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-2xl w-full shadow-2xl transform scale-100 transition-transform overflow-y-auto max-h-[90dvh]">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">AirTouch Gestures</h2>
-                <button onclick="toggleHelp()" class="text-white/50 hover:text-white p-2"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            </div>
+    <!-- HELP / WELCOME MODAL -->
+    <div id="help-modal" onclick="if(event.target === this) toggleHelp()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md transition-opacity duration-300 px-4">
+        <div class="hud-panel p-1 rounded-3xl max-w-3xl w-full shadow-2xl transform transition-transform">
+            <div class="bg-slate-900/50 rounded-[20px] p-6 md:p-10 border border-white/5 relative overflow-hidden">
+                <!-- Close -->
+                <button onclick="toggleHelp()" class="absolute top-6 right-6 text-white/30 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
-                <!-- Card 1 -->
-                <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 hover:border-cyan-500/50 transition-colors">
-                    <div class="h-14 md:h-16 flex items-center justify-center mb-2">
-                        <i class="fa-regular fa-hand-pointer text-3xl md:text-4xl text-cyan-400"></i>
-                    </div>
-                    <h3 class="font-bold mb-1">Navigate</h3>
-                    <p class="text-sm text-gray-400">Hold hand at edge to fill timer.</p>
+                <div class="text-center mb-10">
+                    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Welcome to <span class="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">AirTouch</span></h1>
+                    <p class="text-slate-400">A touchless, hygienic, and futuristic way to browse.</p>
                 </div>
-                <!-- Card 2 -->
-                <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 hover:border-cyan-500/50 transition-colors">
-                    <div class="h-14 md:h-16 flex items-center justify-center mb-2">
-                        <i class="fa-solid fa-hand-fist text-3xl md:text-4xl text-yellow-400"></i>
-                    </div>
-                    <h3 class="font-bold mb-1">Pan / Drag</h3>
-                    <p class="text-sm text-gray-400">Pinch ONE hand + Keep one open.</p>
-                </div>
-                <!-- Card 3 -->
-                <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 hover:border-cyan-500/50 transition-colors">
-                    <div class="h-14 md:h-16 flex items-center justify-center mb-2">
-                        <div class="flex gap-2 justify-center">
-                            <i class="fa-solid fa-hand text-xl md:text-2xl text-purple-400"></i>
-                            <i class="fa-solid fa-hand text-xl md:text-2xl text-purple-400"></i>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <!-- Nav -->
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-cyan-500/30 transition-colors group">
+                        <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center mb-4 text-cyan-400 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-arrow-right-arrow-left"></i>
                         </div>
+                        <h3 class="font-bold text-white mb-2">Navigate</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Move one hand to the <strong>Edge</strong> of the screen and hold to switch images.</p>
                     </div>
-                    <h3 class="font-bold mb-1">Zoom</h3>
-                    <p class="text-sm text-gray-400">Pinch BOTH hands.</p>
-                </div>
-            </div>
 
-            <div class="text-center pb-4 md:pb-0">
-                <button onclick="toggleHelp()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-cyan-500/30 transition-all transform hover:scale-105">
-                    Start Experiencing
-                </button>
-                <p class="mt-4 text-xs text-gray-500">Camera permission is required. Data is processed locally.</p>
+                    <!-- Pan -->
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-yellow-500/30 transition-colors group">
+                        <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-400 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-hand-back-fist"></i>
+                        </div>
+                        <h3 class="font-bold text-white mb-2">Pan & Drag</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed"><strong>Pinch</strong> with one hand to grab the image, then move your hand to drag.</p>
+                    </div>
+
+                    <!-- Zoom -->
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-colors group">
+                        <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center mb-4 text-purple-400 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-expand"></i>
+                        </div>
+                        <h3 class="font-bold text-white mb-2">Zoom</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">Raise <strong>Both Hands</strong> and pinch. Move hands apart to zoom in, together to zoom out.</p>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button onclick="toggleHelp()" class="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-white transition-all duration-200 bg-cyan-600 font-lg rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-600 hover:bg-cyan-500 hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]">
+                        <span>Initialize System</span>
+                        <i class="fa-solid fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                    <p class="mt-4 text-[10px] text-slate-500 uppercase tracking-widest">Camera Processed Locally • No Cloud Upload</p>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Virtual Cursor Element -->
-    <div id="virtual-cursor" class="fixed w-6 h-6 rounded-full border-2 border-white flex items-center justify-center opacity-0 shadow-[0_0_20px_rgba(0,191,255,0.8)] bg-[rgba(0,191,255,0.6)]"></div>
+    <div id="virtual-cursor" class="fixed cursor-default hidden md:block"></div>
 
     <script>
         /**
-         * SETTINGS MANAGEMENT
+         * ------------------------------------------------------------------
+         * CONFIGURATION & STATE
+         * ------------------------------------------------------------------
          */
         const DEFAULT_SETTINGS = {
             sensitivity: 2500,
             pinchThreshold: 0.08,
-            smoothing: 0.2,
+            smoothing: 0.15, 
             edgeZone: 0.15,
             zoomSpeed: 5.5,
-            navDelay: 20 // Frames (~0.5s - 0.7s)
+            navDelay: 20,
+            transitionSpeed: 300 // ms
         };
 
-        // Load Settings from LocalStorage or use Defaults
+        const SAMPLE_IMAGES = [
+            'https://images-assets.nasa.gov/image/PIA00404/PIA00404~large.jpg',
+            'https://explorer1.jpl.nasa.gov/assets/images/galleries/1972_BlueMarble_115334main_image_feature_329_ys_full.jpg',
+            'https://images.pexels.com/photos/18173405/pexels-photo-18173405.jpeg',
+            'https://minutemedia-ressh.cloudinary.com/image/upload/v1695026966/shape/cover/sport/00b0ba4601cc87255343186bb0ccfa068fef21ebb74c81c6f976da04b9967d85.jpg'
+        ];
+
         let userSettings = JSON.parse(localStorage.getItem('airtouch_settings')) || { ...DEFAULT_SETTINGS };
+        if(!userSettings.transitionSpeed) userSettings.transitionSpeed = DEFAULT_SETTINGS.transitionSpeed;
 
-        // Ensure new settings exist if loading old local storage
-        if(!userSettings.navDelay) userSettings.navDelay = DEFAULT_SETTINGS.navDelay;
-
-        function updateSetting(key, value) {
-            value = parseFloat(value);
-            userSettings[key] = value;
-            
-            // Update UI Display text
-            if(key === 'edgeZone') {
-                document.getElementById('val-edge').innerText = Math.round(value * 100) + '%';
-            } else if (key === 'pinchThreshold') {
-                document.getElementById('val-pinch').innerText = value.toFixed(3);
-            } else if (key === 'sensitivity') {
-                document.getElementById('val-sensitivity').innerText = Math.round(value);
-            } else if (key === 'smoothing') {
-                document.getElementById('val-smoothing').innerText = value.toFixed(2);
-            } else if (key === 'navDelay') {
-                document.getElementById('val-delay').innerText = value;
-            }
-
-            // Save
-            localStorage.setItem('airtouch_settings', JSON.stringify(userSettings));
-        }
-
-        function restoreDefaults() {
-            userSettings = { ...DEFAULT_SETTINGS };
-            localStorage.setItem('airtouch_settings', JSON.stringify(userSettings));
-            syncSettingsUI();
-        }
-
-        function syncSettingsUI() {
-            document.getElementById('inp-sensitivity').value = userSettings.sensitivity;
-            document.getElementById('val-sensitivity').innerText = userSettings.sensitivity;
-
-            document.getElementById('inp-smoothing').value = userSettings.smoothing;
-            document.getElementById('val-smoothing').innerText = userSettings.smoothing;
-
-            document.getElementById('inp-pinch').value = userSettings.pinchThreshold;
-            document.getElementById('val-pinch').innerText = userSettings.pinchThreshold;
-
-            document.getElementById('inp-edge').value = userSettings.edgeZone;
-            document.getElementById('val-edge').innerText = Math.round(userSettings.edgeZone * 100) + '%';
-
-            document.getElementById('inp-delay').value = userSettings.navDelay;
-            document.getElementById('val-delay').innerText = userSettings.navDelay;
-        }
-
-        /**
-         * APPLICATION STATE
-         */
         const state = {
-            images: [],
+            images: [...SAMPLE_IMAGES],
             currentIdx: 0,
             isHelpOpen: true,
             isSettingsOpen: false,
             isCinemaMode: false,
+            isCamVisible: true,
+            isTransitioning: false, // New Lock
             
             // Transform State
             scale: 1,
@@ -469,7 +446,7 @@
 
             // Nav State
             navLocked: false,
-            edgeTimer: 0, // Current frames held in zone
+            edgeTimer: 0,
             
             // Pan State
             isPanning: false,
@@ -480,100 +457,147 @@
             
             // Smoothing
             smoothedHandX: null,
-            smoothedHandY: null
+            smoothedHandY: null,
+
+            // FPS
+            lastFrameTime: 0,
+            frameCount: 0
         };
 
         const CONSTANTS = {
-            MIN_SCALE: 0.2,
+            MIN_SCALE: 0.5,
             MAX_SCALE: 8.0,
         };
 
         /**
-         * DOM ELEMENTS
+         * ------------------------------------------------------------------
+         * DOM REFERENCES
+         * ------------------------------------------------------------------
          */
         const els = {
             mainImage: document.getElementById('main-image'),
             imageWrapper: document.getElementById('image-wrapper'),
-            emptyState: document.getElementById('empty-state'),
             counter: document.getElementById('counter'),
             cursor: document.getElementById('virtual-cursor'),
             video: document.getElementById('input_video'),
             canvas: document.getElementById('output_canvas'),
             ctx: document.getElementById('output_canvas').getContext('2d'),
             statusDot: document.getElementById('status-dot'),
-            statusText: document.getElementById('status-text'),
-            uiTop: document.getElementById('ui-top'),
-            uiBottom: document.getElementById('ui-bottom'),
+            gestureState: document.getElementById('gesture-state'),
+            uiLayer: document.getElementById('ui-layer'),
             helpModal: document.getElementById('help-modal'),
             settingsModal: document.getElementById('settings-modal'),
             zonePrev: document.getElementById('zone-prev'),
             zoneNext: document.getElementById('zone-next'),
             progPrev: document.getElementById('prog-prev'),
             progNext: document.getElementById('prog-next'),
-            workspace: document.getElementById('workspace')
+            workspace: document.getElementById('workspace'),
+            toastContainer: document.getElementById('toast-container'),
+            cameraContainer: document.getElementById('camera-container'),
+            fpsCounter: document.getElementById('fps-counter')
         };
 
-        // Utility: Linear Interpolation for smoothing
+        // Utility: Linear Interpolation
         function lerp(start, end, amt) {
             return (1 - amt) * start + amt * end;
         }
 
         /**
-         * UI FUNCTIONS
+         * ------------------------------------------------------------------
+         * UI LOGIC
+         * ------------------------------------------------------------------
          */
-        
-        // Initialize UI with saved settings
-        syncSettingsUI();
 
-        // Add workspace listener to toggle UI (essential for mobile reliability)
-        els.workspace.addEventListener('click', (e) => {
-            // Only trigger if clicking the workspace itself, not the image if image has events (though image is pointer-events-none here)
-            if (state.isCinemaMode) {
-                toggleCinemaMode();
-            }
-        });
+        function init() {
+            syncSettingsUI();
+            renderImage(false); // No transition on init
+            showToast("System Ready", "info");
+        }
 
         function handleFiles(fileList) {
             if (!fileList.length) return;
             const newImages = Array.from(fileList).filter(f => f.type.startsWith('image/'));
             
-            let processed = 0;
-            newImages.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    state.images.push(e.target.result);
-                    processed++;
-                    if (processed === newImages.length) {
-                        if (state.images.length === newImages.length) {
-                            state.currentIdx = 0;
-                            renderImage();
-                        } else {
-                            updateCounter();
+            if (newImages.length > 0) {
+                if(state.images[0] === SAMPLE_IMAGES[0]) state.images = [];
+                
+                let processed = 0;
+                newImages.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        state.images.push(e.target.result);
+                        processed++;
+                        if (processed === newImages.length) {
+                            state.currentIdx = state.images.length - newImages.length;
+                            renderImage(false);
+                            showToast(`Loaded ${newImages.length} Images`, "success");
                         }
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
         }
 
-        function handleDrop(e) {
-            e.preventDefault();
-            handleFiles(e.dataTransfer.files);
-        }
+        function handleDrop(e) { e.preventDefault(); handleFiles(e.dataTransfer.files); }
+        function handleDragOver(e) { e.preventDefault(); }
 
-        function handleDragOver(e) {
-            e.preventDefault();
-        }
-
-        function renderImage() {
+        // Core Image Render
+        function renderImage(withTransition = true, direction = 'next') {
             if (state.images.length === 0) return;
-            els.emptyState.classList.add('hidden');
-            els.imageWrapper.classList.remove('hidden');
-            requestAnimationFrame(() => els.imageWrapper.classList.remove('opacity-0'));
+            els.imageWrapper.classList.remove('opacity-0');
+
+            if (withTransition) {
+                handleImageTransition(direction, () => {
+                    // This runs halfway through transition (after exit, before enter)
+                    els.mainImage.src = state.images[state.currentIdx];
+                    resetView();
+                    updateCounter();
+                });
+            } else {
+                // Instant Swap
+                els.mainImage.src = state.images[state.currentIdx];
+                resetView();
+                updateCounter();
+            }
+        }
+
+        function handleImageTransition(direction, swapCallback) {
+            if (state.isTransitioning) return;
+            state.isTransitioning = true;
+
+            const speed = userSettings.transitionSpeed;
             
-            els.mainImage.src = state.images[state.currentIdx];
-            updateCounter();
-            resetView();
+            // Always Fade
+            let exitClass = 'anim-fade-out';
+            let enterClass = 'anim-fade-in';
+
+            // 2. Apply Duration & Exit Class
+            els.mainImage.style.transitionDuration = `${speed}ms`;
+            els.mainImage.classList.add('anim-base', exitClass);
+
+            // 3. Wait for Exit
+            setTimeout(() => {
+                // Swap Image Data & Reset View (Hidden)
+                swapCallback();
+
+                // Prepare Enter (Remove exit, add enter start state)
+                els.mainImage.classList.remove(exitClass);
+                els.mainImage.classList.add(enterClass);
+                
+                // Force Reflow
+                void els.mainImage.offsetWidth;
+
+                // Animate In (Remove enter class to go to neutral)
+                els.mainImage.classList.remove(enterClass);
+                
+                // 4. Cleanup after Enter
+                setTimeout(() => {
+                    els.mainImage.classList.remove('anim-base');
+                    els.mainImage.style.transitionDuration = '';
+                    state.isTransitioning = false;
+                }, speed);
+
+            }, speed);
         }
 
         function updateCounter() {
@@ -585,44 +609,68 @@
             state.smoothedScale = 1;
             state.panX = 0;
             state.panY = 0;
-            updateTransform();
+            // Force the update even if transitioning, so the underlying style is reset 
+            // before the animation classes are removed.
+            updateTransform(true);
         }
 
-        function updateTransform() {
+        function updateTransform(force = false) {
             if (!els.mainImage) return;
-            els.mainImage.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
+            // Only update transform if NOT transitioning (to avoid fighting CSS animations)
+            // UNLESS 'force' is true (used during reset)
+            if (!state.isTransitioning || force) {
+                els.mainImage.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
+            }
         }
 
         function nextImage() {
-            if (state.images.length === 0) return;
+            if (state.images.length <= 1 || state.isTransitioning) return;
             state.currentIdx = (state.currentIdx + 1) % state.images.length;
-            renderImage();
-            triggerFeedback('right');
+            renderImage(true, 'next');
         }
 
         function prevImage() {
-            if (state.images.length === 0) return;
+            if (state.images.length <= 1 || state.isTransitioning) return;
             state.currentIdx = (state.currentIdx - 1 + state.images.length) % state.images.length;
-            renderImage();
-            triggerFeedback('left');
+            renderImage(true, 'prev');
         }
 
-        function triggerFeedback(direction) {
-            const flash = document.createElement('div');
-            flash.className = `absolute top-0 bottom-0 w-32 pointer-events-none bg-white/20 transition-opacity duration-300 z-50 ${direction === 'left' ? 'left-0' : 'right-0'}`;
-            document.body.appendChild(flash);
+        function toggleCameraView() {
+            state.isCamVisible = !state.isCamVisible;
+            if(state.isCamVisible) {
+                els.cameraContainer.classList.remove('scale-0', 'opacity-0');
+                document.getElementById('cam-toggle-text').innerText = "HIDE CAM";
+            } else {
+                els.cameraContainer.classList.add('scale-0', 'opacity-0');
+                document.getElementById('cam-toggle-text').innerText = "SHOW CAM";
+            }
+        }
+
+        // --- Toast System ---
+        function showToast(message, type = 'neutral') {
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-slate-800/90 border-slate-600 text-white';
+            if(type === 'action') bgClass = 'bg-cyan-500/90 border-cyan-400 text-white shadow-cyan-500/50';
+            if(type === 'warning') bgClass = 'bg-yellow-500/90 border-yellow-400 text-black font-bold';
+            
+            toast.className = `toast-enter backdrop-blur-md px-6 py-2 rounded-full border shadow-xl font-medium text-sm mb-2 ${bgClass}`;
+            toast.innerText = message;
+            
+            els.toastContainer.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('toast-enter-active'));
             setTimeout(() => {
-                flash.style.opacity = '0';
-                setTimeout(() => flash.remove(), 300);
-            }, 50);
+                toast.classList.remove('toast-enter-active');
+                toast.classList.add('toast-exit');
+                setTimeout(() => toast.remove(), 200);
+            }, 2000);
         }
 
         function toggleHelp() {
             state.isHelpOpen = !state.isHelpOpen;
-            if(state.isHelpOpen && state.isSettingsOpen) toggleSettings();
-
             if (state.isHelpOpen) {
                 els.helpModal.classList.remove('opacity-0', 'pointer-events-none');
+                if(state.isSettingsOpen) toggleSettings();
             } else {
                 els.helpModal.classList.add('opacity-0', 'pointer-events-none');
             }
@@ -630,10 +678,9 @@
 
         function toggleSettings() {
             state.isSettingsOpen = !state.isSettingsOpen;
-            if(state.isSettingsOpen && state.isHelpOpen) toggleHelp();
-
             if (state.isSettingsOpen) {
                 els.settingsModal.classList.remove('opacity-0', 'pointer-events-none');
+                if(state.isHelpOpen) toggleHelp();
             } else {
                 els.settingsModal.classList.add('opacity-0', 'pointer-events-none');
             }
@@ -642,28 +689,85 @@
         function toggleCinemaMode() {
             state.isCinemaMode = !state.isCinemaMode;
             if (state.isCinemaMode) {
-                els.uiTop.classList.add('-translate-y-full', 'opacity-0');
-                els.uiBottom.classList.add('translate-y-full', 'opacity-0');
-                els.cursor.style.opacity = '0'; 
+                els.uiLayer.classList.add('opacity-0', 'pointer-events-none');
+                els.cursor.classList.add('opacity-0');
                 document.getElementById('cinema-icon').className = "fa-solid fa-compress";
+                showToast("Cinema Mode On (Press Space to Exit)", "neutral");
             } else {
-                els.uiTop.classList.remove('-translate-y-full', 'opacity-0');
-                els.uiBottom.classList.remove('translate-y-full', 'opacity-0');
-                els.cursor.style.opacity = '1';
+                els.uiLayer.classList.remove('opacity-0', 'pointer-events-none');
+                els.cursor.classList.remove('opacity-0');
                 document.getElementById('cinema-icon').className = "fa-solid fa-expand";
             }
         }
 
-        function setStatus(text, colorClass) {
-            els.statusText.innerText = text;
-            els.statusDot.className = `w-2.5 h-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] ${colorClass}`;
+        function updateStatus(text, type) {
+            els.gestureState.innerText = text;
+            if(type === 'error') {
+                els.statusDot.className = "w-2 h-2 rounded-full bg-red-500 animate-pulse";
+            } else if (type === 'active') {
+                els.statusDot.className = "w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)]";
+            } else if (type === 'wait') {
+                els.statusDot.className = "w-2 h-2 rounded-full bg-yellow-400";
+            } else {
+                els.statusDot.className = "w-2 h-2 rounded-full bg-slate-500";
+            }
+        }
+
+        // --- Settings Logic ---
+        function updateSetting(key, value) {
+            if(key !== 'transitionEffect') {
+                value = parseFloat(value);
+            }
+            userSettings[key] = value;
+            
+            // UI Updates - Fixed to prevent calling toFixed on strings
+            let displayText = value;
+            if(key === 'edgeZone') displayText = Math.round(value * 100) + '%';
+            else if(key === 'pinchThreshold' && typeof value === 'number') displayText = value.toFixed(3);
+            else if(key === 'sensitivity') displayText = Math.round(value);
+            else if(key === 'smoothing' && typeof value === 'number') displayText = value.toFixed(2);
+            else if(key === 'transitionSpeed') displayText = value + 'ms';
+            
+            const displayEl = document.getElementById(`val-${key}`);
+            if(displayEl) displayEl.innerText = displayText;
+
+            localStorage.setItem('airtouch_settings', JSON.stringify(userSettings));
+        }
+
+        function restoreDefaults() {
+            userSettings = { ...DEFAULT_SETTINGS };
+            localStorage.setItem('airtouch_settings', JSON.stringify(userSettings));
+            syncSettingsUI();
+            showToast("Settings Reset", "neutral");
+        }
+
+        function syncSettingsUI() {
+            ['sensitivity', 'smoothing', 'pinchThreshold', 'navDelay', 'transitionSpeed'].forEach(key => {
+                const input = document.getElementById(`inp-${key}`);
+                if(input) input.value = userSettings[key];
+                updateSetting(key, userSettings[key]);
+            });
         }
 
         /**
-         * MEDIA PIPE LOGIC
+         * ------------------------------------------------------------------
+         * MEDIAPIPE GESTURE LOGIC
+         * ------------------------------------------------------------------
          */
 
         function onResults(results) {
+            // FPS Calculation
+            const now = performance.now();
+            if(state.lastFrameTime) {
+                const fps = 1000 / (now - state.lastFrameTime);
+                state.frameCount++;
+                if(state.frameCount % 10 === 0) {
+                    els.fpsCounter.innerText = Math.round(fps);
+                }
+            }
+            state.lastFrameTime = now;
+
+            // Draw to canvas
             els.ctx.save();
             els.ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
             els.ctx.translate(els.canvas.width, 0);
@@ -673,48 +777,58 @@
             const handCount = results.multiHandLandmarks ? results.multiHandLandmarks.length : 0;
 
             if (handCount === 2) {
-                setStatus("2 Hands", "bg-purple-500");
+                updateStatus("MULTI-TOUCH", "active");
                 handleTwoHandGestures(results.multiHandLandmarks);
-                
-                // Clear single hand feedback
                 resetNavVisuals();
-                els.cursor.style.display = 'none'; 
+                setCursorState('hidden');
 
             } else if (handCount === 1) {
-                setStatus("Active", "bg-green-500");
+                updateStatus("NAVIGATION", "active");
                 handleOneHandNavigation(results.multiHandLandmarks[0]);
-                els.cursor.style.display = 'block';
+                setCursorState('default');
 
             } else {
-                // No hands / Idle
-                setStatus("Wait", "bg-yellow-500");
+                updateStatus("IDLE", "wait");
                 state.navLocked = false;
                 state.isPanning = false;
                 state.smoothedHandX = null;
-                state.smoothedHandY = null;
                 resetNavVisuals();
-                els.cursor.style.display = 'none';
+                setCursorState('hidden');
             }
 
             els.ctx.restore();
         }
 
+        function setCursorState(type) {
+            els.cursor.className = `fixed transition-all duration-200 ${
+                type === 'hidden' ? 'opacity-0' : 'opacity-100'
+            } ${
+                type === 'hover' ? 'cursor-hover' : 
+                type === 'grab' ? 'cursor-grab' : 
+                'cursor-default'
+            }`;
+        }
+
         function resetNavVisuals() {
-            els.zonePrev.classList.remove('active');
-            els.zoneNext.classList.remove('active');
+            els.zonePrev.classList.remove('opacity-100', 'bg-cyan-500/10');
+            els.zoneNext.classList.remove('opacity-100', 'bg-cyan-500/10');
+            els.zonePrev.classList.add('opacity-0');
+            els.zoneNext.classList.add('opacity-0');
+            
             els.progPrev.style.height = '0%';
             els.progNext.style.height = '0%';
             state.edgeTimer = 0;
         }
 
         function handleTwoHandGestures(landmarksArray) {
+            if(state.isTransitioning) return; // Block during transition
+            
             state.navLocked = false;
-            resetNavVisuals(); // Ensure edge timer resets on 2 hands
 
             // Debug Skeleton
             for (const landmarks of landmarksArray) {
-                drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
-                drawLandmarks(els.ctx, landmarks, {color: '#FF0000', lineWidth: 1, radius: 3});
+                drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#06b6d4', lineWidth: 2});
+                drawLandmarks(els.ctx, landmarks, {color: '#ffffff', lineWidth: 1, radius: 2});
             }
 
             const p1 = getPinch(landmarksArray[0]);
@@ -724,8 +838,7 @@
             if (p1.isPinching && p2.isPinching) {
                 state.isPanning = false;
                 state.smoothedHandX = null;
-                
-                setStatus("Zooming", "bg-purple-500");
+                updateStatus("ZOOMING", "active");
 
                 const handDistance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
                 
@@ -735,11 +848,10 @@
                 state.smoothedScale = state.smoothedScale + (targetScale - state.smoothedScale) * 0.1;
                 state.scale = state.smoothedScale;
                 updateTransform();
-
             } 
-            // CASE 2: One Pinching + One Open -> PAN (Drag Logic)
+            // CASE 2: One Pinching + One Open -> PAN
             else if (p1.isPinching || p2.isPinching) {
-                setStatus("Panning", "bg-yellow-400");
+                updateStatus("PANNING", "active");
                 
                 let navHand = p1.isPinching ? landmarksArray[1] : landmarksArray[0];
                 const rawNavX = navHand[9].x;
@@ -768,20 +880,20 @@
                 state.panY = state.panStartImgY + (deltaY * userSettings.sensitivity);
 
                 updateTransform();
-            } 
-            else {
+            } else {
                 state.isPanning = false;
                 state.smoothedHandX = null;
-                setStatus("Two Hands", "bg-blue-400");
             }
         }
 
         function handleOneHandNavigation(landmarks) {
+            if(state.isTransitioning) return; // Block during transition
+            
             state.isPanning = false; 
             state.smoothedHandX = null;
             
-            drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#00BFFF', lineWidth: 2});
-            drawLandmarks(els.ctx, landmarks, {color: '#FFFFFF', lineWidth: 1, radius: 3});
+            drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#22d3ee', lineWidth: 1});
+            drawLandmarks(els.ctx, landmarks, {color: '#ffffff', lineWidth: 1, radius: 2});
 
             const indexTip = landmarks[8];
             const x = indexTip.x;
@@ -792,25 +904,20 @@
                 els.cursor.style.top = `${y * 100}%`;
             }
 
-            // --- Updated Navigation Logic with Timer ---
             const zoneSize = userSettings.edgeZone;
-            const leftTrigger = 1 - zoneSize; // Camera X > this = Screen Left
-            const rightTrigger = zoneSize;    // Camera X < this = Screen Right
+            const leftTrigger = 1 - zoneSize; 
+            const rightTrigger = zoneSize;    
 
             if (x > leftTrigger) {
-                // Inside PREV Zone
-                els.zonePrev.classList.add('active');
-                els.zoneNext.classList.remove('active');
-                els.progNext.style.height = '0%'; // Reset other side
-
+                els.zonePrev.classList.remove('opacity-0');
+                els.zonePrev.classList.add('opacity-100');
+                setCursorState('hover');
+                
                 if (!state.navLocked) {
-                    state.edgeTimer++; // Increment timer
-                    
-                    // Visual Progress
+                    state.edgeTimer++;
                     const pct = Math.min(100, (state.edgeTimer / userSettings.navDelay) * 100);
                     els.progPrev.style.height = `${pct}%`;
 
-                    // Trigger Action
                     if (state.edgeTimer > userSettings.navDelay) {
                         prevImage();
                         state.navLocked = true;
@@ -819,19 +926,15 @@
                     }
                 }
             } else if (x < rightTrigger) {
-                // Inside NEXT Zone
-                els.zoneNext.classList.add('active');
-                els.zonePrev.classList.remove('active');
-                els.progPrev.style.height = '0%'; // Reset other side
+                els.zoneNext.classList.remove('opacity-0');
+                els.zoneNext.classList.add('opacity-100');
+                setCursorState('hover');
 
                 if (!state.navLocked) {
-                    state.edgeTimer++; // Increment timer
-                    
-                    // Visual Progress
+                    state.edgeTimer++;
                     const pct = Math.min(100, (state.edgeTimer / userSettings.navDelay) * 100);
                     els.progNext.style.height = `${pct}%`;
 
-                    // Trigger Action
                     if (state.edgeTimer > userSettings.navDelay) {
                         nextImage();
                         state.navLocked = true;
@@ -840,11 +943,9 @@
                     }
                 }
             } else {
-                // Outside Zones - Reset Everything
                 resetNavVisuals();
-                
-                // Unlock with hysteresis
-                if (x > (rightTrigger + 0.1) && x < (leftTrigger - 0.1)) {
+                setCursorState('default');
+                if (x > (rightTrigger + 0.05) && x < (leftTrigger - 0.05)) {
                     state.navLocked = false;
                 }
             }
@@ -864,21 +965,25 @@
             };
         }
 
-        // Initialize MediaPipe
+        /**
+         * ------------------------------------------------------------------
+         * INITIALIZATION
+         * ------------------------------------------------------------------
+         */
+
         const hands = new Hands({locateFile: (file) => {
             return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
         }});
 
         hands.setOptions({
             maxNumHands: 2,
-            modelComplexity: 1, // Keep light for mobile
+            modelComplexity: 1,
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
         });
 
         hands.onResults(onResults);
 
-        // Initialize Camera
         const camera = new Camera(els.video, {
             onFrame: async () => {
                 await hands.send({image: els.video});
@@ -888,21 +993,25 @@
         });
 
         camera.start().then(() => {
-            setStatus("Ready", "bg-green-500");
+            updateStatus("CAMERA ACTIVE", "active");
         }).catch(err => {
             console.error(err);
-            setStatus("Cam Error", "bg-red-500");
-            // Only alert if truly needed to avoid spamming
+            updateStatus("CAMERA BLOCKED", "error");
+            showToast("Camera access denied. Please allow access.", "warning");
         });
 
-        // Set Resolution
+        // Set Render Resolution
         els.canvas.width = 320;
         els.canvas.height = 240;
 
-        // Keyboard Support
+        // Listeners
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight') nextImage();
             if (e.key === 'ArrowLeft') prevImage();
+            if (e.key === ' ') { 
+                e.preventDefault(); 
+                toggleCinemaMode(); 
+            }
             if (e.key === 'Escape') {
                 if(state.isCinemaMode) toggleCinemaMode();
                 if(state.isHelpOpen) toggleHelp();
@@ -910,6 +1019,13 @@
             }
         });
 
+        els.workspace.addEventListener('click', () => {
+             if (state.isCinemaMode) toggleCinemaMode();
+        });
+
+        init();
+
     </script>
 </body>
 </html>
+
