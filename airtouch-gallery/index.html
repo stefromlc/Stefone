@@ -1,8 +1,10 @@
-<!DOCTYPE html>
+
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <!-- Primary Meta Tags -->
 <title>AirTouch Gallery – Hands-Free Gesture Image Viewer</title>
 <link rel="icon" href="/favicon.png" type="image/png">
@@ -28,7 +30,6 @@
 <!-- Optional -->
 <meta name="theme-color" content="#0ea5e9" />
 
-    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -177,13 +178,21 @@
             <img id="main-image" src="" alt="Gallery View" class="max-w-[90%] max-h-[90%] rounded-lg shadow-2xl select-none pointer-events-none">
         </div>
 
-        <!-- Edge Navigation Zones -->
+        <!-- Edge Navigation Zones with Progress Bars -->
         <div id="zone-prev" class="absolute left-0 top-0 bottom-0 w-32 z-30 flex items-center justify-start pl-8 nav-zone opacity-0">
-            <i class="fa-solid fa-chevron-left text-4xl text-cyan-400 shadow-glow"></i>
+            <!-- Progress Bar -->
+            <div class="absolute left-0 top-0 bottom-0 w-2 bg-white/5 backdrop-blur-sm">
+                <div id="prog-prev" class="w-full bg-cyan-400 absolute bottom-0 left-0 transition-all duration-75" style="height: 0%"></div>
+            </div>
+            <i class="fa-solid fa-chevron-left text-4xl text-cyan-400 shadow-glow ml-4"></i>
         </div>
 
         <div id="zone-next" class="absolute right-0 top-0 bottom-0 w-32 z-30 flex items-center justify-end pr-8 nav-zone opacity-0">
-            <i class="fa-solid fa-chevron-right text-4xl text-cyan-400 shadow-glow"></i>
+             <!-- Progress Bar -->
+             <div class="absolute right-0 top-0 bottom-0 w-2 bg-white/5 backdrop-blur-sm">
+                <div id="prog-next" class="w-full bg-cyan-400 absolute bottom-0 right-0 transition-all duration-75" style="height: 0%"></div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-4xl text-cyan-400 shadow-glow mr-4"></i>
         </div>
     </div>
 
@@ -272,13 +281,23 @@
                     <p class="text-[10px] text-gray-500 mt-1">Lower = Smoother/Laggy. Higher = Faster/Jittery.</p>
                 </div>
 
-                <!-- Pinch Threshold -->
+                <!-- Pinch Threshold (RESTORED) -->
                 <div>
                     <div class="flex justify-between mb-2 text-sm">
                         <span class="text-gray-300">Pinch Distance Threshold</span>
                         <span id="val-pinch" class="text-cyan-400 font-mono">0.08</span>
                     </div>
                     <input type="range" id="inp-pinch" min="0.02" max="0.15" step="0.005" class="w-full" oninput="updateSetting('pinchThreshold', this.value)">
+                </div>
+
+                <!-- Nav Delay (NEW) -->
+                <div>
+                    <div class="flex justify-between mb-2 text-sm">
+                        <span class="text-gray-300">Hold Timer (Frames)</span>
+                        <span id="val-delay" class="text-cyan-400 font-mono">20</span>
+                    </div>
+                    <input type="range" id="inp-delay" min="5" max="60" step="5" class="w-full" oninput="updateSetting('navDelay', this.value)">
+                    <p class="text-[10px] text-gray-500 mt-1">Prevents accidental swipes. Higher = Hold Longer.</p>
                 </div>
 
                 <!-- Edge Zone Size -->
@@ -313,7 +332,7 @@
                         <i class="fa-regular fa-hand-pointer text-4xl text-cyan-400"></i>
                     </div>
                     <h3 class="font-bold mb-1">Navigate</h3>
-                    <p class="text-sm text-gray-400">Move 1 hand to left/right edge. Move center to reset.</p>
+                    <p class="text-sm text-gray-400">Hold hand at edge to fill timer.</p>
                 </div>
                 <!-- Card 2 -->
                 <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 hover:border-cyan-500/50 transition-colors">
@@ -357,11 +376,15 @@
             pinchThreshold: 0.08,
             smoothing: 0.2,
             edgeZone: 0.15,
-            zoomSpeed: 5.5
+            zoomSpeed: 5.5,
+            navDelay: 20 // Frames (~0.5s - 0.7s)
         };
 
         // Load Settings from LocalStorage or use Defaults
         let userSettings = JSON.parse(localStorage.getItem('airtouch_settings')) || { ...DEFAULT_SETTINGS };
+
+        // Ensure new settings exist if loading old local storage
+        if(!userSettings.navDelay) userSettings.navDelay = DEFAULT_SETTINGS.navDelay;
 
         function updateSetting(key, value) {
             value = parseFloat(value);
@@ -376,6 +399,8 @@
                 document.getElementById('val-sensitivity').innerText = Math.round(value);
             } else if (key === 'smoothing') {
                 document.getElementById('val-smoothing').innerText = value.toFixed(2);
+            } else if (key === 'navDelay') {
+                document.getElementById('val-delay').innerText = value;
             }
 
             // Save
@@ -400,6 +425,9 @@
 
             document.getElementById('inp-edge').value = userSettings.edgeZone;
             document.getElementById('val-edge').innerText = Math.round(userSettings.edgeZone * 100) + '%';
+
+            document.getElementById('inp-delay').value = userSettings.navDelay;
+            document.getElementById('val-delay').innerText = userSettings.navDelay;
         }
 
         /**
@@ -412,23 +440,24 @@
             isSettingsOpen: false,
             isCinemaMode: false,
             
-            // Original Transform State
+            // Transform State
             scale: 1,
             smoothedScale: 1,
             panX: 0,
             panY: 0,
 
-            // Original Nav State
+            // Nav State
             navLocked: false,
+            edgeTimer: 0, // Current frames held in zone
             
-            // Original Pan State
+            // Pan State
             isPanning: false,
             panStartHandX: 0,
             panStartHandY: 0,
             panStartImgX: 0,
             panStartImgY: 0,
             
-            // Original Smoothing
+            // Smoothing
             smoothedHandX: null,
             smoothedHandY: null
         };
@@ -457,7 +486,9 @@
             helpModal: document.getElementById('help-modal'),
             settingsModal: document.getElementById('settings-modal'),
             zonePrev: document.getElementById('zone-prev'),
-            zoneNext: document.getElementById('zone-next')
+            zoneNext: document.getElementById('zone-next'),
+            progPrev: document.getElementById('prog-prev'),
+            progNext: document.getElementById('prog-next')
         };
 
         // Utility: Linear Interpolation for smoothing
@@ -558,7 +589,6 @@
 
         function toggleHelp() {
             state.isHelpOpen = !state.isHelpOpen;
-            // Close settings if opening help
             if(state.isHelpOpen && state.isSettingsOpen) toggleSettings();
 
             if (state.isHelpOpen) {
@@ -570,7 +600,6 @@
 
         function toggleSettings() {
             state.isSettingsOpen = !state.isSettingsOpen;
-            // Close help if opening settings
             if(state.isSettingsOpen && state.isHelpOpen) toggleHelp();
 
             if (state.isSettingsOpen) {
@@ -601,7 +630,7 @@
         }
 
         /**
-         * MEDIA PIPE LOGIC (Updated to use userSettings)
+         * MEDIA PIPE LOGIC
          */
 
         function onResults(results) {
@@ -618,8 +647,7 @@
                 handleTwoHandGestures(results.multiHandLandmarks);
                 
                 // Clear single hand feedback
-                els.zonePrev.classList.remove('active');
-                els.zoneNext.classList.remove('active');
+                resetNavVisuals();
                 els.cursor.style.display = 'none'; 
 
             } else if (handCount === 1) {
@@ -634,16 +662,24 @@
                 state.isPanning = false;
                 state.smoothedHandX = null;
                 state.smoothedHandY = null;
-                els.zonePrev.classList.remove('active');
-                els.zoneNext.classList.remove('active');
+                resetNavVisuals();
                 els.cursor.style.display = 'none';
             }
 
             els.ctx.restore();
         }
 
+        function resetNavVisuals() {
+            els.zonePrev.classList.remove('active');
+            els.zoneNext.classList.remove('active');
+            els.progPrev.style.height = '0%';
+            els.progNext.style.height = '0%';
+            state.edgeTimer = 0;
+        }
+
         function handleTwoHandGestures(landmarksArray) {
             state.navLocked = false;
+            resetNavVisuals(); // Ensure edge timer resets on 2 hands
 
             // Debug Skeleton
             for (const landmarks of landmarksArray) {
@@ -663,7 +699,6 @@
 
                 const handDistance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
                 
-                // Use settings for Zoom Speed
                 let targetScale = handDistance * userSettings.zoomSpeed; 
                 targetScale = Math.max(CONSTANTS.MIN_SCALE, Math.min(CONSTANTS.MAX_SCALE, targetScale));
 
@@ -677,12 +712,9 @@
                 setStatus("Panning / Dragging", "bg-yellow-400");
                 
                 let navHand = p1.isPinching ? landmarksArray[1] : landmarksArray[0];
-                
-                // Using Middle Finger MCP [9] for stability
                 const rawNavX = navHand[9].x;
                 const rawNavY = navHand[9].y;
 
-                // Apply Smoothing from settings
                 if (state.smoothedHandX === null) {
                     state.smoothedHandX = rawNavX;
                     state.smoothedHandY = rawNavY;
@@ -699,11 +731,9 @@
                     state.panStartImgY = state.panY;
                 }
 
-                // Calculate Drag
                 let deltaX = (state.panStartHandX - state.smoothedHandX);
                 let deltaY = (state.smoothedHandY - state.panStartHandY);
 
-                // Use Sensitivity from settings
                 state.panX = state.panStartImgX + (deltaX * userSettings.sensitivity);
                 state.panY = state.panStartImgY + (deltaY * userSettings.sensitivity);
 
@@ -727,42 +757,63 @@
             const x = indexTip.x;
             const y = indexTip.y;
             
-            // Cursor Update (Inverted X)
             if(!state.isCinemaMode) {
                 els.cursor.style.left = `${(1 - x) * 100}%`;
                 els.cursor.style.top = `${y * 100}%`;
             }
 
-            // Navigation Zones Logic (using userSettings)
+            // --- Updated Navigation Logic with Timer ---
             const zoneSize = userSettings.edgeZone;
-            
-            // Note: X is 0-1 from Camera's perspective (Mirrored on screen)
-            // Camera X > (1 - zoneSize) means LEFT side of screen
-            // Camera X < zoneSize means RIGHT side of screen
-            const leftTrigger = 1 - zoneSize;
-            const rightTrigger = zoneSize;
+            const leftTrigger = 1 - zoneSize; // Camera X > this = Screen Left
+            const rightTrigger = zoneSize;    // Camera X < this = Screen Right
 
             if (x > leftTrigger) {
+                // Inside PREV Zone
                 els.zonePrev.classList.add('active');
                 els.zoneNext.classList.remove('active');
-                
-                if (!state.navLocked) {
-                    prevImage();
-                    state.navLocked = true;
-                }
-            } else if (x < rightTrigger) {
-                els.zoneNext.classList.add('active');
-                els.zonePrev.classList.remove('active');
+                els.progNext.style.height = '0%'; // Reset other side
 
                 if (!state.navLocked) {
-                    nextImage();
-                    state.navLocked = true;
+                    state.edgeTimer++; // Increment timer
+                    
+                    // Visual Progress
+                    const pct = Math.min(100, (state.edgeTimer / userSettings.navDelay) * 100);
+                    els.progPrev.style.height = `${pct}%`;
+
+                    // Trigger Action
+                    if (state.edgeTimer > userSettings.navDelay) {
+                        prevImage();
+                        state.navLocked = true;
+                        state.edgeTimer = 0;
+                        els.progPrev.style.height = '0%';
+                    }
+                }
+            } else if (x < rightTrigger) {
+                // Inside NEXT Zone
+                els.zoneNext.classList.add('active');
+                els.zonePrev.classList.remove('active');
+                els.progPrev.style.height = '0%'; // Reset other side
+
+                if (!state.navLocked) {
+                    state.edgeTimer++; // Increment timer
+                    
+                    // Visual Progress
+                    const pct = Math.min(100, (state.edgeTimer / userSettings.navDelay) * 100);
+                    els.progNext.style.height = `${pct}%`;
+
+                    // Trigger Action
+                    if (state.edgeTimer > userSettings.navDelay) {
+                        nextImage();
+                        state.navLocked = true;
+                        state.edgeTimer = 0;
+                        els.progNext.style.height = '0%';
+                    }
                 }
             } else {
-                els.zonePrev.classList.remove('active');
-                els.zoneNext.classList.remove('active');
+                // Outside Zones - Reset Everything
+                resetNavVisuals();
                 
-                // Unlock when back in center (with some buffer)
+                // Unlock with hysteresis
                 if (x > (rightTrigger + 0.1) && x < (leftTrigger - 0.1)) {
                     state.navLocked = false;
                 }
@@ -777,7 +828,7 @@
             const midY = (indexTip.y + thumbTip.y) / 2;
             
             return {
-                isPinching: distance < userSettings.pinchThreshold, // Use setting
+                isPinching: distance < userSettings.pinchThreshold,
                 x: midX,
                 y: midY
             };
