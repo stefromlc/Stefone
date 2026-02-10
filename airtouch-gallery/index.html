@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Primary Meta Tags -->
+<title>AirTouch Gallery – Hands-Free Gesture Image Viewer</title>
+<meta name="title" content="AirTouch Gallery – Hands-Free Gesture Image Viewer" />
+<meta name="description" content="Browse photos hands-free using your webcam. Glide, pinch, pan, zoom, and switch to cinema mode in this local, gesture-controlled image gallery." />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.stefone.com/airtouch-gallery/" />
+<meta property="og:title" content="AirTouch Gallery – Hands-Free Gesture Image Viewer" />
+<meta property="og:description" content="Browse photos hands-free using your webcam. Glide, pinch, pan, zoom, and switch to cinema mode in this local, gesture-controlled image gallery." />
+<meta property="og:image" content="https://www.stefone.com/assets/thumbs/airtouch-gallery.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="AirTouch Gallery gesture-controlled image viewer preview" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="AirTouch Gallery – Hands-Free Gesture Image Viewer" />
+<meta name="twitter:description" content="Browse photos hands-free using your webcam. Glide, pinch, pan, zoom, and switch to cinema mode in this local, gesture-controlled image gallery." />
+<meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/airtouch-gallery.png" />
+
+<!-- Optional -->
+<meta name="theme-color" content="#0ea5e9" />
+
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- MediaPipe Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-button {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+        }
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .glass-button:active {
+            transform: translateY(0);
+        }
+
+        /* Cursor & Interactions */
+        #virtual-cursor {
+            pointer-events: none;
+            z-index: 50;
+            transition: width 0.1s, height 0.1s, background-color 0.2s;
+            mix-blend-mode: difference;
+        }
+
+        /* Navigation Zones */
+        .nav-zone {
+            transition: background 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .nav-zone.active {
+            background: rgba(34, 211, 238, 0.2); /* Cyan tint */
+            opacity: 1 !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        /* Smooth Image Transitions */
+        #main-image {
+            will-change: transform;
+        }
+
+        /* Camera Mirroring */
+        #output_canvas {
+            transform: scaleX(-1);
+        }
+
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #22d3ee;
+            cursor: pointer;
+            margin-top: -6px; 
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen relative text-white" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+
+    <!-- 1. TOP BAR -->
+    <div id="ui-top" class="absolute top-0 left-0 w-full p-6 flex justify-between items-start z-40 transition-opacity duration-300">
+        <!-- Back Button -->
+        <a href="/projects/" class="glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group">
+            <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
+            <span>Back to Projects</span>
+        </a>
+
+        <!-- Status & Camera Wrapper -->
+        <div class="flex flex-col items-end gap-4">
+            <!-- Status Pill -->
+            <div id="status-pill" class="glass-panel px-4 py-2 rounded-full flex items-center gap-3 text-xs font-semibold uppercase tracking-wider">
+                <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]"></div>
+                <span id="status-text" class="text-gray-300">Initializing AI...</span>
+            </div>
+
+            <!-- Camera Feed -->
+            <div class="relative group">
+                <div class="w-40 h-32 rounded-xl overflow-hidden glass-panel shadow-2xl relative transition-all duration-300 hover:scale-105">
+                    <video id="input_video" class="hidden"></video>
+                    <canvas id="output_canvas" class="w-full h-full object-cover"></canvas>
+                    <div class="absolute bottom-1 right-2 text-[10px] text-white/50">DEBUG VIEW</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN WORKSPACE -->
+    <div id="workspace" class="absolute inset-0 flex items-center justify-center overflow-hidden z-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        
+        <!-- Placeholder State -->
+        <div id="empty-state" class="text-center p-10 border-2 border-dashed border-white/10 rounded-3xl text-white/40 flex flex-col items-center gap-4">
+            <i class="fa-solid fa-images text-6xl mb-2"></i>
+            <h2 class="text-2xl font-bold text-white">No Images Loaded</h2>
+            <p>Drag & Drop files here or use the toolbar</p>
+            <button onclick="document.getElementById('fileInput').click()" class="mt-4 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-full transition-colors shadow-lg shadow-cyan-500/20">
+                Select Files
+            </button>
+        </div>
+
+        <!-- Image Container -->
+        <div id="image-wrapper" class="w-full h-full flex items-center justify-center relative hidden opacity-0 transition-opacity duration-500">
+            <img id="main-image" src="" alt="Gallery View" class="max-w-[90%] max-h-[90%] rounded-lg shadow-2xl select-none pointer-events-none">
+        </div>
+
+        <!-- Edge Navigation Zones -->
+        <div id="zone-prev" class="absolute left-0 top-0 bottom-0 w-32 z-30 flex items-center justify-start pl-8 nav-zone opacity-0">
+            <i class="fa-solid fa-chevron-left text-4xl text-cyan-400 shadow-glow"></i>
+        </div>
+
+        <div id="zone-next" class="absolute right-0 top-0 bottom-0 w-32 z-30 flex items-center justify-end pr-8 nav-zone opacity-0">
+            <i class="fa-solid fa-chevron-right text-4xl text-cyan-400 shadow-glow"></i>
+        </div>
+    </div>
+
+    <!-- 3. BOTTOM DOCK (Controls) -->
+    <div id="ui-bottom" class="absolute bottom-8 left-1/2 -translate-x-1/2 z-40 transition-transform duration-300">
+        <div class="glass-panel px-6 py-3 rounded-2xl flex items-center gap-6 shadow-2xl">
+            
+            <!-- File Upload -->
+            <div class="tooltip-container relative group">
+                <button onclick="document.getElementById('fileInput').click()" class="glass-button w-12 h-12 rounded-xl flex items-center justify-center text-xl text-white">
+                    <i class="fa-solid fa-folder-open"></i>
+                </button>
+                <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">Open</span>
+            </div>
+            <input type="file" id="fileInput" hidden multiple accept="image/*" onchange="handleFiles(this.files)">
+
+            <div class="w-px h-8 bg-white/10"></div>
+
+            <!-- Navigation Controls -->
+            <button onclick="prevImage()" class="text-white/70 hover:text-white transition-colors text-xl px-2"><i class="fa-solid fa-backward-step"></i></button>
+            <span id="counter" class="font-mono text-cyan-400 min-w-[60px] text-center font-bold">0 / 0</span>
+            <button onclick="nextImage()" class="text-white/70 hover:text-white transition-colors text-xl px-2"><i class="fa-solid fa-forward-step"></i></button>
+
+            <div class="w-px h-8 bg-white/10"></div>
+
+            <!-- View Controls -->
+            <div class="tooltip-container relative group">
+                <button onclick="resetView()" class="glass-button w-12 h-12 rounded-xl flex items-center justify-center text-xl text-white">
+                    <i class="fa-solid fa-compress"></i>
+                </button>
+                <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">Reset View</span>
+            </div>
+
+            <div class="tooltip-container relative group">
+                <button onclick="toggleCinemaMode()" class="glass-button w-12 h-12 rounded-xl flex items-center justify-center text-xl text-yellow-400">
+                    <i id="cinema-icon" class="fa-solid fa-expand"></i>
+                </button>
+                <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">Cinema Mode</span>
+            </div>
+            
+            <!-- Settings & Help -->
+            <div class="w-px h-8 bg-white/10"></div>
+
+            <div class="tooltip-container relative group">
+                <button onclick="toggleSettings()" class="glass-button w-12 h-12 rounded-xl flex items-center justify-center text-xl text-white/80 hover:text-white">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">Settings</span>
+            </div>
+
+            <div class="tooltip-container relative group">
+                <button onclick="toggleHelp()" class="glass-button w-12 h-12 rounded-xl flex items-center justify-center text-xl text-cyan-400 border border-cyan-400/30">
+                    <i class="fa-solid fa-question"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. SETTINGS MODAL -->
+    <div id="settings-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-panel p-8 rounded-3xl max-w-md w-full mx-4 shadow-2xl transform scale-100 transition-transform">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-sliders text-cyan-400"></i> Settings
+                </h2>
+                <button onclick="toggleSettings()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Pan Sensitivity -->
+                <div>
+                    <div class="flex justify-between mb-2 text-sm">
+                        <span class="text-gray-300">Pan Sensitivity (Speed)</span>
+                        <span id="val-sensitivity" class="text-cyan-400 font-mono">2500</span>
+                    </div>
+                    <input type="range" id="inp-sensitivity" min="500" max="5000" step="100" class="w-full" oninput="updateSetting('sensitivity', this.value)">
+                </div>
+
+                <!-- Smoothing -->
+                <div>
+                    <div class="flex justify-between mb-2 text-sm">
+                        <span class="text-gray-300">Motion Smoothing</span>
+                        <span id="val-smoothing" class="text-cyan-400 font-mono">0.2</span>
+                    </div>
+                    <input type="range" id="inp-smoothing" min="0.01" max="0.5" step="0.01" class="w-full" oninput="updateSetting('smoothing', this.value)">
+                    <p class="text-[10px] text-gray-500 mt-1">Lower = Smoother/Laggy. Higher = Faster/Jittery.</p>
+                </div>
+
+                <!-- Pinch Threshold -->
+                <div>
+                    <div class="flex justify-between mb-2 text-sm">
+                        <span class="text-gray-300">Pinch Distance Threshold</span>
+                        <span id="val-pinch" class="text-cyan-400 font-mono">0.08</span>
+                    </div>
+                    <input type="range" id="inp-pinch" min="0.02" max="0.15" step="0.005" class="w-full" oninput="updateSetting('pinchThreshold', this.value)">
+                </div>
+
+                <!-- Edge Zone Size -->
+                <div>
+                    <div class="flex justify-between mb-2 text-sm">
+                        <span class="text-gray-300">Edge Zone Size</span>
+                        <span id="val-edge" class="text-cyan-400 font-mono">15%</span>
+                    </div>
+                    <input type="range" id="inp-edge" min="0.05" max="0.30" step="0.01" class="w-full" oninput="updateSetting('edgeZone', this.value)">
+                </div>
+
+                <div class="pt-4 border-t border-white/10 flex justify-between items-center">
+                    <button onclick="restoreDefaults()" class="text-xs text-red-400 hover:text-red-300 underline">Restore Defaults</button>
+                    <button onclick="toggleSettings()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm transition-colors">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. HELP MODAL -->
+    <div id="help-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300">
+        <div class="glass-panel p-8 rounded-3xl max-w-2xl w-full mx-4 shadow-2xl transform scale-100 transition-transform">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">AirTouch Gestures</h2>
+                <button onclick="toggleHelp()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Card 1 -->
+                <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 hover:border-cyan-500/50 transition-colors">
+                    <div class="h-16 flex items-center justify-center mb-2">
+                        <i class="fa-regular fa-hand-pointer text-4xl text-cyan-400"></i>
+                    </div>
+                    <h3 class="font-bold mb-1">Navigate</h3>
+                    <p class="text-sm text-gray-400">Move 1 hand to left/right edge. Move center to reset.</p>
+                </div>
+                <!-- Card 2 -->
+                <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 hover:border-cyan-500/50 transition-colors">
+                    <div class="h-16 flex items-center justify-center mb-2">
+                        <i class="fa-solid fa-hand-fist text-4xl text-yellow-400"></i>
+                    </div>
+                    <h3 class="font-bold mb-1">Pan / Drag</h3>
+                    <p class="text-sm text-gray-400">Pinch ONE hand + Keep one open.</p>
+                </div>
+                <!-- Card 3 -->
+                <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 hover:border-cyan-500/50 transition-colors">
+                    <div class="h-16 flex items-center justify-center mb-2">
+                        <div class="flex gap-2 justify-center">
+                            <i class="fa-solid fa-hand text-2xl text-purple-400"></i>
+                            <i class="fa-solid fa-hand text-2xl text-purple-400"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-bold mb-1">Zoom</h3>
+                    <p class="text-sm text-gray-400">Pinch BOTH hands.</p>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button onclick="toggleHelp()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-cyan-500/30 transition-all transform hover:scale-105">
+                    Start Experiencing
+                </button>
+                <p class="mt-4 text-xs text-gray-500">Camera permission is required. Data is processed locally.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Virtual Cursor Element -->
+    <div id="virtual-cursor" class="fixed w-6 h-6 rounded-full border-2 border-white flex items-center justify-center opacity-0 shadow-[0_0_20px_rgba(0,191,255,0.8)] bg-[rgba(0,191,255,0.6)]"></div>
+
+    <script>
+        /**
+         * SETTINGS MANAGEMENT
+         */
+        const DEFAULT_SETTINGS = {
+            sensitivity: 2500,
+            pinchThreshold: 0.08,
+            smoothing: 0.2,
+            edgeZone: 0.15,
+            zoomSpeed: 5.5
+        };
+
+        // Load Settings from LocalStorage or use Defaults
+        let userSettings = JSON.parse(localStorage.getItem('airtouch_settings')) || { ...DEFAULT_SETTINGS };
+
+        function updateSetting(key, value) {
+            value = parseFloat(value);
+            userSettings[key] = value;
+            
+            // Update UI Display text
+            if(key === 'edgeZone') {
+                document.getElementById('val-edge').innerText = Math.round(value * 100) + '%';
+            } else if (key === 'pinchThreshold') {
+                document.getElementById('val-pinch').innerText = value.toFixed(3);
+            } else if (key === 'sensitivity') {
+                document.getElementById('val-sensitivity').innerText = Math.round(value);
+            } else if (key === 'smoothing') {
+                document.getElementById('val-smoothing').innerText = value.toFixed(2);
+            }
+
+            // Save
+            localStorage.setItem('airtouch_settings', JSON.stringify(userSettings));
+        }
+
+        function restoreDefaults() {
+            userSettings = { ...DEFAULT_SETTINGS };
+            localStorage.setItem('airtouch_settings', JSON.stringify(userSettings));
+            syncSettingsUI();
+        }
+
+        function syncSettingsUI() {
+            document.getElementById('inp-sensitivity').value = userSettings.sensitivity;
+            document.getElementById('val-sensitivity').innerText = userSettings.sensitivity;
+
+            document.getElementById('inp-smoothing').value = userSettings.smoothing;
+            document.getElementById('val-smoothing').innerText = userSettings.smoothing;
+
+            document.getElementById('inp-pinch').value = userSettings.pinchThreshold;
+            document.getElementById('val-pinch').innerText = userSettings.pinchThreshold;
+
+            document.getElementById('inp-edge').value = userSettings.edgeZone;
+            document.getElementById('val-edge').innerText = Math.round(userSettings.edgeZone * 100) + '%';
+        }
+
+        /**
+         * APPLICATION STATE
+         */
+        const state = {
+            images: [],
+            currentIdx: 0,
+            isHelpOpen: true,
+            isSettingsOpen: false,
+            isCinemaMode: false,
+            
+            // Original Transform State
+            scale: 1,
+            smoothedScale: 1,
+            panX: 0,
+            panY: 0,
+
+            // Original Nav State
+            navLocked: false,
+            
+            // Original Pan State
+            isPanning: false,
+            panStartHandX: 0,
+            panStartHandY: 0,
+            panStartImgX: 0,
+            panStartImgY: 0,
+            
+            // Original Smoothing
+            smoothedHandX: null,
+            smoothedHandY: null
+        };
+
+        const CONSTANTS = {
+            MIN_SCALE: 0.2,
+            MAX_SCALE: 8.0,
+        };
+
+        /**
+         * DOM ELEMENTS
+         */
+        const els = {
+            mainImage: document.getElementById('main-image'),
+            imageWrapper: document.getElementById('image-wrapper'),
+            emptyState: document.getElementById('empty-state'),
+            counter: document.getElementById('counter'),
+            cursor: document.getElementById('virtual-cursor'),
+            video: document.getElementById('input_video'),
+            canvas: document.getElementById('output_canvas'),
+            ctx: document.getElementById('output_canvas').getContext('2d'),
+            statusDot: document.getElementById('status-dot'),
+            statusText: document.getElementById('status-text'),
+            uiTop: document.getElementById('ui-top'),
+            uiBottom: document.getElementById('ui-bottom'),
+            helpModal: document.getElementById('help-modal'),
+            settingsModal: document.getElementById('settings-modal'),
+            zonePrev: document.getElementById('zone-prev'),
+            zoneNext: document.getElementById('zone-next')
+        };
+
+        // Utility: Linear Interpolation for smoothing
+        function lerp(start, end, amt) {
+            return (1 - amt) * start + amt * end;
+        }
+
+        /**
+         * UI FUNCTIONS
+         */
+        
+        // Initialize UI with saved settings
+        syncSettingsUI();
+
+        function handleFiles(fileList) {
+            if (!fileList.length) return;
+            const newImages = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+            
+            let processed = 0;
+            newImages.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    state.images.push(e.target.result);
+                    processed++;
+                    if (processed === newImages.length) {
+                        if (state.images.length === newImages.length) {
+                            state.currentIdx = 0;
+                            renderImage();
+                        } else {
+                            updateCounter();
+                        }
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            handleFiles(e.dataTransfer.files);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function renderImage() {
+            if (state.images.length === 0) return;
+            els.emptyState.classList.add('hidden');
+            els.imageWrapper.classList.remove('hidden');
+            requestAnimationFrame(() => els.imageWrapper.classList.remove('opacity-0'));
+            
+            els.mainImage.src = state.images[state.currentIdx];
+            updateCounter();
+            resetView();
+        }
+
+        function updateCounter() {
+            els.counter.innerText = `${state.currentIdx + 1} / ${state.images.length}`;
+        }
+
+        function resetView() {
+            state.scale = 1;
+            state.smoothedScale = 1;
+            state.panX = 0;
+            state.panY = 0;
+            updateTransform();
+        }
+
+        function updateTransform() {
+            if (!els.mainImage) return;
+            els.mainImage.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
+        }
+
+        function nextImage() {
+            if (state.images.length === 0) return;
+            state.currentIdx = (state.currentIdx + 1) % state.images.length;
+            renderImage();
+            triggerFeedback('right');
+        }
+
+        function prevImage() {
+            if (state.images.length === 0) return;
+            state.currentIdx = (state.currentIdx - 1 + state.images.length) % state.images.length;
+            renderImage();
+            triggerFeedback('left');
+        }
+
+        function triggerFeedback(direction) {
+            const flash = document.createElement('div');
+            flash.className = `absolute top-0 bottom-0 w-32 pointer-events-none bg-white/20 transition-opacity duration-300 z-50 ${direction === 'left' ? 'left-0' : 'right-0'}`;
+            document.body.appendChild(flash);
+            setTimeout(() => {
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 300);
+            }, 50);
+        }
+
+        function toggleHelp() {
+            state.isHelpOpen = !state.isHelpOpen;
+            // Close settings if opening help
+            if(state.isHelpOpen && state.isSettingsOpen) toggleSettings();
+
+            if (state.isHelpOpen) {
+                els.helpModal.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                els.helpModal.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function toggleSettings() {
+            state.isSettingsOpen = !state.isSettingsOpen;
+            // Close help if opening settings
+            if(state.isSettingsOpen && state.isHelpOpen) toggleHelp();
+
+            if (state.isSettingsOpen) {
+                els.settingsModal.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                els.settingsModal.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function toggleCinemaMode() {
+            state.isCinemaMode = !state.isCinemaMode;
+            if (state.isCinemaMode) {
+                els.uiTop.classList.add('-translate-y-full', 'opacity-0');
+                els.uiBottom.classList.add('translate-y-full', 'opacity-0');
+                els.cursor.style.opacity = '0'; 
+                document.getElementById('cinema-icon').className = "fa-solid fa-compress";
+            } else {
+                els.uiTop.classList.remove('-translate-y-full', 'opacity-0');
+                els.uiBottom.classList.remove('translate-y-full', 'opacity-0');
+                els.cursor.style.opacity = '1';
+                document.getElementById('cinema-icon').className = "fa-solid fa-expand";
+            }
+        }
+
+        function setStatus(text, colorClass) {
+            els.statusText.innerText = text;
+            els.statusDot.className = `w-2.5 h-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] ${colorClass}`;
+        }
+
+        /**
+         * MEDIA PIPE LOGIC (Updated to use userSettings)
+         */
+
+        function onResults(results) {
+            els.ctx.save();
+            els.ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
+            els.ctx.translate(els.canvas.width, 0);
+            els.ctx.scale(-1, 1);
+            els.ctx.drawImage(results.image, 0, 0, els.canvas.width, els.canvas.height);
+
+            const handCount = results.multiHandLandmarks ? results.multiHandLandmarks.length : 0;
+
+            if (handCount === 2) {
+                setStatus("2 Hands Detected", "bg-purple-500");
+                handleTwoHandGestures(results.multiHandLandmarks);
+                
+                // Clear single hand feedback
+                els.zonePrev.classList.remove('active');
+                els.zoneNext.classList.remove('active');
+                els.cursor.style.display = 'none'; 
+
+            } else if (handCount === 1) {
+                setStatus("Active", "bg-green-500");
+                handleOneHandNavigation(results.multiHandLandmarks[0]);
+                els.cursor.style.display = 'block';
+
+            } else {
+                // No hands / Idle
+                setStatus("Show hands to control", "bg-yellow-500");
+                state.navLocked = false;
+                state.isPanning = false;
+                state.smoothedHandX = null;
+                state.smoothedHandY = null;
+                els.zonePrev.classList.remove('active');
+                els.zoneNext.classList.remove('active');
+                els.cursor.style.display = 'none';
+            }
+
+            els.ctx.restore();
+        }
+
+        function handleTwoHandGestures(landmarksArray) {
+            state.navLocked = false;
+
+            // Debug Skeleton
+            for (const landmarks of landmarksArray) {
+                drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
+                drawLandmarks(els.ctx, landmarks, {color: '#FF0000', lineWidth: 1, radius: 3});
+            }
+
+            const p1 = getPinch(landmarksArray[0]);
+            const p2 = getPinch(landmarksArray[1]);
+
+            // CASE 1: Both Pinching -> ZOOM
+            if (p1.isPinching && p2.isPinching) {
+                state.isPanning = false;
+                state.smoothedHandX = null;
+                
+                setStatus("Zooming...", "bg-purple-500");
+
+                const handDistance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                
+                // Use settings for Zoom Speed
+                let targetScale = handDistance * userSettings.zoomSpeed; 
+                targetScale = Math.max(CONSTANTS.MIN_SCALE, Math.min(CONSTANTS.MAX_SCALE, targetScale));
+
+                state.smoothedScale = state.smoothedScale + (targetScale - state.smoothedScale) * 0.1;
+                state.scale = state.smoothedScale;
+                updateTransform();
+
+            } 
+            // CASE 2: One Pinching + One Open -> PAN (Drag Logic)
+            else if (p1.isPinching || p2.isPinching) {
+                setStatus("Panning / Dragging", "bg-yellow-400");
+                
+                let navHand = p1.isPinching ? landmarksArray[1] : landmarksArray[0];
+                
+                // Using Middle Finger MCP [9] for stability
+                const rawNavX = navHand[9].x;
+                const rawNavY = navHand[9].y;
+
+                // Apply Smoothing from settings
+                if (state.smoothedHandX === null) {
+                    state.smoothedHandX = rawNavX;
+                    state.smoothedHandY = rawNavY;
+                } else {
+                    state.smoothedHandX = lerp(state.smoothedHandX, rawNavX, userSettings.smoothing); 
+                    state.smoothedHandY = lerp(state.smoothedHandY, rawNavY, userSettings.smoothing);
+                }
+
+                if (!state.isPanning) {
+                    state.isPanning = true;
+                    state.panStartHandX = state.smoothedHandX;
+                    state.panStartHandY = state.smoothedHandY;
+                    state.panStartImgX = state.panX;
+                    state.panStartImgY = state.panY;
+                }
+
+                // Calculate Drag
+                let deltaX = (state.panStartHandX - state.smoothedHandX);
+                let deltaY = (state.smoothedHandY - state.panStartHandY);
+
+                // Use Sensitivity from settings
+                state.panX = state.panStartImgX + (deltaX * userSettings.sensitivity);
+                state.panY = state.panStartImgY + (deltaY * userSettings.sensitivity);
+
+                updateTransform();
+            } 
+            else {
+                state.isPanning = false;
+                state.smoothedHandX = null;
+                setStatus("Pinch both: Zoom, One: Pan", "bg-blue-400");
+            }
+        }
+
+        function handleOneHandNavigation(landmarks) {
+            state.isPanning = false; 
+            state.smoothedHandX = null;
+            
+            drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#00BFFF', lineWidth: 2});
+            drawLandmarks(els.ctx, landmarks, {color: '#FFFFFF', lineWidth: 1, radius: 3});
+
+            const indexTip = landmarks[8];
+            const x = indexTip.x;
+            const y = indexTip.y;
+            
+            // Cursor Update (Inverted X)
+            if(!state.isCinemaMode) {
+                els.cursor.style.left = `${(1 - x) * 100}%`;
+                els.cursor.style.top = `${y * 100}%`;
+            }
+
+            // Navigation Zones Logic (using userSettings)
+            const zoneSize = userSettings.edgeZone;
+            
+            // Note: X is 0-1 from Camera's perspective (Mirrored on screen)
+            // Camera X > (1 - zoneSize) means LEFT side of screen
+            // Camera X < zoneSize means RIGHT side of screen
+            const leftTrigger = 1 - zoneSize;
+            const rightTrigger = zoneSize;
+
+            if (x > leftTrigger) {
+                els.zonePrev.classList.add('active');
+                els.zoneNext.classList.remove('active');
+                
+                if (!state.navLocked) {
+                    prevImage();
+                    state.navLocked = true;
+                }
+            } else if (x < rightTrigger) {
+                els.zoneNext.classList.add('active');
+                els.zonePrev.classList.remove('active');
+
+                if (!state.navLocked) {
+                    nextImage();
+                    state.navLocked = true;
+                }
+            } else {
+                els.zonePrev.classList.remove('active');
+                els.zoneNext.classList.remove('active');
+                
+                // Unlock when back in center (with some buffer)
+                if (x > (rightTrigger + 0.1) && x < (leftTrigger - 0.1)) {
+                    state.navLocked = false;
+                }
+            }
+        }
+
+        function getPinch(landmarks) {
+            const indexTip = landmarks[8];
+            const thumbTip = landmarks[4];
+            const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+            const midX = (indexTip.x + thumbTip.x) / 2;
+            const midY = (indexTip.y + thumbTip.y) / 2;
+            
+            return {
+                isPinching: distance < userSettings.pinchThreshold, // Use setting
+                x: midX,
+                y: midY
+            };
+        }
+
+        // Initialize MediaPipe
+        const hands = new Hands({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }});
+
+        hands.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(onResults);
+
+        // Initialize Camera
+        const camera = new Camera(els.video, {
+            onFrame: async () => {
+                await hands.send({image: els.video});
+            },
+            width: 640,
+            height: 480
+        });
+
+        camera.start().then(() => {
+            setStatus("Ready - Show Hands", "bg-green-500");
+        }).catch(err => {
+            console.error(err);
+            setStatus("Camera Error", "bg-red-500");
+            alert("Please allow camera access.");
+        });
+
+        // Set Resolution
+        els.canvas.width = 320;
+        els.canvas.height = 240;
+
+        // Keyboard Support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'ArrowLeft') prevImage();
+            if (e.key === 'Escape') {
+                if(state.isCinemaMode) toggleCinemaMode();
+                if(state.isHelpOpen) toggleHelp();
+                if(state.isSettingsOpen) toggleSettings();
+            }
+        });
+
+    </script>
+</body>
+</html>
