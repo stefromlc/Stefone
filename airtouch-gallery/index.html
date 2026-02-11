@@ -29,7 +29,6 @@
     <!-- Optional -->
     <meta name="theme-color" content="#0ea5e9" />
 
-
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -49,6 +48,7 @@
                     },
                     animation: {
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 8s linear infinite',
                     }
                 }
             }
@@ -67,28 +67,33 @@
 
     <style>
         body {
-            background-color: #020617; /* Deep Slate */
+            background-color: #000000; /* Void (Default) */
+            transition: background-color 0.5s ease;
             overflow: hidden;
             user-select: none;
             height: 100dvh; 
             width: 100vw;
             color: white;
+            overscroll-behavior: none;
         }
 
         /* HUD Aesthetics */
         .hud-panel {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
 
         .hud-btn {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
         .hud-btn:active { transform: scale(0.95); }
         .hud-btn:hover { background: rgba(255,255,255,0.1); color: #22d3ee; }
+        .hud-btn.active-state { background: rgba(34, 211, 238, 0.15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); }
 
         /* Custom Cursor */
         #virtual-cursor {
@@ -96,12 +101,52 @@
             z-index: 100;
             transition: width 0.15s, height 0.15s, background-color 0.2s, transform 0.1s;
             mix-blend-mode: exclusion;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
         }
         
-        .cursor-default { width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; }
-        .cursor-hover { width: 40px; height: 40px; border-color: #22d3ee; background: rgba(34, 211, 238, 0.2); }
-        .cursor-grab { width: 20px; height: 20px; background: #fbbf24; border: none; border-radius: 4px; transform: rotate(45deg); }
+        .cursor-default { width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        .cursor-hover { width: 48px; height: 48px; border-color: #22d3ee; background: rgba(34, 211, 238, 0.1); border-width: 1px; border-radius: 50%; border-style: solid; }
+        .cursor-grab { width: 24px; height: 24px; background: #fbbf24; border: none; border-radius: 4px; transform: rotate(45deg); box-shadow: 0 0 15px #fbbf24; }
+        .cursor-fist { width: 32px; height: 32px; background: #ef4444; border-radius: 50%; transform: scale(0.8); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.3); }
+        .cursor-peace { 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            border: 2px solid #10b981; /* Emerald 500 */
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .cursor-peace::after {
+            content: '\f25b'; /* FontAwesome Hand Peace */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            color: #10b981;
+            font-size: 24px;
+        }
         .cursor-hidden { opacity: 0; }
+
+        /* Progress Ring SVG inside cursor */
+        #cursor-progress {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-90deg);
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        #cursor-progress circle {
+            fill: none;
+            stroke: #10b981;
+            stroke-width: 4;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            transition: stroke-dashoffset 0.1s linear;
+        }
 
         /* Navigation Zones */
         .nav-zone {
@@ -137,29 +182,40 @@
         .safe-pb { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
         .safe-pt { padding-top: max(1rem, env(safe-area-inset-top)); }
 
-        /* --- TRANSITION ANIMATIONS (Only Fade Kept) --- */
-        /* Use !important to override inline gesture transforms during transition */
         .anim-base {
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Fade Effect */
-        .anim-fade-out { opacity: 0 !important; }
-        .anim-fade-in { opacity: 0 !important; } /* Starting state for enter */
+        .anim-fade-out { opacity: 0 !important; transform: scale(0.95) !important; }
+        .anim-fade-in { opacity: 0 !important; transform: scale(1.05) !important; } 
+
+        /* Theme Classes */
+        .theme-slate { background-color: #020617; }
+        .theme-void { background-color: #000000; }
+        .theme-midnight { background-color: #020420; }
+        .theme-forest { background-color: #022c22; }
     </style>
 </head>
-<body ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+<body id="app-body" class="theme-void" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
 
     <!-- BACKGROUND / WORKSPACE -->
-    <div id="workspace" class="absolute inset-0 flex items-center justify-center overflow-hidden z-0 bg-slate-950 cursor-crosshair">
+    <div id="workspace" class="absolute inset-0 flex items-center justify-center overflow-hidden z-0 cursor-crosshair">
         
-        <!-- Background Pattern -->
-        <div class="absolute inset-0 opacity-20 pointer-events-none" 
-             style="background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 32px 32px;">
+        <!-- Background Pattern (Default to Void Style) -->
+        <div id="bg-pattern" class="absolute inset-0 opacity-10 pointer-events-none transition-opacity duration-500" 
+             style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 80px 80px;">
+        </div>
+
+        <!-- Transform Helper Grid (Visible during zoom/rotate) -->
+        <div id="transform-grid" class="absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-300 flex items-center justify-center">
+            <div class="w-[200vw] h-[200vw] border border-cyan-500/10 rounded-full absolute"></div>
+            <div class="w-full h-px bg-cyan-500/20 absolute"></div>
+            <div class="h-full w-px bg-cyan-500/20 absolute"></div>
         </div>
 
         <!-- Image Container -->
-        <div id="image-wrapper" class="w-full h-full flex items-center justify-center relative opacity-0 transition-opacity duration-700 p-4 md:p-8">
+        <div id="image-wrapper" class="w-full h-full flex items-center justify-center relative opacity-0 transition-opacity duration-700 p-0 md:p-8">
             <img id="main-image" src="" alt="Gallery View" class="max-w-full max-h-full object-contain shadow-2xl select-none pointer-events-none origin-center will-change-transform rounded-sm">
         </div>
 
@@ -168,11 +224,17 @@
             <div class="h-32 w-1 bg-white/20 rounded-full overflow-hidden relative">
                 <div id="prog-prev" class="w-full bg-cyan-400 absolute bottom-0 left-0 transition-all duration-75" style="height: 0%"></div>
             </div>
-            <i class="fa-solid fa-chevron-left text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] ml-6"></i>
+            <div class="ml-6 flex flex-col items-center">
+                <i class="fa-solid fa-chevron-left text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></i>
+                <span class="text-[10px] font-mono text-cyan-400 mt-2">PREV</span>
+            </div>
         </div>
 
         <div id="zone-next" class="absolute right-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-end pr-6 nav-zone right opacity-0 pointer-events-none">
-            <i class="fa-solid fa-chevron-right text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] mr-6"></i>
+            <div class="mr-6 flex flex-col items-center">
+                <i class="fa-solid fa-chevron-right text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></i>
+                <span class="text-[10px] font-mono text-cyan-400 mt-2">NEXT</span>
+            </div>
             <div class="h-32 w-1 bg-white/20 rounded-full overflow-hidden relative">
                 <div id="prog-next" class="w-full bg-cyan-400 absolute bottom-0 right-0 transition-all duration-75" style="height: 0%"></div>
             </div>
@@ -183,22 +245,25 @@
     <div id="ui-layer" class="absolute inset-0 z-40 pointer-events-none flex flex-col justify-between safe-pt safe-pb transition-opacity duration-300">
         
         <!-- TOP BAR -->
-        <div class="flex justify-between items-start px-4 md:px-6">
+        <div class="flex justify-between items-start px-4 md:px-6 pt-4">
             <!-- Logo / Branding -->
             <div class="pointer-events-auto flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
                     <i class="fa-solid fa-hand-sparkles text-white text-lg"></i>
                 </div>
                 <div class="hidden md:block">
-                    <h1 class="font-bold text-lg tracking-tight">AirTouch<span class="text-cyan-400"> Gallery</span></h1>
-                    <div class="text-[10px] uppercase tracking-widest text-slate-400 font-mono" id="gesture-state">Initializing...</div>
+                    <h1 class="font-bold text-lg tracking-tight">AirTouch <span class="text-cyan-400">Gallery</span></h1>
+                    <div class="flex items-center gap-2">
+                        <div class="text-[10px] uppercase tracking-widest text-slate-400 font-mono" id="gesture-state">Initializing...</div>
+                        <!-- Rotation Indicator -->
+                        <div id="rot-indicator" class="hidden text-[10px] font-mono text-cyan-400 bg-cyan-900/30 px-1.5 rounded">0°</div>
+                    </div>
                 </div>
- <a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10">
+<a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10">
             <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
             <span class="hidden md:inline">Back to Projects</span>
         </a>
             </div>
-
 
             <!-- Camera Widget (Collapsible) -->
             <div class="pointer-events-auto flex flex-col items-end gap-2">
@@ -228,8 +293,8 @@
         </div>
 
         <!-- BOTTOM DOCK -->
-        <div class="flex justify-center px-4 mb-2">
-            <div class="hud-panel px-2 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 md:gap-4 pointer-events-auto shadow-2xl">
+        <div class="flex justify-center px-4 mb-4">
+            <div class="hud-panel px-2 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 md:gap-4 pointer-events-auto shadow-2xl overflow-x-auto max-w-full">
                 
                 <!-- File Input -->
                 <div class="tooltip-wrapper relative group">
@@ -241,16 +306,28 @@
 
                 <div class="w-px h-8 bg-white/10 mx-1"></div>
 
+                <!-- Collections Button (New) -->
+                <button onclick="toggleCollections()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-cyan-400" title="Collections">
+                    <i class="fa-solid fa-earth-americas"></i>
+                </button>
+
+                <div class="w-px h-8 bg-white/10 mx-1"></div>
+
                 <!-- Nav -->
                 <button onclick="prevImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-backward-step"></i></button>
-                <div class="font-mono text-cyan-400 text-sm md:text-base font-bold min-w-[60px] text-center" id="counter">-- / --</div>
+                <div class="font-mono text-cyan-400 text-sm md:text-base font-bold min-w-[60px] text-center select-none" id="counter">-- / --</div>
                 <button onclick="nextImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-forward-step"></i></button>
 
                 <div class="w-px h-8 bg-white/10 mx-1"></div>
 
+                <!-- Playback -->
+                <button id="btn-slideshow" onclick="toggleSlideshow()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-cyan-400" title="Slideshow">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+
                 <!-- Tools -->
-                <button onclick="resetView()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Fit to Screen">
-                    <i class="fa-solid fa-maximize"></i>
+                <button onclick="resetView()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Reset (Hold Peace Sign)">
+                    <i class="fa-solid fa-compress-arrows-alt"></i>
                 </button>
                 
                 <button onclick="toggleCinemaMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-yellow-400" title="Cinema Mode (Space)">
@@ -270,84 +347,150 @@
         </div>
     </div>
 
-    <!-- SETTINGS MODAL -->
-    <div id="settings-modal" onclick="if(event.target === this) toggleSettings()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
-        <div class="hud-panel p-6 md:p-8 rounded-3xl max-w-md w-full transform scale-100 transition-transform overflow-y-auto max-h-[85vh]">
+    <!-- COLLECTIONS MODAL -->
+    <div id="collections-modal" onclick="if(event.target === this) toggleCollections()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="hud-panel p-6 rounded-3xl max-w-md w-full transform scale-100 transition-transform">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-white flex items-center gap-3">
-                    <i class="fa-solid fa-sliders text-cyan-400"></i> Calibration
+                    <i class="fa-solid fa-earth-americas text-cyan-400"></i> Featured Collections
+                </h2>
+                <button onclick="toggleCollections()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="loadCollection('solar')" class="relative overflow-hidden p-6 rounded-2xl group border border-white/10 hover:border-cyan-500/50 transition-all text-left">
+                    <div class="absolute inset-0 bg-gradient-to-r from-indigo-900 to-purple-900 opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                    <div class="relative z-10">
+                        <div class="text-xs font-bold text-cyan-300 mb-1 tracking-widest uppercase">Universe</div>
+                        <h3 class="text-2xl font-bold text-white mb-2">Solar System</h3>
+                        <p class="text-sm text-white/70">Journey through the cosmos with high-resolution imagery from NASA.</p>
+                    </div>
+                </button>
+
+                <button onclick="loadCollection('landmarks')" class="relative overflow-hidden p-6 rounded-2xl group border border-white/10 hover:border-emerald-500/50 transition-all text-left">
+                    <div class="absolute inset-0 bg-gradient-to-r from-emerald-900 to-teal-900 opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                    <div class="relative z-10">
+                        <div class="text-xs font-bold text-emerald-300 mb-1 tracking-widest uppercase">Earth</div>
+                        <h3 class="text-2xl font-bold text-white mb-2">World Wonders</h3>
+                        <p class="text-sm text-white/70">Explore breathtaking architectural marvels from around the globe.</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" onclick="if(event.target === this) toggleSettings()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="hud-panel p-6 md:p-8 rounded-3xl max-w-lg w-full transform scale-100 transition-transform overflow-y-auto max-h-[85vh]">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-sliders text-cyan-400"></i> Settings
                 </h2>
                 <button onclick="toggleSettings()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
 
             <div class="space-y-6">
                 
-                <!-- Visual Settings -->
+                <!-- Section: Theme -->
                 <div class="bg-white/5 p-4 rounded-xl border border-white/5">
-                    <div class="flex justify-between mb-3 text-xs uppercase tracking-wider font-semibold text-slate-300">
-                        <span>Visual Experience</span>
+                    <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
+                        <span>Theme & Ambience</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="setTheme('slate')" class="h-10 rounded-lg bg-[#020617] border border-white/20 hover:scale-105 transition-transform" title="Deep Slate"></button>
+                        <button onclick="setTheme('void')" class="h-10 rounded-lg bg-black border border-white/20 hover:scale-105 transition-transform" title="Cosmic Void (Default)"></button>
+                        <button onclick="setTheme('midnight')" class="h-10 rounded-lg bg-[#020420] border border-white/20 hover:scale-105 transition-transform" title="Midnight Blue"></button>
+                        <button onclick="setTheme('forest')" class="h-10 rounded-lg bg-[#022c22] border border-white/20 hover:scale-105 transition-transform" title="Deep Forest"></button>
+                    </div>
+                </div>
+                
+                <!-- Section: Timing -->
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                    <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
+                        <span>Timing Controls</span>
                     </div>
                     
+                    <!-- Slideshow Interval -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Slideshow Speed</span>
+                            <span id="val-slideInterval" class="text-cyan-400 font-mono text-xs">3.0s</span>
+                        </div>
+                        <input type="range" id="inp-slideInterval" min="1000" max="10000" step="500" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('slideInterval', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">Time between photos in slideshow.</p>
+                    </div>
+
+                     <!-- Nav Delay -->
+                     <div class="mb-4">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Nav Hold Duration</span>
+                            <span id="val-navDelay" class="text-cyan-400 font-mono text-xs">20fr</span>
+                        </div>
+                        <input type="range" id="inp-navDelay" min="5" max="60" step="5" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('navDelay', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">Hold finger at screen edge this long to switch photos.</p>
+                    </div>
+
+                    <!-- Reset Hold Delay -->
                     <div>
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
-                            <span>Fade Speed</span>
-                            <span id="val-transitionSpeed" class="text-cyan-400 font-mono text-xs">300ms</span>
+                            <span>Reset Hold Duration</span>
+                            <span id="val-resetHoldTime" class="text-cyan-400 font-mono text-xs">1500ms</span>
                         </div>
-                        <input type="range" id="inp-transitionSpeed" min="100" max="1000" step="50" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('transitionSpeed', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">How fast one photo melts into the next.</p>
+                        <input type="range" id="inp-resetHoldTime" min="500" max="3000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('resetHoldTime', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">Time required to hold the Peace Sign to reset view.</p>
                     </div>
                 </div>
 
-                <!-- Gesture Settings -->
-                <div>
-                     <div class="flex justify-between mb-3 text-xs uppercase tracking-wider font-semibold text-slate-300">
-                        <span>Gesture Control</span>
+                <!-- Section: Gestures -->
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                     <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
+                        <span>Gesture Physics</span>
                     </div>
 
                     <!-- Sensitivity -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
-                            <span>Drag Speed</span>
+                            <span>Pan Speed</span>
                             <span id="val-sensitivity" class="text-cyan-400 font-mono text-xs">2500</span>
                         </div>
                         <input type="range" id="inp-sensitivity" min="500" max="5000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('sensitivity', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Make the image move faster or slower when you drag.</p>
+                        <p class="text-[10px] text-slate-500 mt-1">Controls how fast the image moves when dragging.</p>
                     </div>
 
                     <!-- Smoothing -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
-                            <span>Jitter Reducer</span>
-                            <span id="val-smoothing" class="text-cyan-400 font-mono text-xs">0.2</span>
+                            <span>Smoothing</span>
+                            <span id="val-smoothing" class="text-cyan-400 font-mono text-xs">0.1</span>
                         </div>
                         <input type="range" id="inp-smoothing" min="0.01" max="0.5" step="0.01" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('smoothing', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Higher = smoother cursor. Lower = faster response.</p>
+                        <p class="text-[10px] text-slate-500 mt-1">Reduces camera jitter for smoother movement.</p>
                     </div>
 
-                    <!-- Pinch -->
-                    <div class="mb-4">
+                     <!-- Pinch Threshold -->
+                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Pinch Ease</span>
-                            <span id="val-pinchThreshold" class="text-cyan-400 font-mono text-xs">0.08</span>
+                            <span id="val-pinchThreshold" class="text-cyan-400 font-mono text-xs">0.05</span>
                         </div>
-                        <input type="range" id="inp-pinchThreshold" min="0.02" max="0.15" step="0.005" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('pinchThreshold', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Adjusts how close fingers need to be to "grab".</p>
+                        <input type="range" id="inp-pinchThreshold" min="0.02" max="0.15" step="0.01" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('pinchThreshold', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">Lower = fingers must be closer to pinch. Higher = easier to pinch.</p>
                     </div>
 
-                     <!-- Nav Delay -->
-                     <div>
+                    <!-- Rotation Threshold -->
+                    <div>
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
-                            <span>Edge Hold Time</span>
-                            <span id="val-navDelay" class="text-cyan-400 font-mono text-xs">20</span>
+                            <span>Rotation Deadzone</span>
+                            <span id="val-rotationThreshold" class="text-cyan-400 font-mono text-xs">25°</span>
                         </div>
-                        <input type="range" id="inp-navDelay" min="5" max="60" step="5" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('navDelay', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">How long to hold at the side to switch photos.</p>
+                        <input type="range" id="inp-rotationThreshold" min="0" max="45" step="1" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('rotationThreshold', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">Prevents accidental rotation. Higher = harder to rotate.</p>
                     </div>
                 </div>
 
                 <div class="pt-4 border-t border-white/10 flex justify-between items-center">
-                    <button onclick="restoreDefaults()" class="text-xs text-red-400 hover:text-red-300">Reset Everything</button>
-                    <button onclick="toggleSettings()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-cyan-500/20">Done</button>
+                    <button onclick="restoreDefaults()" class="text-xs text-red-400 hover:text-red-300">Reset Defaults</button>
+                    <button onclick="toggleSettings()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-cyan-500/20">Close</button>
                 </div>
             </div>
         </div>
@@ -355,58 +498,71 @@
 
     <!-- HELP / WELCOME MODAL -->
     <div id="help-modal" onclick="if(event.target === this) toggleHelp()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md transition-opacity duration-300 px-4">
-        <div class="hud-panel p-1 rounded-3xl max-w-3xl w-full shadow-2xl transform transition-transform">
-            <div class="bg-slate-900/50 rounded-[20px] p-6 md:p-10 border border-white/5 relative overflow-hidden">
+        <div class="hud-panel p-1 rounded-3xl max-w-4xl w-full shadow-2xl transform transition-transform overflow-hidden">
+            <div class="bg-slate-900/50 rounded-[20px] p-6 md:p-10 border border-white/5 relative overflow-y-auto max-h-[85vh]">
                 <!-- Close -->
                 <button onclick="toggleHelp()" class="absolute top-6 right-6 text-white/30 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
 
-                <div class="text-center mb-10">
-                    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Welcome to <span class="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">AirTouch</span></h1>
-                    <p class="text-slate-400">A touchless and futuristic way to browse.</p>
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">AirTouch <span class="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Gallery</span></h1>
+                    <p class="text-slate-400">Touchless image manipulation.</p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <!-- Nav -->
-                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-cyan-500/30 transition-colors group">
-                        <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center mb-4 text-cyan-400 group-hover:scale-110 transition-transform">
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-cyan-500/30 transition-colors group">
+                        <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center mb-4 text-cyan-400">
                             <i class="fa-solid fa-arrow-right-arrow-left"></i>
                         </div>
-                        <h3 class="font-bold text-white mb-2">Navigate</h3>
-                        <p class="text-sm text-slate-400 leading-relaxed">Move index finger to the <strong>Edge</strong> of the screen and hold to switch images.</p>
+                        <h3 class="font-bold text-white mb-1">Navigate</h3>
+                        <p class="text-xs text-slate-400">Move index finger to screen <strong>Edge</strong> to switch.</p>
                     </div>
 
                     <!-- Pan -->
-                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-yellow-500/30 transition-colors group">
-                        <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-400 group-hover:scale-110 transition-transform">
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-yellow-500/30 transition-colors group">
+                        <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-400">
                             <i class="fa-solid fa-hand-back-fist"></i>
                         </div>
-                        <h3 class="font-bold text-white mb-2">Pan & Drag</h3>
-                        <p class="text-sm text-slate-400 leading-relaxed"><strong>Pinch</strong> index finger and thumb together with one hand, then move your other hand open palmed to drag.</p>
+                        <h3 class="font-bold text-white mb-1">Pan</h3>
+                        <p class="text-xs text-slate-400"><strong>Pinch one hand</strong>, keep other open. Drag to move.</p>
                     </div>
 
-                    <!-- Zoom -->
-                    <div class="bg-white/5 p-6 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-colors group">
-                        <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center mb-4 text-purple-400 group-hover:scale-110 transition-transform">
-                            <i class="fa-solid fa-expand"></i>
+                    <!-- Zoom/Rotate -->
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-colors group">
+                        <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center mb-4 text-purple-400">
+                            <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
                         </div>
-                        <h3 class="font-bold text-white mb-2">Zoom</h3>
-                        <p class="text-sm text-slate-400 leading-relaxed">Raise <strong>Both Hands</strong> and pinch. Move hands apart to zoom in, together to zoom out.</p>
+                        <h3 class="font-bold text-white mb-1">Zoom & Rotate</h3>
+                        <p class="text-xs text-slate-400"><strong>Pinch BOTH hands</strong>. Move apart to zoom. Rotate hands to turn.</p>
+                    </div>
+
+                    <!-- Reset -->
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-colors group">
+                        <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center mb-4 text-emerald-400">
+                            <i class="fa-regular fa-hand-peace"></i>
+                        </div>
+                        <h3 class="font-bold text-white mb-1">Reset</h3>
+                        <p class="text-xs text-slate-400">Hold <strong>Peace Sign</strong> (Index + Middle) for 1s to reset.</p>
                     </div>
                 </div>
 
                 <div class="text-center">
-                    <button onclick="toggleHelp()" class="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-white transition-all duration-200 bg-cyan-600 font-lg rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-600 hover:bg-cyan-500 hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]">
+                    <button onclick="toggleHelp()" class="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-white transition-all duration-200 bg-cyan-600 font-lg rounded-full focus:outline-none hover:bg-cyan-500 hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]">
                         <span>Initialize System</span>
                         <i class="fa-solid fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
                     </button>
-                    <p class="mt-4 text-[10px] text-slate-500 uppercase tracking-widest">Camera Processed Locally • No Cloud Upload</p>
+                    <p class="mt-4 text-[10px] text-slate-500 uppercase tracking-widest">Local Processing Only</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Virtual Cursor Element -->
-    <div id="virtual-cursor" class="fixed cursor-default hidden md:block"></div>
+    <div id="virtual-cursor" class="fixed cursor-default hidden md:block">
+        <svg id="cursor-progress" viewBox="0 0 50 50">
+            <circle cx="25" cy="25" r="23" />
+        </svg>
+    </div>
 
     <script>
         /**
@@ -416,45 +572,89 @@
          */
         const DEFAULT_SETTINGS = {
             sensitivity: 2500,
-            pinchThreshold: 0.08,
-            smoothing: 0.15, 
+            pinchThreshold: 0.05, // Updated
+            smoothing: 0.1, // Lower is smoother but laggier
             edgeZone: 0.15,
-            zoomSpeed: 5.5,
             navDelay: 20,
-            transitionSpeed: 300 // ms
+            transitionSpeed: 300,
+            slideInterval: 3000,
+            rotationThreshold: 25, // Updated
+            resetHoldTime: 1500 // Updated
+        };
+
+        const PRESETS = {
+            solar: [
+                'https://i.redd.it/rg21bnd1bzla1.jpg',
+                'https://live.staticflickr.com/7151/6760135001_ddc2c15fd3_6k.jpg',
+                'https://i.redd.it/51uvndo6wsi21.jpg'
+            ],
+            landmarks: [
+                'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=3000&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=3000&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1587595431973-160d0d94add1?q=80&w=3000&auto=format&fit=crop',
+                'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg',
+                'https://vastphotos.com/files/uploads/photos/11657/gigapixel-wallpaper-photo-of-new-york-city-l.jpg?v=20230914174722'
+            ]
         };
 
         const SAMPLE_IMAGES = [
-            'https://images-assets.nasa.gov/image/PIA00404/PIA00404~large.jpg',
-            'https://explorer1.jpl.nasa.gov/assets/images/galleries/1972_BlueMarble_115334main_image_feature_329_ys_full.jpg',
-            'https://images.pexels.com/photos/18173405/pexels-photo-18173405.jpeg',
-            'https://minutemedia-ressh.cloudinary.com/image/upload/v1695026966/shape/cover/sport/00b0ba4601cc87255343186bb0ccfa068fef21ebb74c81c6f976da04b9967d85.jpg'
+           'https://i.redd.it/rg21bnd1bzla1.jpg',
+           'https://vastphotos.com/files/uploads/photos/11657/gigapixel-wallpaper-photo-of-new-york-city-l.jpg?v=20230914174722',
+           'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg'
         ];
 
-        let userSettings = JSON.parse(localStorage.getItem('airtouch_settings')) || { ...DEFAULT_SETTINGS };
-        if(!userSettings.transitionSpeed) userSettings.transitionSpeed = DEFAULT_SETTINGS.transitionSpeed;
+        // Updated storage key to force new defaults for existing users
+        let userSettings = JSON.parse(localStorage.getItem('airtouch_settings_v2')) || { ...DEFAULT_SETTINGS };
+        
+        // Ensure new settings exist if loading from old localStorage (fallback)
+        if(!userSettings.slideInterval) userSettings.slideInterval = DEFAULT_SETTINGS.slideInterval;
+        if(userSettings.rotationThreshold === undefined) userSettings.rotationThreshold = DEFAULT_SETTINGS.rotationThreshold;
+        if(!userSettings.resetHoldTime) userSettings.resetHoldTime = DEFAULT_SETTINGS.resetHoldTime;
+        if(!userSettings.pinchThreshold) userSettings.pinchThreshold = DEFAULT_SETTINGS.pinchThreshold;
 
         const state = {
             images: [...SAMPLE_IMAGES],
             currentIdx: 0,
             isHelpOpen: true,
             isSettingsOpen: false,
+            isCollectionsOpen: false,
             isCinemaMode: false,
             isCamVisible: true,
-            isTransitioning: false, // New Lock
+            isTransitioning: false,
+            theme: 'void', // Default to void
             
-            // Transform State
+            // Slideshow
+            slideshowTimer: null,
+            
+            // Transform State (Current actual visual values)
             scale: 1,
-            smoothedScale: 1,
+            rotation: 0,
             panX: 0,
             panY: 0,
+            
+            // Target State (For smoothing)
+            targetScale: 1,
+            targetRotation: 0,
+            targetPanX: 0,
+            targetPanY: 0,
 
             // Nav State
             navLocked: false,
             edgeTimer: 0,
             
-            // Pan State
+            // Reset Gesture State
+            resetStartTime: 0,
+
+            // Interaction State
+            isZooming: false,
             isPanning: false,
+
+            // Reference points for relative calculations
+            zoomStartDist: 0,
+            zoomStartScale: 1,
+            zoomStartAngle: 0,
+            startRotation: 0,
+            
             panStartHandX: 0,
             panStartHandY: 0,
             panStartImgX: 0,
@@ -471,7 +671,7 @@
 
         const CONSTANTS = {
             MIN_SCALE: 0.5,
-            MAX_SCALE: 8.0,
+            MAX_SCALE: 12.0,
         };
 
         /**
@@ -484,27 +684,39 @@
             imageWrapper: document.getElementById('image-wrapper'),
             counter: document.getElementById('counter'),
             cursor: document.getElementById('virtual-cursor'),
+            cursorProgress: document.getElementById('cursor-progress'),
             video: document.getElementById('input_video'),
             canvas: document.getElementById('output_canvas'),
             ctx: document.getElementById('output_canvas').getContext('2d'),
             statusDot: document.getElementById('status-dot'),
             gestureState: document.getElementById('gesture-state'),
+            rotIndicator: document.getElementById('rot-indicator'),
+            transformGrid: document.getElementById('transform-grid'),
             uiLayer: document.getElementById('ui-layer'),
             helpModal: document.getElementById('help-modal'),
             settingsModal: document.getElementById('settings-modal'),
+            collectionsModal: document.getElementById('collections-modal'),
             zonePrev: document.getElementById('zone-prev'),
             zoneNext: document.getElementById('zone-next'),
             progPrev: document.getElementById('prog-prev'),
             progNext: document.getElementById('prog-next'),
+            btnSlideshow: document.getElementById('btn-slideshow'),
             workspace: document.getElementById('workspace'),
             toastContainer: document.getElementById('toast-container'),
             cameraContainer: document.getElementById('camera-container'),
-            fpsCounter: document.getElementById('fps-counter')
+            fpsCounter: document.getElementById('fps-counter'),
+            appBody: document.getElementById('app-body'),
+            bgPattern: document.getElementById('bg-pattern')
         };
 
         // Utility: Linear Interpolation
         function lerp(start, end, amt) {
             return (1 - amt) * start + amt * end;
+        }
+        
+        // Utility: Angle between two points
+        function getAngle(p1, p2) {
+            return Math.atan2(p2.y - p1.y, p2.x - p1.x);
         }
 
         /**
@@ -517,6 +729,34 @@
             syncSettingsUI();
             renderImage(false); // No transition on init
             showToast("System Ready", "info");
+            
+            // Start the main render loop for smooth physics
+            requestAnimationFrame(renderLoop);
+        }
+
+        // Physics Loop for Smooth Animations
+        function renderLoop() {
+            // Smooth Panning
+            state.panX = lerp(state.panX, state.targetPanX, userSettings.smoothing);
+            state.panY = lerp(state.panY, state.targetPanY, userSettings.smoothing);
+            
+            // Smooth Zoom/Scale
+            state.scale = lerp(state.scale, state.targetScale, userSettings.smoothing);
+            
+            // Smooth Rotation
+            state.rotation = lerp(state.rotation, state.targetRotation, userSettings.smoothing);
+
+            updateTransform();
+            
+            // Update rotation indicator text
+            if(Math.abs(state.rotation) > 1) {
+                els.rotIndicator.classList.remove('hidden');
+                els.rotIndicator.innerText = Math.round(state.rotation) + '°';
+            } else {
+                els.rotIndicator.classList.add('hidden');
+            }
+
+            requestAnimationFrame(renderLoop);
         }
 
         function handleFiles(fileList) {
@@ -543,6 +783,33 @@
             }
         }
 
+        function loadCollection(key) {
+            if(PRESETS[key]) {
+                state.images = [...PRESETS[key]];
+                state.currentIdx = 0;
+                renderImage(false);
+                showToast(`Loaded ${key === 'solar' ? 'Solar System' : 'Landmarks'}`, 'success');
+                toggleCollections(); // Close modal
+            }
+        }
+
+        function setTheme(theme) {
+            state.theme = theme;
+            els.appBody.className = `theme-${theme}`;
+            
+            // Adjust pattern opacity for 'void' theme
+            if(theme === 'void') {
+                els.bgPattern.style.opacity = '0.1';
+                els.bgPattern.style.backgroundImage = 'radial-gradient(#ffffff 1px, transparent 1px)'; // White stars
+                els.bgPattern.style.backgroundSize = '80px 80px';
+            } else {
+                els.bgPattern.style.opacity = '0.2';
+                els.bgPattern.style.backgroundImage = 'radial-gradient(#334155 1px, transparent 1px)';
+                els.bgPattern.style.backgroundSize = '40px 40px';
+            }
+            showToast(`Theme Set: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`, 'info');
+        }
+
         function handleDrop(e) { e.preventDefault(); handleFiles(e.dataTransfer.files); }
         function handleDragOver(e) { e.preventDefault(); }
 
@@ -553,54 +820,70 @@
 
             if (withTransition) {
                 handleImageTransition(direction, () => {
-                    // This runs halfway through transition (after exit, before enter)
                     els.mainImage.src = state.images[state.currentIdx];
-                    resetView();
+                    resetView(true); // Pass true to silence the toast
                     updateCounter();
                 });
             } else {
-                // Instant Swap
                 els.mainImage.src = state.images[state.currentIdx];
-                resetView();
+                resetView(true); // Pass true to silence the toast
                 updateCounter();
             }
         }
 
-        function handleImageTransition(direction, swapCallback) {
+        function handleImageTransition(direction, updateCallback) {
             if (state.isTransitioning) return;
             state.isTransitioning = true;
 
             const speed = userSettings.transitionSpeed;
-            
-            // Always Fade
             let exitClass = 'anim-fade-out';
             let enterClass = 'anim-fade-in';
 
-            // 2. Apply Duration & Exit Class
+            // 1. Fade OUT the current image
             els.mainImage.style.transitionDuration = `${speed}ms`;
             els.mainImage.classList.add('anim-base', exitClass);
 
-            // 3. Wait for Exit
+            // 2. Wait for fade out to finish
             setTimeout(() => {
-                // Swap Image Data & Reset View (Hidden)
-                swapCallback();
-
-                // Prepare Enter (Remove exit, add enter start state)
-                els.mainImage.classList.remove(exitClass);
+                // IMPORTANT: Ensure we stay hidden while loading new src
+                // Add enter class (opacity 0) BEFORE removing exit class
+                // This prevents any flash of the old image if opacity rules conflict
                 els.mainImage.classList.add(enterClass);
+                els.mainImage.classList.remove(exitClass);
                 
-                // Force Reflow
-                void els.mainImage.offsetWidth;
+                // Update UI counters/state
+                updateCallback();
 
-                // Animate In (Remove enter class to go to neutral)
-                els.mainImage.classList.remove(enterClass);
-                
-                // 4. Cleanup after Enter
-                setTimeout(() => {
-                    els.mainImage.classList.remove('anim-base');
-                    els.mainImage.style.transitionDuration = '';
-                    state.isTransitioning = false;
-                }, speed);
+                // 3. Set the new Source
+                const newSrc = state.images[state.currentIdx];
+                els.mainImage.src = newSrc;
+
+                // 4. Wait for the new image to LOAD before showing it
+                // This prevents "ghosting" where the browser shows the old image while decoding the new one
+                els.mainImage.onload = () => {
+                    // Reset View Geometry (Zoom/Pan) while hidden
+                    resetView(true); 
+                    
+                    // Force reflow to ensure styles apply
+                    void els.mainImage.offsetWidth;
+
+                    // 5. Fade IN the new image
+                    els.mainImage.classList.remove(enterClass);
+                    
+                    // Cleanup classes after transition
+                    setTimeout(() => {
+                        els.mainImage.classList.remove('anim-base');
+                        els.mainImage.style.transitionDuration = '';
+                        state.isTransitioning = false;
+                        els.mainImage.onload = null; // Clean up listener
+                    }, speed);
+                };
+
+                // Fallback in case onload hangs (e.g. cached image might fire immediately or fail)
+                els.mainImage.onerror = () => {
+                     state.isTransitioning = false;
+                     els.mainImage.classList.remove(enterClass, 'anim-base');
+                };
 
             }, speed);
         }
@@ -609,22 +892,30 @@
             els.counter.innerText = `${state.currentIdx + 1} / ${state.images.length}`;
         }
 
-        function resetView() {
+        function resetView(silent = false) {
+            // Reset targets
+            state.targetScale = 1;
+            state.targetRotation = 0;
+            state.targetPanX = 0;
+            state.targetPanY = 0;
+            
+            // Force physics state to match
             state.scale = 1;
-            state.smoothedScale = 1;
+            state.rotation = 0;
             state.panX = 0;
             state.panY = 0;
-            // Force the update even if transitioning, so the underlying style is reset 
-            // before the animation classes are removed.
-            updateTransform(true);
+            
+            updateTransform();
+            
+            if (!silent) {
+                showToast("View Reset", "neutral");
+            }
         }
 
-        function updateTransform(force = false) {
+        function updateTransform() {
             if (!els.mainImage) return;
-            // Only update transform if NOT transitioning (to avoid fighting CSS animations)
-            // UNLESS 'force' is true (used during reset)
-            if (!state.isTransitioning || force) {
-                els.mainImage.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
+            if (!state.isTransitioning) {
+                els.mainImage.style.transform = `translate(${state.panX}px, ${state.panY}px) rotate(${state.rotation}deg) scale(${state.scale})`;
             }
         }
 
@@ -650,6 +941,30 @@
                 document.getElementById('cam-toggle-text').innerText = "SHOW CAM";
             }
         }
+        
+        // --- Slideshow ---
+        function toggleSlideshow() {
+            if(state.slideshowTimer) {
+                clearInterval(state.slideshowTimer);
+                state.slideshowTimer = null;
+                els.btnSlideshow.innerHTML = '<i class="fa-solid fa-play"></i>';
+                els.btnSlideshow.classList.remove('active-state', 'text-cyan-400');
+                showToast("Slideshow Paused", "neutral");
+            } else {
+                state.slideshowTimer = setInterval(() => {
+                    if(!state.isZooming && !state.isPanning && state.resetStartTime === 0) {
+                        nextImage();
+                    }
+                }, userSettings.slideInterval);
+                els.btnSlideshow.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                els.btnSlideshow.classList.add('active-state', 'text-cyan-400');
+                showToast("Slideshow Started", "action");
+            }
+        }
+        
+        function stopSlideshow() {
+            if(state.slideshowTimer) toggleSlideshow();
+        }
 
         // --- Toast System ---
         function showToast(message, type = 'neutral') {
@@ -658,6 +973,8 @@
             let bgClass = 'bg-slate-800/90 border-slate-600 text-white';
             if(type === 'action') bgClass = 'bg-cyan-500/90 border-cyan-400 text-white shadow-cyan-500/50';
             if(type === 'warning') bgClass = 'bg-yellow-500/90 border-yellow-400 text-black font-bold';
+            if(type === 'success') bgClass = 'bg-emerald-500/90 border-emerald-400 text-white shadow-emerald-500/50';
+            if(type === 'info') bgClass = 'bg-blue-500/90 border-blue-400 text-white shadow-blue-500/50';
             
             toast.className = `toast-enter backdrop-blur-md px-6 py-2 rounded-full border shadow-xl font-medium text-sm mb-2 ${bgClass}`;
             toast.innerText = message;
@@ -676,6 +993,7 @@
             if (state.isHelpOpen) {
                 els.helpModal.classList.remove('opacity-0', 'pointer-events-none');
                 if(state.isSettingsOpen) toggleSettings();
+                if(state.isCollectionsOpen) toggleCollections();
             } else {
                 els.helpModal.classList.add('opacity-0', 'pointer-events-none');
             }
@@ -686,8 +1004,20 @@
             if (state.isSettingsOpen) {
                 els.settingsModal.classList.remove('opacity-0', 'pointer-events-none');
                 if(state.isHelpOpen) toggleHelp();
+                if(state.isCollectionsOpen) toggleCollections();
             } else {
                 els.settingsModal.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function toggleCollections() {
+            state.isCollectionsOpen = !state.isCollectionsOpen;
+            if (state.isCollectionsOpen) {
+                els.collectionsModal.classList.remove('opacity-0', 'pointer-events-none');
+                if(state.isHelpOpen) toggleHelp();
+                if(state.isSettingsOpen) toggleSettings();
+            } else {
+                els.collectionsModal.classList.add('opacity-0', 'pointer-events-none');
             }
         }
 
@@ -695,12 +1025,12 @@
             state.isCinemaMode = !state.isCinemaMode;
             if (state.isCinemaMode) {
                 els.uiLayer.classList.add('opacity-0', 'pointer-events-none');
-                els.cursor.classList.add('opacity-0');
+                // Cursor logic removed to keep it visible
                 document.getElementById('cinema-icon').className = "fa-solid fa-compress";
                 showToast("Cinema Mode On (Press Space to Exit)", "neutral");
             } else {
                 els.uiLayer.classList.remove('opacity-0', 'pointer-events-none');
-                els.cursor.classList.remove('opacity-0');
+                // Cursor logic removed
                 document.getElementById('cinema-icon').className = "fa-solid fa-expand";
             }
         }
@@ -725,29 +1055,36 @@
             }
             userSettings[key] = value;
             
-            // UI Updates - Fixed to prevent calling toFixed on strings
+            // UI Updates
             let displayText = value;
             if(key === 'edgeZone') displayText = Math.round(value * 100) + '%';
-            else if(key === 'pinchThreshold' && typeof value === 'number') displayText = value.toFixed(3);
+            else if(key === 'slideInterval') { 
+                displayText = (value / 1000).toFixed(1) + 's'; 
+                // Restart if running
+                if(state.slideshowTimer) { toggleSlideshow(); toggleSlideshow(); }
+            }
             else if(key === 'sensitivity') displayText = Math.round(value);
             else if(key === 'smoothing' && typeof value === 'number') displayText = value.toFixed(2);
-            else if(key === 'transitionSpeed') displayText = value + 'ms';
+            else if(key === 'navDelay') displayText = value + 'fr';
+            else if(key === 'resetHoldTime') displayText = value + 'ms';
+            else if(key === 'pinchThreshold') displayText = value.toFixed(2);
+            else if(key === 'rotationThreshold') displayText = value + '°';
             
             const displayEl = document.getElementById(`val-${key}`);
             if(displayEl) displayEl.innerText = displayText;
 
-            localStorage.setItem('airtouch_settings', JSON.stringify(userSettings));
+            localStorage.setItem('airtouch_settings_v2', JSON.stringify(userSettings));
         }
 
         function restoreDefaults() {
             userSettings = { ...DEFAULT_SETTINGS };
-            localStorage.setItem('airtouch_settings', JSON.stringify(userSettings));
+            localStorage.setItem('airtouch_settings_v2', JSON.stringify(userSettings));
             syncSettingsUI();
             showToast("Settings Reset", "neutral");
         }
 
         function syncSettingsUI() {
-            ['sensitivity', 'smoothing', 'pinchThreshold', 'navDelay', 'transitionSpeed'].forEach(key => {
+            ['sensitivity', 'smoothing', 'slideInterval', 'navDelay', 'rotationThreshold', 'resetHoldTime', 'pinchThreshold'].forEach(key => {
                 const input = document.getElementById(`inp-${key}`);
                 if(input) input.value = userSettings[key];
                 updateSetting(key, userSettings[key]);
@@ -782,23 +1119,31 @@
             const handCount = results.multiHandLandmarks ? results.multiHandLandmarks.length : 0;
 
             if (handCount === 2) {
+                stopSlideshow(); 
+                state.resetStartTime = 0;
+                setCursorResetProgress(0); // Reset UI
                 updateStatus("MULTI-TOUCH", "active");
                 handleTwoHandGestures(results.multiHandLandmarks);
                 resetNavVisuals();
                 setCursorState('hidden');
 
             } else if (handCount === 1) {
+                stopSlideshow();
                 updateStatus("NAVIGATION", "active");
                 handleOneHandNavigation(results.multiHandLandmarks[0]);
-                setCursorState('default');
-
+                // Ensure grid is hidden if not zooming
+                els.transformGrid.classList.remove('opacity-100');
             } else {
                 updateStatus("IDLE", "wait");
                 state.navLocked = false;
                 state.isPanning = false;
+                state.isZooming = false;
                 state.smoothedHandX = null;
+                state.resetStartTime = 0; // Reset
+                setCursorResetProgress(0);
                 resetNavVisuals();
                 setCursorState('hidden');
+                els.transformGrid.classList.remove('opacity-100');
             }
 
             els.ctx.restore();
@@ -810,8 +1155,24 @@
             } ${
                 type === 'hover' ? 'cursor-hover' : 
                 type === 'grab' ? 'cursor-grab' : 
+                type === 'fist' ? 'cursor-fist' :
+                type === 'peace' ? 'cursor-peace' :
                 'cursor-default'
             }`;
+        }
+        
+        // Progress is 0 to 1
+        function setCursorResetProgress(progress) {
+             const circle = els.cursorProgress.querySelector('circle');
+             if(progress <= 0) {
+                 els.cursorProgress.style.opacity = '0';
+                 return;
+             }
+             
+             els.cursorProgress.style.opacity = '1';
+             // Circumference ~ 144
+             const dashOffset = 144 - (144 * progress);
+             circle.style.strokeDashoffset = dashOffset;
         }
 
         function resetNavVisuals() {
@@ -826,7 +1187,7 @@
         }
 
         function handleTwoHandGestures(landmarksArray) {
-            if(state.isTransitioning) return; // Block during transition
+            if(state.isTransitioning) return; 
             
             state.navLocked = false;
 
@@ -839,23 +1200,63 @@
             const p1 = getPinch(landmarksArray[0]);
             const p2 = getPinch(landmarksArray[1]);
 
-            // CASE 1: Both Pinching -> ZOOM
+            // CASE 1: Both Pinching -> ZOOM & ROTATE
             if (p1.isPinching && p2.isPinching) {
                 state.isPanning = false;
                 state.smoothedHandX = null;
-                updateStatus("ZOOMING", "active");
+                updateStatus("ZOOM/ROTATE", "active");
+                els.transformGrid.classList.add('opacity-100'); // Show grid
 
-                const handDistance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-                
-                let targetScale = handDistance * userSettings.zoomSpeed; 
-                targetScale = Math.max(CONSTANTS.MIN_SCALE, Math.min(CONSTANTS.MAX_SCALE, targetScale));
+                const currentDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                const currentAngle = getAngle(p1, p2);
 
-                state.smoothedScale = state.smoothedScale + (targetScale - state.smoothedScale) * 0.1;
-                state.scale = state.smoothedScale;
-                updateTransform();
+                if (!state.isZooming) {
+                    // FIRST FRAME OF ZOOM
+                    state.isZooming = true;
+                    state.zoomStartDist = currentDist;
+                    state.zoomStartScale = state.targetScale; // Use current target for relative math
+                    state.zoomStartAngle = currentAngle;
+                    state.startRotation = state.targetRotation;
+                } else {
+                    // SUBSEQUENT FRAMES
+                    // 1. Calculate relative scale factor
+                    // Prevent div by zero
+                    if(state.zoomStartDist > 0.01) {
+                         const scaleMultiplier = currentDist / state.zoomStartDist;
+                         let newScale = state.zoomStartScale * scaleMultiplier;
+                         // Clamp
+                         newScale = Math.max(CONSTANTS.MIN_SCALE, Math.min(CONSTANTS.MAX_SCALE, newScale));
+                         state.targetScale = newScale;
+                    }
+
+                    // 2. Calculate relative rotation
+                    let angleDelta = currentAngle - state.zoomStartAngle;
+                    
+                    // Normalize angle to prevent 360 jump glitches (Wrap-around fix)
+                    if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
+                    if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
+
+                    // Convert radians to degrees
+                    const degDelta = angleDelta * (180 / Math.PI);
+                    
+                    // Apply Threshold / Deadzone logic
+                    if (Math.abs(degDelta) > userSettings.rotationThreshold) {
+                         // Apply rotation but subtract threshold to avoid "jump" on activation
+                         const effectiveDeg = degDelta > 0 
+                            ? degDelta - userSettings.rotationThreshold 
+                            : degDelta + userSettings.rotationThreshold;
+                         
+                         state.targetRotation = state.startRotation + effectiveDeg;
+                    } else {
+                        // Stay locked to original angle if within threshold (magnetic snap)
+                        state.targetRotation = state.startRotation;
+                    }
+                }
             } 
             // CASE 2: One Pinching + One Open -> PAN
             else if (p1.isPinching || p2.isPinching) {
+                state.isZooming = false; // Reset zoom state
+                els.transformGrid.classList.remove('opacity-100');
                 updateStatus("PANNING", "active");
                 
                 let navHand = p1.isPinching ? landmarksArray[1] : landmarksArray[0];
@@ -866,6 +1267,7 @@
                     state.smoothedHandX = rawNavX;
                     state.smoothedHandY = rawNavY;
                 } else {
+                    // Apply heavy smoothing to the INPUT hand coordinate
                     state.smoothedHandX = lerp(state.smoothedHandX, rawNavX, userSettings.smoothing); 
                     state.smoothedHandY = lerp(state.smoothedHandY, rawNavY, userSettings.smoothing);
                 }
@@ -874,27 +1276,62 @@
                     state.isPanning = true;
                     state.panStartHandX = state.smoothedHandX;
                     state.panStartHandY = state.smoothedHandY;
-                    state.panStartImgX = state.panX;
-                    state.panStartImgY = state.panY;
+                    state.panStartImgX = state.targetPanX;
+                    state.panStartImgY = state.targetPanY;
                 }
 
+                // Delta movement
                 let deltaX = (state.panStartHandX - state.smoothedHandX);
                 let deltaY = (state.smoothedHandY - state.panStartHandY);
 
-                state.panX = state.panStartImgX + (deltaX * userSettings.sensitivity);
-                state.panY = state.panStartImgY + (deltaY * userSettings.sensitivity);
+                // Apply Sensitivity
+                state.targetPanX = state.panStartImgX + (deltaX * userSettings.sensitivity);
+                state.targetPanY = state.panStartImgY + (deltaY * userSettings.sensitivity);
 
-                updateTransform();
             } else {
                 state.isPanning = false;
+                state.isZooming = false;
                 state.smoothedHandX = null;
+                els.transformGrid.classList.remove('opacity-100');
             }
         }
 
         function handleOneHandNavigation(landmarks) {
-            if(state.isTransitioning) return; // Block during transition
+            if(state.isTransitioning) return; 
             
+            // CHECK FOR PEACE SIGN (RESET)
+            if (isPeaceSign(landmarks)) {
+                 updateStatus("RESETTING...", "wait");
+                 setCursorState('peace'); 
+                 
+                 // Handle Hold Logic
+                 if(state.resetStartTime === 0) {
+                     state.resetStartTime = performance.now();
+                 }
+                 
+                 const elapsed = performance.now() - state.resetStartTime;
+                 const progress = Math.min(1, elapsed / userSettings.resetHoldTime);
+                 setCursorResetProgress(progress);
+
+                 if(progress >= 1) {
+                     resetView();
+                     state.resetStartTime = 0; // Prevent loop
+                     setCursorResetProgress(0); // Hide ring
+                 }
+                 
+                 // Reset visuals for nav since we are resetting
+                 resetNavVisuals();
+                 return;
+            } else {
+                // Not holding peace sign, reset timer
+                state.resetStartTime = 0;
+                setCursorResetProgress(0);
+            }
+
+            setCursorState('default');
+
             state.isPanning = false; 
+            state.isZooming = false;
             state.smoothedHandX = null;
             
             drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#22d3ee', lineWidth: 1});
@@ -904,10 +1341,9 @@
             const x = indexTip.x;
             const y = indexTip.y;
             
-            if(!state.isCinemaMode) {
-                els.cursor.style.left = `${(1 - x) * 100}%`;
-                els.cursor.style.top = `${y * 100}%`;
-            }
+            // Always update cursor position
+            els.cursor.style.left = `${(1 - x) * 100}%`;
+            els.cursor.style.top = `${y * 100}%`;
 
             const zoneSize = userSettings.edgeZone;
             const leftTrigger = 1 - zoneSize; 
@@ -954,6 +1390,28 @@
                     state.navLocked = false;
                 }
             }
+        }
+
+        // --- Gesture Helpers ---
+
+        function isFingerExtended(landmarks, tipIdx, pipIdx) {
+            const wrist = landmarks[0];
+            const tip = landmarks[tipIdx];
+            const pip = landmarks[pipIdx];
+            // Check if tip is further from wrist than PIP is from wrist
+            // This generally works to distinguish extended vs curled for simple gestures
+            return Math.hypot(tip.x - wrist.x, tip.y - wrist.y) > Math.hypot(pip.x - wrist.x, pip.y - wrist.y);
+        }
+
+        function isPeaceSign(landmarks) {
+             const indexExt = isFingerExtended(landmarks, 8, 6);
+             const middleExt = isFingerExtended(landmarks, 12, 10);
+             const ringExt = isFingerExtended(landmarks, 16, 14);
+             const pinkyExt = isFingerExtended(landmarks, 20, 18);
+             
+             // Strict peace: Index & Middle UP, Ring & Pinky DOWN
+             // Note: Thumb position can vary so we ignore it for robustness
+             return indexExt && middleExt && !ringExt && !pinkyExt;
         }
 
         function getPinch(landmarks) {
@@ -1033,4 +1491,3 @@
     </script>
 </body>
 </html>
-
