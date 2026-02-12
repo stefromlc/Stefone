@@ -28,10 +28,6 @@
 
     <!-- Optional -->
     <meta name="theme-color" content="#0ea5e9" />
-
-    <!-- Leaflet CSS (Map) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -67,8 +63,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <!-- Leaflet JS -->
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- EXIF JS for Geotagging -->
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 
     <style>
         body {
@@ -110,17 +111,18 @@
             align-items: center;
             justify-content: center;
             position: fixed;
+            will-change: transform, top, left;
         }
         
         .cursor-default { width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
         .cursor-hover { width: 48px; height: 48px; border-color: #22d3ee; background: rgba(34, 211, 238, 0.1); border-width: 1px; border-radius: 50%; border-style: solid; }
         .cursor-grab { width: 24px; height: 24px; background: #fbbf24; border: none; border-radius: 4px; transform: rotate(45deg); box-shadow: 0 0 15px #fbbf24; }
-        .cursor-fist { width: 32px; height: 32px; background: #ef4444; border-radius: 50%; transform: scale(0.8); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.3); }
+        .cursor-fist { width: 40px; height: 40px; border: 4px solid #ef4444; border-radius: 50%; background: transparent; transform: scale(0.9); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
         .cursor-peace { 
             width: 50px; 
             height: 50px; 
             border-radius: 50%; 
-            border: 2px solid #10b981; /* Emerald 500 */
+            border: 2px solid #10b981; 
             background: rgba(16, 185, 129, 0.1);
         }
         .cursor-peace::after {
@@ -132,26 +134,36 @@
         }
         .cursor-hidden { opacity: 0; }
 
-        /* Progress Ring SVG inside cursor */
+        /* Progress Ring SVG inside cursor - HIGH VISIBILITY UPDATE */
         #cursor-progress {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-90deg);
-            width: 100%;
-            height: 100%;
+            width: 180%; /* Larger to be clear around the fist */
+            height: 180%;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s;
+            filter: drop-shadow(0 0 6px rgba(0,0,0,1)); /* Very Heavy shadow for contrast */
         }
-        #cursor-progress circle {
+        /* Background circle for contrast */
+        #cursor-progress .bg-ring {
+            fill: rgba(0, 0, 0, 0.6); /* Darker backing */
+            stroke: rgba(255, 255, 255, 0.3);
+            stroke-width: 3;
+        }
+        #cursor-progress .progress-ring {
             fill: none;
-            stroke: #10b981;
-            stroke-width: 4;
+            stroke: #ef4444; /* Bright Red for visibility */
+            stroke-width: 6; /* Thicker */
             stroke-dasharray: 100;
             stroke-dashoffset: 100;
+            stroke-linecap: round;
             transition: stroke-dashoffset 0.1s linear;
         }
+        /* Color overrides based on state if needed */
+        .cursor-peace #cursor-progress .progress-ring { stroke: #10b981; }
 
         /* Navigation Zones */
         .nav-zone {
@@ -209,17 +221,88 @@
         /* Map Background Fix - Matches Dark Matter Tile Color */
         #leaflet-map {
             background-color: #1a1a1a; 
+            transition: transform 0.5s cubic-bezier(0.2, 0, 0.4, 1);
         }
-        /* Custom Layers Control */
-        .leaflet-control-layers {
-            background: rgba(15, 23, 42, 0.85) !important;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            color: #ccc !important;
-            border-radius: 8px !important;
+
+        /* 3D Map Mode Perspective Container */
+        .map-3d-perspective {
+            perspective: 1200px;
+            overflow: hidden;
         }
-        .leaflet-control-layers-expanded {
-            padding: 10px !important;
+        .map-3d-active {
+            transform: rotateX(55deg) scale(1.4);
+        }
+
+        /* Radial Menu */
+        #radial-menu {
+            position: fixed;
+            width: 360px; /* Increased size */
+            height: 360px; /* Increased size */
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        #radial-menu.open {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .radial-bg {
+            fill: rgba(0, 0, 0, 0.85); /* 85% Black for high contrast */
+            stroke: rgba(255, 255, 255, 0.2);
+            stroke-width: 2px;
+            backdrop-filter: blur(20px); /* Heavier blur */
+        }
+        .radial-slice {
+            fill: transparent;
+            transition: fill 0.2s;
+            cursor: pointer;
+        }
+        .radial-slice.active {
+            fill: rgba(6, 182, 212, 0.3); /* Stronger Cyan highlight */
+            stroke: #22d3ee;
+            stroke-width: 3px;
+        }
+        .radial-icon {
+            font-size: 28px; /* Larger icons */
+            fill: white;
+            pointer-events: none;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+        }
+        .radial-label {
+            font-size: 12px; /* Larger text */
+            fill: #e2e8f0; /* Brighter text */
+            font-family: 'JetBrains Mono', monospace;
+            text-anchor: middle;
+            pointer-events: none;
+            font-weight: 600;
+            opacity: 0.9;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,1));
+        }
+        .radial-slice.active + .radial-icon {
+            fill: #22d3ee;
+            filter: drop-shadow(0 0 10px rgba(34,211,238,1));
+        }
+        .radial-slice.active ~ .radial-label {
+            fill: #22d3ee;
+            font-weight: bold;
+        }
+        
+        /* Popup Buttons for Gestures */
+        .popup-btn {
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .popup-btn:hover {
+            transform: scale(1.1);
+            background-color: #0891b2 !important; /* Cyan-600 */
+        }
+
+        /* IMPORTANT: Ensure photo markers are interactive */
+        .photo-marker {
+            pointer-events: auto !important;
         }
     </style>
 </head>
@@ -233,24 +316,25 @@
              style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 80px 80px;">
         </div>
 
-        <!-- Transform Helper Grid (Visible during zoom/rotate) -->
-        <div id="transform-grid" class="absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-300 flex items-center justify-center z-20">
-            <div class="w-[200vw] h-[200vw] border border-cyan-500/10 rounded-full absolute"></div>
-            <div class="w-full h-px bg-cyan-500/20 absolute"></div>
-            <div class="h-full w-px bg-cyan-500/20 absolute"></div>
-        </div>
-
         <!-- Image Container -->
         <div id="image-wrapper" class="w-full h-full flex items-center justify-center relative opacity-0 transition-opacity duration-700 p-0 md:p-8 z-10">
-            <img id="main-image" src="" alt="Gallery View" class="max-w-full max-h-full object-contain shadow-2xl select-none pointer-events-none origin-center will-change-transform rounded-sm">
+            <img id="main-image" src="" alt="Gallery View" class="max-w-full max-h-full object-contain shadow-2xl select-none pointer-events-none origin-center will-change-transform rounded-sm transition-all duration-300">
         </div>
 
-        <!-- Map Container -->
-        <div id="map-wrapper" class="absolute inset-0 z-10 opacity-0 pointer-events-none transition-opacity duration-700">
+        <!-- Map Container with 3D capability -->
+        <div id="map-wrapper" class="absolute inset-0 z-10 opacity-0 pointer-events-none transition-opacity duration-700 map-3d-perspective">
              <div id="leaflet-map" class="w-full h-full"></div>
              <!-- Map Mode Overlay -->
-             <div class="absolute top-20 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur px-4 py-1 rounded-full text-xs font-mono text-cyan-400 border border-cyan-500/20 pointer-events-none">
+             <div class="absolute top-24 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur px-4 py-1 rounded-full text-xs font-mono text-cyan-400 border border-cyan-500/20 pointer-events-none z-[1000]">
                 GESTURE MAP CONTROL
+             </div>
+             
+             <!-- 3D Toggle (Visible in Map Mode) -->
+             <div id="map-3d-controls" class="absolute bottom-32 right-6 z-[1000] flex flex-col gap-2">
+                 <button onclick="toggle3DMap()" class="w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 text-white hover:text-cyan-400 hover:border-cyan-400/50 flex items-center justify-center shadow-lg backdrop-blur transition-all">
+                     <i class="fa-solid fa-cube text-lg"></i>
+                 </button>
+                 <div class="text-[10px] text-center bg-black/50 rounded px-1 text-white/70 font-mono">TILT</div>
              </div>
         </div>
 
@@ -294,9 +378,9 @@
                         <div id="rot-indicator" class="hidden text-[10px] font-mono text-cyan-400 bg-cyan-900/30 px-1.5 rounded">0°</div>
                     </div>
                 </div>
-                <a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10 ml-4">
+                 <a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10 ml-4">
                     <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
-                    <span class="hidden md:inline">Back</span>
+                    <span class="hidden md:inline">Back to Projects</span>
                 </a>
             </div>
 
@@ -342,18 +426,23 @@
                 <div class="w-px h-8 bg-white/10 mx-1"></div>
 
                 <!-- Collections Button -->
-                <button onclick="toggleCollections()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-cyan-400" title="Collections">
+                <button onclick="toggleCollections()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-cyan-400" title="Collections (Fist Menu)">
                     <i class="fa-solid fa-earth-americas"></i>
                 </button>
 
-                <!-- MAP TOGGLE (NEW) -->
-                <button id="btn-map" onclick="toggleMapMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-emerald-400" title="Map Mode">
+                <!-- MAP TOGGLE -->
+                <button id="btn-map" onclick="toggleMapMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-emerald-400" title="Switch Mode">
                     <i class="fa-solid fa-map"></i>
                 </button>
 
-                <!-- LAYERS TOGGLE (NEW) -->
+                <!-- LAYERS TOGGLE -->
                 <button id="btn-layers" onclick="toggleLayers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-purple-400 hidden" title="Map Layers">
                     <i class="fa-solid fa-layer-group"></i>
+                </button>
+
+                <!-- PHOTO PLOT TOGGLE (Visible in Map Mode) -->
+                <button id="btn-photos" onclick="togglePhotoMarkers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-yellow-400 hidden" title="Show Uploaded Photos">
+                    <i class="fa-solid fa-camera"></i>
                 </button>
 
                 <div class="w-px h-8 bg-white/10 mx-1" id="sep-nav"></div>
@@ -373,8 +462,8 @@
                 </button>
 
                 <!-- Tools -->
-                <button onclick="resetView()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Reset (Hold Peace Sign)">
-                    <i class="fa-solid fa-compress-arrows-alt"></i>
+                <button onclick="toggleFilters()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-pink-400" title="Filters">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </button>
                 
                 <button onclick="toggleCinemaMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-yellow-400" title="Cinema Mode (Space)">
@@ -392,6 +481,21 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <!-- RADIAL MENU (SVG) -->
+    <div id="radial-menu" class="flex items-center justify-center">
+        <!-- SVG generated via JS -->
+        <svg id="radial-svg" width="360" height="360" viewBox="0 0 360 360">
+            <defs>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+            </defs>
+            <circle cx="180" cy="180" r="40" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.2)"></circle>
+            <!-- Slices will be injected here -->
+        </svg>
     </div>
 
     <!-- MAP LAYERS MODAL -->
@@ -415,6 +519,16 @@
                     </div>
                 </button>
 
+                <button onclick="setMapLayer('terrain')" class="relative overflow-hidden p-4 rounded-2xl group border border-white/10 hover:border-emerald-500/50 transition-all text-left flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-lg bg-emerald-900 flex items-center justify-center border border-white/20">
+                        <i class="fa-solid fa-mountain text-2xl text-emerald-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white">3D Terrain</h3>
+                        <p class="text-xs text-white/70">Topography + Hillshade</p>
+                    </div>
+                </button>
+
                 <button onclick="setMapLayer('dark')" class="relative overflow-hidden p-4 rounded-2xl group border border-white/10 hover:border-purple-500/50 transition-all text-left flex items-center gap-4">
                     <div class="w-16 h-16 rounded-lg bg-black flex items-center justify-center border border-white/20">
                         <i class="fa-solid fa-moon text-2xl text-gray-400"></i>
@@ -422,16 +536,6 @@
                     <div>
                         <h3 class="font-bold text-white">Dark Void</h3>
                         <p class="text-xs text-white/70">Carto Dark Matter</p>
-                    </div>
-                </button>
-
-                <button onclick="setMapLayer('streets')" class="relative overflow-hidden p-4 rounded-2xl group border border-white/10 hover:border-purple-500/50 transition-all text-left flex items-center gap-4">
-                    <div class="w-16 h-16 rounded-lg bg-slate-200 flex items-center justify-center border border-white/20">
-                        <i class="fa-solid fa-road text-2xl text-slate-600"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-white">Streets</h3>
-                        <p class="text-xs text-white/70">OpenStreetMap</p>
                     </div>
                 </button>
             </div>
@@ -449,7 +553,7 @@
             </div>
             
             <div class="grid grid-cols-1 gap-4">
-                <button onclick="loadCollection('solar')" class="relative overflow-hidden p-6 rounded-2xl group border border-white/10 hover:border-cyan-500/50 transition-all text-left">
+                <button data-collection="solar" onclick="loadCollection('solar')" class="collection-card relative overflow-hidden p-6 rounded-2xl group border border-white/10 hover:border-cyan-500/50 transition-all text-left">
                     <div class="absolute inset-0 bg-gradient-to-r from-indigo-900 to-purple-900 opacity-60 group-hover:opacity-80 transition-opacity"></div>
                     <div class="relative z-10">
                         <div class="text-xs font-bold text-cyan-300 mb-1 tracking-widest uppercase">Universe</div>
@@ -458,7 +562,7 @@
                     </div>
                 </button>
 
-                <button onclick="loadCollection('landmarks')" class="relative overflow-hidden p-6 rounded-2xl group border border-white/10 hover:border-emerald-500/50 transition-all text-left">
+                <button data-collection="landmarks" onclick="loadCollection('landmarks')" class="collection-card relative overflow-hidden p-6 rounded-2xl group border border-white/10 hover:border-emerald-500/50 transition-all text-left">
                     <div class="absolute inset-0 bg-gradient-to-r from-emerald-900 to-teal-900 opacity-60 group-hover:opacity-80 transition-opacity"></div>
                     <div class="relative z-10">
                         <div class="text-xs font-bold text-emerald-300 mb-1 tracking-widest uppercase">Earth</div>
@@ -495,7 +599,7 @@
                     </div>
                 </div>
                 
-                <!-- Section: Timing -->
+                <!-- Section: Timing (RESTORED) -->
                 <div class="bg-white/5 p-4 rounded-xl border border-white/5">
                     <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
                         <span>Timing Controls</span>
@@ -508,7 +612,6 @@
                             <span id="val-slideInterval" class="text-cyan-400 font-mono text-xs">3.0s</span>
                         </div>
                         <input type="range" id="inp-slideInterval" min="1000" max="10000" step="500" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('slideInterval', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Time between photos in slideshow.</p>
                     </div>
 
                      <!-- Nav Delay -->
@@ -518,21 +621,30 @@
                             <span id="val-navDelay" class="text-cyan-400 font-mono text-xs">20fr</span>
                         </div>
                         <input type="range" id="inp-navDelay" min="5" max="60" step="5" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('navDelay', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Hold finger at screen edge this long to switch photos.</p>
                     </div>
 
                     <!-- Reset Hold Delay -->
-                    <div>
+                    <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
-                            <span>Reset Hold Duration</span>
+                            <span>Reset/Fist Hold</span>
                             <span id="val-resetHoldTime" class="text-cyan-400 font-mono text-xs">1500ms</span>
                         </div>
                         <input type="range" id="inp-resetHoldTime" min="500" max="3000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('resetHoldTime', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Time required to hold the Peace Sign to reset view.</p>
+                        <p class="text-[10px] text-slate-500 mt-1">Duration to trigger Reset or Radial Menu.</p>
+                    </div>
+
+                    <!-- Collection Dwell Time -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Menu Dwell Time</span>
+                            <span id="val-collectionDwellTime" class="text-cyan-400 font-mono text-xs">1500ms</span>
+                        </div>
+                        <input type="range" id="inp-collectionDwellTime" min="500" max="3000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('collectionDwellTime', this.value)">
+                        <p class="text-[10px] text-slate-500 mt-1">Time to hold over menu items to select.</p>
                     </div>
                 </div>
 
-                <!-- Section: Gestures -->
+                <!-- Section: Gestures (RESTORED) -->
                 <div class="bg-white/5 p-4 rounded-xl border border-white/5">
                      <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
                         <span>Gesture Physics</span>
@@ -545,7 +657,6 @@
                             <span id="val-sensitivity" class="text-cyan-400 font-mono text-xs">2500</span>
                         </div>
                         <input type="range" id="inp-sensitivity" min="500" max="5000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('sensitivity', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Controls how fast the image moves when dragging.</p>
                     </div>
 
                     <!-- Smoothing -->
@@ -555,7 +666,7 @@
                             <span id="val-smoothing" class="text-cyan-400 font-mono text-xs">0.1</span>
                         </div>
                         <input type="range" id="inp-smoothing" min="0.01" max="0.5" step="0.01" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('smoothing', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Reduces camera jitter for smoother movement.</p>
+                        <p class="text-[10px] text-slate-500 mt-1">Lower = smoother but more delay.</p>
                     </div>
 
                      <!-- Pinch Threshold -->
@@ -565,7 +676,6 @@
                             <span id="val-pinchThreshold" class="text-cyan-400 font-mono text-xs">0.05</span>
                         </div>
                         <input type="range" id="inp-pinchThreshold" min="0.02" max="0.15" step="0.01" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('pinchThreshold', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Lower = fingers must be closer to pinch. Higher = easier to pinch.</p>
                     </div>
 
                     <!-- Rotation Threshold -->
@@ -575,7 +685,6 @@
                             <span id="val-rotationThreshold" class="text-cyan-400 font-mono text-xs">25°</span>
                         </div>
                         <input type="range" id="inp-rotationThreshold" min="0" max="45" step="1" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('rotationThreshold', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Prevents accidental rotation. Higher = harder to rotate.</p>
                     </div>
                 </div>
 
@@ -609,6 +718,15 @@
                         <p class="text-xs text-slate-400">Move index finger to screen <strong>Edge</strong> to switch images.</p>
                     </div>
 
+                    <!-- Air Menu (New) -->
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-red-500/30 transition-colors group">
+                        <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center mb-4 text-red-400">
+                            <i class="fa-solid fa-hand-fist"></i>
+                        </div>
+                        <h3 class="font-bold text-white mb-1">Air Menu</h3>
+                        <p class="text-xs text-slate-400"><strong>Hold Fist</strong> for 1s to open menu. Open hand to select. Dwell to click.</p>
+                    </div>
+
                     <!-- Pan -->
                     <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-yellow-500/30 transition-colors group">
                         <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-400">
@@ -626,15 +744,6 @@
                         <h3 class="font-bold text-white mb-1">Zoom</h3>
                         <p class="text-xs text-slate-400"><strong>Pinch BOTH hands</strong>. Move apart to zoom.</p>
                     </div>
-
-                    <!-- Reset -->
-                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-colors group">
-                        <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center mb-4 text-emerald-400">
-                            <i class="fa-regular fa-hand-peace"></i>
-                        </div>
-                        <h3 class="font-bold text-white mb-1">Reset</h3>
-                        <p class="text-xs text-slate-400">Hold <strong>Peace Sign</strong> (Index + Middle) for 1s to reset.</p>
-                    </div>
                 </div>
 
                 <div class="text-center">
@@ -651,7 +760,10 @@
     <!-- Virtual Cursor Element -->
     <div id="virtual-cursor" class="fixed cursor-default hidden md:block">
         <svg id="cursor-progress" viewBox="0 0 50 50">
-            <circle cx="25" cy="25" r="23" />
+            <!-- Background ring for contrast on white images -->
+            <circle class="bg-ring" cx="25" cy="25" r="23" />
+            <!-- Active Progress -->
+            <circle class="progress-ring" cx="25" cy="25" r="23" />
         </svg>
     </div>
 
@@ -670,37 +782,39 @@
             transitionSpeed: 300,
             slideInterval: 3000,
             rotationThreshold: 25, 
-            resetHoldTime: 1500 
+            resetHoldTime: 1200,
+            collectionDwellTime: 1500 // New setting
         };
 
         const PRESETS = {
             solar: [
-                'https://i.redd.it/rg21bnd1bzla1.jpg',
-                'https://live.staticflickr.com/7151/6760135001_ddc2c15fd3_6k.jpg',
-                'https://i.redd.it/51uvndo6wsi21.jpg'
+                { src: 'https://i.redd.it/rg21bnd1bzla1.jpg' },
+                { src: 'https://live.staticflickr.com/7151/6760135001_ddc2c15fd3_6k.jpg' },
+                { src: 'https://i.redd.it/51uvndo6wsi21.jpg' }
             ],
             landmarks: [
-                'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=3000&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=3000&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1587595431973-160d0d94add1?q=80&w=3000&auto=format&fit=crop',
-                'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg',
-                'https://vastphotos.com/files/uploads/photos/11657/gigapixel-wallpaper-photo-of-new-york-city-l.jpg?v=20230914174722'
+                { src: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=3000&auto=format&fit=crop' },
+                { src: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=3000&auto=format&fit=crop' },
+                { src: 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?q=80&w=3000&auto=format&fit=crop' },
+                { src: 'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg' },
+                { src: 'https://vastphotos.com/files/uploads/photos/11657/gigapixel-wallpaper-photo-of-new-york-city-l.jpg?v=20230914174722' }
             ]
         };
 
         const SAMPLE_IMAGES = [
-           'https://i.redd.it/rg21bnd1bzla1.jpg',
-           'https://vastphotos.com/files/uploads/photos/11657/gigapixel-wallpaper-photo-of-new-york-city-l.jpg?v=20230914174722',
-           'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg'
+           { src: 'https://i.redd.it/rg21bnd1bzla1.jpg' },
+           { src: 'https://vastphotos.com/files/uploads/photos/11657/gigapixel-wallpaper-photo-of-new-york-city-l.jpg?v=20230914174722' },
+           { src: 'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg' }
         ];
 
-        let userSettings = JSON.parse(localStorage.getItem('airtouch_settings_v2')) || { ...DEFAULT_SETTINGS };
+        let userSettings = JSON.parse(localStorage.getItem('airtouch_settings_v3')) || { ...DEFAULT_SETTINGS };
         
-        // Ensure new settings exist if loading from old localStorage
+        // Settings migrations
         if(!userSettings.slideInterval) userSettings.slideInterval = DEFAULT_SETTINGS.slideInterval;
         if(userSettings.rotationThreshold === undefined) userSettings.rotationThreshold = DEFAULT_SETTINGS.rotationThreshold;
         if(!userSettings.resetHoldTime) userSettings.resetHoldTime = DEFAULT_SETTINGS.resetHoldTime;
         if(!userSettings.pinchThreshold) userSettings.pinchThreshold = DEFAULT_SETTINGS.pinchThreshold;
+        if(!userSettings.collectionDwellTime) userSettings.collectionDwellTime = DEFAULT_SETTINGS.collectionDwellTime;
 
         const state = {
             images: [...SAMPLE_IMAGES],
@@ -712,9 +826,13 @@
             isLayersOpen: false,
             isCamVisible: true,
             isTransitioning: false,
-            isMapMode: false, // New Map Flag
-            mapInstance: null, // Leaflet Instance
-            mapLayers: {}, // Store layer references
+            isMapMode: false,
+            is3DMapMode: false, 
+            isPhotoMarkersVisible: false,
+            mapInstance: null, 
+            mapLayers: {},
+            photoLayer: null,
+            userMarker: null,
             currentLayer: null,
             theme: 'void', 
             
@@ -724,61 +842,52 @@
             // Slideshow
             slideshowTimer: null,
             
-            // Transform State (Current actual visual values)
-            scale: 1,
-            rotation: 0,
-            panX: 0,
-            panY: 0,
+            // Filters
+            filterIndex: 0, // 0: None, 1: B&W, 2: Sepia, 3: High Contrast
             
-            // Target State (For smoothing)
-            targetScale: 1,
-            targetRotation: 0,
-            targetPanX: 0,
-            targetPanY: 0,
+            // Radial Menu State
+            isRadialMenuOpen: false,
+            fistHoldStart: 0,
+            activeSlice: -1,
+            dwellTimer: 0,
+            
+            // Interaction Dwell State
+            dwellTarget: null,
+            dwellStartTime: 0,
+            
+            // Transform State
+            scale: 1, rotation: 0, panX: 0, panY: 0,
+            targetScale: 1, targetRotation: 0, targetPanX: 0, targetPanY: 0,
 
-            // Delta tracking for Map Mode
-            lastFramePanX: 0,
-            lastFramePanY: 0,
-            lastFrameScale: 1,
+            // Delta tracking
+            lastFramePanX: 0, lastFramePanY: 0, lastFrameScale: 1,
 
             // Nav State
             navLocked: false,
             edgeTimer: 0,
             
-            // Reset Gesture State
-            resetStartTime: 0,
-
             // Interaction State
             isZooming: false,
             isPanning: false,
-
-            // Reference points for relative calculations
-            zoomStartDist: 0,
-            zoomStartScale: 1,
-            zoomStartAngle: 0,
-            startRotation: 0,
-            
-            // Hand Smoothing
             smoothedZoomDist: null, 
-            
-            panStartHandX: 0,
-            panStartHandY: 0,
-            panStartImgX: 0,
-            panStartImgY: 0,
-            
-            // Smoothing
-            smoothedHandX: null,
-            smoothedHandY: null,
+            panStartHandX: 0, panStartHandY: 0, panStartImgX: 0, panStartImgY: 0,
+            smoothedHandX: null, smoothedHandY: null,
 
             // FPS
             lastFrameTime: 0,
             frameCount: 0
         };
 
-        const CONSTANTS = {
-            MIN_SCALE: 0.5,
-            MAX_SCALE: 12.0,
-        };
+        // --- Radial Menu Config ---
+        const RADIAL_ITEMS = [
+            { icon: '\uf279', label: 'Switch Mode', action: 'toggleMapMode' },     // Switch Mode (Renamed)
+            { icon: '\uf04b', label: 'Slideshow', action: 'toggleSlideshow' },  // Play
+            { icon: '\uf021', label: 'Reset View', action: 'resetView' },       // Reset
+            { icon: '\uf0ac', label: 'Collections', action: 'toggleCollections' }, // Globe
+            { icon: '\uf72b', label: 'Filters', action: 'toggleFilters' }       // Magic
+        ];
+
+        const CONSTANTS = { MIN_SCALE: 0.5, MAX_SCALE: 12.0 };
 
         /**
          * ------------------------------------------------------------------
@@ -789,6 +898,7 @@
             mainImage: document.getElementById('main-image'),
             imageWrapper: document.getElementById('image-wrapper'),
             mapWrapper: document.getElementById('map-wrapper'),
+            map3dControls: document.getElementById('map-3d-controls'), 
             counter: document.getElementById('counter'),
             cursor: document.getElementById('virtual-cursor'),
             cursorProgress: document.getElementById('cursor-progress'),
@@ -798,7 +908,6 @@
             statusDot: document.getElementById('status-dot'),
             gestureState: document.getElementById('gesture-state'),
             rotIndicator: document.getElementById('rot-indicator'),
-            transformGrid: document.getElementById('transform-grid'),
             uiLayer: document.getElementById('ui-layer'),
             helpModal: document.getElementById('help-modal'),
             settingsModal: document.getElementById('settings-modal'),
@@ -811,6 +920,7 @@
             btnSlideshow: document.getElementById('btn-slideshow'),
             btnMap: document.getElementById('btn-map'),
             btnLayers: document.getElementById('btn-layers'),
+            btnPhotos: document.getElementById('btn-photos'),
             navControls: document.getElementById('nav-controls'),
             grpFile: document.getElementById('grp-file'),
             sepNav: document.getElementById('sep-nav'),
@@ -819,33 +929,171 @@
             cameraContainer: document.getElementById('camera-container'),
             fpsCounter: document.getElementById('fps-counter'),
             appBody: document.getElementById('app-body'),
-            bgPattern: document.getElementById('bg-pattern')
+            bgPattern: document.getElementById('bg-pattern'),
+            radialMenu: document.getElementById('radial-menu'),
+            radialSvg: document.getElementById('radial-svg')
         };
 
         // Utility: Linear Interpolation
-        function lerp(start, end, amt) {
-            return (1 - amt) * start + amt * end;
-        }
-        
-        // Utility: Angle between two points
-        function getAngle(p1, p2) {
-            return Math.atan2(p2.y - p1.y, p2.x - p1.x);
-        }
+        function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
+        function getAngle(p1, p2) { return Math.atan2(p2.y - p1.y, p2.x - p1.x); }
 
         /**
          * ------------------------------------------------------------------
-         * UI LOGIC
+         * UI LOGIC & INIT
          * ------------------------------------------------------------------
          */
 
         function init() {
             syncSettingsUI();
+            buildRadialMenu(); // Generate SVG Pie
             renderImage(false); 
             showToast("System Ready", "info");
             requestAnimationFrame(renderLoop);
         }
 
-        // Physics Loop for Smooth Animations & Map Control
+        // --- Radial Menu Generation ---
+        function buildRadialMenu() {
+            const size = 360;
+            const center = size / 2;
+            const radius = 120; // Increased radius
+            const iconRadius = 90;
+            const sliceAngle = 360 / RADIAL_ITEMS.length;
+
+            els.radialSvg.innerHTML = ''; // Clear prev
+            
+            // Add defs filter
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            defs.innerHTML = `<filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter>`;
+            els.radialSvg.appendChild(defs);
+            
+            // Center circle
+            const centerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            centerCircle.setAttribute("cx", center);
+            centerCircle.setAttribute("cy", center);
+            centerCircle.setAttribute("r", 40);
+            centerCircle.setAttribute("fill", "rgba(0,0,0,0.5)");
+            centerCircle.setAttribute("stroke", "rgba(255,255,255,0.2)");
+            els.radialSvg.appendChild(centerCircle);
+
+            RADIAL_ITEMS.forEach((item, index) => {
+                const startAngle = (index * sliceAngle) - 90; // Start at top
+                const endAngle = startAngle + sliceAngle;
+                
+                // SVG Arc Path
+                const x1 = center + radius * Math.cos(Math.PI * startAngle / 180);
+                const y1 = center + radius * Math.sin(Math.PI * startAngle / 180);
+                const x2 = center + radius * Math.cos(Math.PI * endAngle / 180);
+                const y2 = center + radius * Math.sin(Math.PI * endAngle / 180);
+                
+                const pathData = `M${center},${center} L${x1},${y1} A${radius},${radius} 0 0,1 ${x2},${y2} Z`;
+
+                // Create Slice
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", pathData);
+                path.setAttribute("class", "radial-slice radial-bg");
+                path.setAttribute("id", `slice-${index}`);
+                
+                // Create Icon
+                const midAngle = startAngle + (sliceAngle / 2);
+                const iconX = center + iconRadius * Math.cos(Math.PI * midAngle / 180);
+                const iconY = center + iconRadius * Math.sin(Math.PI * midAngle / 180);
+                
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", iconX);
+                text.setAttribute("y", iconY);
+                text.setAttribute("class", "radial-icon fa");
+                text.textContent = item.icon; // FontAwesome unicode
+
+                // Create Label
+                const labelX = center + (radius + 25) * Math.cos(Math.PI * midAngle / 180);
+                const labelY = center + (radius + 25) * Math.sin(Math.PI * midAngle / 180);
+                
+                const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.setAttribute("x", labelX);
+                label.setAttribute("y", labelY);
+                label.setAttribute("class", "radial-label");
+                label.textContent = item.label;
+
+                els.radialSvg.appendChild(path);
+                els.radialSvg.appendChild(text);
+                els.radialSvg.appendChild(label);
+            });
+        }
+
+        function updateRadialMenuLogic(cursorX, cursorY) {
+            // Get menu center (fixed when opened)
+            const menuRect = els.radialMenu.getBoundingClientRect();
+            const centerX = menuRect.left + menuRect.width / 2;
+            const centerY = menuRect.top + menuRect.height / 2;
+
+            // Calculate angle from center to cursor
+            let angle = Math.atan2(cursorY - centerY, cursorX - centerX) * (180 / Math.PI);
+            angle += 90; // Normalize to top start
+            if (angle < 0) angle += 360;
+
+            const dist = Math.hypot(cursorX - centerX, cursorY - centerY);
+            
+            // Check if cursor is inside the menu ring
+            if (dist > 30 && dist < 220) {
+                const sliceIndex = Math.floor(angle / (360 / RADIAL_ITEMS.length));
+                
+                if (state.activeSlice !== sliceIndex) {
+                    // Reset prev slice
+                    if(state.activeSlice !== -1) {
+                         document.getElementById(`slice-${state.activeSlice}`).classList.remove('active');
+                    }
+                    
+                    // Highlight new slice
+                    state.activeSlice = sliceIndex % RADIAL_ITEMS.length;
+                    document.getElementById(`slice-${state.activeSlice}`).classList.add('active');
+                    state.dwellTimer = performance.now(); // Start dwell
+                } else {
+                    // Dwell Logic
+                    if (performance.now() - state.dwellTimer > 800) { // 800ms dwell to click
+                        executeRadialAction(RADIAL_ITEMS[state.activeSlice].action);
+                        closeRadialMenu();
+                    }
+                }
+            } else {
+                // Outside or too close to center -> No selection
+                if(state.activeSlice !== -1) {
+                    document.getElementById(`slice-${state.activeSlice}`).classList.remove('active');
+                    state.activeSlice = -1;
+                }
+            }
+        }
+
+        function executeRadialAction(actionName) {
+            // Close menu first
+            closeRadialMenu();
+            
+            // Execute
+            if (actionName === 'toggleMapMode') toggleMapMode();
+            else if (actionName === 'toggleSlideshow') toggleSlideshow();
+            else if (actionName === 'resetView') resetView();
+            else if (actionName === 'toggleCollections') toggleCollections();
+            else if (actionName === 'toggleFilters') toggleFilters();
+        }
+
+        function openRadialMenu(x, y) {
+            state.isRadialMenuOpen = true;
+            // Position menu centered on hand
+            els.radialMenu.style.left = `${x * window.innerWidth - 180}px`; // Offset by half width (360/2)
+            els.radialMenu.style.top = `${y * window.innerHeight - 180}px`;
+            els.radialMenu.classList.add('open');
+            updateStatus("MENU OPEN", "active");
+        }
+
+        function closeRadialMenu() {
+            state.isRadialMenuOpen = false;
+            els.radialMenu.classList.remove('open');
+            state.activeSlice = -1;
+            document.querySelectorAll('.radial-slice').forEach(el => el.classList.remove('active'));
+            state.fistHoldStart = 0; // Reset hold timer
+        }
+
+        // --- Core Loop ---
         function renderLoop() {
             // 1. Smoothly Interpolate towards Targets
             state.panX = lerp(state.panX, state.targetPanX, userSettings.smoothing);
@@ -853,57 +1101,39 @@
             state.scale = lerp(state.scale, state.targetScale, userSettings.smoothing);
             state.rotation = lerp(state.rotation, state.targetRotation, userSettings.smoothing);
 
-            // 2. Apply transformations
-            if (state.isMapMode) {
-                if (state.mapInstance) {
-                    // CALCULATE DELTAS FOR MAP
-                    // How much did the physics value change this frame?
-                    // Safety check: Avoid NaN or Infinity
-                    if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) {
-                        return; // Skip broken frame
-                    }
+            // 2. Map Mode Logic
+            if (state.isMapMode && state.mapInstance) {
+                // Skip if in 3D Mode (Locked View)
+                if(!state.is3DMapMode) {
+                    if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) return;
 
                     const dX = state.panX - state.lastFramePanX;
                     const dY = state.panY - state.lastFramePanY;
-                    let dScale = state.scale / (state.lastFrameScale || 1); // Avoid div/0
+                    let dScale = state.scale / (state.lastFrameScale || 1);
 
-                    // STABILIZATION: Map Zoom Deadzone
-                    // If zoom change is extremely small (jitter), ignore it to stop map flashing
-                    if (dScale > 0.992 && dScale < 1.008) {
-                        dScale = 1;
-                    }
+                    if (dScale > 0.992 && dScale < 1.008) dScale = 1;
 
-                    // Apply Pan (Limit delta to prevent massive jumps)
-                    if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000 && Math.abs(dY) < 1000) {
+                    if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000) {
                          state.mapInstance.panBy([-dX, -dY], {animate: false});
                     }
 
-                     // Apply Zoom (Limit zoom delta & Strict Clamp)
-                    if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) { // Tighter delta limit
+                    if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
                         const currentZoom = state.mapInstance.getZoom();
                         let newZoom = currentZoom + Math.log2(dScale);
-                        
-                        // FIX: ALLOW DEEP ZOOM VIA STRETCHING (Max 22)
-                        // Leaflet handles scaling if maxNativeZoom is set correctly
                         newZoom = Math.max(state.mapInstance.getMinZoom(), Math.min(22, newZoom));
-                        
-                        // Increase threshold to reduce redraw frequency
                         if(!isNaN(newZoom) && Math.abs(newZoom - currentZoom) > 0.02) {
                              state.mapInstance.setZoom(newZoom, {animate: false});
                         }
                     }
                 }
             } else {
-                // IMAGE MODE: Absolute transform
                 updateTransform();
             }
 
-            // 3. Update Previous Frame References (For Deltas)
             state.lastFramePanX = state.panX;
             state.lastFramePanY = state.panY;
             state.lastFrameScale = state.scale;
 
-            // Rotation Indicator UI
             if(Math.abs(state.rotation) > 1 && !state.isMapMode) {
                 els.rotIndicator.classList.remove('hidden');
                 els.rotIndicator.innerText = Math.round(state.rotation) + '°';
@@ -914,34 +1144,72 @@
             requestAnimationFrame(renderLoop);
         }
 
-        function handleFiles(fileList) {
+        // --- Geotagging Helper ---
+        function getExifData(file) {
+            return new Promise((resolve) => {
+                EXIF.getData(file, function() {
+                    const lat = EXIF.getTag(this, "GPSLatitude");
+                    const lon = EXIF.getTag(this, "GPSLongitude");
+                    const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+                    const lonRef = EXIF.getTag(this, "GPSLongitudeRef");
+                    
+                    if (lat && lon && latRef && lonRef) {
+                        const toDecimal = (coord) => coord[0] + coord[1]/60 + coord[2]/3600;
+                        let finalLat = toDecimal(lat);
+                        let finalLon = toDecimal(lon);
+                        
+                        if (latRef === "S") finalLat *= -1;
+                        if (lonRef === "W") finalLon *= -1;
+                        
+                        resolve({ lat: finalLat, lng: finalLon });
+                    } else {
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        async function handleFiles(fileList) {
             if (!fileList.length) return;
             const newImages = Array.from(fileList).filter(f => f.type.startsWith('image/'));
             
             if (newImages.length > 0) {
-                if(state.images[0] === SAMPLE_IMAGES[0]) state.images = [];
+                if(state.images.length > 0 && state.images[0].src === SAMPLE_IMAGES[0].src) state.images = [];
                 
                 let processed = 0;
-                newImages.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        state.images.push(e.target.result);
-                        processed++;
-                        if (processed === newImages.length) {
-                            state.currentIdx = state.images.length - newImages.length;
-                            // Auto switch to gallery if adding files
-                            if(state.isMapMode) toggleMapMode();
-                            renderImage(false);
-                            showToast(`Loaded ${newImages.length} Images`, "success");
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                });
+                // Process sequentially to keep order
+                for (const file of newImages) {
+                    const gpsData = await getExifData(file);
+                    
+                    await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const imgObj = { src: e.target.result };
+                            if(gpsData) {
+                                imgObj.lat = gpsData.lat;
+                                imgObj.lng = gpsData.lng;
+                            }
+                            state.images.push(imgObj);
+                            processed++;
+                            resolve();
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+                
+                if (processed === newImages.length) {
+                    state.currentIdx = state.images.length - newImages.length;
+                    if(state.isMapMode) toggleMapMode();
+                    renderImage(false);
+                    showToast(`Loaded ${newImages.length} Images`, "success");
+                    // Refresh photo markers if map is active later
+                    if(state.isMapMode && state.isPhotoMarkersVisible) togglePhotoMarkers(); 
+                }
             }
         }
 
         function loadCollection(key) {
-            if(state.isMapMode) toggleMapMode(); // Switch back to gallery
+            if(state.isMapMode) toggleMapMode();
             if(PRESETS[key]) {
                 state.images = [...PRESETS[key]];
                 state.currentIdx = 0;
@@ -957,13 +1225,24 @@
             if(theme === 'void') {
                 els.bgPattern.style.opacity = '0.1';
                 els.bgPattern.style.backgroundImage = 'radial-gradient(#ffffff 1px, transparent 1px)'; 
-                els.bgPattern.style.backgroundSize = '80px 80px';
             } else {
                 els.bgPattern.style.opacity = '0.2';
                 els.bgPattern.style.backgroundImage = 'radial-gradient(#334155 1px, transparent 1px)';
-                els.bgPattern.style.backgroundSize = '40px 40px';
             }
             showToast(`Theme Set: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`, 'info');
+        }
+        
+        function toggleFilters() {
+            state.filterIndex = (state.filterIndex + 1) % 4;
+            const filters = [
+                'none',
+                'grayscale(100%)',
+                'sepia(100%)',
+                'contrast(150%) brightness(1.1)'
+            ];
+            const names = ['None', 'Noir', 'Sepia', 'Vivid'];
+            els.mainImage.style.filter = filters[state.filterIndex];
+            showToast(`Filter: ${names[state.filterIndex]}`, 'action');
         }
 
         function handleDrop(e) { e.preventDefault(); handleFiles(e.dataTransfer.files); }
@@ -975,12 +1254,12 @@
 
             if (withTransition) {
                 handleImageTransition(direction, () => {
-                    els.mainImage.src = state.images[state.currentIdx];
+                    els.mainImage.src = state.images[state.currentIdx].src;
                     resetView(true); 
                     updateCounter();
                 });
             } else {
-                els.mainImage.src = state.images[state.currentIdx];
+                els.mainImage.src = state.images[state.currentIdx].src;
                 resetView(true);
                 updateCounter();
             }
@@ -989,27 +1268,20 @@
         function handleImageTransition(direction, updateCallback) {
             if (state.isTransitioning) return;
             state.isTransitioning = true;
-
             const speed = userSettings.transitionSpeed;
-            let exitClass = 'anim-fade-out';
-            let enterClass = 'anim-fade-in';
-
             els.mainImage.style.transitionDuration = `${speed}ms`;
-            els.mainImage.classList.add('anim-base', exitClass);
+            els.mainImage.classList.add('anim-base', 'anim-fade-out');
 
             setTimeout(() => {
-                els.mainImage.classList.add(enterClass);
-                els.mainImage.classList.remove(exitClass);
-                
+                els.mainImage.classList.add('anim-fade-in');
+                els.mainImage.classList.remove('anim-fade-out');
                 updateCallback();
-
-                const newSrc = state.images[state.currentIdx];
+                const newSrc = state.images[state.currentIdx].src;
                 els.mainImage.src = newSrc;
-
                 els.mainImage.onload = () => {
                     resetView(true); 
                     void els.mainImage.offsetWidth;
-                    els.mainImage.classList.remove(enterClass);
+                    els.mainImage.classList.remove('anim-fade-in');
                     setTimeout(() => {
                         els.mainImage.classList.remove('anim-base');
                         els.mainImage.style.transitionDuration = '';
@@ -1017,12 +1289,6 @@
                         els.mainImage.onload = null;
                     }, speed);
                 };
-
-                els.mainImage.onerror = () => {
-                     state.isTransitioning = false;
-                     els.mainImage.classList.remove(enterClass, 'anim-base');
-                };
-
             }, speed);
         }
 
@@ -1031,33 +1297,28 @@
         }
 
         function resetView(silent = false) {
+            // Reset Map
             if(state.isMapMode && state.mapInstance) {
-                // Reset Map
                 if (state.userLocation) {
                     state.mapInstance.flyTo(state.userLocation, 16, {animate: true, duration: 1.5});
-                    if (!silent) showToast("Reset to User Location", "neutral");
                 } else {
                     state.mapInstance.setView([20, 0], 2);
-                    if (!silent) showToast("Map Reset", "neutral");
                 }
-                
-                // IMPORTANT: Stop any drifting momentum in Map Mode
                 state.targetScale = state.scale;
                 state.targetPanX = state.panX;
                 state.targetPanY = state.panY;
-            } else {
-                // Reset Image
+                if (!silent) showToast("Map Reset", "neutral");
+            } 
+            // Reset Image
+            else {
                 state.targetScale = 1;
                 state.targetRotation = 0;
                 state.targetPanX = 0;
                 state.targetPanY = 0;
-                
-                // Force sync to prevent drift
                 state.scale = 1;
                 state.rotation = 0;
                 state.panX = 0;
                 state.panY = 0;
-                
                 updateTransform();
                 if (!silent) showToast("View Reset", "neutral");
             }
@@ -1071,14 +1332,14 @@
         }
 
         function nextImage() {
-            if(state.isMapMode) return; // Disable in Map Mode
+            if(state.isMapMode) return;
             if (state.images.length <= 1 || state.isTransitioning) return;
             state.currentIdx = (state.currentIdx + 1) % state.images.length;
             renderImage(true, 'next');
         }
 
         function prevImage() {
-            if(state.isMapMode) return; // Disable in Map Mode
+            if(state.isMapMode) return;
             if (state.images.length <= 1 || state.isTransitioning) return;
             state.currentIdx = (state.currentIdx - 1 + state.images.length) % state.images.length;
             renderImage(true, 'prev');
@@ -1095,152 +1356,186 @@
             }
         }
 
-        // --- Map Mode Logic ---
+        // --- Map & 3D Terrain Logic ---
         function initMap() {
             if (state.mapInstance) return;
             
-            // Define Layers
             const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-                maxNativeZoom: 19,
-                maxZoom: 22,
-                preload: Infinity,
-                keepBuffer: 20
+                attribution: 'Esri', maxNativeZoom: 19, maxZoom: 22
             });
 
             const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxNativeZoom: 18,
-                maxZoom: 22,
-                preload: Infinity,
-                keepBuffer: 20
+                attribution: 'CARTO', subdomains: 'abcd', maxNativeZoom: 18, maxZoom: 22
             });
 
-            const streets = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxNativeZoom: 19,
-                maxZoom: 22,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                preload: Infinity,
-                keepBuffer: 20
+            const terrain = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Esri', maxNativeZoom: 19, maxZoom: 22
             });
 
-            // Store layers for modal
-            state.mapLayers = { satellite, dark, streets };
+            state.mapLayers = { satellite, dark, terrain };
             state.currentLayer = satellite;
 
-            // Load saved state or default
             const savedState = JSON.parse(localStorage.getItem('airtouch_map_state'));
             const initialCenter = savedState ? savedState.center : [20, 0];
             const initialZoom = savedState ? savedState.zoom : 2;
 
-            // Initialize Leaflet
             state.mapInstance = L.map('leaflet-map', {
-                zoomControl: false,
-                attributionControl: false,
-                zoomAnimation: false, 
-                zoomSnap: 0, 
-                minZoom: 2, 
-                maxZoom: 22, 
-                maxBounds: [[-90, -180], [90, 180]],
-                maxBoundsViscosity: 1.0,
-                bounceAtZoomLimits: false,
-                layers: [satellite] // Default to satellite
+                zoomControl: false, attributionControl: false, zoomAnimation: false, 
+                zoomSnap: 0, minZoom: 2, maxZoom: 22, 
+                maxBoundsViscosity: 1.0, layers: [satellite]
             }).setView(initialCenter, initialZoom);
             
             L.control.attribution({position: 'bottomright'}).addTo(state.mapInstance);
+            
+            // Marker Layer Group
+            state.photoLayer = L.layerGroup().addTo(state.mapInstance);
 
-            // Save State on Move/Zoom End
             state.mapInstance.on('moveend', () => {
                 const center = state.mapInstance.getCenter();
                 const zoom = state.mapInstance.getZoom();
-                localStorage.setItem('airtouch_map_state', JSON.stringify({
-                    center: [center.lat, center.lng],
-                    zoom: zoom
-                }));
+                localStorage.setItem('airtouch_map_state', JSON.stringify({ center: [center.lat, center.lng], zoom: zoom }));
             });
 
-            // Geolocation
-            if (!savedState) showToast("Locating you...", "info");
-            
-            // Always try to locate to populate userLocation for reset functionality
-            state.mapInstance.locate({setView: false, maxZoom: 16});
-            
-            state.mapInstance.on('locationfound', (e) => {
-                state.userLocation = e.latlng;
-                // FIX: Force fly to location on first find, even if there was a saved state
-                state.mapInstance.flyTo(e.latlng, 16, {animate: true, duration: 2});
-                showToast("Location Found", "success");
-            });
-            
-            state.mapInstance.on('locationerror', (e) => {
-                if(!savedState) showToast("Could not access location", "warning");
+            state.mapInstance.locate({setView: false, maxZoom: 16, watch: true});
+            state.mapInstance.on('locationfound', (e) => { 
+                state.userLocation = e.latlng; 
+                // Update or create user marker
+                if(state.userMarker) {
+                    state.userMarker.setLatLng(e.latlng);
+                } else {
+                    const pulseIcon = L.divIcon({
+                        className: 'user-marker',
+                        html: '<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_15px_#3b82f6] animate-pulse"></div>',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    });
+                    state.userMarker = L.marker(e.latlng, {icon: pulseIcon}).addTo(state.mapInstance);
+                }
+                
+                if(!savedState) state.mapInstance.flyTo(e.latlng, 16); 
             });
         }
 
         function setMapLayer(type) {
             if(!state.mapInstance || !state.mapLayers[type]) return;
-            
-            // Remove old
             if(state.currentLayer) state.mapInstance.removeLayer(state.currentLayer);
-            
-            // Add new
             state.currentLayer = state.mapLayers[type];
             state.mapInstance.addLayer(state.currentLayer);
-            
-            // Toggle modal
             toggleLayers();
             showToast(`Layer Switched: ${type.charAt(0).toUpperCase() + type.slice(1)}`, 'info');
         }
 
+        function togglePhotoMarkers() {
+            state.isPhotoMarkersVisible = !state.isPhotoMarkersVisible;
+            const btn = els.btnPhotos;
+            
+            if(state.isPhotoMarkersVisible) {
+                btn.classList.add('active-state', 'text-yellow-400');
+                plotPhotos();
+                showToast("Photos Plotted on Map", "success");
+            } else {
+                btn.classList.remove('active-state', 'text-yellow-400');
+                state.photoLayer.clearLayers();
+                showToast("Photos Hidden", "neutral");
+            }
+        }
+
+        function plotPhotos() {
+            if(!state.mapInstance || !state.photoLayer) return;
+            state.photoLayer.clearLayers();
+            
+            let count = 0;
+            state.images.forEach((img, idx) => {
+                if(img.lat && img.lng) {
+                    const icon = L.divIcon({
+                        className: 'photo-marker', // Class added here to wrapper
+                        html: `<div class="w-10 h-10 rounded-lg border-2 border-white overflow-hidden shadow-lg hover:scale-125 transition-transform bg-black"><img src="${img.src}" class="w-full h-full object-cover"></div>`,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 40]
+                    });
+                    
+                    const marker = L.marker([img.lat, img.lng], {icon: icon, interactive: true})
+                        .addTo(state.photoLayer)
+                        .bindPopup(`<div class="text-center"><img src="${img.src}" class="w-32 rounded mb-2"><br><button onclick="jumpToImage(${idx})" class="popup-btn text-xs bg-cyan-600 text-white px-2 py-1 rounded">View Full</button></div>`);
+                    count++;
+                }
+            });
+            
+            if(count === 0) showToast("No geotagged photos found", "warning");
+        }
+        
+        // Global helper for popup button
+        window.jumpToImage = (idx) => {
+            toggleMapMode(); // Exit map
+            state.currentIdx = idx;
+            renderImage(false);
+        };
+
+        // NEW: Toggle 3D CSS Mode
+        function toggle3DMap() {
+            if(!state.isMapMode) return;
+            state.is3DMapMode = !state.is3DMapMode;
+            
+            const mapEl = document.getElementById('leaflet-map');
+            const icon = els.map3dControls.querySelector('i');
+
+            if(state.is3DMapMode) {
+                // Activate 3D
+                mapEl.classList.add('map-3d-active');
+                icon.className = "fa-solid fa-cube text-cyan-400";
+                
+                // Auto switch to terrain if not already
+                setMapLayer('terrain'); 
+                
+                showToast("3D Terrain Mode Active", "success");
+            } else {
+                // Deactivate
+                mapEl.classList.remove('map-3d-active');
+                icon.className = "fa-solid fa-cube";
+                showToast("2D Map Mode", "neutral");
+            }
+        }
+
         function toggleMapMode() {
             state.isMapMode = !state.isMapMode;
+            // Disable 3D mode if exiting map
+            if(!state.isMapMode && state.is3DMapMode) toggle3DMap();
 
             if (state.isMapMode) {
-                // Activate Map
                 initMap();
                 els.mapWrapper.classList.remove('opacity-0', 'pointer-events-none');
                 els.imageWrapper.classList.add('opacity-0', 'pointer-events-none');
-                els.transformGrid.classList.remove('opacity-100'); // Force hide grid
                 
-                // Hide Image-Specific Controls
                 els.navControls.classList.add('opacity-50', 'pointer-events-none');
                 els.grpFile.classList.add('opacity-50', 'pointer-events-none');
                 els.btnSlideshow.classList.add('opacity-50', 'pointer-events-none');
                 stopSlideshow();
 
                 els.btnMap.classList.add('active-state', 'text-emerald-400');
-                els.btnLayers.classList.remove('hidden'); // Show Layers Button
+                els.btnLayers.classList.remove('hidden'); 
+                els.btnPhotos.classList.remove('hidden'); // Show photo toggle
                 showToast("Map Mode Active", "success");
                 
-                // Sync delta tracking to prevent jumps
                 state.lastFramePanX = state.panX;
                 state.lastFramePanY = state.panY;
                 state.lastFrameScale = state.scale;
                 
-                // Force map size refresh aggressively to prevent black box
-                setTimeout(() => { state.mapInstance.invalidateSize(); }, 50);
-                setTimeout(() => { state.mapInstance.invalidateSize(); }, 300); // Check again after transition
-
+                setTimeout(() => { state.mapInstance.invalidateSize(); }, 300);
             } else {
-                // Deactivate Map
                 els.mapWrapper.classList.add('opacity-0', 'pointer-events-none');
                 els.imageWrapper.classList.remove('opacity-0', 'pointer-events-none');
                 
-                // Show Image Controls
                 els.navControls.classList.remove('opacity-50', 'pointer-events-none');
                 els.grpFile.classList.remove('opacity-50', 'pointer-events-none');
                 els.btnSlideshow.classList.remove('opacity-50', 'pointer-events-none');
                 
                 els.btnMap.classList.remove('active-state', 'text-emerald-400');
-                els.btnLayers.classList.add('hidden'); // Hide Layers Button
-                
-                // Reset Image View to be safe
+                els.btnLayers.classList.add('hidden');
+                els.btnPhotos.classList.add('hidden');
                 resetView(true);
             }
         }
         
-        // --- Slideshow ---
         function toggleSlideshow() {
             if(state.isMapMode) return;
             if(state.slideshowTimer) {
@@ -1251,9 +1546,7 @@
                 showToast("Slideshow Paused", "neutral");
             } else {
                 state.slideshowTimer = setInterval(() => {
-                    if(!state.isZooming && !state.isPanning && state.resetStartTime === 0) {
-                        nextImage();
-                    }
+                    if(!state.isZooming && !state.isPanning) nextImage();
                 }, userSettings.slideInterval);
                 els.btnSlideshow.innerHTML = '<i class="fa-solid fa-pause"></i>';
                 els.btnSlideshow.classList.add('active-state', 'text-cyan-400');
@@ -1268,7 +1561,6 @@
         // --- Toast System ---
         function showToast(message, type = 'neutral') {
             const toast = document.createElement('div');
-            
             let bgClass = 'bg-slate-800/90 border-slate-600 text-white';
             if(type === 'action') bgClass = 'bg-cyan-500/90 border-cyan-400 text-white shadow-cyan-500/50';
             if(type === 'warning') bgClass = 'bg-yellow-500/90 border-yellow-400 text-black font-bold';
@@ -1289,50 +1581,30 @@
 
         function toggleHelp() {
             state.isHelpOpen = !state.isHelpOpen;
-            if (state.isHelpOpen) {
-                els.helpModal.classList.remove('opacity-0', 'pointer-events-none');
-                if(state.isSettingsOpen) toggleSettings();
-                if(state.isCollectionsOpen) toggleCollections();
-                if(state.isLayersOpen) toggleLayers();
-            } else {
-                els.helpModal.classList.add('opacity-0', 'pointer-events-none');
-            }
+            els.helpModal.classList.toggle('opacity-0', !state.isHelpOpen);
+            els.helpModal.classList.toggle('pointer-events-none', !state.isHelpOpen);
+            if(state.isHelpOpen) { if(state.isSettingsOpen) toggleSettings(); if(state.isCollectionsOpen) toggleCollections(); if(state.isLayersOpen) toggleLayers(); }
         }
 
         function toggleSettings() {
             state.isSettingsOpen = !state.isSettingsOpen;
-            if (state.isSettingsOpen) {
-                els.settingsModal.classList.remove('opacity-0', 'pointer-events-none');
-                if(state.isHelpOpen) toggleHelp();
-                if(state.isCollectionsOpen) toggleCollections();
-                if(state.isLayersOpen) toggleLayers();
-            } else {
-                els.settingsModal.classList.add('opacity-0', 'pointer-events-none');
-            }
+            els.settingsModal.classList.toggle('opacity-0', !state.isSettingsOpen);
+            els.settingsModal.classList.toggle('pointer-events-none', !state.isSettingsOpen);
+            if(state.isSettingsOpen) { if(state.isHelpOpen) toggleHelp(); if(state.isCollectionsOpen) toggleCollections(); if(state.isLayersOpen) toggleLayers(); }
         }
 
         function toggleCollections() {
             state.isCollectionsOpen = !state.isCollectionsOpen;
-            if (state.isCollectionsOpen) {
-                els.collectionsModal.classList.remove('opacity-0', 'pointer-events-none');
-                if(state.isHelpOpen) toggleHelp();
-                if(state.isSettingsOpen) toggleSettings();
-                if(state.isLayersOpen) toggleLayers();
-            } else {
-                els.collectionsModal.classList.add('opacity-0', 'pointer-events-none');
-            }
+            els.collectionsModal.classList.toggle('opacity-0', !state.isCollectionsOpen);
+            els.collectionsModal.classList.toggle('pointer-events-none', !state.isCollectionsOpen);
+            if(state.isCollectionsOpen) { if(state.isHelpOpen) toggleHelp(); if(state.isSettingsOpen) toggleSettings(); if(state.isLayersOpen) toggleLayers(); }
         }
 
         function toggleLayers() {
             state.isLayersOpen = !state.isLayersOpen;
-            if (state.isLayersOpen) {
-                els.layersModal.classList.remove('opacity-0', 'pointer-events-none');
-                if(state.isHelpOpen) toggleHelp();
-                if(state.isSettingsOpen) toggleSettings();
-                if(state.isCollectionsOpen) toggleCollections();
-            } else {
-                els.layersModal.classList.add('opacity-0', 'pointer-events-none');
-            }
+            els.layersModal.classList.toggle('opacity-0', !state.isLayersOpen);
+            els.layersModal.classList.toggle('pointer-events-none', !state.isLayersOpen);
+            if(state.isLayersOpen) { if(state.isHelpOpen) toggleHelp(); if(state.isSettingsOpen) toggleSettings(); if(state.isCollectionsOpen) toggleCollections(); }
         }
 
         function toggleCinemaMode() {
@@ -1340,7 +1612,7 @@
             if (state.isCinemaMode) {
                 els.uiLayer.classList.add('opacity-0', 'pointer-events-none');
                 document.getElementById('cinema-icon').className = "fa-solid fa-compress";
-                showToast("Cinema Mode On (Press Space to Exit)", "neutral");
+                showToast("Cinema Mode On (Space to Exit)", "neutral");
             } else {
                 els.uiLayer.classList.remove('opacity-0', 'pointer-events-none');
                 document.getElementById('cinema-icon').className = "fa-solid fa-expand";
@@ -1349,52 +1621,35 @@
 
         function updateStatus(text, type) {
             els.gestureState.innerText = text;
-            if(type === 'error') {
-                els.statusDot.className = "w-2 h-2 rounded-full bg-red-500 animate-pulse";
-            } else if (type === 'active') {
-                els.statusDot.className = "w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)]";
-            } else if (type === 'wait') {
-                els.statusDot.className = "w-2 h-2 rounded-full bg-yellow-400";
-            } else {
-                els.statusDot.className = "w-2 h-2 rounded-full bg-slate-500";
-            }
+            if(type === 'error') els.statusDot.className = "w-2 h-2 rounded-full bg-red-500 animate-pulse";
+            else if (type === 'active') els.statusDot.className = "w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)]";
+            else if (type === 'wait') els.statusDot.className = "w-2 h-2 rounded-full bg-yellow-400";
+            else els.statusDot.className = "w-2 h-2 rounded-full bg-slate-500";
         }
 
-        // --- Settings Logic ---
         function updateSetting(key, value) {
-            if(key !== 'transitionEffect') {
-                value = parseFloat(value);
-            }
+            if(key !== 'transitionEffect') value = parseFloat(value);
             userSettings[key] = value;
-            
             let displayText = value;
-            if(key === 'edgeZone') displayText = Math.round(value * 100) + '%';
-            else if(key === 'slideInterval') { 
-                displayText = (value / 1000).toFixed(1) + 's'; 
-                if(state.slideshowTimer) { toggleSlideshow(); toggleSlideshow(); }
-            }
-            else if(key === 'sensitivity') displayText = Math.round(value);
-            else if(key === 'smoothing' && typeof value === 'number') displayText = value.toFixed(2);
-            else if(key === 'navDelay') displayText = value + 'fr';
+            if(key === 'slideInterval') displayText = (value / 1000).toFixed(1) + 's'; 
             else if(key === 'resetHoldTime') displayText = value + 'ms';
-            else if(key === 'pinchThreshold') displayText = value.toFixed(2);
-            else if(key === 'rotationThreshold') displayText = value + '°';
+            else if(key === 'navDelay') displayText = value + 'fr';
+            else if(key === 'collectionDwellTime') displayText = value + 'ms';
             
             const displayEl = document.getElementById(`val-${key}`);
             if(displayEl) displayEl.innerText = displayText;
-
-            localStorage.setItem('airtouch_settings_v2', JSON.stringify(userSettings));
+            localStorage.setItem('airtouch_settings_v3', JSON.stringify(userSettings));
         }
 
         function restoreDefaults() {
             userSettings = { ...DEFAULT_SETTINGS };
-            localStorage.setItem('airtouch_settings_v2', JSON.stringify(userSettings));
+            localStorage.setItem('airtouch_settings_v3', JSON.stringify(userSettings));
             syncSettingsUI();
             showToast("Settings Reset", "neutral");
         }
 
         function syncSettingsUI() {
-            ['sensitivity', 'smoothing', 'slideInterval', 'navDelay', 'rotationThreshold', 'resetHoldTime', 'pinchThreshold'].forEach(key => {
+            ['sensitivity', 'resetHoldTime', 'smoothing', 'pinchThreshold', 'slideInterval', 'navDelay', 'rotationThreshold', 'collectionDwellTime'].forEach(key => {
                 const input = document.getElementById(`inp-${key}`);
                 if(input) input.value = userSettings[key];
                 updateSetting(key, userSettings[key]);
@@ -1408,14 +1663,12 @@
          */
 
         function onResults(results) {
-            // FPS Calculation
+            // FPS
             const now = performance.now();
             if(state.lastFrameTime) {
                 const fps = 1000 / (now - state.lastFrameTime);
                 state.frameCount++;
-                if(state.frameCount % 10 === 0) {
-                    els.fpsCounter.innerText = Math.round(fps);
-                }
+                if(state.frameCount % 10 === 0) els.fpsCounter.innerText = Math.round(fps);
             }
             state.lastFrameTime = now;
 
@@ -1429,8 +1682,7 @@
 
             if (handCount === 2) {
                 stopSlideshow(); 
-                state.resetStartTime = 0;
-                setCursorResetProgress(0); 
+                if(state.isRadialMenuOpen) closeRadialMenu(); // Force close menu on multi-touch
                 updateStatus("MULTI-TOUCH", "active");
                 handleTwoHandGestures(results.multiHandLandmarks);
                 resetNavVisuals();
@@ -1438,21 +1690,30 @@
 
             } else if (handCount === 1) {
                 stopSlideshow();
-                updateStatus("NAVIGATION", "active");
-                handleOneHandNavigation(results.multiHandLandmarks[0]);
-                // Ensure grid is hidden if not zooming
-                els.transformGrid.classList.remove('opacity-100');
+                // Logic branch: Menu vs Nav
+                const lm = results.multiHandLandmarks[0];
+                
+                if (state.isRadialMenuOpen) {
+                    // Menu Interaction Mode
+                    updateStatus("MENU SELECT", "active");
+                    handleMenuInteraction(lm);
+                } else {
+                    // Normal Nav Mode
+                    updateStatus("NAVIGATION", "active");
+                    handleOneHandNavigation(lm);
+                }
             } else {
                 updateStatus("IDLE", "wait");
                 state.navLocked = false;
                 state.isPanning = false;
                 state.isZooming = false;
                 state.smoothedHandX = null;
-                state.resetStartTime = 0; 
-                setCursorResetProgress(0);
                 resetNavVisuals();
                 setCursorState('hidden');
-                els.transformGrid.classList.remove('opacity-100');
+                resetDwell();
+                
+                // If hand lost, close menu
+                if(state.isRadialMenuOpen) closeRadialMenu();
             }
 
             els.ctx.restore();
@@ -1482,96 +1743,87 @@
         }
 
         function resetNavVisuals() {
-            els.zonePrev.classList.remove('opacity-100', 'bg-cyan-500/10');
-            els.zoneNext.classList.remove('opacity-100', 'bg-cyan-500/10');
+            els.zonePrev.classList.remove('opacity-100');
+            els.zoneNext.classList.remove('opacity-100');
             els.zonePrev.classList.add('opacity-0');
             els.zoneNext.classList.add('opacity-0');
-            
             els.progPrev.style.height = '0%';
             els.progNext.style.height = '0%';
             state.edgeTimer = 0;
         }
 
+        function handleMenuInteraction(landmarks) {
+             drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#ef4444', lineWidth: 1});
+             drawLandmarks(els.ctx, landmarks, {color: '#ffffff', lineWidth: 1, radius: 2});
+
+             const indexTip = landmarks[8];
+             const x = indexTip.x;
+             const y = indexTip.y;
+             
+             // Move cursor
+             els.cursor.style.left = `${(1 - x) * 100}%`;
+             els.cursor.style.top = `${y * 100}%`;
+             
+             // Check if open hand (to move) or fist (to select)
+             // Actually, simplest is: Open Hand moves cursor. Dwell to click.
+             if (isFist(landmarks)) {
+                 // Maybe close if they hold fist again without selecting?
+                 // Or treat fist as "Click" immediately?
+                 // Let's rely on Dwell for now as it's safer.
+                 setCursorState('fist');
+             } else {
+                 setCursorState('default');
+             }
+             
+             updateRadialMenuLogic((1 - x) * window.innerWidth, y * window.innerHeight);
+        }
+
         function handleTwoHandGestures(landmarksArray) {
             if(state.isTransitioning) return; 
-            
             state.navLocked = false;
-
             for (const landmarks of landmarksArray) {
                 drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#06b6d4', lineWidth: 2});
-                drawLandmarks(els.ctx, landmarks, {color: '#ffffff', lineWidth: 1, radius: 2});
             }
 
             const p1 = getPinch(landmarksArray[0]);
             const p2 = getPinch(landmarksArray[1]);
 
-            // CASE 1: Both Pinching -> ZOOM & ROTATE
+            // CASE 1: ZOOM
             if (p1.isPinching && p2.isPinching) {
                 state.isPanning = false;
                 state.smoothedHandX = null;
-                updateStatus(state.isMapMode ? "ZOOMING MAP" : "ZOOM/ROTATE", "active");
-                
-                // Grid overlay disabled globally per user request
-                els.transformGrid.classList.remove('opacity-100');
+                updateStatus(state.isMapMode ? "ZOOMING MAP" : "ZOOMING", "active");
 
-                // STABILIZATION: Use low-pass filtered distance for smooth zooming
                 const rawDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
                 if (state.smoothedZoomDist === null) state.smoothedZoomDist = rawDist;
-                
-                // Heavy smoothing factor (0.15) to kill jitter
                 state.smoothedZoomDist = lerp(state.smoothedZoomDist, rawDist, 0.15); 
                 
                 const currentDist = state.smoothedZoomDist;
-                const currentAngle = getAngle(p1, p2);
 
                 if (!state.isZooming) {
-                    // FIRST FRAME
                     state.isZooming = true;
                     state.zoomStartDist = currentDist;
                     state.zoomStartScale = state.targetScale; 
-                    state.zoomStartAngle = currentAngle;
-                    state.startRotation = state.targetRotation;
                 } else {
-                    // SUBSEQUENT FRAMES
                     if(state.zoomStartDist > 0.01) {
                          const scaleMultiplier = currentDist / state.zoomStartDist;
                          let newScale = state.zoomStartScale * scaleMultiplier;
                          
-                         // In map mode, use LOOSE clamps to prevent infinity/NaN, but allow zoom
-                         // In image mode, use TIGHT clamps
                          if (!state.isMapMode) {
                             newScale = Math.max(CONSTANTS.MIN_SCALE, Math.min(CONSTANTS.MAX_SCALE, newScale));
                          } else {
-                            // Loose clamps for map to keep math sane (e.g. 0.000001 to 1000000)
-                            // This prevents "Zoom to black" crash
                             newScale = Math.max(0.0001, Math.min(100000, newScale));
                          }
                          state.targetScale = newScale;
                     }
-
-                    // Rotation (Disable for map to avoid disorientation)
-                    if (!state.isMapMode) {
-                        let angleDelta = currentAngle - state.zoomStartAngle;
-                        if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
-                        if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
-                        const degDelta = angleDelta * (180 / Math.PI);
-                        
-                        if (Math.abs(degDelta) > userSettings.rotationThreshold) {
-                             const effectiveDeg = degDelta > 0 
-                                ? degDelta - userSettings.rotationThreshold 
-                                : degDelta + userSettings.rotationThreshold;
-                             state.targetRotation = state.startRotation + effectiveDeg;
-                        } else {
-                            state.targetRotation = state.startRotation;
-                        }
-                    }
                 }
             } 
-            // CASE 2: One Pinching + One Open -> PAN
+            // CASE 2: PAN
             else if (p1.isPinching || p2.isPinching) {
+                if(state.is3DMapMode) return; // Disable pan in 3D Mode (Locked Perspective)
+                
                 state.isZooming = false; 
-                state.smoothedZoomDist = null; // Reset smoother
-                els.transformGrid.classList.remove('opacity-100');
+                state.smoothedZoomDist = null;
                 updateStatus(state.isMapMode ? "PANNING MAP" : "PANNING", "active");
                 
                 let navHand = p1.isPinching ? landmarksArray[1] : landmarksArray[0];
@@ -1596,53 +1848,22 @@
 
                 let deltaX = (state.panStartHandX - state.smoothedHandX);
                 let deltaY = (state.smoothedHandY - state.panStartHandY);
-
-                state.targetPanX = state.panStartImgX + (deltaX * userSettings.sensitivity);
-                state.targetPanY = state.panStartImgY + (deltaY * userSettings.sensitivity);
+                
+                // Adjust sensitivity based on zoom level for Maps
+                let sens = userSettings.sensitivity;
+                state.targetPanX = state.panStartImgX + (deltaX * sens);
+                state.targetPanY = state.panStartImgY + (deltaY * sens);
 
             } else {
                 state.isPanning = false;
                 state.isZooming = false;
                 state.smoothedHandX = null;
                 state.smoothedZoomDist = null;
-                els.transformGrid.classList.remove('opacity-100');
             }
         }
 
         function handleOneHandNavigation(landmarks) {
             if(state.isTransitioning) return; 
-            
-            // CHECK FOR PEACE SIGN (RESET)
-            if (isPeaceSign(landmarks)) {
-                 updateStatus("RESETTING...", "wait");
-                 setCursorState('peace'); 
-                 
-                 if(state.resetStartTime === 0) {
-                     state.resetStartTime = performance.now();
-                 }
-                 
-                 const elapsed = performance.now() - state.resetStartTime;
-                 const progress = Math.min(1, elapsed / userSettings.resetHoldTime);
-                 setCursorResetProgress(progress);
-
-                 if(progress >= 1) {
-                     resetView();
-                     state.resetStartTime = 0; 
-                     setCursorResetProgress(0); 
-                 }
-                 resetNavVisuals();
-                 return;
-            } else {
-                state.resetStartTime = 0;
-                setCursorResetProgress(0);
-            }
-
-            setCursorState('default');
-
-            state.isPanning = false; 
-            state.isZooming = false;
-            state.smoothedHandX = null;
-            state.smoothedZoomDist = null;
             
             drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#22d3ee', lineWidth: 1});
             drawLandmarks(els.ctx, landmarks, {color: '#ffffff', lineWidth: 1, radius: 2});
@@ -1654,10 +1875,40 @@
             els.cursor.style.left = `${(1 - x) * 100}%`;
             els.cursor.style.top = `${y * 100}%`;
 
-            if (state.isMapMode) {
-                // In map mode, disable edge nav to prevent accidental switches
-                return;
+            // Check Hover Interactions (Dwell Click)
+            handleHoverInteractions(1 - x, y);
+
+            // FIST DETECTION (RADIAL MENU TRIGGER)
+            if (isFist(landmarks)) {
+                 updateStatus("HOLD FIST...", "wait");
+                 setCursorState('fist'); 
+                 
+                 if(state.fistHoldStart === 0) {
+                     state.fistHoldStart = performance.now();
+                 }
+                 
+                 const elapsed = performance.now() - state.fistHoldStart;
+                 const progress = Math.min(1, elapsed / userSettings.resetHoldTime);
+                 setCursorResetProgress(progress);
+
+                 if(progress >= 1) {
+                     openRadialMenu(1 - x, y);
+                     state.fistHoldStart = 0; 
+                     setCursorResetProgress(0); 
+                 }
+                 return;
+            } else {
+                state.fistHoldStart = 0;
+                // Only reset if not dwelling on an item
+                if(!state.dwellStartTime) setCursorResetProgress(0);
             }
+
+            setCursorState('default');
+            state.isPanning = false; 
+            state.isZooming = false;
+
+            // EDGE NAV (Image Mode Only)
+            if (state.isMapMode) return;
 
             const zoneSize = userSettings.edgeZone;
             const leftTrigger = 1 - zoneSize; 
@@ -1706,6 +1957,83 @@
             }
         }
 
+        // --- Hover / Dwell Logic ---
+        function handleHoverInteractions(x, y) {
+            // Convert normalized (0-1) to screen coords
+            const screenX = x * window.innerWidth;
+            const screenY = y * window.innerHeight;
+
+            const el = document.elementFromPoint(screenX, screenY);
+            if (!el) {
+                resetDwell();
+                return;
+            }
+
+            // 1. Collections Logic (Modal Open)
+            if (state.isCollectionsOpen) {
+                const card = el.closest('.collection-card');
+                if (card) {
+                    handleDwell(card, userSettings.collectionDwellTime, () => {
+                        const type = card.dataset.collection;
+                        if(type) loadCollection(type);
+                    });
+                    return; 
+                }
+            }
+
+            // 2. Map Marker Logic (Map Mode Open)
+            if (state.isMapMode) {
+                // Hover Marker -> Open Popup (Fast Dwell)
+                // Updated Selector to include custom photo markers
+                const markerIcon = el.closest('.leaflet-marker-icon, .photo-marker');
+                
+                if (markerIcon) {
+                     handleDwell(markerIcon, 500, () => { // 0.5s to open popup
+                         markerIcon.click(); 
+                     }, true);
+                     return;
+                }
+
+                // Hover Popup Button -> View Full Image (Normal Dwell)
+                const popupBtn = el.closest('.popup-btn'); 
+                if (popupBtn) {
+                     handleDwell(popupBtn, userSettings.collectionDwellTime, () => { 
+                         popupBtn.click();
+                     });
+                     return;
+                }
+            }
+            
+            // If nothing interactive found
+            resetDwell();
+        }
+
+        function handleDwell(element, threshold, callback, showProgress = true) {
+            if (state.dwellTarget !== element) {
+                state.dwellTarget = element;
+                state.dwellStartTime = performance.now();
+                if(showProgress) setCursorState('hover'); // Visual feedback
+            }
+
+            const elapsed = performance.now() - state.dwellStartTime;
+            
+            if(showProgress) {
+                const progress = Math.min(1, elapsed / threshold);
+                setCursorResetProgress(progress);
+            }
+
+            if (elapsed > threshold) {
+                callback();
+                resetDwell(); // Reset after trigger
+            }
+        }
+
+        function resetDwell() {
+            state.dwellTarget = null;
+            state.dwellStartTime = 0;
+            setCursorResetProgress(0);
+        }
+
         // --- Gesture Helpers ---
 
         function isFingerExtended(landmarks, tipIdx, pipIdx) {
@@ -1715,12 +2043,13 @@
             return Math.hypot(tip.x - wrist.x, tip.y - wrist.y) > Math.hypot(pip.x - wrist.x, pip.y - wrist.y);
         }
 
-        function isPeaceSign(landmarks) {
-             const indexExt = isFingerExtended(landmarks, 8, 6);
-             const middleExt = isFingerExtended(landmarks, 12, 10);
-             const ringExt = isFingerExtended(landmarks, 16, 14);
-             const pinkyExt = isFingerExtended(landmarks, 20, 18);
-             return indexExt && middleExt && !ringExt && !pinkyExt;
+        function isFist(landmarks) {
+            const indexExt = isFingerExtended(landmarks, 8, 6);
+            const middleExt = isFingerExtended(landmarks, 12, 10);
+            const ringExt = isFingerExtended(landmarks, 16, 14);
+            const pinkyExt = isFingerExtended(landmarks, 20, 18);
+            // Thumb is tricky, ignore it for robustness
+            return !indexExt && !middleExt && !ringExt && !pinkyExt;
         }
 
         function getPinch(landmarks) {
@@ -1729,64 +2058,37 @@
             const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
             const midX = (indexTip.x + thumbTip.x) / 2;
             const midY = (indexTip.y + thumbTip.y) / 2;
-            
-            return {
-                isPinching: distance < userSettings.pinchThreshold,
-                x: midX,
-                y: midY
-            };
+            return { isPinching: distance < userSettings.pinchThreshold, x: midX, y: midY };
         }
 
         /**
          * ------------------------------------------------------------------
-         * INITIALIZATION
+         * INIT
          * ------------------------------------------------------------------
          */
 
-        const hands = new Hands({locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-        }});
-
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
         hands.setOptions({
             maxNumHands: 2,
             modelComplexity: 1,
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
         });
-
         hands.onResults(onResults);
 
-        // Replacement for MediaPipe Camera Utils to avoid AbortError/Timeout
         async function startCamera() {
             try {
-                const constraints = {
-                    video: {
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
-                        facingMode: "user"
-                    }
-                };
-
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } });
                 els.video.srcObject = stream;
-                
-                await new Promise((resolve) => {
-                    els.video.onloadedmetadata = () => {
-                        resolve();
-                    };
-                });
-                
+                await new Promise((resolve) => els.video.onloadedmetadata = resolve);
                 await els.video.play();
                 updateStatus("CAMERA ACTIVE", "active");
-                
-                // Start processing loop
                 const processFrame = async () => {
                     if (els.video.paused || els.video.ended) return;
                     await hands.send({image: els.video});
                     requestAnimationFrame(processFrame);
                 };
                 processFrame();
-
             } catch (err) {
                 console.error("Camera access failed:", err);
                 updateStatus("CAMERA BLOCKED", "error");
@@ -1795,26 +2097,19 @@
         }
 
         startCamera();
-
         els.canvas.width = 320;
         els.canvas.height = 240;
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight') nextImage();
             if (e.key === 'ArrowLeft') prevImage();
-            if (e.key === ' ') { 
-                e.preventDefault(); 
-                toggleCinemaMode(); 
-            }
+            if (e.key === ' ') { e.preventDefault(); toggleCinemaMode(); }
             if (e.key === 'Escape') {
+                if(state.isRadialMenuOpen) closeRadialMenu();
                 if(state.isCinemaMode) toggleCinemaMode();
                 if(state.isHelpOpen) toggleHelp();
                 if(state.isSettingsOpen) toggleSettings();
             }
-        });
-
-        els.workspace.addEventListener('click', () => {
-             if (state.isCinemaMode) toggleCinemaMode();
         });
 
         init();
