@@ -27,7 +27,7 @@
     <meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/airtouch-gallery.png" />
 
     <!-- Optional -->
-    <meta name="theme-color" content="#0ea5e9" />
+    <meta name="theme-color" content="#0ea5e9" />c
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -278,8 +278,13 @@
             opacity: 1;
             transform: scale(1);
         }
-        
-        /* Frosty Glass Backdrop for Menu */
+        .radial-bg {
+            fill: rgba(0, 0, 0, 0.85); /* 85% Black for high contrast */
+            stroke: rgba(255, 255, 255, 0.2);
+            stroke-width: 2px;
+            backdrop-filter: blur(20px); /* Heavier blur */
+        }
+        /* Frosty Backdrop for Menu */
         .radial-backdrop {
             fill: rgba(15, 23, 42, 0.85); /* Dark base */
             stroke: rgba(255, 255, 255, 0.3); /* Brighter stroke */
@@ -293,11 +298,10 @@
             cursor: pointer;
         }
         .radial-slice.active {
-            fill: rgba(34, 211, 238, 0.2); 
+            fill: rgba(255, 255, 255, 0.1); 
             stroke: var(--accent-color);
             stroke-width: 3px;
         }
-        
         .radial-icon {
             font-size: 28px; /* Larger icons */
             fill: white;
@@ -322,6 +326,7 @@
         }
         .radial-slice.active ~ .radial-label {
             fill: var(--accent-color);
+            font-weight: bold;
         }
         
         /* Popup Buttons for Gestures */
@@ -399,10 +404,11 @@
                         <div id="rot-indicator" class="hidden text-[10px] font-mono bg-white/10 px-1.5 rounded" style="color: var(--accent-color);">0°</div>
                     </div>
                 </div>
-                 <a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10 ml-4">
+<a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10 ml-4">
                     <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
                     <span class="hidden md:inline">Back to Projects</span>
                 </a>
+
             </div>
 
             <!-- Camera Widget (Collapsible) -->
@@ -2079,8 +2085,8 @@
                             newScale = Math.max(0.0001, Math.min(100000, newScale));
                          }
                          
-                         // Apply Focal Zoom
-                         if (state.targetScale !== 0) {
+                         // Apply Focal Zoom (IMAGE MODE ONLY)
+                         if (!state.isMapMode && state.targetScale !== 0) {
                              const ratio = newScale / state.targetScale;
                              if(Math.abs(ratio - 1) > 0.0001) {
                                  // Calculate Focal Point (Screen Center Relative)
