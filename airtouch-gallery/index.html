@@ -28,6 +28,7 @@
 
     <!-- Optional -->
     <meta name="theme-color" content="#0ea5e9" />
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -48,6 +49,14 @@
                     animation: {
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 8s linear infinite',
+                        'cursor-pulse': 'cursorPulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) forwards',
+                    },
+                    keyframes: {
+                        cursorPulse: {
+                            '0%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.3)' },
+                            '100%': { transform: 'scale(1)' }
+                        }
                     }
                 }
             }
@@ -72,6 +81,12 @@
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 
     <style>
+        :root {
+            --accent-color: #22d3ee; /* Default Cyan */
+            --accent-glow: rgba(34, 211, 238, 0.5);
+            --ui-scale: 1;
+        }
+
         body {
             background-color: #000000; /* Void (Default) */
             transition: background-color 0.5s ease;
@@ -81,6 +96,8 @@
             width: 100vw;
             color: white;
             overscroll-behavior: none;
+            touch-action: none; /* Prevent browser defaults like pull-to-refresh */
+            font-size: calc(16px * var(--ui-scale));
         }
 
         /* HUD Aesthetics */
@@ -92,14 +109,23 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
 
+        /* Hide scrollbar for HUD but keep functionality */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         .hud-btn {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
         .hud-btn:active { transform: scale(0.95); }
-        .hud-btn:hover { background: rgba(255,255,255,0.1); color: #22d3ee; }
-        .hud-btn.active-state { background: rgba(34, 211, 238, 0.15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); }
+        .hud-btn:hover { background: rgba(255,255,255,0.1); color: var(--accent-color); }
+        .hud-btn.active-state { 
+            background: rgba(255, 255, 255, 0.1); 
+            color: var(--accent-color); 
+            border: 1px solid var(--accent-glow); 
+            box-shadow: 0 0 10px var(--accent-glow) inset;
+        }
 
         /* Custom Cursor */
         #virtual-cursor {
@@ -115,7 +141,7 @@
         }
         
         .cursor-default { width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
-        .cursor-hover { width: 48px; height: 48px; border-color: #22d3ee; background: rgba(34, 211, 238, 0.1); border-width: 1px; border-radius: 50%; border-style: solid; }
+        .cursor-hover { width: 48px; height: 48px; border-color: var(--accent-color); background: rgba(255,255,255,0.1); border-width: 1px; border-radius: 50%; border-style: solid; }
         .cursor-grab { width: 24px; height: 24px; background: #fbbf24; border: none; border-radius: 4px; transform: rotate(45deg); box-shadow: 0 0 15px #fbbf24; }
         .cursor-fist { width: 40px; height: 40px; border: 4px solid #ef4444; border-radius: 50%; background: transparent; transform: scale(0.9); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
         .cursor-peace { 
@@ -133,6 +159,7 @@
             font-size: 24px;
         }
         .cursor-hidden { opacity: 0; }
+        .cursor-pulse { animation: cursorPulse 0.3s ease-out; }
 
         /* Progress Ring SVG inside cursor - HIGH VISIBILITY UPDATE */
         #cursor-progress {
@@ -140,38 +167,37 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-90deg);
-            width: 180%; /* Larger to be clear around the fist */
+            width: 180%; 
             height: 180%;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s;
-            filter: drop-shadow(0 0 6px rgba(0,0,0,1)); /* Very Heavy shadow for contrast */
+            filter: drop-shadow(0 0 6px rgba(0,0,0,1)); 
         }
-        /* Background circle for contrast */
         #cursor-progress .bg-ring {
-            fill: rgba(0, 0, 0, 0.6); /* Darker backing */
+            fill: rgba(0, 0, 0, 0.6); 
             stroke: rgba(255, 255, 255, 0.3);
             stroke-width: 3;
         }
         #cursor-progress .progress-ring {
             fill: none;
-            stroke: #ef4444; /* Bright Red for visibility */
-            stroke-width: 6; /* Thicker */
+            stroke: var(--accent-color); /* Dynamic Color */
+            stroke-width: 6; 
             stroke-dasharray: 100;
             stroke-dashoffset: 100;
             stroke-linecap: round;
             transition: stroke-dashoffset 0.1s linear;
         }
-        /* Color overrides based on state if needed */
         .cursor-peace #cursor-progress .progress-ring { stroke: #10b981; }
+        .cursor-fist #cursor-progress .progress-ring { stroke: #ef4444; }
 
         /* Navigation Zones */
         .nav-zone {
             transition: background 0.3s ease, opacity 0.3s ease;
-            background: linear-gradient(90deg, rgba(6,182,212,0.15) 0%, transparent 100%);
+            background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%);
         }
         .nav-zone.right {
-            background: linear-gradient(-90deg, rgba(6,182,212,0.15) 0%, transparent 100%);
+            background: linear-gradient(-90deg, var(--accent-glow) 0%, transparent 100%);
         }
         
         /* Canvas Mirror */
@@ -186,9 +212,9 @@
         /* Range Sliders */
         input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%;
-            background: #22d3ee; cursor: pointer; margin-top: -5px; 
-            box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: var(--accent-color); cursor: pointer; margin-top: -6px; 
+            box-shadow: 0 0 10px var(--accent-glow);
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%; height: 4px; cursor: pointer;
@@ -201,11 +227,12 @@
 
         .anim-base {
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
         }
 
-        /* Fade Effect */
-        .anim-fade-out { opacity: 0 !important; transform: scale(0.95) !important; }
-        .anim-fade-in { opacity: 0 !important; transform: scale(1.05) !important; } 
+        /* Improved Fade Effect with Scale */
+        .anim-fade-out { opacity: 0 !important; transform: scale(0.92) !important; filter: blur(4px); }
+        .anim-fade-in { opacity: 0 !important; transform: scale(1.08) !important; filter: blur(4px); } 
 
         /* Theme Classes */
         .theme-slate { background-color: #020617; }
@@ -215,8 +242,8 @@
 
         /* Leaflet Overrides */
         .leaflet-control-attribution { background: rgba(0,0,0,0.5) !important; color: #aaa !important; }
-        .leaflet-control-attribution a { color: #22d3ee !important; }
-        .leaflet-container { background: transparent !important; }
+        .leaflet-control-attribution a { color: var(--accent-color) !important; }
+        .leaflet-container { background: transparent !important; font-family: 'Inter', sans-serif !important; }
         
         /* Map Background Fix - Matches Dark Matter Tile Color */
         #leaflet-map {
@@ -225,15 +252,14 @@
         }
 
         /* 3D Map Mode Perspective Container */
-        :root {
-            --map-tilt: 60deg;
-        }
         .map-3d-perspective {
             perspective: 1200px;
             overflow: hidden;
         }
+        
+        /* UPDATED: Full screen tilt mode */
         .map-3d-active {
-            transform: rotateX(var(--map-tilt)) scale(3.2) translateY(-15%);
+            transform: rotateX(45deg) scale(1.8); /* Reduced angle, increased scale to prevent crop */
             transform-origin: center center;
         }
 
@@ -252,22 +278,26 @@
             opacity: 1;
             transform: scale(1);
         }
-        .radial-bg {
-            fill: rgba(0, 0, 0, 0.85); /* 85% Black for high contrast */
-            stroke: rgba(255, 255, 255, 0.2);
+        
+        /* Frosty Glass Backdrop for Menu */
+        .radial-backdrop {
+            fill: rgba(15, 23, 42, 0.85); /* Dark base */
+            stroke: rgba(255, 255, 255, 0.3); /* Brighter stroke */
             stroke-width: 2px;
-            backdrop-filter: blur(20px); /* Heavier blur */
+            filter: drop-shadow(0 0 20px rgba(0,0,0,0.8));
         }
+
         .radial-slice {
             fill: transparent;
             transition: fill 0.2s;
             cursor: pointer;
         }
         .radial-slice.active {
-            fill: rgba(6, 182, 212, 0.3); /* Stronger Cyan highlight */
-            stroke: #22d3ee;
+            fill: rgba(34, 211, 238, 0.2); 
+            stroke: var(--accent-color);
             stroke-width: 3px;
         }
+        
         .radial-icon {
             font-size: 28px; /* Larger icons */
             fill: white;
@@ -277,22 +307,21 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
         }
         .radial-label {
-            font-size: 12px; /* Larger text */
-            fill: #e2e8f0; /* Brighter text */
+            font-size: 13px; /* Larger text */
+            fill: #ffffff; /* Brighter text */
             font-family: 'JetBrains Mono', monospace;
             text-anchor: middle;
             pointer-events: none;
-            font-weight: 600;
-            opacity: 0.9;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,1));
+            font-weight: 700;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,1)); /* Stronger shadow */
+            letter-spacing: 0.5px;
         }
         .radial-slice.active + .radial-icon {
-            fill: #22d3ee;
-            filter: drop-shadow(0 0 10px rgba(34,211,238,1));
+            fill: var(--accent-color);
+            filter: drop-shadow(0 0 10px var(--accent-glow));
         }
         .radial-slice.active ~ .radial-label {
-            fill: #22d3ee;
-            font-weight: bold;
+            fill: var(--accent-color);
         }
         
         /* Popup Buttons for Gestures */
@@ -301,7 +330,7 @@
         }
         .popup-btn:hover {
             transform: scale(1.1);
-            background-color: #0891b2 !important; /* Cyan-600 */
+            background-color: var(--accent-color) !important;
         }
 
         /* IMPORTANT: Ensure photo markers are interactive */
@@ -328,30 +357,26 @@
         <!-- Map Container with 3D capability -->
         <div id="map-wrapper" class="absolute inset-0 z-10 opacity-0 pointer-events-none transition-opacity duration-700 map-3d-perspective">
              <div id="leaflet-map" class="w-full h-full"></div>
-             <!-- Map Mode Overlay -->
-             <div id="gesture-map-label" class="absolute top-24 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur px-4 py-1 rounded-full text-xs font-mono text-cyan-400 border border-cyan-500/20 pointer-events-none z-[1000] transition-opacity duration-300">
-                GESTURE MAP CONTROL
-             </div>
         </div>
 
         <!-- Edge Navigation Zones -->
         <div id="zone-prev" class="absolute left-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-start pl-6 nav-zone opacity-0 pointer-events-none">
             <div class="h-32 w-1 bg-white/20 rounded-full overflow-hidden relative">
-                <div id="prog-prev" class="w-full bg-cyan-400 absolute bottom-0 left-0 transition-all duration-75" style="height: 0%"></div>
+                <div id="prog-prev" class="w-full bg-[var(--accent-color)] absolute bottom-0 left-0 transition-all duration-75" style="height: 0%"></div>
             </div>
             <div class="ml-6 flex flex-col items-center">
-                <i class="fa-solid fa-chevron-left text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></i>
-                <span class="text-[10px] font-mono text-cyan-400 mt-2">PREV</span>
+                <i class="fa-solid fa-chevron-left text-4xl text-[var(--accent-color)] drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></i>
+                <span class="text-[10px] font-mono text-[var(--accent-color)] mt-2">PREV</span>
             </div>
         </div>
 
         <div id="zone-next" class="absolute right-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-end pr-6 nav-zone right opacity-0 pointer-events-none">
             <div class="mr-6 flex flex-col items-center">
-                <i class="fa-solid fa-chevron-right text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></i>
-                <span class="text-[10px] font-mono text-cyan-400 mt-2">NEXT</span>
+                <i class="fa-solid fa-chevron-right text-4xl text-[var(--accent-color)] drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></i>
+                <span class="text-[10px] font-mono text-[var(--accent-color)] mt-2">NEXT</span>
             </div>
             <div class="h-32 w-1 bg-white/20 rounded-full overflow-hidden relative">
-                <div id="prog-next" class="w-full bg-cyan-400 absolute bottom-0 right-0 transition-all duration-75" style="height: 0%"></div>
+                <div id="prog-next" class="w-full bg-[var(--accent-color)] absolute bottom-0 right-0 transition-all duration-75" style="height: 0%"></div>
             </div>
         </div>
     </div>
@@ -363,15 +388,15 @@
         <div class="flex justify-between items-start px-4 md:px-6 pt-4">
             <!-- Logo / Branding -->
             <div class="pointer-events-auto flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                    <i class="fa-solid fa-hand-sparkles text-white text-lg"></i>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-800 to-black flex items-center justify-center shadow-lg border border-white/10">
+                    <i class="fa-solid fa-hand-sparkles text-[var(--accent-color)] text-lg"></i>
                 </div>
                 <div class="hidden md:block">
-                    <h1 class="font-bold text-lg tracking-tight">AirTouch <span class="text-cyan-400">Gallery</span></h1>
+                    <h1 class="font-bold text-lg tracking-tight">AirTouch <span style="color: var(--accent-color);">Gallery</span></h1>
                     <div class="flex items-center gap-2">
                         <div class="text-[10px] uppercase tracking-widest text-slate-400 font-mono" id="gesture-state">Initializing...</div>
                         <!-- Rotation Indicator -->
-                        <div id="rot-indicator" class="hidden text-[10px] font-mono text-cyan-400 bg-cyan-900/30 px-1.5 rounded">0°</div>
+                        <div id="rot-indicator" class="hidden text-[10px] font-mono bg-white/10 px-1.5 rounded" style="color: var(--accent-color);">0°</div>
                     </div>
                 </div>
                  <a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10 ml-4">
@@ -383,7 +408,7 @@
             <!-- Camera Widget (Collapsible) -->
             <div class="pointer-events-auto flex flex-col items-end gap-2">
                 <div class="flex items-center gap-2">
-                    <button onclick="toggleCameraView()" class="hud-panel px-3 py-1.5 rounded-lg text-xs font-mono text-cyan-400 hover:bg-white/5 border-cyan-500/30 flex items-center gap-2">
+                    <button onclick="toggleCameraView()" class="hud-panel px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 border-white/20 flex items-center gap-2" style="color: var(--accent-color);">
                         <span id="cam-toggle-text">HIDE CAM</span>
                         <div id="status-dot" class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,1)] animate-pulse"></div>
                     </button>
@@ -409,82 +434,87 @@
 
         <!-- BOTTOM DOCK -->
         <div class="flex justify-center px-4 mb-4">
-            <div class="hud-panel px-2 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 md:gap-4 pointer-events-auto shadow-2xl overflow-x-auto max-w-full">
+            <div class="hud-panel px-2 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 md:gap-4 pointer-events-auto shadow-2xl overflow-x-auto max-w-full no-scrollbar">
                 
                 <!-- File Input -->
-                <div class="tooltip-wrapper relative group" id="grp-file">
+                <div class="tooltip-wrapper relative group shrink-0" id="grp-file">
                     <button onclick="document.getElementById('fileInput').click()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white/80">
                         <i class="fa-solid fa-folder-plus text-lg"></i>
                     </button>
                     <input type="file" id="fileInput" hidden multiple accept="image/*" onchange="handleFiles(this.files)">
                 </div>
 
-                <div class="w-px h-8 bg-white/10 mx-1"></div>
+                <div class="w-px h-8 bg-white/10 mx-1 shrink-0"></div>
 
                 <!-- Collections Button -->
-                <button onclick="toggleCollections()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-cyan-400" title="Collections (Fist Menu)">
+                <button onclick="toggleCollections()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 shrink-0" title="Collections (Fist Menu)">
                     <i class="fa-solid fa-earth-americas"></i>
                 </button>
 
                 <!-- MAP TOGGLE -->
-                <button id="btn-map" onclick="toggleMapMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-emerald-400" title="Switch Mode">
+                <button id="btn-map" onclick="toggleMapMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 shrink-0" title="Switch Mode">
                     <i class="fa-solid fa-map"></i>
                 </button>
 
                 <!-- LAYERS TOGGLE -->
-                <button id="btn-layers" onclick="toggleLayers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-purple-400 hidden" title="Map Layers">
+                <button id="btn-layers" onclick="toggleLayers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hidden shrink-0" title="Map Layers">
                     <i class="fa-solid fa-layer-group"></i>
                 </button>
 
                 <!-- PHOTO PLOT TOGGLE (Visible in Map Mode) -->
-                <button id="btn-photos" onclick="togglePhotoMarkers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-yellow-400 hidden" title="Show Uploaded Photos">
+                <button id="btn-photos" onclick="togglePhotoMarkers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hidden shrink-0" title="Show Uploaded Photos">
                     <i class="fa-solid fa-camera"></i>
                 </button>
 
-                <div class="w-px h-8 bg-white/10 mx-1" id="sep-nav"></div>
+                <div class="w-px h-8 bg-white/10 mx-1 shrink-0" id="sep-nav"></div>
 
                 <!-- Nav -->
-                <div id="nav-controls" class="flex items-center gap-2 md:gap-4">
+                <div id="nav-controls" class="flex items-center gap-2 md:gap-4 shrink-0">
                     <button onclick="prevImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-backward-step"></i></button>
-                    <div class="font-mono text-cyan-400 text-sm md:text-base font-bold min-w-[60px] text-center select-none" id="counter">-- / --</div>
+                    <div class="font-mono text-sm md:text-base font-bold min-w-[60px] text-center select-none" style="color: var(--accent-color);" id="counter">-- / --</div>
                     <button onclick="nextImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-forward-step"></i></button>
                 </div>
 
-                <div class="w-px h-8 bg-white/10 mx-1"></div>
+                <div class="w-px h-8 bg-white/10 mx-1 shrink-0"></div>
 
                 <!-- Playback -->
-                <button id="btn-slideshow" onclick="toggleSlideshow()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-cyan-400" title="Slideshow">
+                <button id="btn-slideshow" onclick="toggleSlideshow()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 shrink-0" title="Slideshow">
                     <i class="fa-solid fa-play"></i>
                 </button>
 
                 <!-- Tools -->
-                <button onclick="toggleFilters()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-pink-400" title="Filters">
+                <button onclick="toggleFilters()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 shrink-0" title="Filters">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </button>
                 
-                <button onclick="toggleCinemaMode(event)" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-yellow-400" title="Cinema Mode (Space)">
+                <button onclick="toggleCinemaMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-yellow-400 shrink-0" title="Cinema Mode (Space)">
                     <i id="cinema-icon" class="fa-solid fa-expand"></i>
                 </button>
 
-                <div class="w-px h-8 bg-white/10 mx-1"></div>
+                <div class="w-px h-8 bg-white/10 mx-1 shrink-0"></div>
 
-                <button onclick="toggleSettings()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/60">
+                <button onclick="toggleSettings()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/60 shrink-0">
                     <i class="fa-solid fa-sliders"></i>
                 </button>
 
-                <button onclick="toggleHelp()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-cyan-400 border border-cyan-500/30 bg-cyan-500/10">
+                <button onclick="toggleHelp()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl border border-white/20 bg-white/5 shrink-0" style="color: var(--accent-color);">
                     <i class="fa-solid fa-question"></i>
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- 3D Toggle (Moved to UI Layer to prevent 3D Map overlap) -->
-        <div id="map-3d-controls" class="absolute bottom-32 right-6 z-[1000] flex flex-col gap-2 pointer-events-auto transition-opacity duration-300 opacity-0 pointer-events-none">
-             <button onclick="toggle3DMap()" class="cursor-pointer w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 text-white hover:text-cyan-400 hover:border-cyan-400/50 flex items-center justify-center shadow-lg backdrop-blur transition-all">
-                 <i class="fa-solid fa-cube text-lg pointer-events-none"></i>
-             </button>
-             <div class="text-[10px] text-center bg-black/50 rounded px-1 text-white/70 font-mono pointer-events-none">TILT</div>
-        </div>
+    <!-- Map Mode Overlay (Moved out of map-wrapper for z-index layering) -->
+    <div id="map-mode-label" class="fixed top-24 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur px-4 py-1 rounded-full text-xs font-mono border border-white/20 pointer-events-none z-50 transition-opacity duration-300 opacity-0" style="color: var(--accent-color);">
+        GESTURE MAP CONTROL
+    </div>
+
+    <!-- 3D Toggle (Moved to root for z-index accessibility) -->
+    <div id="map-3d-controls" class="fixed bottom-32 right-6 z-50 flex flex-col gap-2 opacity-0 pointer-events-none transition-opacity duration-300">
+         <button id="btn-tilt-toggle" onclick="toggle3DMap()" class="w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 text-white hover:text-[var(--accent-color)] hover:border-[var(--accent-color)] flex items-center justify-center shadow-lg backdrop-blur transition-all pointer-events-auto">
+             <i class="fa-solid fa-cube text-lg"></i>
+         </button>
+         <div class="text-[10px] text-center bg-black/50 rounded px-1 text-white/70 font-mono pointer-events-none">TILT</div>
     </div>
 
     <!-- RADIAL MENU (SVG) -->
@@ -497,6 +527,9 @@
                     <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
             </defs>
+            <!-- Frosty Backdrop -->
+            <circle class="radial-backdrop" cx="180" cy="180" r="160"></circle>
+            <!-- Inner Center -->
             <circle cx="180" cy="180" r="40" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.2)"></circle>
             <!-- Slices will be injected here -->
         </svg>
@@ -551,7 +584,7 @@
         <div class="hud-panel p-6 rounded-3xl max-w-md w-full transform scale-100 transition-transform">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-white flex items-center gap-3">
-                    <i class="fa-solid fa-earth-americas text-cyan-400"></i> Featured Collections
+                    <i class="fa-solid fa-earth-americas" style="color: var(--accent-color);"></i> Featured Collections
                 </h2>
                 <button onclick="toggleCollections()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
@@ -583,87 +616,115 @@
         <div class="hud-panel p-6 md:p-8 rounded-3xl max-w-lg w-full transform scale-100 transition-transform overflow-y-auto max-h-[85vh]">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-white flex items-center gap-3">
-                    <i class="fa-solid fa-sliders text-cyan-400"></i> Settings
+                    <i class="fa-solid fa-sliders" style="color: var(--accent-color);"></i> Settings
                 </h2>
                 <button onclick="toggleSettings()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
 
             <div class="space-y-6">
                 
-                <!-- Section: Theme -->
+                <!-- Section: Personalization -->
                 <div class="bg-white/5 p-4 rounded-xl border border-white/5">
                     <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
-                        <span>Theme & Ambience</span>
+                        <span>Personalization</span>
                     </div>
-                    <div class="grid grid-cols-4 gap-2">
+                    
+                    <!-- Theme Buttons -->
+                    <div class="grid grid-cols-4 gap-2 mb-4">
                         <button onclick="setTheme('slate')" class="h-10 rounded-lg bg-[#020617] border border-white/20 hover:scale-105 transition-transform" title="Deep Slate"></button>
                         <button onclick="setTheme('void')" class="h-10 rounded-lg bg-black border border-white/20 hover:scale-105 transition-transform" title="Cosmic Void (Default)"></button>
                         <button onclick="setTheme('midnight')" class="h-10 rounded-lg bg-[#020420] border border-white/20 hover:scale-105 transition-transform" title="Midnight Blue"></button>
                         <button onclick="setTheme('forest')" class="h-10 rounded-lg bg-[#022c22] border border-white/20 hover:scale-105 transition-transform" title="Deep Forest"></button>
                     </div>
-                </div>
-                
-                <!-- Section: Map Options -->
-                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
-                    <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
-                        <span>Map Options</span>
+
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-2 text-sm text-slate-300">
+                            <span>Accent Color</span>
+                            <span class="text-xs text-white/50">Custom</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <input type="color" id="inp-accentColor" value="#22d3ee" class="h-10 w-full rounded cursor-pointer bg-transparent border border-white/20" onchange="updateSetting('accentColor', this.value)">
+                        </div>
                     </div>
-                    <!-- Tilt Angle -->
+
                     <div class="mb-2">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
-                            <span>3D Tilt Angle</span>
-                            <span id="val-tiltAngle" class="text-cyan-400 font-mono text-xs">60°</span>
+                            <span>Interface Scale</span>
+                            <span id="val-uiScale" class="font-mono text-xs" style="color: var(--accent-color);">1.0x</span>
                         </div>
-                        <input type="range" id="inp-tiltAngle" min="20" max="80" step="1" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('tiltAngle', this.value)">
+                        <input type="range" id="inp-uiScale" min="0.8" max="1.3" step="0.1" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('uiScale', this.value)">
                     </div>
                 </div>
-
-                <!-- Section: Timing (RESTORED) -->
+                
+                <!-- Section: Timing & Animation -->
                 <div class="bg-white/5 p-4 rounded-xl border border-white/5">
                     <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
-                        <span>Timing Controls</span>
+                        <span>Timing & Animation</span>
                     </div>
                     
                     <!-- Slideshow Interval -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Slideshow Speed</span>
-                            <span id="val-slideInterval" class="text-cyan-400 font-mono text-xs">3.0s</span>
+                            <span id="val-slideInterval" class="font-mono text-xs" style="color: var(--accent-color);">3.0s</span>
                         </div>
-                        <input type="range" id="inp-slideInterval" min="1000" max="10000" step="500" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('slideInterval', this.value)">
+                        <input type="range" id="inp-slideInterval" min="1000" max="10000" step="500" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('slideInterval', this.value)">
+                    </div>
+
+                    <!-- Transition Speed -->
+                    <div class="mb-2">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Transition Speed</span>
+                            <span id="val-transitionSpeed" class="font-mono text-xs" style="color: var(--accent-color);">300ms</span>
+                        </div>
+                        <input type="range" id="inp-transitionSpeed" min="100" max="1000" step="50" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('transitionSpeed', this.value)">
+                    </div>
+                </div>
+
+                <!-- Section: Navigation & Interaction -->
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                    <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
+                        <span>Navigation & Interaction</span>
                     </div>
 
                      <!-- Nav Delay -->
                      <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Nav Hold Duration</span>
-                            <span id="val-navDelay" class="text-cyan-400 font-mono text-xs">20fr</span>
+                            <span id="val-navDelay" class="font-mono text-xs" style="color: var(--accent-color);">20fr</span>
                         </div>
-                        <input type="range" id="inp-navDelay" min="5" max="60" step="5" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('navDelay', this.value)">
+                        <input type="range" id="inp-navDelay" min="5" max="60" step="5" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('navDelay', this.value)">
                     </div>
 
                     <!-- Reset Hold Delay -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Reset/Fist Hold</span>
-                            <span id="val-resetHoldTime" class="text-cyan-400 font-mono text-xs">1500ms</span>
+                            <span id="val-resetHoldTime" class="font-mono text-xs" style="color: var(--accent-color);">1500ms</span>
                         </div>
-                        <input type="range" id="inp-resetHoldTime" min="500" max="3000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('resetHoldTime', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Duration to trigger Reset or Radial Menu.</p>
+                        <input type="range" id="inp-resetHoldTime" min="500" max="3000" step="100" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('resetHoldTime', this.value)">
                     </div>
 
-                    <!-- Collection Dwell Time -->
+                    <!-- Menu Dwell Time -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Menu Dwell Time</span>
-                            <span id="val-collectionDwellTime" class="text-cyan-400 font-mono text-xs">1500ms</span>
+                            <span id="val-collectionDwellTime" class="font-mono text-xs" style="color: var(--accent-color);">1500ms</span>
                         </div>
-                        <input type="range" id="inp-collectionDwellTime" min="500" max="3000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('collectionDwellTime', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Time to hold over menu items to select.</p>
+                        <input type="range" id="inp-collectionDwellTime" min="500" max="3000" step="100" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('collectionDwellTime', this.value)">
+                    </div>
+
+                    <!-- Edge Zone Width -->
+                    <div class="mb-2">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Screen Edge Width</span>
+                            <span id="val-edgeZone" class="font-mono text-xs" style="color: var(--accent-color);">15%</span>
+                        </div>
+                        <input type="range" id="inp-edgeZone" min="0.05" max="0.3" step="0.01" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('edgeZone', this.value)">
                     </div>
                 </div>
 
-                <!-- Section: Gestures (RESTORED) -->
+                <!-- Section: Gesture Physics -->
                 <div class="bg-white/5 p-4 rounded-xl border border-white/5">
                      <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
                         <span>Gesture Physics</span>
@@ -673,43 +734,42 @@
                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Pan Speed</span>
-                            <span id="val-sensitivity" class="text-cyan-400 font-mono text-xs">2500</span>
+                            <span id="val-sensitivity" class="font-mono text-xs" style="color: var(--accent-color);">2500</span>
                         </div>
-                        <input type="range" id="inp-sensitivity" min="500" max="5000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('sensitivity', this.value)">
+                        <input type="range" id="inp-sensitivity" min="500" max="5000" step="100" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('sensitivity', this.value)">
                     </div>
 
                     <!-- Smoothing -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Smoothing</span>
-                            <span id="val-smoothing" class="text-cyan-400 font-mono text-xs">0.1</span>
+                            <span id="val-smoothing" class="font-mono text-xs" style="color: var(--accent-color);">0.1</span>
                         </div>
-                        <input type="range" id="inp-smoothing" min="0.01" max="0.5" step="0.01" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('smoothing', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Lower = smoother but more delay.</p>
+                        <input type="range" id="inp-smoothing" min="0.01" max="0.5" step="0.01" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('smoothing', this.value)">
                     </div>
 
                      <!-- Pinch Threshold -->
                      <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Pinch Ease</span>
-                            <span id="val-pinchThreshold" class="text-cyan-400 font-mono text-xs">0.05</span>
+                            <span id="val-pinchThreshold" class="font-mono text-xs" style="color: var(--accent-color);">0.05</span>
                         </div>
-                        <input type="range" id="inp-pinchThreshold" min="0.02" max="0.15" step="0.01" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('pinchThreshold', this.value)">
+                        <input type="range" id="inp-pinchThreshold" min="0.02" max="0.15" step="0.01" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('pinchThreshold', this.value)">
                     </div>
 
                     <!-- Rotation Threshold -->
                     <div>
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Rotation Deadzone</span>
-                            <span id="val-rotationThreshold" class="text-cyan-400 font-mono text-xs">25°</span>
+                            <span id="val-rotationThreshold" class="font-mono text-xs" style="color: var(--accent-color);">25°</span>
                         </div>
-                        <input type="range" id="inp-rotationThreshold" min="0" max="45" step="1" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('rotationThreshold', this.value)">
+                        <input type="range" id="inp-rotationThreshold" min="0" max="45" step="1" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('rotationThreshold', this.value)">
                     </div>
                 </div>
 
                 <div class="pt-4 border-t border-white/10 flex justify-between items-center">
                     <button onclick="restoreDefaults()" class="text-xs text-red-400 hover:text-red-300">Reset Defaults</button>
-                    <button onclick="toggleSettings()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-cyan-500/20">Close</button>
+                    <button onclick="toggleSettings()" class="text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg bg-[var(--accent-color)] text-black">Close</button>
                 </div>
             </div>
         </div>
@@ -723,18 +783,18 @@
                 <button onclick="toggleHelp()" class="absolute top-6 right-6 text-white/30 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
 
                 <div class="text-center mb-8">
-                    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">AirTouch <span class="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Gallery</span></h1>
+                    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">AirTouch <span class="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent-color)] to-white">Gallery</span></h1>
                     <p class="text-slate-400">Touchless image & map manipulation.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <!-- Nav -->
-                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-cyan-500/30 transition-colors group">
-                        <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center mb-4 text-cyan-400">
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-[var(--accent-color)] transition-colors group">
+                        <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-4 text-[var(--accent-color)]">
                             <i class="fa-solid fa-arrow-right-arrow-left"></i>
                         </div>
                         <h3 class="font-bold text-white mb-1">Navigate</h3>
-                        <p class="text-xs text-slate-400">Move index finger to screen <strong>Edge</strong> to switch images.</p>
+                        <p class="text-xs text-slate-400">Move index finger to screen <strong>Edge</strong> or <strong>Swipe</strong> on Mobile.</p>
                     </div>
 
                     <!-- Air Menu (New) -->
@@ -752,7 +812,7 @@
                             <i class="fa-solid fa-hand-back-fist"></i>
                         </div>
                         <h3 class="font-bold text-white mb-1">Pan</h3>
-                        <p class="text-xs text-slate-400"><strong>Pinch one hand</strong>, keep other open. Drag to move map or image.</p>
+                        <p class="text-xs text-slate-400"><strong>Pinch one hand</strong> or <strong>Drag</strong> on mobile.</p>
                     </div>
 
                     <!-- Zoom/Rotate -->
@@ -761,12 +821,21 @@
                             <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
                         </div>
                         <h3 class="font-bold text-white mb-1">Zoom</h3>
-                        <p class="text-xs text-slate-400"><strong>Pinch BOTH hands</strong>. Move apart to zoom.</p>
+                        <p class="text-xs text-slate-400"><strong>Pinch BOTH hands</strong> or <strong>Pinch</strong> on mobile.</p>
+                    </div>
+
+                    <!-- Reset -->
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-colors group">
+                        <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center mb-4 text-emerald-400">
+                            <i class="fa-regular fa-hand-peace"></i>
+                        </div>
+                        <h3 class="font-bold text-white mb-1">Reset</h3>
+                        <p class="text-xs text-slate-400">Hold <strong>Peace Sign</strong> (Index + Middle) for 1s to reset.</p>
                     </div>
                 </div>
 
                 <div class="text-center">
-                    <button onclick="toggleHelp()" class="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-white transition-all duration-200 bg-cyan-600 font-lg rounded-full focus:outline-none hover:bg-cyan-500 hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]">
+                    <button onclick="toggleHelp()" class="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-black transition-all duration-200 font-lg rounded-full focus:outline-none hover:shadow-[0_0_20px_var(--accent-glow)]" style="background-color: var(--accent-color);">
                         <span>Initialize System</span>
                         <i class="fa-solid fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
                     </button>
@@ -802,8 +871,9 @@
             slideInterval: 3000,
             rotationThreshold: 25, 
             resetHoldTime: 1200,
-            collectionDwellTime: 1500, // New setting
-            tiltAngle: 60 // Map Tilt Setting
+            collectionDwellTime: 1500,
+            accentColor: '#22d3ee',
+            uiScale: 1.0
         };
 
         const PRESETS = {
@@ -827,15 +897,13 @@
            { src: 'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg' }
         ];
 
-        let userSettings = JSON.parse(localStorage.getItem('airtouch_settings_v3')) || { ...DEFAULT_SETTINGS };
+        let userSettings = JSON.parse(localStorage.getItem('airtouch_settings_v4')) || { ...DEFAULT_SETTINGS };
         
-        // Settings migrations
-        if(!userSettings.slideInterval) userSettings.slideInterval = DEFAULT_SETTINGS.slideInterval;
-        if(userSettings.rotationThreshold === undefined) userSettings.rotationThreshold = DEFAULT_SETTINGS.rotationThreshold;
-        if(!userSettings.resetHoldTime) userSettings.resetHoldTime = DEFAULT_SETTINGS.resetHoldTime;
-        if(!userSettings.pinchThreshold) userSettings.pinchThreshold = DEFAULT_SETTINGS.pinchThreshold;
-        if(!userSettings.collectionDwellTime) userSettings.collectionDwellTime = DEFAULT_SETTINGS.collectionDwellTime;
-        if(!userSettings.tiltAngle) userSettings.tiltAngle = DEFAULT_SETTINGS.tiltAngle;
+        // Ensure new settings exist
+        if(!userSettings.accentColor) userSettings.accentColor = DEFAULT_SETTINGS.accentColor;
+        if(!userSettings.uiScale) userSettings.uiScale = DEFAULT_SETTINGS.uiScale;
+        if(!userSettings.transitionSpeed) userSettings.transitionSpeed = DEFAULT_SETTINGS.transitionSpeed;
+        if(!userSettings.edgeZone) userSettings.edgeZone = DEFAULT_SETTINGS.edgeZone;
 
         const state = {
             images: [...SAMPLE_IMAGES],
@@ -864,12 +932,11 @@
             slideshowTimer: null,
             
             // Filters
-            filterIndex: 0, // 0: None, 1: B&W, 2: Sepia, 3: High Contrast
+            filterIndex: 0,
             
             // Radial Menu State
             isRadialMenuOpen: false,
             fistHoldStart: 0,
-            peaceHoldStart: 0,
             activeSlice: -1,
             dwellTimer: 0,
             
@@ -888,12 +955,37 @@
             navLocked: false,
             edgeTimer: 0,
             
+            // Reset Gesture State
+            resetStartTime: 0,
+
             // Interaction State
             isZooming: false,
             isPanning: false,
+
+            // Reference points for relative calculations
+            zoomStartDist: 0,
+            zoomStartScale: 1,
+            zoomStartAngle: 0,
+            startRotation: 0,
+            
+            // Hand Smoothing
             smoothedZoomDist: null, 
-            panStartHandX: 0, panStartHandY: 0, panStartImgX: 0, panStartImgY: 0,
-            smoothedHandX: null, smoothedHandY: null,
+            
+            panStartHandX: 0,
+            panStartHandY: 0,
+            panStartImgX: 0,
+            panStartImgY: 0,
+            
+            // Smoothing
+            smoothedHandX: null,
+            smoothedHandY: null,
+
+            // Touch State (New)
+            touchStartX: 0, touchStartY: 0,
+            touchStartDist: 0,
+            touchStartScale: 1,
+            touchStartPanX: 0, touchStartPanY: 0,
+            isTouching: false,
 
             // FPS
             lastFrameTime: 0,
@@ -903,7 +995,7 @@
         // --- Radial Menu Config ---
         const RADIAL_ITEMS = [
             { icon: '\uf279', label: 'Switch Mode', action: 'toggleMapMode' },     // Switch Mode (Renamed)
-            { icon: '\uf04b', label: 'Slideshow', action: 'toggleSlideshow' },  // Play
+            { icon: '\uf1b2', label: 'Tilt Map', action: 'toggle3DMap' },  // Tilt Map (Replaced Slideshow)
             { icon: '\uf021', label: 'Reset View', action: 'resetView' },       // Reset
             { icon: '\uf0ac', label: 'Collections', action: 'toggleCollections' }, // Globe
             { icon: '\uf72b', label: 'Filters', action: 'toggleFilters' }       // Magic
@@ -920,8 +1012,9 @@
             mainImage: document.getElementById('main-image'),
             imageWrapper: document.getElementById('image-wrapper'),
             mapWrapper: document.getElementById('map-wrapper'),
-            gestureMapLabel: document.getElementById('gesture-map-label'),
-            map3dControls: document.getElementById('map-3d-controls'), 
+            mapHint: document.getElementById('map-mode-label'), // Added ref
+            map3dControls: document.getElementById('map-3d-controls'),
+            btnTiltToggle: document.getElementById('btn-tilt-toggle'), // New ref
             counter: document.getElementById('counter'),
             cursor: document.getElementById('virtual-cursor'),
             cursorProgress: document.getElementById('cursor-progress'),
@@ -972,7 +1065,110 @@
             buildRadialMenu(); // Generate SVG Pie
             renderImage(false); 
             showToast("System Ready", "info");
+            
+            // Add Touch Listeners for Mobile Optimization
+            els.workspace.addEventListener('touchstart', handleTouchStart, {passive: false});
+            els.workspace.addEventListener('touchmove', handleTouchMove, {passive: false});
+            els.workspace.addEventListener('touchend', handleTouchEnd);
+            
+            // Handle Resize / Orientation Change
+            window.addEventListener('resize', () => {
+                if(state.mapInstance) {
+                    setTimeout(() => { state.mapInstance.invalidateSize(); }, 200);
+                }
+            });
+
+            // Mobile Check for Camera
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                toggleCameraView(); // Auto-collapse camera on mobile
+            }
+
             requestAnimationFrame(renderLoop);
+        }
+
+        // --- Touch Logic (Mobile) ---
+        function handleTouchStart(e) {
+            // If in Map Mode, let Leaflet handle it unless 3D logic
+            if (state.isMapMode) return;
+            
+            // Prevent default unless it's a multi-touch which might be system zoom (we want to block system zoom)
+            if(e.cancelable) e.preventDefault(); 
+            state.isTouching = true;
+            
+            if (e.touches.length === 1) {
+                state.touchStartX = e.touches[0].clientX;
+                state.touchStartY = e.touches[0].clientY;
+                state.touchStartPanX = state.targetPanX;
+                state.touchStartPanY = state.targetPanY;
+            } else if (e.touches.length === 2) {
+                // Pinch Start
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                state.touchStartDist = dist;
+                state.touchStartScale = state.targetScale;
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (state.isMapMode || !state.isTouching) return;
+            if(e.cancelable) e.preventDefault();
+
+            if (e.touches.length === 1) {
+                // Pan Logic
+                const deltaX = e.touches[0].clientX - state.touchStartX;
+                const deltaY = e.touches[0].clientY - state.touchStartY;
+                
+                // If scale > 1, allow pan. If 1, check for swipe intent
+                if (state.scale > 1.1) {
+                    state.targetPanX = state.touchStartPanX + deltaX;
+                    state.targetPanY = state.touchStartPanY + deltaY;
+                }
+            } else if (e.touches.length === 2) {
+                // Zoom Logic
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                
+                if (state.touchStartDist > 0) {
+                    const scaleFactor = dist / state.touchStartDist;
+                    const newScale = Math.max(0.5, Math.min(10, state.touchStartScale * scaleFactor));
+                    
+                    if (state.targetScale !== 0) {
+                        const ratio = newScale / state.targetScale;
+                        if(Math.abs(ratio - 1) > 0.0001) {
+                            // Touch coordinates are already screen pixels, top-left origin
+                            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                            
+                            const focalX = midX - window.innerWidth / 2;
+                            const focalY = midY - window.innerHeight / 2;
+                            
+                            state.targetPanX = focalX + (state.targetPanX - focalX) * ratio;
+                            state.targetPanY = focalY + (state.targetPanY - focalY) * ratio;
+                        }
+                    }
+                    state.targetScale = newScale;
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (state.isMapMode) return;
+            state.isTouching = false;
+            
+            // Swipe Detection (if 1 finger and scale is roughly 1)
+            if (e.changedTouches.length === 1 && state.scale < 1.1) {
+                const deltaX = e.changedTouches[0].clientX - state.touchStartX;
+                // Threshold 80px for better sensitivity
+                if (Math.abs(deltaX) > 80) { 
+                    if (deltaX > 0) prevImage();
+                    else nextImage();
+                }
+            }
         }
 
         // --- Radial Menu Generation ---
@@ -989,6 +1185,14 @@
             const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
             defs.innerHTML = `<filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter>`;
             els.radialSvg.appendChild(defs);
+            
+            // Frosty Backdrop (Visual only, behind interactions)
+            const backdrop = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            backdrop.setAttribute("class", "radial-backdrop");
+            backdrop.setAttribute("cx", center);
+            backdrop.setAttribute("cy", center);
+            backdrop.setAttribute("r", 155); // Slightly smaller than SVG width
+            els.radialSvg.appendChild(backdrop);
             
             // Center circle
             const centerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -1014,7 +1218,7 @@
                 // Create Slice
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", pathData);
-                path.setAttribute("class", "radial-slice radial-bg");
+                path.setAttribute("class", "radial-slice"); // Removed radial-bg, now using backdrop
                 path.setAttribute("id", `slice-${index}`);
                 
                 // Create Icon
@@ -1094,6 +1298,7 @@
             // Execute
             if (actionName === 'toggleMapMode') toggleMapMode();
             else if (actionName === 'toggleSlideshow') toggleSlideshow();
+            else if (actionName === 'toggle3DMap') toggle3DMap();
             else if (actionName === 'resetView') resetView();
             else if (actionName === 'toggleCollections') toggleCollections();
             else if (actionName === 'toggleFilters') toggleFilters();
@@ -1126,6 +1331,7 @@
 
             // 2. Map Mode Logic
             if (state.isMapMode && state.mapInstance) {
+                // --- 3D MAP CONTROL LOGIC ---
                 if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) return;
 
                 const dX = state.panX - state.lastFramePanX;
@@ -1134,10 +1340,12 @@
 
                 if (dScale > 0.992 && dScale < 1.008) dScale = 1;
 
+                // Pan works normally
                 if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000) {
                      state.mapInstance.panBy([-dX, -dY], {animate: false});
                 }
 
+                // Zoom works normally (visual perspective handled by CSS)
                 if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
                     const currentZoom = state.mapInstance.getZoom();
                     let newZoom = currentZoom + Math.log2(dScale);
@@ -1201,20 +1409,16 @@
                 for (const file of newImages) {
                     const gpsData = await getExifData(file);
                     
-                    await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const imgObj = { src: e.target.result };
-                            if(gpsData) {
-                                imgObj.lat = gpsData.lat;
-                                imgObj.lng = gpsData.lng;
-                            }
-                            state.images.push(imgObj);
-                            processed++;
-                            resolve();
-                        };
-                        reader.readAsDataURL(file);
-                    });
+                    // MEMORY OPTIMIZATION: Use Blob URLs instead of Base64
+                    const blobUrl = URL.createObjectURL(file);
+                    const imgObj = { src: blobUrl, isBlob: true };
+                    
+                    if(gpsData) {
+                        imgObj.lat = gpsData.lat;
+                        imgObj.lng = gpsData.lng;
+                    }
+                    state.images.push(imgObj);
+                    processed++;
                 }
                 
                 if (processed === newImages.length) {
@@ -1271,6 +1475,12 @@
         function renderImage(withTransition = true, direction = 'next') {
             if (state.images.length === 0) return;
             els.imageWrapper.classList.remove('opacity-0');
+
+            // SMART PRELOADING: Load next/prev images in background
+            const nextIdx = (state.currentIdx + 1) % state.images.length;
+            const prevIdx = (state.currentIdx - 1 + state.images.length) % state.images.length;
+            const preloadNext = new Image(); preloadNext.src = state.images[nextIdx].src;
+            const preloadPrev = new Image(); preloadPrev.src = state.images[prevIdx].src;
 
             if (withTransition) {
                 handleImageTransition(direction, () => {
@@ -1441,10 +1651,7 @@
             if(state.currentLayer) state.mapInstance.removeLayer(state.currentLayer);
             state.currentLayer = state.mapLayers[type];
             state.mapInstance.addLayer(state.currentLayer);
-            
-            // BUG FIX: Only toggle layers menu if it is currently open
-            if(state.isLayersOpen) toggleLayers();
-            
+            toggleLayers();
             showToast(`Layer Switched: ${type.charAt(0).toUpperCase() + type.slice(1)}`, 'info');
         }
 
@@ -1496,23 +1703,25 @@
 
         // NEW: Toggle 3D CSS Mode
         function toggle3DMap() {
-            if(!state.isMapMode) return;
+            if(!state.isMapMode) {
+                 showToast("Switch to Map Mode first", "warning");
+                 return;
+            }
             state.is3DMapMode = !state.is3DMapMode;
             
             const mapEl = document.getElementById('leaflet-map');
-            const icon = els.map3dControls.querySelector('i');
+            const icon = els.btnTiltToggle ? els.btnTiltToggle.querySelector('i') : null;
 
             if(state.is3DMapMode) {
                 // Activate 3D
                 mapEl.classList.add('map-3d-active');
-                icon.className = "fa-solid fa-cube text-cyan-400";
-                
-                showToast("3D Tilt Mode Active", "success");
+                if(icon) icon.className = "fa-solid fa-cube text-cyan-400";
+                showToast("Tilt Perspective Active", "success");
             } else {
                 // Deactivate
                 mapEl.classList.remove('map-3d-active');
-                icon.className = "fa-solid fa-cube";
-                showToast("2D Map Mode", "neutral");
+                if(icon) icon.className = "fa-solid fa-cube";
+                showToast("Flat View", "neutral");
             }
         }
 
@@ -1534,7 +1743,8 @@
                 els.btnMap.classList.add('active-state', 'text-emerald-400');
                 els.btnLayers.classList.remove('hidden'); 
                 els.btnPhotos.classList.remove('hidden'); // Show photo toggle
-                els.map3dControls.classList.remove('opacity-0', 'pointer-events-none');
+                els.map3dControls.classList.remove('opacity-0', 'pointer-events-none'); // SHOW TILT
+                els.mapHint.classList.remove('opacity-0'); // Show Map Hint
                 showToast("Map Mode Active", "success");
                 
                 state.lastFramePanX = state.panX;
@@ -1553,7 +1763,8 @@
                 els.btnMap.classList.remove('active-state', 'text-emerald-400');
                 els.btnLayers.classList.add('hidden');
                 els.btnPhotos.classList.add('hidden');
-                els.map3dControls.classList.add('opacity-0', 'pointer-events-none');
+                els.map3dControls.classList.add('opacity-0', 'pointer-events-none'); // HIDE TILT
+                els.mapHint.classList.add('opacity-0'); // Hide Map Hint
                 resetView(true);
             }
         }
@@ -1629,18 +1840,22 @@
             if(state.isLayersOpen) { if(state.isHelpOpen) toggleHelp(); if(state.isSettingsOpen) toggleSettings(); if(state.isCollectionsOpen) toggleCollections(); }
         }
 
-        function toggleCinemaMode(e) {
-            // Added e to allow prevent bubbling
-            if (e) e.stopPropagation();
+        function toggleCinemaMode() {
             state.isCinemaMode = !state.isCinemaMode;
             if (state.isCinemaMode) {
                 els.uiLayer.classList.add('opacity-0', 'pointer-events-none');
-                if (els.gestureMapLabel) els.gestureMapLabel.classList.add('opacity-0');
+                
+                // Hide map label in cinema mode
+                if (els.mapHint) els.mapHint.classList.add('opacity-0');
+                
                 document.getElementById('cinema-icon').className = "fa-solid fa-compress";
                 showToast("Cinema Mode On (Space to Exit)", "neutral");
             } else {
                 els.uiLayer.classList.remove('opacity-0', 'pointer-events-none');
-                if (els.gestureMapLabel) els.gestureMapLabel.classList.remove('opacity-0');
+                
+                // Show map label if in map mode
+                if (els.mapHint && state.isMapMode) els.mapHint.classList.remove('opacity-0');
+                
                 document.getElementById('cinema-icon').className = "fa-solid fa-expand";
             }
         }
@@ -1648,38 +1863,49 @@
         function updateStatus(text, type) {
             els.gestureState.innerText = text;
             if(type === 'error') els.statusDot.className = "w-2 h-2 rounded-full bg-red-500 animate-pulse";
-            else if (type === 'active') els.statusDot.className = "w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)]";
+            else if (type === 'active') els.statusDot.className = "w-2 h-2 rounded-full bg-[var(--accent-color)] shadow-[0_0_8px_var(--accent-glow)]";
             else if (type === 'wait') els.statusDot.className = "w-2 h-2 rounded-full bg-yellow-400";
             else els.statusDot.className = "w-2 h-2 rounded-full bg-slate-500";
         }
 
         function updateSetting(key, value) {
-            if(key !== 'transitionEffect') value = parseFloat(value);
+            if(key !== 'transitionEffect' && key !== 'accentColor') value = parseFloat(value);
             userSettings[key] = value;
             let displayText = value;
+            
             if(key === 'slideInterval') displayText = (value / 1000).toFixed(1) + 's'; 
             else if(key === 'resetHoldTime') displayText = value + 'ms';
             else if(key === 'navDelay') displayText = value + 'fr';
             else if(key === 'collectionDwellTime') displayText = value + 'ms';
-            else if(key === 'tiltAngle') {
-                displayText = value + '°';
-                document.documentElement.style.setProperty('--map-tilt', `${value}deg`);
+            else if(key === 'transitionSpeed') displayText = value + 'ms';
+            else if(key === 'edgeZone') displayText = Math.round(value * 100) + '%';
+            else if(key === 'uiScale') { 
+                displayText = value + 'x';
+                document.documentElement.style.setProperty('--ui-scale', value);
+            }
+            else if(key === 'accentColor') {
+                document.documentElement.style.setProperty('--accent-color', value);
+                // Convert hex to rgba for glow
+                const r = parseInt(value.slice(1, 3), 16);
+                const g = parseInt(value.slice(3, 5), 16);
+                const b = parseInt(value.slice(5, 7), 16);
+                document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
             }
             
             const displayEl = document.getElementById(`val-${key}`);
             if(displayEl) displayEl.innerText = displayText;
-            localStorage.setItem('airtouch_settings_v3', JSON.stringify(userSettings));
+            localStorage.setItem('airtouch_settings_v4', JSON.stringify(userSettings));
         }
 
         function restoreDefaults() {
             userSettings = { ...DEFAULT_SETTINGS };
-            localStorage.setItem('airtouch_settings_v3', JSON.stringify(userSettings));
+            localStorage.setItem('airtouch_settings_v4', JSON.stringify(userSettings));
             syncSettingsUI();
             showToast("Settings Reset", "neutral");
         }
 
         function syncSettingsUI() {
-            ['sensitivity', 'resetHoldTime', 'smoothing', 'pinchThreshold', 'slideInterval', 'navDelay', 'rotationThreshold', 'collectionDwellTime', 'tiltAngle'].forEach(key => {
+            ['sensitivity', 'resetHoldTime', 'smoothing', 'pinchThreshold', 'slideInterval', 'navDelay', 'rotationThreshold', 'collectionDwellTime', 'accentColor', 'uiScale', 'transitionSpeed', 'edgeZone'].forEach(key => {
                 const input = document.getElementById(`inp-${key}`);
                 if(input) input.value = userSettings[key];
                 updateSetting(key, userSettings[key]);
@@ -1712,13 +1938,13 @@
 
             if (handCount === 2) {
                 stopSlideshow(); 
+                state.resetStartTime = 0; // Reset peace timer if 2 hands
+                setCursorResetProgress(0); 
                 if(state.isRadialMenuOpen) closeRadialMenu(); // Force close menu on multi-touch
                 updateStatus("MULTI-TOUCH", "active");
                 handleTwoHandGestures(results.multiHandLandmarks);
                 resetNavVisuals();
                 setCursorState('hidden');
-                state.fistHoldStart = 0;
-                state.peaceHoldStart = 0;
 
             } else if (handCount === 1) {
                 stopSlideshow();
@@ -1740,11 +1966,11 @@
                 state.isPanning = false;
                 state.isZooming = false;
                 state.smoothedHandX = null;
+                state.resetStartTime = 0; // Reset
+                setCursorResetProgress(0); // Reset
                 resetNavVisuals();
                 setCursorState('hidden');
                 resetDwell();
-                state.fistHoldStart = 0;
-                state.peaceHoldStart = 0;
                 
                 // If hand lost, close menu
                 if(state.isRadialMenuOpen) closeRadialMenu();
@@ -1757,7 +1983,7 @@
             els.cursor.className = `fixed transition-all duration-200 ${
                 type === 'hidden' ? 'opacity-0' : 'opacity-100'
             } ${
-                type === 'hover' ? 'cursor-hover' : 
+                type === 'hover' ? 'cursor-hover cursor-pulse' : 
                 type === 'grab' ? 'cursor-grab' : 
                 type === 'fist' ? 'cursor-fist' :
                 type === 'peace' ? 'cursor-peace' :
@@ -1822,53 +2048,69 @@
             const p1 = getPinch(landmarksArray[0]);
             const p2 = getPinch(landmarksArray[1]);
 
-            // CASE 1: ZOOM & ROTATE
+            // CASE 1: ZOOM
             if (p1.isPinching && p2.isPinching) {
                 state.isPanning = false;
                 state.smoothedHandX = null;
-                updateStatus(state.isMapMode ? "ZOOMING MAP" : "ZOOM & ROTATE", "active");
+                updateStatus(state.isMapMode ? "ZOOMING MAP" : "ZOOMING", "active");
 
                 const rawDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-                const rawAngle = getAngle(p1, p2) * (180 / Math.PI); // Extract raw angle
-
                 if (state.smoothedZoomDist === null) state.smoothedZoomDist = rawDist;
                 state.smoothedZoomDist = lerp(state.smoothedZoomDist, rawDist, 0.15); 
                 
                 const currentDist = state.smoothedZoomDist;
+                const currentAngle = getAngle(p1, p2);
 
                 if (!state.isZooming) {
                     state.isZooming = true;
                     state.zoomStartDist = currentDist;
                     state.zoomStartScale = state.targetScale; 
-                    state.zoomStartAngle = rawAngle; // Log angle on start
-                    state.zoomStartRotation = state.targetRotation; // Log initial rotation
+                    state.zoomStartAngle = currentAngle;
+                    state.startRotation = state.targetRotation;
                 } else {
-                    // Zoom logic
                     if(state.zoomStartDist > 0.01) {
                          const scaleMultiplier = currentDist / state.zoomStartDist;
-                         let newScale = state.zoomStartScale * scaleMultiplier;
+                         const newScaleRaw = state.zoomStartScale * scaleMultiplier;
+                         let newScale = newScaleRaw;
                          
                          if (!state.isMapMode) {
                             newScale = Math.max(CONSTANTS.MIN_SCALE, Math.min(CONSTANTS.MAX_SCALE, newScale));
                          } else {
                             newScale = Math.max(0.0001, Math.min(100000, newScale));
                          }
+                         
+                         // Apply Focal Zoom
+                         if (state.targetScale !== 0) {
+                             const ratio = newScale / state.targetScale;
+                             if(Math.abs(ratio - 1) > 0.0001) {
+                                 // Calculate Focal Point (Screen Center Relative)
+                                 const midX = (p1.x + p2.x) / 2;
+                                 const midY = (p1.y + p2.y) / 2;
+                                 
+                                 const focalX = (0.5 - midX) * window.innerWidth;
+                                 const focalY = (midY - 0.5) * window.innerHeight;
+                                 
+                                 state.targetPanX = focalX + (state.targetPanX - focalX) * ratio;
+                                 state.targetPanY = focalY + (state.targetPanY - focalY) * ratio;
+                             }
+                         }
+
                          state.targetScale = newScale;
                     }
 
-                    // BUG FIX: Rotation logic integrated
+                    // Rotation Logic (Fixed: Restored)
                     if (!state.isMapMode) {
-                        let angleDiff = rawAngle - state.zoomStartAngle;
-                        
-                        // Handle wrap-around constraints (e.g. going from 179 to -179)
-                        if (angleDiff > 180) angleDiff -= 360;
-                        if (angleDiff < -180) angleDiff += 360;
+                        let angleDelta = currentAngle - state.zoomStartAngle;
+                        // Normalize angle jump
+                        if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
+                        if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
+                        const degDelta = angleDelta * (180 / Math.PI);
 
-                        if (Math.abs(angleDiff) > userSettings.rotationThreshold) {
-                            // Apply angular difference beyond deadzone
-                            const sign = Math.sign(angleDiff);
-                            const effectiveDiff = angleDiff - (sign * userSettings.rotationThreshold);
-                            state.targetRotation = state.zoomStartRotation + effectiveDiff;
+                        if (Math.abs(degDelta) > userSettings.rotationThreshold) {
+                             const effectiveDeg = degDelta > 0 
+                                ? degDelta - userSettings.rotationThreshold 
+                                : degDelta + userSettings.rotationThreshold;
+                             state.targetRotation = state.startRotation + effectiveDeg;
                         }
                     }
                 }
@@ -1931,7 +2173,33 @@
             // Check Hover Interactions (Dwell Click)
             handleHoverInteractions(1 - x, y);
 
-            // FIST DETECTION (RADIAL MENU TRIGGER)
+            // 1. CHECK FOR PEACE SIGN (RESET) - FIXED: Restored Logic
+            if (isPeaceSign(landmarks)) {
+                 updateStatus("RESETTING...", "wait");
+                 setCursorState('peace'); 
+                 
+                 if(state.resetStartTime === 0) {
+                     state.resetStartTime = performance.now();
+                 }
+                 
+                 const elapsed = performance.now() - state.resetStartTime;
+                 const progress = Math.min(1, elapsed / userSettings.resetHoldTime);
+                 setCursorResetProgress(progress);
+
+                 if(progress >= 1) {
+                     resetView();
+                     state.resetStartTime = 0; 
+                     setCursorResetProgress(0); 
+                 }
+                 resetNavVisuals();
+                 return; // Priority over other gestures
+            } else {
+                state.resetStartTime = 0;
+                // Only reset progress if not dwelling on an item (handled inside Hover Logic)
+                // But for peace sign specifically, we can reset if peace is broken
+            }
+
+            // 2. FIST DETECTION (RADIAL MENU TRIGGER)
             if (isFist(landmarks)) {
                  updateStatus("HOLD FIST...", "wait");
                  setCursorState('fist'); 
@@ -1950,29 +2218,9 @@
                      setCursorResetProgress(0); 
                  }
                  return;
-            } else if (isPeaceSign(landmarks)) {
-                 updateStatus("HOLD PEACE...", "wait");
-                 setCursorState('peace'); 
-                 
-                 if(state.peaceHoldStart === 0) {
-                     state.peaceHoldStart = performance.now();
-                 }
-                 
-                 const elapsed = performance.now() - state.peaceHoldStart;
-                 const progress = Math.min(1, elapsed / userSettings.resetHoldTime);
-                 setCursorResetProgress(progress);
-
-                 if(progress >= 1) {
-                     resetView();
-                     state.peaceHoldStart = 0; 
-                     setCursorResetProgress(0); 
-                 }
-                 return;
             } else {
                 state.fistHoldStart = 0;
-                state.peaceHoldStart = 0;
-                // Only reset if not dwelling on an item
-                if(!state.dwellStartTime) setCursorResetProgress(0);
+                if(!state.dwellStartTime && state.resetStartTime === 0) setCursorResetProgress(0);
             }
 
             setCursorState('default');
@@ -2103,7 +2351,7 @@
         function resetDwell() {
             state.dwellTarget = null;
             state.dwellStartTime = 0;
-            setCursorResetProgress(0);
+            // setCursorResetProgress(0); // Handled by main loop now to avoid conflict
         }
 
         // --- Gesture Helpers ---
@@ -2115,6 +2363,14 @@
             return Math.hypot(tip.x - wrist.x, tip.y - wrist.y) > Math.hypot(pip.x - wrist.x, pip.y - wrist.y);
         }
 
+        function isPeaceSign(landmarks) {
+             const indexExt = isFingerExtended(landmarks, 8, 6);
+             const middleExt = isFingerExtended(landmarks, 12, 10);
+             const ringExt = isFingerExtended(landmarks, 16, 14);
+             const pinkyExt = isFingerExtended(landmarks, 20, 18);
+             return indexExt && middleExt && !ringExt && !pinkyExt;
+        }
+
         function isFist(landmarks) {
             const indexExt = isFingerExtended(landmarks, 8, 6);
             const middleExt = isFingerExtended(landmarks, 12, 10);
@@ -2122,14 +2378,6 @@
             const pinkyExt = isFingerExtended(landmarks, 20, 18);
             // Thumb is tricky, ignore it for robustness
             return !indexExt && !middleExt && !ringExt && !pinkyExt;
-        }
-
-        function isPeaceSign(landmarks) {
-            const indexExt = isFingerExtended(landmarks, 8, 6);
-            const middleExt = isFingerExtended(landmarks, 12, 10);
-            const ringExt = isFingerExtended(landmarks, 16, 14);
-            const pinkyExt = isFingerExtended(landmarks, 20, 18);
-            return indexExt && middleExt && !ringExt && !pinkyExt;
         }
 
         function getPinch(landmarks) {
@@ -2148,9 +2396,12 @@
          */
 
         const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        // Mobile Optimization: Use lower complexity model
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
         hands.setOptions({
             maxNumHands: 2,
-            modelComplexity: 1,
+            modelComplexity: isMobile ? 0 : 1, // 0 for Lite (Mobile), 1 for Full (Desktop)
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
         });
@@ -2158,17 +2409,26 @@
 
         async function startCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } });
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: isMobile ? 480 : 640, // Lower res for mobile
+                        height: isMobile ? 360 : 480, 
+                        facingMode: "user" 
+                    } 
+                });
                 els.video.srcObject = stream;
                 await new Promise((resolve) => els.video.onloadedmetadata = resolve);
                 await els.video.play();
                 updateStatus("CAMERA ACTIVE", "active");
+                
+                // Start processing loop
                 const processFrame = async () => {
                     if (els.video.paused || els.video.ended) return;
                     await hands.send({image: els.video});
                     requestAnimationFrame(processFrame);
                 };
                 processFrame();
+
             } catch (err) {
                 console.error("Camera access failed:", err);
                 updateStatus("CAMERA BLOCKED", "error");
@@ -2177,13 +2437,17 @@
         }
 
         startCamera();
+
         els.canvas.width = 320;
         els.canvas.height = 240;
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight') nextImage();
             if (e.key === 'ArrowLeft') prevImage();
-            if (e.key === ' ') { e.preventDefault(); toggleCinemaMode(); }
+            if (e.key === ' ') { 
+                e.preventDefault(); 
+                toggleCinemaMode(); 
+            }
             if (e.key === 'Escape') {
                 if(state.isRadialMenuOpen) closeRadialMenu();
                 if(state.isCinemaMode) toggleCinemaMode();
@@ -2192,16 +2456,9 @@
             }
         });
 
-        // BUG FIX: Tap Screen to Exit Cinema Mode natively on touch/mouse
-        window.addEventListener('pointerdown', (e) => {
-            if (state.isCinemaMode) {
-                // Ensure we don't catch the actual hud-button click itself to prevent instant re-trigger
-                const btn = e.target.closest('.hud-btn');
-                if (!btn) {
-                    toggleCinemaMode();
-                }
-            }
-        }, true); // use capture phase to catch it before map/images swallow it
+        els.workspace.addEventListener('click', () => {
+             if (state.isCinemaMode) toggleCinemaMode();
+        });
 
         init();
 

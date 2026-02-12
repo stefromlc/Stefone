@@ -278,22 +278,26 @@
             opacity: 1;
             transform: scale(1);
         }
-        .radial-bg {
-            fill: rgba(0, 0, 0, 0.85); /* 85% Black for high contrast */
-            stroke: rgba(255, 255, 255, 0.2);
+        
+        /* Frosty Glass Backdrop for Menu */
+        .radial-backdrop {
+            fill: rgba(15, 23, 42, 0.85); /* Dark base */
+            stroke: rgba(255, 255, 255, 0.3); /* Brighter stroke */
             stroke-width: 2px;
-            backdrop-filter: blur(20px); /* Heavier blur */
+            filter: drop-shadow(0 0 20px rgba(0,0,0,0.8));
         }
+
         .radial-slice {
             fill: transparent;
             transition: fill 0.2s;
             cursor: pointer;
         }
         .radial-slice.active {
-            fill: rgba(255, 255, 255, 0.1); 
+            fill: rgba(34, 211, 238, 0.2); 
             stroke: var(--accent-color);
             stroke-width: 3px;
         }
+        
         .radial-icon {
             font-size: 28px; /* Larger icons */
             fill: white;
@@ -303,14 +307,14 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
         }
         .radial-label {
-            font-size: 12px; /* Larger text */
-            fill: #e2e8f0; /* Brighter text */
+            font-size: 13px; /* Larger text */
+            fill: #ffffff; /* Brighter text */
             font-family: 'JetBrains Mono', monospace;
             text-anchor: middle;
             pointer-events: none;
-            font-weight: 600;
-            opacity: 0.9;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,1));
+            font-weight: 700;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,1)); /* Stronger shadow */
+            letter-spacing: 0.5px;
         }
         .radial-slice.active + .radial-icon {
             fill: var(--accent-color);
@@ -318,7 +322,6 @@
         }
         .radial-slice.active ~ .radial-label {
             fill: var(--accent-color);
-            font-weight: bold;
         }
         
         /* Popup Buttons for Gestures */
@@ -396,8 +399,8 @@
                         <div id="rot-indicator" class="hidden text-[10px] font-mono bg-white/10 px-1.5 rounded" style="color: var(--accent-color);">0°</div>
                     </div>
                 </div>
-                <a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10 ml-4">
-                     <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
+                 <a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10 ml-4">
+                    <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
                     <span class="hidden md:inline">Back to Projects</span>
                 </a>
             </div>
@@ -508,7 +511,7 @@
 
     <!-- 3D Toggle (Moved to root for z-index accessibility) -->
     <div id="map-3d-controls" class="fixed bottom-32 right-6 z-50 flex flex-col gap-2 opacity-0 pointer-events-none transition-opacity duration-300">
-         <button onclick="toggle3DMap()" class="w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 text-white hover:text-[var(--accent-color)] hover:border-[var(--accent-color)] flex items-center justify-center shadow-lg backdrop-blur transition-all pointer-events-auto">
+         <button id="btn-tilt-toggle" onclick="toggle3DMap()" class="w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 text-white hover:text-[var(--accent-color)] hover:border-[var(--accent-color)] flex items-center justify-center shadow-lg backdrop-blur transition-all pointer-events-auto">
              <i class="fa-solid fa-cube text-lg"></i>
          </button>
          <div class="text-[10px] text-center bg-black/50 rounded px-1 text-white/70 font-mono pointer-events-none">TILT</div>
@@ -524,6 +527,9 @@
                     <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
             </defs>
+            <!-- Frosty Backdrop -->
+            <circle class="radial-backdrop" cx="180" cy="180" r="160"></circle>
+            <!-- Inner Center -->
             <circle cx="180" cy="180" r="40" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.2)"></circle>
             <!-- Slices will be injected here -->
         </svg>
@@ -989,7 +995,7 @@
         // --- Radial Menu Config ---
         const RADIAL_ITEMS = [
             { icon: '\uf279', label: 'Switch Mode', action: 'toggleMapMode' },     // Switch Mode (Renamed)
-            { icon: '\uf04b', label: 'Slideshow', action: 'toggleSlideshow' },  // Play
+            { icon: '\uf1b2', label: 'Tilt Map', action: 'toggle3DMap' },  // Tilt Map (Replaced Slideshow)
             { icon: '\uf021', label: 'Reset View', action: 'resetView' },       // Reset
             { icon: '\uf0ac', label: 'Collections', action: 'toggleCollections' }, // Globe
             { icon: '\uf72b', label: 'Filters', action: 'toggleFilters' }       // Magic
@@ -1007,7 +1013,8 @@
             imageWrapper: document.getElementById('image-wrapper'),
             mapWrapper: document.getElementById('map-wrapper'),
             mapHint: document.getElementById('map-mode-label'), // Added ref
-            map3dControls: document.getElementById('map-3d-controls'), 
+            map3dControls: document.getElementById('map-3d-controls'),
+            btnTiltToggle: document.getElementById('btn-tilt-toggle'), // New ref
             counter: document.getElementById('counter'),
             cursor: document.getElementById('virtual-cursor'),
             cursorProgress: document.getElementById('cursor-progress'),
@@ -1128,7 +1135,23 @@
                 
                 if (state.touchStartDist > 0) {
                     const scaleFactor = dist / state.touchStartDist;
-                    state.targetScale = Math.max(0.5, Math.min(10, state.touchStartScale * scaleFactor));
+                    const newScale = Math.max(0.5, Math.min(10, state.touchStartScale * scaleFactor));
+                    
+                    if (state.targetScale !== 0) {
+                        const ratio = newScale / state.targetScale;
+                        if(Math.abs(ratio - 1) > 0.0001) {
+                            // Touch coordinates are already screen pixels, top-left origin
+                            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                            
+                            const focalX = midX - window.innerWidth / 2;
+                            const focalY = midY - window.innerHeight / 2;
+                            
+                            state.targetPanX = focalX + (state.targetPanX - focalX) * ratio;
+                            state.targetPanY = focalY + (state.targetPanY - focalY) * ratio;
+                        }
+                    }
+                    state.targetScale = newScale;
                 }
             }
         }
@@ -1163,6 +1186,14 @@
             defs.innerHTML = `<filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter>`;
             els.radialSvg.appendChild(defs);
             
+            // Frosty Backdrop (Visual only, behind interactions)
+            const backdrop = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            backdrop.setAttribute("class", "radial-backdrop");
+            backdrop.setAttribute("cx", center);
+            backdrop.setAttribute("cy", center);
+            backdrop.setAttribute("r", 155); // Slightly smaller than SVG width
+            els.radialSvg.appendChild(backdrop);
+            
             // Center circle
             const centerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             centerCircle.setAttribute("cx", center);
@@ -1187,7 +1218,7 @@
                 // Create Slice
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", pathData);
-                path.setAttribute("class", "radial-slice radial-bg");
+                path.setAttribute("class", "radial-slice"); // Removed radial-bg, now using backdrop
                 path.setAttribute("id", `slice-${index}`);
                 
                 // Create Icon
@@ -1267,6 +1298,7 @@
             // Execute
             if (actionName === 'toggleMapMode') toggleMapMode();
             else if (actionName === 'toggleSlideshow') toggleSlideshow();
+            else if (actionName === 'toggle3DMap') toggle3DMap();
             else if (actionName === 'resetView') resetView();
             else if (actionName === 'toggleCollections') toggleCollections();
             else if (actionName === 'toggleFilters') toggleFilters();
@@ -1299,54 +1331,27 @@
 
             // 2. Map Mode Logic
             if (state.isMapMode && state.mapInstance) {
-                // Skip if in 3D Mode (Locked View)
-                if(!state.is3DMapMode) {
-                    if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) return;
+                // --- 3D MAP CONTROL LOGIC ---
+                if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) return;
 
-                    const dX = state.panX - state.lastFramePanX;
-                    const dY = state.panY - state.lastFramePanY;
-                    let dScale = state.scale / (state.lastFrameScale || 1);
+                const dX = state.panX - state.lastFramePanX;
+                const dY = state.panY - state.lastFramePanY;
+                let dScale = state.scale / (state.lastFrameScale || 1);
 
-                    if (dScale > 0.992 && dScale < 1.008) dScale = 1;
+                if (dScale > 0.992 && dScale < 1.008) dScale = 1;
 
-                    if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000) {
-                         state.mapInstance.panBy([-dX, -dY], {animate: false});
-                    }
+                // Pan works normally
+                if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000) {
+                     state.mapInstance.panBy([-dX, -dY], {animate: false});
+                }
 
-                    if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
-                        const currentZoom = state.mapInstance.getZoom();
-                        let newZoom = currentZoom + Math.log2(dScale);
-                        newZoom = Math.max(state.mapInstance.getMinZoom(), Math.min(22, newZoom));
-                        if(!isNaN(newZoom) && Math.abs(newZoom - currentZoom) > 0.02) {
-                             state.mapInstance.setZoom(newZoom, {animate: false});
-                        }
-                    }
-                } else {
-                    // --- 3D MAP CONTROL LOGIC (NEW) ---
-                    // Allow gestures to control map even in 3D mode
-                    // Just duplicate logic but without disabling it
-                    
-                    if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) return;
-
-                    const dX = state.panX - state.lastFramePanX;
-                    const dY = state.panY - state.lastFramePanY;
-                    let dScale = state.scale / (state.lastFrameScale || 1);
-
-                    if (dScale > 0.992 && dScale < 1.008) dScale = 1;
-
-                    // Pan works normally
-                    if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000) {
-                         state.mapInstance.panBy([-dX, -dY], {animate: false});
-                    }
-
-                    // Zoom works normally (visual perspective handled by CSS)
-                    if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
-                        const currentZoom = state.mapInstance.getZoom();
-                        let newZoom = currentZoom + Math.log2(dScale);
-                        newZoom = Math.max(state.mapInstance.getMinZoom(), Math.min(22, newZoom));
-                        if(!isNaN(newZoom) && Math.abs(newZoom - currentZoom) > 0.02) {
-                             state.mapInstance.setZoom(newZoom, {animate: false});
-                        }
+                // Zoom works normally (visual perspective handled by CSS)
+                if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
+                    const currentZoom = state.mapInstance.getZoom();
+                    let newZoom = currentZoom + Math.log2(dScale);
+                    newZoom = Math.max(state.mapInstance.getMinZoom(), Math.min(22, newZoom));
+                    if(!isNaN(newZoom) && Math.abs(newZoom - currentZoom) > 0.02) {
+                         state.mapInstance.setZoom(newZoom, {animate: false});
                     }
                 }
             } else {
@@ -1698,26 +1703,25 @@
 
         // NEW: Toggle 3D CSS Mode
         function toggle3DMap() {
-            if(!state.isMapMode) return;
+            if(!state.isMapMode) {
+                 showToast("Switch to Map Mode first", "warning");
+                 return;
+            }
             state.is3DMapMode = !state.is3DMapMode;
             
             const mapEl = document.getElementById('leaflet-map');
-            const icon = els.map3dControls.querySelector('i');
+            const icon = els.btnTiltToggle ? els.btnTiltToggle.querySelector('i') : null;
 
             if(state.is3DMapMode) {
                 // Activate 3D
                 mapEl.classList.add('map-3d-active');
-                icon.className = "fa-solid fa-cube text-cyan-400";
-                
-                // Auto switch to terrain if not already
-                setMapLayer('terrain'); 
-                
-                showToast("3D Terrain Mode Active", "success");
+                if(icon) icon.className = "fa-solid fa-cube text-cyan-400";
+                showToast("Tilt Perspective Active", "success");
             } else {
                 // Deactivate
                 mapEl.classList.remove('map-3d-active');
-                icon.className = "fa-solid fa-cube";
-                showToast("2D Map Mode", "neutral");
+                if(icon) icon.className = "fa-solid fa-cube";
+                showToast("Flat View", "neutral");
             }
         }
 
@@ -2066,13 +2070,31 @@
                 } else {
                     if(state.zoomStartDist > 0.01) {
                          const scaleMultiplier = currentDist / state.zoomStartDist;
-                         let newScale = state.zoomStartScale * scaleMultiplier;
+                         const newScaleRaw = state.zoomStartScale * scaleMultiplier;
+                         let newScale = newScaleRaw;
                          
                          if (!state.isMapMode) {
                             newScale = Math.max(CONSTANTS.MIN_SCALE, Math.min(CONSTANTS.MAX_SCALE, newScale));
                          } else {
                             newScale = Math.max(0.0001, Math.min(100000, newScale));
                          }
+                         
+                         // Apply Focal Zoom
+                         if (state.targetScale !== 0) {
+                             const ratio = newScale / state.targetScale;
+                             if(Math.abs(ratio - 1) > 0.0001) {
+                                 // Calculate Focal Point (Screen Center Relative)
+                                 const midX = (p1.x + p2.x) / 2;
+                                 const midY = (p1.y + p2.y) / 2;
+                                 
+                                 const focalX = (0.5 - midX) * window.innerWidth;
+                                 const focalY = (midY - 0.5) * window.innerHeight;
+                                 
+                                 state.targetPanX = focalX + (state.targetPanX - focalX) * ratio;
+                                 state.targetPanY = focalY + (state.targetPanY - focalY) * ratio;
+                             }
+                         }
+
                          state.targetScale = newScale;
                     }
 
