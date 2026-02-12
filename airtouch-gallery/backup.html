@@ -49,6 +49,14 @@
                     animation: {
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'spin-slow': 'spin 8s linear infinite',
+                        'cursor-pulse': 'cursorPulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) forwards',
+                    },
+                    keyframes: {
+                        cursorPulse: {
+                            '0%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.3)' },
+                            '100%': { transform: 'scale(1)' }
+                        }
                     }
                 }
             }
@@ -64,8 +72,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- EXIF JS for Geotagging -->
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 
     <style>
+        :root {
+            --accent-color: #22d3ee; /* Default Cyan */
+            --accent-glow: rgba(34, 211, 238, 0.5);
+            --ui-scale: 1;
+        }
+
         body {
             background-color: #000000; /* Void (Default) */
             transition: background-color 0.5s ease;
@@ -75,6 +96,8 @@
             width: 100vw;
             color: white;
             overscroll-behavior: none;
+            touch-action: none; /* Prevent browser defaults like pull-to-refresh */
+            font-size: calc(16px * var(--ui-scale));
         }
 
         /* HUD Aesthetics */
@@ -92,8 +115,13 @@
             overflow: hidden;
         }
         .hud-btn:active { transform: scale(0.95); }
-        .hud-btn:hover { background: rgba(255,255,255,0.1); color: #22d3ee; }
-        .hud-btn.active-state { background: rgba(34, 211, 238, 0.15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); }
+        .hud-btn:hover { background: rgba(255,255,255,0.1); color: var(--accent-color); }
+        .hud-btn.active-state { 
+            background: rgba(255, 255, 255, 0.1); 
+            color: var(--accent-color); 
+            border: 1px solid var(--accent-glow); 
+            box-shadow: 0 0 10px var(--accent-glow) inset;
+        }
 
         /* Custom Cursor */
         #virtual-cursor {
@@ -105,17 +133,18 @@
             align-items: center;
             justify-content: center;
             position: fixed;
+            will-change: transform, top, left;
         }
         
         .cursor-default { width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
-        .cursor-hover { width: 48px; height: 48px; border-color: #22d3ee; background: rgba(34, 211, 238, 0.1); border-width: 1px; border-radius: 50%; border-style: solid; }
+        .cursor-hover { width: 48px; height: 48px; border-color: var(--accent-color); background: rgba(255,255,255,0.1); border-width: 1px; border-radius: 50%; border-style: solid; }
         .cursor-grab { width: 24px; height: 24px; background: #fbbf24; border: none; border-radius: 4px; transform: rotate(45deg); box-shadow: 0 0 15px #fbbf24; }
-        .cursor-fist { width: 32px; height: 32px; background: #ef4444; border-radius: 50%; transform: scale(0.8); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.3); }
+        .cursor-fist { width: 40px; height: 40px; border: 4px solid #ef4444; border-radius: 50%; background: transparent; transform: scale(0.9); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
         .cursor-peace { 
             width: 50px; 
             height: 50px; 
             border-radius: 50%; 
-            border: 2px solid #10b981; /* Emerald 500 */
+            border: 2px solid #10b981; 
             background: rgba(16, 185, 129, 0.1);
         }
         .cursor-peace::after {
@@ -126,35 +155,45 @@
             font-size: 24px;
         }
         .cursor-hidden { opacity: 0; }
+        .cursor-pulse { animation: cursorPulse 0.3s ease-out; }
 
-        /* Progress Ring SVG inside cursor */
+        /* Progress Ring SVG inside cursor - HIGH VISIBILITY UPDATE */
         #cursor-progress {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-90deg);
-            width: 100%;
-            height: 100%;
+            width: 180%; 
+            height: 180%;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s;
+            filter: drop-shadow(0 0 6px rgba(0,0,0,1)); 
         }
-        #cursor-progress circle {
+        #cursor-progress .bg-ring {
+            fill: rgba(0, 0, 0, 0.6); 
+            stroke: rgba(255, 255, 255, 0.3);
+            stroke-width: 3;
+        }
+        #cursor-progress .progress-ring {
             fill: none;
-            stroke: #10b981;
-            stroke-width: 4;
+            stroke: var(--accent-color); /* Dynamic Color */
+            stroke-width: 6; 
             stroke-dasharray: 100;
             stroke-dashoffset: 100;
+            stroke-linecap: round;
             transition: stroke-dashoffset 0.1s linear;
         }
+        .cursor-peace #cursor-progress .progress-ring { stroke: #10b981; }
+        .cursor-fist #cursor-progress .progress-ring { stroke: #ef4444; }
 
         /* Navigation Zones */
         .nav-zone {
             transition: background 0.3s ease, opacity 0.3s ease;
-            background: linear-gradient(90deg, rgba(6,182,212,0.15) 0%, transparent 100%);
+            background: linear-gradient(90deg, var(--accent-glow) 0%, transparent 100%);
         }
         .nav-zone.right {
-            background: linear-gradient(-90deg, rgba(6,182,212,0.15) 0%, transparent 100%);
+            background: linear-gradient(-90deg, var(--accent-glow) 0%, transparent 100%);
         }
         
         /* Canvas Mirror */
@@ -169,9 +208,9 @@
         /* Range Sliders */
         input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%;
-            background: #22d3ee; cursor: pointer; margin-top: -5px; 
-            box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: var(--accent-color); cursor: pointer; margin-top: -6px; 
+            box-shadow: 0 0 10px var(--accent-glow);
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%; height: 4px; cursor: pointer;
@@ -184,17 +223,113 @@
 
         .anim-base {
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
         }
 
-        /* Fade Effect */
-        .anim-fade-out { opacity: 0 !important; transform: scale(0.95) !important; }
-        .anim-fade-in { opacity: 0 !important; transform: scale(1.05) !important; } 
+        /* Improved Fade Effect with Scale */
+        .anim-fade-out { opacity: 0 !important; transform: scale(0.92) !important; filter: blur(4px); }
+        .anim-fade-in { opacity: 0 !important; transform: scale(1.08) !important; filter: blur(4px); } 
 
         /* Theme Classes */
         .theme-slate { background-color: #020617; }
         .theme-void { background-color: #000000; }
         .theme-midnight { background-color: #020420; }
         .theme-forest { background-color: #022c22; }
+
+        /* Leaflet Overrides */
+        .leaflet-control-attribution { background: rgba(0,0,0,0.5) !important; color: #aaa !important; }
+        .leaflet-control-attribution a { color: var(--accent-color) !important; }
+        .leaflet-container { background: transparent !important; font-family: 'Inter', sans-serif !important; }
+        
+        /* Map Background Fix - Matches Dark Matter Tile Color */
+        #leaflet-map {
+            background-color: #1a1a1a; 
+            transition: transform 0.5s cubic-bezier(0.2, 0, 0.4, 1);
+        }
+
+        /* 3D Map Mode Perspective Container */
+        .map-3d-perspective {
+            perspective: 1200px;
+            overflow: hidden;
+        }
+        
+        /* UPDATED: Full screen tilt mode */
+        .map-3d-active {
+            transform: rotateX(45deg) scale(1.8); /* Reduced angle, increased scale to prevent crop */
+            transform-origin: center center;
+        }
+
+        /* Radial Menu */
+        #radial-menu {
+            position: fixed;
+            width: 360px; /* Increased size */
+            height: 360px; /* Increased size */
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        #radial-menu.open {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .radial-bg {
+            fill: rgba(0, 0, 0, 0.85); /* 85% Black for high contrast */
+            stroke: rgba(255, 255, 255, 0.2);
+            stroke-width: 2px;
+            backdrop-filter: blur(20px); /* Heavier blur */
+        }
+        .radial-slice {
+            fill: transparent;
+            transition: fill 0.2s;
+            cursor: pointer;
+        }
+        .radial-slice.active {
+            fill: rgba(255, 255, 255, 0.1); 
+            stroke: var(--accent-color);
+            stroke-width: 3px;
+        }
+        .radial-icon {
+            font-size: 28px; /* Larger icons */
+            fill: white;
+            pointer-events: none;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+        }
+        .radial-label {
+            font-size: 12px; /* Larger text */
+            fill: #e2e8f0; /* Brighter text */
+            font-family: 'JetBrains Mono', monospace;
+            text-anchor: middle;
+            pointer-events: none;
+            font-weight: 600;
+            opacity: 0.9;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,1));
+        }
+        .radial-slice.active + .radial-icon {
+            fill: var(--accent-color);
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+        }
+        .radial-slice.active ~ .radial-label {
+            fill: var(--accent-color);
+            font-weight: bold;
+        }
+        
+        /* Popup Buttons for Gestures */
+        .popup-btn {
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .popup-btn:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color) !important;
+        }
+
+        /* IMPORTANT: Ensure photo markers are interactive */
+        .photo-marker {
+            pointer-events: auto !important;
+        }
     </style>
 </head>
 <body id="app-body" class="theme-void" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
@@ -207,36 +342,34 @@
              style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 80px 80px;">
         </div>
 
-        <!-- Transform Helper Grid (Visible during zoom/rotate) -->
-        <div id="transform-grid" class="absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-300 flex items-center justify-center">
-            <div class="w-[200vw] h-[200vw] border border-cyan-500/10 rounded-full absolute"></div>
-            <div class="w-full h-px bg-cyan-500/20 absolute"></div>
-            <div class="h-full w-px bg-cyan-500/20 absolute"></div>
+        <!-- Image Container -->
+        <div id="image-wrapper" class="w-full h-full flex items-center justify-center relative opacity-0 transition-opacity duration-700 p-0 md:p-8 z-10">
+            <img id="main-image" src="" alt="Gallery View" class="max-w-full max-h-full object-contain shadow-2xl select-none pointer-events-none origin-center will-change-transform rounded-sm transition-all duration-300">
         </div>
 
-        <!-- Image Container -->
-        <div id="image-wrapper" class="w-full h-full flex items-center justify-center relative opacity-0 transition-opacity duration-700 p-0 md:p-8">
-            <img id="main-image" src="" alt="Gallery View" class="max-w-full max-h-full object-contain shadow-2xl select-none pointer-events-none origin-center will-change-transform rounded-sm">
+        <!-- Map Container with 3D capability -->
+        <div id="map-wrapper" class="absolute inset-0 z-10 opacity-0 pointer-events-none transition-opacity duration-700 map-3d-perspective">
+             <div id="leaflet-map" class="w-full h-full"></div>
         </div>
 
         <!-- Edge Navigation Zones -->
         <div id="zone-prev" class="absolute left-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-start pl-6 nav-zone opacity-0 pointer-events-none">
             <div class="h-32 w-1 bg-white/20 rounded-full overflow-hidden relative">
-                <div id="prog-prev" class="w-full bg-cyan-400 absolute bottom-0 left-0 transition-all duration-75" style="height: 0%"></div>
+                <div id="prog-prev" class="w-full bg-[var(--accent-color)] absolute bottom-0 left-0 transition-all duration-75" style="height: 0%"></div>
             </div>
             <div class="ml-6 flex flex-col items-center">
-                <i class="fa-solid fa-chevron-left text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></i>
-                <span class="text-[10px] font-mono text-cyan-400 mt-2">PREV</span>
+                <i class="fa-solid fa-chevron-left text-4xl text-[var(--accent-color)] drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></i>
+                <span class="text-[10px] font-mono text-[var(--accent-color)] mt-2">PREV</span>
             </div>
         </div>
 
         <div id="zone-next" class="absolute right-0 top-0 bottom-0 w-24 md:w-32 z-30 flex items-center justify-end pr-6 nav-zone right opacity-0 pointer-events-none">
             <div class="mr-6 flex flex-col items-center">
-                <i class="fa-solid fa-chevron-right text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></i>
-                <span class="text-[10px] font-mono text-cyan-400 mt-2">NEXT</span>
+                <i class="fa-solid fa-chevron-right text-4xl text-[var(--accent-color)] drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"></i>
+                <span class="text-[10px] font-mono text-[var(--accent-color)] mt-2">NEXT</span>
             </div>
             <div class="h-32 w-1 bg-white/20 rounded-full overflow-hidden relative">
-                <div id="prog-next" class="w-full bg-cyan-400 absolute bottom-0 right-0 transition-all duration-75" style="height: 0%"></div>
+                <div id="prog-next" class="w-full bg-[var(--accent-color)] absolute bottom-0 right-0 transition-all duration-75" style="height: 0%"></div>
             </div>
         </div>
     </div>
@@ -248,27 +381,27 @@
         <div class="flex justify-between items-start px-4 md:px-6 pt-4">
             <!-- Logo / Branding -->
             <div class="pointer-events-auto flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                    <i class="fa-solid fa-hand-sparkles text-white text-lg"></i>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-800 to-black flex items-center justify-center shadow-lg border border-white/10">
+                    <i class="fa-solid fa-hand-sparkles text-[var(--accent-color)] text-lg"></i>
                 </div>
                 <div class="hidden md:block">
-                    <h1 class="font-bold text-lg tracking-tight">AirTouch <span class="text-cyan-400">Gallery</span></h1>
+                    <h1 class="font-bold text-lg tracking-tight">AirTouch <span style="color: var(--accent-color);">Gallery</span></h1>
                     <div class="flex items-center gap-2">
                         <div class="text-[10px] uppercase tracking-widest text-slate-400 font-mono" id="gesture-state">Initializing...</div>
                         <!-- Rotation Indicator -->
-                        <div id="rot-indicator" class="hidden text-[10px] font-mono text-cyan-400 bg-cyan-900/30 px-1.5 rounded">0°</div>
+                        <div id="rot-indicator" class="hidden text-[10px] font-mono bg-white/10 px-1.5 rounded" style="color: var(--accent-color);">0°</div>
                     </div>
                 </div>
-<a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10">
-            <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
-            <span class="hidden md:inline">Back to Projects</span>
-        </a>
+                <a href="/projects/" class="pointer-events-auto glass-button flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-sm font-medium hover:text-cyan-400 group h-10 ml-4">
+                     <i class="fa-solid fa-arrow-left transition-transform group-hover:-translate-x-1"></i>
+                    <span class="hidden md:inline">Back to Projects</span>
+                </a>
             </div>
 
             <!-- Camera Widget (Collapsible) -->
             <div class="pointer-events-auto flex flex-col items-end gap-2">
                 <div class="flex items-center gap-2">
-                    <button onclick="toggleCameraView()" class="hud-panel px-3 py-1.5 rounded-lg text-xs font-mono text-cyan-400 hover:bg-white/5 border-cyan-500/30 flex items-center gap-2">
+                    <button onclick="toggleCameraView()" class="hud-panel px-3 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 border-white/20 flex items-center gap-2" style="color: var(--accent-color);">
                         <span id="cam-toggle-text">HIDE CAM</span>
                         <div id="status-dot" class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,1)] animate-pulse"></div>
                     </button>
@@ -297,7 +430,7 @@
             <div class="hud-panel px-2 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 md:gap-4 pointer-events-auto shadow-2xl overflow-x-auto max-w-full">
                 
                 <!-- File Input -->
-                <div class="tooltip-wrapper relative group">
+                <div class="tooltip-wrapper relative group" id="grp-file">
                     <button onclick="document.getElementById('fileInput').click()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white/80">
                         <i class="fa-solid fa-folder-plus text-lg"></i>
                     </button>
@@ -306,28 +439,45 @@
 
                 <div class="w-px h-8 bg-white/10 mx-1"></div>
 
-                <!-- Collections Button (New) -->
-                <button onclick="toggleCollections()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-cyan-400" title="Collections">
+                <!-- Collections Button -->
+                <button onclick="toggleCollections()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Collections (Fist Menu)">
                     <i class="fa-solid fa-earth-americas"></i>
                 </button>
 
-                <div class="w-px h-8 bg-white/10 mx-1"></div>
+                <!-- MAP TOGGLE -->
+                <button id="btn-map" onclick="toggleMapMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Switch Mode">
+                    <i class="fa-solid fa-map"></i>
+                </button>
+
+                <!-- LAYERS TOGGLE -->
+                <button id="btn-layers" onclick="toggleLayers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hidden" title="Map Layers">
+                    <i class="fa-solid fa-layer-group"></i>
+                </button>
+
+                <!-- PHOTO PLOT TOGGLE (Visible in Map Mode) -->
+                <button id="btn-photos" onclick="togglePhotoMarkers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hidden" title="Show Uploaded Photos">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
+
+                <div class="w-px h-8 bg-white/10 mx-1" id="sep-nav"></div>
 
                 <!-- Nav -->
-                <button onclick="prevImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-backward-step"></i></button>
-                <div class="font-mono text-cyan-400 text-sm md:text-base font-bold min-w-[60px] text-center select-none" id="counter">-- / --</div>
-                <button onclick="nextImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-forward-step"></i></button>
+                <div id="nav-controls" class="flex items-center gap-2 md:gap-4">
+                    <button onclick="prevImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-backward-step"></i></button>
+                    <div class="font-mono text-sm md:text-base font-bold min-w-[60px] text-center select-none" style="color: var(--accent-color);" id="counter">-- / --</div>
+                    <button onclick="nextImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-forward-step"></i></button>
+                </div>
 
                 <div class="w-px h-8 bg-white/10 mx-1"></div>
 
                 <!-- Playback -->
-                <button id="btn-slideshow" onclick="toggleSlideshow()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hover:text-cyan-400" title="Slideshow">
+                <button id="btn-slideshow" onclick="toggleSlideshow()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Slideshow">
                     <i class="fa-solid fa-play"></i>
                 </button>
 
                 <!-- Tools -->
-                <button onclick="resetView()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Reset (Hold Peace Sign)">
-                    <i class="fa-solid fa-compress-arrows-alt"></i>
+                <button onclick="toggleFilters()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Filters">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </button>
                 
                 <button onclick="toggleCinemaMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-yellow-400" title="Cinema Mode (Space)">
@@ -347,18 +497,90 @@
         </div>
     </div>
 
+    <!-- Map Mode Overlay (Moved out of map-wrapper for z-index layering) -->
+    <div id="map-mode-label" class="fixed top-24 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur px-4 py-1 rounded-full text-xs font-mono border border-white/20 pointer-events-none z-50 transition-opacity duration-300 opacity-0" style="color: var(--accent-color);">
+        GESTURE MAP CONTROL
+    </div>
+
+    <!-- 3D Toggle (Moved to root for z-index accessibility) -->
+    <div id="map-3d-controls" class="fixed bottom-32 right-6 z-50 flex flex-col gap-2 opacity-0 pointer-events-none transition-opacity duration-300">
+         <button onclick="toggle3DMap()" class="w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 text-white hover:text-[var(--accent-color)] hover:border-[var(--accent-color)] flex items-center justify-center shadow-lg backdrop-blur transition-all pointer-events-auto">
+             <i class="fa-solid fa-cube text-lg"></i>
+         </button>
+         <div class="text-[10px] text-center bg-black/50 rounded px-1 text-white/70 font-mono pointer-events-none">TILT</div>
+    </div>
+
+    <!-- RADIAL MENU (SVG) -->
+    <div id="radial-menu" class="flex items-center justify-center">
+        <!-- SVG generated via JS -->
+        <svg id="radial-svg" width="360" height="360" viewBox="0 0 360 360">
+            <defs>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+            </defs>
+            <circle cx="180" cy="180" r="40" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.2)"></circle>
+            <!-- Slices will be injected here -->
+        </svg>
+    </div>
+
+    <!-- MAP LAYERS MODAL -->
+    <div id="layers-modal" onclick="if(event.target === this) toggleLayers()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div class="hud-panel p-6 rounded-3xl max-w-md w-full transform scale-100 transition-transform">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-layer-group text-purple-400"></i> Map Layers
+                </h2>
+                <button onclick="toggleLayers()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="setMapLayer('satellite')" class="relative overflow-hidden p-4 rounded-2xl group border border-white/10 hover:border-purple-500/50 transition-all text-left flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-lg bg-gray-800 flex items-center justify-center border border-white/20">
+                        <i class="fa-solid fa-satellite text-2xl text-purple-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white">Satellite</h3>
+                        <p class="text-xs text-white/70">Esri World Imagery</p>
+                    </div>
+                </button>
+
+                <button onclick="setMapLayer('terrain')" class="relative overflow-hidden p-4 rounded-2xl group border border-white/10 hover:border-emerald-500/50 transition-all text-left flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-lg bg-emerald-900 flex items-center justify-center border border-white/20">
+                        <i class="fa-solid fa-mountain text-2xl text-emerald-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white">3D Terrain</h3>
+                        <p class="text-xs text-white/70">Topography + Hillshade</p>
+                    </div>
+                </button>
+
+                <button onclick="setMapLayer('dark')" class="relative overflow-hidden p-4 rounded-2xl group border border-white/10 hover:border-purple-500/50 transition-all text-left flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-lg bg-black flex items-center justify-center border border-white/20">
+                        <i class="fa-solid fa-moon text-2xl text-gray-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white">Dark Void</h3>
+                        <p class="text-xs text-white/70">Carto Dark Matter</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- COLLECTIONS MODAL -->
     <div id="collections-modal" onclick="if(event.target === this) toggleCollections()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
         <div class="hud-panel p-6 rounded-3xl max-w-md w-full transform scale-100 transition-transform">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-white flex items-center gap-3">
-                    <i class="fa-solid fa-earth-americas text-cyan-400"></i> Featured Collections
+                    <i class="fa-solid fa-earth-americas" style="color: var(--accent-color);"></i> Featured Collections
                 </h2>
                 <button onclick="toggleCollections()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
             <div class="grid grid-cols-1 gap-4">
-                <button onclick="loadCollection('solar')" class="relative overflow-hidden p-6 rounded-2xl group border border-white/10 hover:border-cyan-500/50 transition-all text-left">
+                <button data-collection="solar" onclick="loadCollection('solar')" class="collection-card relative overflow-hidden p-6 rounded-2xl group border border-white/10 hover:border-cyan-500/50 transition-all text-left">
                     <div class="absolute inset-0 bg-gradient-to-r from-indigo-900 to-purple-900 opacity-60 group-hover:opacity-80 transition-opacity"></div>
                     <div class="relative z-10">
                         <div class="text-xs font-bold text-cyan-300 mb-1 tracking-widest uppercase">Universe</div>
@@ -367,7 +589,7 @@
                     </div>
                 </button>
 
-                <button onclick="loadCollection('landmarks')" class="relative overflow-hidden p-6 rounded-2xl group border border-white/10 hover:border-emerald-500/50 transition-all text-left">
+                <button data-collection="landmarks" onclick="loadCollection('landmarks')" class="collection-card relative overflow-hidden p-6 rounded-2xl group border border-white/10 hover:border-emerald-500/50 transition-all text-left">
                     <div class="absolute inset-0 bg-gradient-to-r from-emerald-900 to-teal-900 opacity-60 group-hover:opacity-80 transition-opacity"></div>
                     <div class="relative z-10">
                         <div class="text-xs font-bold text-emerald-300 mb-1 tracking-widest uppercase">Earth</div>
@@ -384,64 +606,115 @@
         <div class="hud-panel p-6 md:p-8 rounded-3xl max-w-lg w-full transform scale-100 transition-transform overflow-y-auto max-h-[85vh]">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-white flex items-center gap-3">
-                    <i class="fa-solid fa-sliders text-cyan-400"></i> Settings
+                    <i class="fa-solid fa-sliders" style="color: var(--accent-color);"></i> Settings
                 </h2>
                 <button onclick="toggleSettings()" class="text-white/50 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
 
             <div class="space-y-6">
                 
-                <!-- Section: Theme -->
+                <!-- Section: Personalization -->
                 <div class="bg-white/5 p-4 rounded-xl border border-white/5">
                     <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
-                        <span>Theme & Ambience</span>
+                        <span>Personalization</span>
                     </div>
-                    <div class="grid grid-cols-4 gap-2">
+                    
+                    <!-- Theme Buttons -->
+                    <div class="grid grid-cols-4 gap-2 mb-4">
                         <button onclick="setTheme('slate')" class="h-10 rounded-lg bg-[#020617] border border-white/20 hover:scale-105 transition-transform" title="Deep Slate"></button>
                         <button onclick="setTheme('void')" class="h-10 rounded-lg bg-black border border-white/20 hover:scale-105 transition-transform" title="Cosmic Void (Default)"></button>
                         <button onclick="setTheme('midnight')" class="h-10 rounded-lg bg-[#020420] border border-white/20 hover:scale-105 transition-transform" title="Midnight Blue"></button>
                         <button onclick="setTheme('forest')" class="h-10 rounded-lg bg-[#022c22] border border-white/20 hover:scale-105 transition-transform" title="Deep Forest"></button>
                     </div>
+
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-2 text-sm text-slate-300">
+                            <span>Accent Color</span>
+                            <span class="text-xs text-white/50">Custom</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <input type="color" id="inp-accentColor" value="#22d3ee" class="h-10 w-full rounded cursor-pointer bg-transparent border border-white/20" onchange="updateSetting('accentColor', this.value)">
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Interface Scale</span>
+                            <span id="val-uiScale" class="font-mono text-xs" style="color: var(--accent-color);">1.0x</span>
+                        </div>
+                        <input type="range" id="inp-uiScale" min="0.8" max="1.3" step="0.1" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('uiScale', this.value)">
+                    </div>
                 </div>
                 
-                <!-- Section: Timing -->
+                <!-- Section: Timing & Animation -->
                 <div class="bg-white/5 p-4 rounded-xl border border-white/5">
                     <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
-                        <span>Timing Controls</span>
+                        <span>Timing & Animation</span>
                     </div>
                     
                     <!-- Slideshow Interval -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Slideshow Speed</span>
-                            <span id="val-slideInterval" class="text-cyan-400 font-mono text-xs">3.0s</span>
+                            <span id="val-slideInterval" class="font-mono text-xs" style="color: var(--accent-color);">3.0s</span>
                         </div>
-                        <input type="range" id="inp-slideInterval" min="1000" max="10000" step="500" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('slideInterval', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Time between photos in slideshow.</p>
+                        <input type="range" id="inp-slideInterval" min="1000" max="10000" step="500" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('slideInterval', this.value)">
+                    </div>
+
+                    <!-- Transition Speed -->
+                    <div class="mb-2">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Transition Speed</span>
+                            <span id="val-transitionSpeed" class="font-mono text-xs" style="color: var(--accent-color);">300ms</span>
+                        </div>
+                        <input type="range" id="inp-transitionSpeed" min="100" max="1000" step="50" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('transitionSpeed', this.value)">
+                    </div>
+                </div>
+
+                <!-- Section: Navigation & Interaction -->
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                    <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
+                        <span>Navigation & Interaction</span>
                     </div>
 
                      <!-- Nav Delay -->
                      <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Nav Hold Duration</span>
-                            <span id="val-navDelay" class="text-cyan-400 font-mono text-xs">20fr</span>
+                            <span id="val-navDelay" class="font-mono text-xs" style="color: var(--accent-color);">20fr</span>
                         </div>
-                        <input type="range" id="inp-navDelay" min="5" max="60" step="5" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('navDelay', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Hold finger at screen edge this long to switch photos.</p>
+                        <input type="range" id="inp-navDelay" min="5" max="60" step="5" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('navDelay', this.value)">
                     </div>
 
                     <!-- Reset Hold Delay -->
-                    <div>
+                    <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
-                            <span>Reset Hold Duration</span>
-                            <span id="val-resetHoldTime" class="text-cyan-400 font-mono text-xs">1500ms</span>
+                            <span>Reset/Fist Hold</span>
+                            <span id="val-resetHoldTime" class="font-mono text-xs" style="color: var(--accent-color);">1500ms</span>
                         </div>
-                        <input type="range" id="inp-resetHoldTime" min="500" max="3000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('resetHoldTime', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Time required to hold the Peace Sign to reset view.</p>
+                        <input type="range" id="inp-resetHoldTime" min="500" max="3000" step="100" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('resetHoldTime', this.value)">
+                    </div>
+
+                    <!-- Menu Dwell Time -->
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Menu Dwell Time</span>
+                            <span id="val-collectionDwellTime" class="font-mono text-xs" style="color: var(--accent-color);">1500ms</span>
+                        </div>
+                        <input type="range" id="inp-collectionDwellTime" min="500" max="3000" step="100" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('collectionDwellTime', this.value)">
+                    </div>
+
+                    <!-- Edge Zone Width -->
+                    <div class="mb-2">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>Screen Edge Width</span>
+                            <span id="val-edgeZone" class="font-mono text-xs" style="color: var(--accent-color);">15%</span>
+                        </div>
+                        <input type="range" id="inp-edgeZone" min="0.05" max="0.3" step="0.01" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('edgeZone', this.value)">
                     </div>
                 </div>
 
-                <!-- Section: Gestures -->
+                <!-- Section: Gesture Physics -->
                 <div class="bg-white/5 p-4 rounded-xl border border-white/5">
                      <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
                         <span>Gesture Physics</span>
@@ -451,46 +724,42 @@
                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Pan Speed</span>
-                            <span id="val-sensitivity" class="text-cyan-400 font-mono text-xs">2500</span>
+                            <span id="val-sensitivity" class="font-mono text-xs" style="color: var(--accent-color);">2500</span>
                         </div>
-                        <input type="range" id="inp-sensitivity" min="500" max="5000" step="100" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('sensitivity', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Controls how fast the image moves when dragging.</p>
+                        <input type="range" id="inp-sensitivity" min="500" max="5000" step="100" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('sensitivity', this.value)">
                     </div>
 
                     <!-- Smoothing -->
                     <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Smoothing</span>
-                            <span id="val-smoothing" class="text-cyan-400 font-mono text-xs">0.1</span>
+                            <span id="val-smoothing" class="font-mono text-xs" style="color: var(--accent-color);">0.1</span>
                         </div>
-                        <input type="range" id="inp-smoothing" min="0.01" max="0.5" step="0.01" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('smoothing', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Reduces camera jitter for smoother movement.</p>
+                        <input type="range" id="inp-smoothing" min="0.01" max="0.5" step="0.01" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('smoothing', this.value)">
                     </div>
 
                      <!-- Pinch Threshold -->
                      <div class="mb-4">
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Pinch Ease</span>
-                            <span id="val-pinchThreshold" class="text-cyan-400 font-mono text-xs">0.05</span>
+                            <span id="val-pinchThreshold" class="font-mono text-xs" style="color: var(--accent-color);">0.05</span>
                         </div>
-                        <input type="range" id="inp-pinchThreshold" min="0.02" max="0.15" step="0.01" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('pinchThreshold', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Lower = fingers must be closer to pinch. Higher = easier to pinch.</p>
+                        <input type="range" id="inp-pinchThreshold" min="0.02" max="0.15" step="0.01" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('pinchThreshold', this.value)">
                     </div>
 
                     <!-- Rotation Threshold -->
                     <div>
                         <div class="flex justify-between mb-1 text-sm text-slate-300">
                             <span>Rotation Deadzone</span>
-                            <span id="val-rotationThreshold" class="text-cyan-400 font-mono text-xs">25°</span>
+                            <span id="val-rotationThreshold" class="font-mono text-xs" style="color: var(--accent-color);">25°</span>
                         </div>
-                        <input type="range" id="inp-rotationThreshold" min="0" max="45" step="1" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('rotationThreshold', this.value)">
-                        <p class="text-[10px] text-slate-500 mt-1">Prevents accidental rotation. Higher = harder to rotate.</p>
+                        <input type="range" id="inp-rotationThreshold" min="0" max="45" step="1" class="w-full accent-[var(--accent-color)] cursor-pointer" oninput="updateSetting('rotationThreshold', this.value)">
                     </div>
                 </div>
 
                 <div class="pt-4 border-t border-white/10 flex justify-between items-center">
                     <button onclick="restoreDefaults()" class="text-xs text-red-400 hover:text-red-300">Reset Defaults</button>
-                    <button onclick="toggleSettings()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-cyan-500/20">Close</button>
+                    <button onclick="toggleSettings()" class="text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg bg-[var(--accent-color)] text-black">Close</button>
                 </div>
             </div>
         </div>
@@ -504,18 +773,27 @@
                 <button onclick="toggleHelp()" class="absolute top-6 right-6 text-white/30 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
 
                 <div class="text-center mb-8">
-                    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">AirTouch <span class="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Gallery</span></h1>
-                    <p class="text-slate-400">Touchless image manipulation.</p>
+                    <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">AirTouch <span class="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent-color)] to-white">Gallery</span></h1>
+                    <p class="text-slate-400">Touchless image & map manipulation.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <!-- Nav -->
-                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-cyan-500/30 transition-colors group">
-                        <div class="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center mb-4 text-cyan-400">
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-[var(--accent-color)] transition-colors group">
+                        <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-4 text-[var(--accent-color)]">
                             <i class="fa-solid fa-arrow-right-arrow-left"></i>
                         </div>
                         <h3 class="font-bold text-white mb-1">Navigate</h3>
-                        <p class="text-xs text-slate-400">Move index finger to screen <strong>Edge</strong> to switch.</p>
+                        <p class="text-xs text-slate-400">Move index finger to screen <strong>Edge</strong> or <strong>Swipe</strong> on Mobile.</p>
+                    </div>
+
+                    <!-- Air Menu (New) -->
+                    <div class="bg-white/5 p-5 rounded-2xl border border-white/5 hover:border-red-500/30 transition-colors group">
+                        <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center mb-4 text-red-400">
+                            <i class="fa-solid fa-hand-fist"></i>
+                        </div>
+                        <h3 class="font-bold text-white mb-1">Air Menu</h3>
+                        <p class="text-xs text-slate-400"><strong>Hold Fist</strong> for 1s to open menu. Open hand to select. Dwell to click.</p>
                     </div>
 
                     <!-- Pan -->
@@ -524,7 +802,7 @@
                             <i class="fa-solid fa-hand-back-fist"></i>
                         </div>
                         <h3 class="font-bold text-white mb-1">Pan</h3>
-                        <p class="text-xs text-slate-400"><strong>Pinch one hand</strong>, keep other open. Drag to move.</p>
+                        <p class="text-xs text-slate-400"><strong>Pinch one hand</strong> or <strong>Drag</strong> on mobile.</p>
                     </div>
 
                     <!-- Zoom/Rotate -->
@@ -532,8 +810,8 @@
                         <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center mb-4 text-purple-400">
                             <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
                         </div>
-                        <h3 class="font-bold text-white mb-1">Zoom & Rotate</h3>
-                        <p class="text-xs text-slate-400"><strong>Pinch BOTH hands</strong>. Move apart to zoom. Rotate hands to turn.</p>
+                        <h3 class="font-bold text-white mb-1">Zoom</h3>
+                        <p class="text-xs text-slate-400"><strong>Pinch BOTH hands</strong> or <strong>Pinch</strong> on mobile.</p>
                     </div>
 
                     <!-- Reset -->
@@ -547,7 +825,7 @@
                 </div>
 
                 <div class="text-center">
-                    <button onclick="toggleHelp()" class="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-white transition-all duration-200 bg-cyan-600 font-lg rounded-full focus:outline-none hover:bg-cyan-500 hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]">
+                    <button onclick="toggleHelp()" class="group relative inline-flex items-center justify-center px-8 py-3 font-bold text-black transition-all duration-200 font-lg rounded-full focus:outline-none hover:shadow-[0_0_20px_var(--accent-glow)]" style="background-color: var(--accent-color);">
                         <span>Initialize System</span>
                         <i class="fa-solid fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
                     </button>
@@ -560,7 +838,10 @@
     <!-- Virtual Cursor Element -->
     <div id="virtual-cursor" class="fixed cursor-default hidden md:block">
         <svg id="cursor-progress" viewBox="0 0 50 50">
-            <circle cx="25" cy="25" r="23" />
+            <!-- Background ring for contrast on white images -->
+            <circle class="bg-ring" cx="25" cy="25" r="23" />
+            <!-- Active Progress -->
+            <circle class="progress-ring" cx="25" cy="25" r="23" />
         </svg>
     </div>
 
@@ -572,45 +853,47 @@
          */
         const DEFAULT_SETTINGS = {
             sensitivity: 2500,
-            pinchThreshold: 0.05, // Updated
-            smoothing: 0.1, // Lower is smoother but laggier
+            pinchThreshold: 0.05, 
+            smoothing: 0.1, 
             edgeZone: 0.15,
             navDelay: 20,
             transitionSpeed: 300,
             slideInterval: 3000,
-            rotationThreshold: 25, // Updated
-            resetHoldTime: 1500 // Updated
+            rotationThreshold: 25, 
+            resetHoldTime: 1200,
+            collectionDwellTime: 1500,
+            accentColor: '#22d3ee',
+            uiScale: 1.0
         };
 
         const PRESETS = {
             solar: [
-                'https://i.redd.it/rg21bnd1bzla1.jpg',
-                'https://live.staticflickr.com/7151/6760135001_ddc2c15fd3_6k.jpg',
-                'https://i.redd.it/51uvndo6wsi21.jpg'
+                { src: 'https://i.redd.it/rg21bnd1bzla1.jpg' },
+                { src: 'https://live.staticflickr.com/7151/6760135001_ddc2c15fd3_6k.jpg' },
+                { src: 'https://i.redd.it/51uvndo6wsi21.jpg' }
             ],
             landmarks: [
-                'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=3000&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=3000&auto=format&fit=crop',
-                'https://images.unsplash.com/photo-1587595431973-160d0d94add1?q=80&w=3000&auto=format&fit=crop',
-                'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg',
-                'https://vastphotos.com/files/uploads/photos/11657/gigapixel-wallpaper-photo-of-new-york-city-l.jpg?v=20230914174722'
+                { src: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=3000&auto=format&fit=crop' },
+                { src: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=3000&auto=format&fit=crop' },
+                { src: 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?q=80&w=3000&auto=format&fit=crop' },
+                { src: 'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg' },
+                { src: 'https://vastphotos.com/files/uploads/photos/11657/gigapixel-wallpaper-photo-of-new-york-city-l.jpg?v=20230914174722' }
             ]
         };
 
         const SAMPLE_IMAGES = [
-           'https://i.redd.it/rg21bnd1bzla1.jpg',
-           'https://vastphotos.com/files/uploads/photos/11657/gigapixel-wallpaper-photo-of-new-york-city-l.jpg?v=20230914174722',
-           'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg'
+           { src: 'https://i.redd.it/rg21bnd1bzla1.jpg' },
+           { src: 'https://vastphotos.com/files/uploads/photos/11657/gigapixel-wallpaper-photo-of-new-york-city-l.jpg?v=20230914174722' },
+           { src: 'https://www.northlight-images.co.uk/wp-content/uploads/2018/07/clock-tower-1.jpg' }
         ];
 
-        // Updated storage key to force new defaults for existing users
-        let userSettings = JSON.parse(localStorage.getItem('airtouch_settings_v2')) || { ...DEFAULT_SETTINGS };
+        let userSettings = JSON.parse(localStorage.getItem('airtouch_settings_v4')) || { ...DEFAULT_SETTINGS };
         
-        // Ensure new settings exist if loading from old localStorage (fallback)
-        if(!userSettings.slideInterval) userSettings.slideInterval = DEFAULT_SETTINGS.slideInterval;
-        if(userSettings.rotationThreshold === undefined) userSettings.rotationThreshold = DEFAULT_SETTINGS.rotationThreshold;
-        if(!userSettings.resetHoldTime) userSettings.resetHoldTime = DEFAULT_SETTINGS.resetHoldTime;
-        if(!userSettings.pinchThreshold) userSettings.pinchThreshold = DEFAULT_SETTINGS.pinchThreshold;
+        // Ensure new settings exist
+        if(!userSettings.accentColor) userSettings.accentColor = DEFAULT_SETTINGS.accentColor;
+        if(!userSettings.uiScale) userSettings.uiScale = DEFAULT_SETTINGS.uiScale;
+        if(!userSettings.transitionSpeed) userSettings.transitionSpeed = DEFAULT_SETTINGS.transitionSpeed;
+        if(!userSettings.edgeZone) userSettings.edgeZone = DEFAULT_SETTINGS.edgeZone;
 
         const state = {
             images: [...SAMPLE_IMAGES],
@@ -619,24 +902,44 @@
             isSettingsOpen: false,
             isCollectionsOpen: false,
             isCinemaMode: false,
+            isLayersOpen: false,
             isCamVisible: true,
             isTransitioning: false,
-            theme: 'void', // Default to void
+            isMapMode: false,
+            is3DMapMode: false, 
+            isPhotoMarkersVisible: false,
+            mapInstance: null, 
+            mapLayers: {},
+            photoLayer: null,
+            userMarker: null,
+            currentLayer: null,
+            theme: 'void', 
             
+            // Location
+            userLocation: null, 
+
             // Slideshow
             slideshowTimer: null,
             
-            // Transform State (Current actual visual values)
-            scale: 1,
-            rotation: 0,
-            panX: 0,
-            panY: 0,
+            // Filters
+            filterIndex: 0,
             
-            // Target State (For smoothing)
-            targetScale: 1,
-            targetRotation: 0,
-            targetPanX: 0,
-            targetPanY: 0,
+            // Radial Menu State
+            isRadialMenuOpen: false,
+            fistHoldStart: 0,
+            activeSlice: -1,
+            dwellTimer: 0,
+            
+            // Interaction Dwell State
+            dwellTarget: null,
+            dwellStartTime: 0,
+            
+            // Transform State
+            scale: 1, rotation: 0, panX: 0, panY: 0,
+            targetScale: 1, targetRotation: 0, targetPanX: 0, targetPanY: 0,
+
+            // Delta tracking
+            lastFramePanX: 0, lastFramePanY: 0, lastFrameScale: 1,
 
             // Nav State
             navLocked: false,
@@ -655,6 +958,9 @@
             zoomStartAngle: 0,
             startRotation: 0,
             
+            // Hand Smoothing
+            smoothedZoomDist: null, 
+            
             panStartHandX: 0,
             panStartHandY: 0,
             panStartImgX: 0,
@@ -664,15 +970,28 @@
             smoothedHandX: null,
             smoothedHandY: null,
 
+            // Touch State (New)
+            touchStartX: 0, touchStartY: 0,
+            touchStartDist: 0,
+            touchStartScale: 1,
+            touchStartPanX: 0, touchStartPanY: 0,
+            isTouching: false,
+
             // FPS
             lastFrameTime: 0,
             frameCount: 0
         };
 
-        const CONSTANTS = {
-            MIN_SCALE: 0.5,
-            MAX_SCALE: 12.0,
-        };
+        // --- Radial Menu Config ---
+        const RADIAL_ITEMS = [
+            { icon: '\uf279', label: 'Switch Mode', action: 'toggleMapMode' },     // Switch Mode (Renamed)
+            { icon: '\uf04b', label: 'Slideshow', action: 'toggleSlideshow' },  // Play
+            { icon: '\uf021', label: 'Reset View', action: 'resetView' },       // Reset
+            { icon: '\uf0ac', label: 'Collections', action: 'toggleCollections' }, // Globe
+            { icon: '\uf72b', label: 'Filters', action: 'toggleFilters' }       // Magic
+        ];
+
+        const CONSTANTS = { MIN_SCALE: 0.5, MAX_SCALE: 12.0 };
 
         /**
          * ------------------------------------------------------------------
@@ -682,6 +1001,9 @@
         const els = {
             mainImage: document.getElementById('main-image'),
             imageWrapper: document.getElementById('image-wrapper'),
+            mapWrapper: document.getElementById('map-wrapper'),
+            mapHint: document.getElementById('map-mode-label'), // Added ref
+            map3dControls: document.getElementById('map-3d-controls'), 
             counter: document.getElementById('counter'),
             cursor: document.getElementById('virtual-cursor'),
             cursorProgress: document.getElementById('cursor-progress'),
@@ -691,65 +1013,332 @@
             statusDot: document.getElementById('status-dot'),
             gestureState: document.getElementById('gesture-state'),
             rotIndicator: document.getElementById('rot-indicator'),
-            transformGrid: document.getElementById('transform-grid'),
             uiLayer: document.getElementById('ui-layer'),
             helpModal: document.getElementById('help-modal'),
             settingsModal: document.getElementById('settings-modal'),
             collectionsModal: document.getElementById('collections-modal'),
+            layersModal: document.getElementById('layers-modal'),
             zonePrev: document.getElementById('zone-prev'),
             zoneNext: document.getElementById('zone-next'),
             progPrev: document.getElementById('prog-prev'),
             progNext: document.getElementById('prog-next'),
             btnSlideshow: document.getElementById('btn-slideshow'),
+            btnMap: document.getElementById('btn-map'),
+            btnLayers: document.getElementById('btn-layers'),
+            btnPhotos: document.getElementById('btn-photos'),
+            navControls: document.getElementById('nav-controls'),
+            grpFile: document.getElementById('grp-file'),
+            sepNav: document.getElementById('sep-nav'),
             workspace: document.getElementById('workspace'),
             toastContainer: document.getElementById('toast-container'),
             cameraContainer: document.getElementById('camera-container'),
             fpsCounter: document.getElementById('fps-counter'),
             appBody: document.getElementById('app-body'),
-            bgPattern: document.getElementById('bg-pattern')
+            bgPattern: document.getElementById('bg-pattern'),
+            radialMenu: document.getElementById('radial-menu'),
+            radialSvg: document.getElementById('radial-svg')
         };
 
         // Utility: Linear Interpolation
-        function lerp(start, end, amt) {
-            return (1 - amt) * start + amt * end;
-        }
-        
-        // Utility: Angle between two points
-        function getAngle(p1, p2) {
-            return Math.atan2(p2.y - p1.y, p2.x - p1.x);
-        }
+        function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
+        function getAngle(p1, p2) { return Math.atan2(p2.y - p1.y, p2.x - p1.x); }
 
         /**
          * ------------------------------------------------------------------
-         * UI LOGIC
+         * UI LOGIC & INIT
          * ------------------------------------------------------------------
          */
 
         function init() {
             syncSettingsUI();
-            renderImage(false); // No transition on init
+            buildRadialMenu(); // Generate SVG Pie
+            renderImage(false); 
             showToast("System Ready", "info");
             
-            // Start the main render loop for smooth physics
+            // Add Touch Listeners for Mobile Optimization
+            els.workspace.addEventListener('touchstart', handleTouchStart, {passive: false});
+            els.workspace.addEventListener('touchmove', handleTouchMove, {passive: false});
+            els.workspace.addEventListener('touchend', handleTouchEnd);
+
             requestAnimationFrame(renderLoop);
         }
 
-        // Physics Loop for Smooth Animations
+        // --- Touch Logic (Mobile) ---
+        function handleTouchStart(e) {
+            // If in Map Mode, let Leaflet handle it unless 3D logic
+            if (state.isMapMode) return;
+            
+            e.preventDefault(); // Stop scrolling on workspace
+            state.isTouching = true;
+            
+            if (e.touches.length === 1) {
+                state.touchStartX = e.touches[0].clientX;
+                state.touchStartY = e.touches[0].clientY;
+                state.touchStartPanX = state.targetPanX;
+                state.touchStartPanY = state.targetPanY;
+            } else if (e.touches.length === 2) {
+                // Pinch Start
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                state.touchStartDist = dist;
+                state.touchStartScale = state.targetScale;
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (state.isMapMode || !state.isTouching) return;
+            e.preventDefault();
+
+            if (e.touches.length === 1) {
+                // Pan Logic
+                const deltaX = e.touches[0].clientX - state.touchStartX;
+                const deltaY = e.touches[0].clientY - state.touchStartY;
+                
+                // If scale > 1, allow pan. If 1, check for swipe intent
+                if (state.scale > 1.1) {
+                    state.targetPanX = state.touchStartPanX + deltaX;
+                    state.targetPanY = state.touchStartPanY + deltaY;
+                }
+            } else if (e.touches.length === 2) {
+                // Zoom Logic
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                
+                if (state.touchStartDist > 0) {
+                    const scaleFactor = dist / state.touchStartDist;
+                    state.targetScale = Math.max(0.5, Math.min(10, state.touchStartScale * scaleFactor));
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (state.isMapMode) return;
+            state.isTouching = false;
+            
+            // Swipe Detection (if 1 finger and scale is roughly 1)
+            if (e.changedTouches.length === 1 && state.scale < 1.1) {
+                const deltaX = e.changedTouches[0].clientX - state.touchStartX;
+                if (Math.abs(deltaX) > 100) { // Threshold
+                    if (deltaX > 0) prevImage();
+                    else nextImage();
+                }
+            }
+        }
+
+        // --- Radial Menu Generation ---
+        function buildRadialMenu() {
+            const size = 360;
+            const center = size / 2;
+            const radius = 120; // Increased radius
+            const iconRadius = 90;
+            const sliceAngle = 360 / RADIAL_ITEMS.length;
+
+            els.radialSvg.innerHTML = ''; // Clear prev
+            
+            // Add defs filter
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            defs.innerHTML = `<filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter>`;
+            els.radialSvg.appendChild(defs);
+            
+            // Center circle
+            const centerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            centerCircle.setAttribute("cx", center);
+            centerCircle.setAttribute("cy", center);
+            centerCircle.setAttribute("r", 40);
+            centerCircle.setAttribute("fill", "rgba(0,0,0,0.5)");
+            centerCircle.setAttribute("stroke", "rgba(255,255,255,0.2)");
+            els.radialSvg.appendChild(centerCircle);
+
+            RADIAL_ITEMS.forEach((item, index) => {
+                const startAngle = (index * sliceAngle) - 90; // Start at top
+                const endAngle = startAngle + sliceAngle;
+                
+                // SVG Arc Path
+                const x1 = center + radius * Math.cos(Math.PI * startAngle / 180);
+                const y1 = center + radius * Math.sin(Math.PI * startAngle / 180);
+                const x2 = center + radius * Math.cos(Math.PI * endAngle / 180);
+                const y2 = center + radius * Math.sin(Math.PI * endAngle / 180);
+                
+                const pathData = `M${center},${center} L${x1},${y1} A${radius},${radius} 0 0,1 ${x2},${y2} Z`;
+
+                // Create Slice
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", pathData);
+                path.setAttribute("class", "radial-slice radial-bg");
+                path.setAttribute("id", `slice-${index}`);
+                
+                // Create Icon
+                const midAngle = startAngle + (sliceAngle / 2);
+                const iconX = center + iconRadius * Math.cos(Math.PI * midAngle / 180);
+                const iconY = center + iconRadius * Math.sin(Math.PI * midAngle / 180);
+                
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", iconX);
+                text.setAttribute("y", iconY);
+                text.setAttribute("class", "radial-icon fa");
+                text.textContent = item.icon; // FontAwesome unicode
+
+                // Create Label
+                const labelX = center + (radius + 25) * Math.cos(Math.PI * midAngle / 180);
+                const labelY = center + (radius + 25) * Math.sin(Math.PI * midAngle / 180);
+                
+                const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.setAttribute("x", labelX);
+                label.setAttribute("y", labelY);
+                label.setAttribute("class", "radial-label");
+                label.textContent = item.label;
+
+                els.radialSvg.appendChild(path);
+                els.radialSvg.appendChild(text);
+                els.radialSvg.appendChild(label);
+            });
+        }
+
+        function updateRadialMenuLogic(cursorX, cursorY) {
+            // Get menu center (fixed when opened)
+            const menuRect = els.radialMenu.getBoundingClientRect();
+            const centerX = menuRect.left + menuRect.width / 2;
+            const centerY = menuRect.top + menuRect.height / 2;
+
+            // Calculate angle from center to cursor
+            let angle = Math.atan2(cursorY - centerY, cursorX - centerX) * (180 / Math.PI);
+            angle += 90; // Normalize to top start
+            if (angle < 0) angle += 360;
+
+            const dist = Math.hypot(cursorX - centerX, cursorY - centerY);
+            
+            // Check if cursor is inside the menu ring
+            if (dist > 30 && dist < 220) {
+                const sliceIndex = Math.floor(angle / (360 / RADIAL_ITEMS.length));
+                
+                if (state.activeSlice !== sliceIndex) {
+                    // Reset prev slice
+                    if(state.activeSlice !== -1) {
+                         document.getElementById(`slice-${state.activeSlice}`).classList.remove('active');
+                    }
+                    
+                    // Highlight new slice
+                    state.activeSlice = sliceIndex % RADIAL_ITEMS.length;
+                    document.getElementById(`slice-${state.activeSlice}`).classList.add('active');
+                    state.dwellTimer = performance.now(); // Start dwell
+                } else {
+                    // Dwell Logic
+                    if (performance.now() - state.dwellTimer > 800) { // 800ms dwell to click
+                        executeRadialAction(RADIAL_ITEMS[state.activeSlice].action);
+                        closeRadialMenu();
+                    }
+                }
+            } else {
+                // Outside or too close to center -> No selection
+                if(state.activeSlice !== -1) {
+                    document.getElementById(`slice-${state.activeSlice}`).classList.remove('active');
+                    state.activeSlice = -1;
+                }
+            }
+        }
+
+        function executeRadialAction(actionName) {
+            // Close menu first
+            closeRadialMenu();
+            
+            // Execute
+            if (actionName === 'toggleMapMode') toggleMapMode();
+            else if (actionName === 'toggleSlideshow') toggleSlideshow();
+            else if (actionName === 'resetView') resetView();
+            else if (actionName === 'toggleCollections') toggleCollections();
+            else if (actionName === 'toggleFilters') toggleFilters();
+        }
+
+        function openRadialMenu(x, y) {
+            state.isRadialMenuOpen = true;
+            // Position menu centered on hand
+            els.radialMenu.style.left = `${x * window.innerWidth - 180}px`; // Offset by half width (360/2)
+            els.radialMenu.style.top = `${y * window.innerHeight - 180}px`;
+            els.radialMenu.classList.add('open');
+            updateStatus("MENU OPEN", "active");
+        }
+
+        function closeRadialMenu() {
+            state.isRadialMenuOpen = false;
+            els.radialMenu.classList.remove('open');
+            state.activeSlice = -1;
+            document.querySelectorAll('.radial-slice').forEach(el => el.classList.remove('active'));
+            state.fistHoldStart = 0; // Reset hold timer
+        }
+
+        // --- Core Loop ---
         function renderLoop() {
-            // Smooth Panning
+            // 1. Smoothly Interpolate towards Targets
             state.panX = lerp(state.panX, state.targetPanX, userSettings.smoothing);
             state.panY = lerp(state.panY, state.targetPanY, userSettings.smoothing);
-            
-            // Smooth Zoom/Scale
             state.scale = lerp(state.scale, state.targetScale, userSettings.smoothing);
-            
-            // Smooth Rotation
             state.rotation = lerp(state.rotation, state.targetRotation, userSettings.smoothing);
 
-            updateTransform();
-            
-            // Update rotation indicator text
-            if(Math.abs(state.rotation) > 1) {
+            // 2. Map Mode Logic
+            if (state.isMapMode && state.mapInstance) {
+                // Skip if in 3D Mode (Locked View)
+                if(!state.is3DMapMode) {
+                    if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) return;
+
+                    const dX = state.panX - state.lastFramePanX;
+                    const dY = state.panY - state.lastFramePanY;
+                    let dScale = state.scale / (state.lastFrameScale || 1);
+
+                    if (dScale > 0.992 && dScale < 1.008) dScale = 1;
+
+                    if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000) {
+                         state.mapInstance.panBy([-dX, -dY], {animate: false});
+                    }
+
+                    if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
+                        const currentZoom = state.mapInstance.getZoom();
+                        let newZoom = currentZoom + Math.log2(dScale);
+                        newZoom = Math.max(state.mapInstance.getMinZoom(), Math.min(22, newZoom));
+                        if(!isNaN(newZoom) && Math.abs(newZoom - currentZoom) > 0.02) {
+                             state.mapInstance.setZoom(newZoom, {animate: false});
+                        }
+                    }
+                } else {
+                    // --- 3D MAP CONTROL LOGIC (NEW) ---
+                    // Allow gestures to control map even in 3D mode
+                    // Just duplicate logic but without disabling it
+                    
+                    if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) return;
+
+                    const dX = state.panX - state.lastFramePanX;
+                    const dY = state.panY - state.lastFramePanY;
+                    let dScale = state.scale / (state.lastFrameScale || 1);
+
+                    if (dScale > 0.992 && dScale < 1.008) dScale = 1;
+
+                    // Pan works normally
+                    if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000) {
+                         state.mapInstance.panBy([-dX, -dY], {animate: false});
+                    }
+
+                    // Zoom works normally (visual perspective handled by CSS)
+                    if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
+                        const currentZoom = state.mapInstance.getZoom();
+                        let newZoom = currentZoom + Math.log2(dScale);
+                        newZoom = Math.max(state.mapInstance.getMinZoom(), Math.min(22, newZoom));
+                        if(!isNaN(newZoom) && Math.abs(newZoom - currentZoom) > 0.02) {
+                             state.mapInstance.setZoom(newZoom, {animate: false});
+                        }
+                    }
+                }
+            } else {
+                updateTransform();
+            }
+
+            state.lastFramePanX = state.panX;
+            state.lastFramePanY = state.panY;
+            state.lastFrameScale = state.scale;
+
+            if(Math.abs(state.rotation) > 1 && !state.isMapMode) {
                 els.rotIndicator.classList.remove('hidden');
                 els.rotIndicator.innerText = Math.round(state.rotation) + '°';
             } else {
@@ -759,74 +1348,125 @@
             requestAnimationFrame(renderLoop);
         }
 
-        function handleFiles(fileList) {
+        // --- Geotagging Helper ---
+        function getExifData(file) {
+            return new Promise((resolve) => {
+                EXIF.getData(file, function() {
+                    const lat = EXIF.getTag(this, "GPSLatitude");
+                    const lon = EXIF.getTag(this, "GPSLongitude");
+                    const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+                    const lonRef = EXIF.getTag(this, "GPSLongitudeRef");
+                    
+                    if (lat && lon && latRef && lonRef) {
+                        const toDecimal = (coord) => coord[0] + coord[1]/60 + coord[2]/3600;
+                        let finalLat = toDecimal(lat);
+                        let finalLon = toDecimal(lon);
+                        
+                        if (latRef === "S") finalLat *= -1;
+                        if (lonRef === "W") finalLon *= -1;
+                        
+                        resolve({ lat: finalLat, lng: finalLon });
+                    } else {
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        async function handleFiles(fileList) {
             if (!fileList.length) return;
             const newImages = Array.from(fileList).filter(f => f.type.startsWith('image/'));
             
             if (newImages.length > 0) {
-                if(state.images[0] === SAMPLE_IMAGES[0]) state.images = [];
+                if(state.images.length > 0 && state.images[0].src === SAMPLE_IMAGES[0].src) state.images = [];
                 
                 let processed = 0;
-                newImages.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        state.images.push(e.target.result);
-                        processed++;
-                        if (processed === newImages.length) {
-                            state.currentIdx = state.images.length - newImages.length;
-                            renderImage(false);
-                            showToast(`Loaded ${newImages.length} Images`, "success");
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                });
+                // Process sequentially to keep order
+                for (const file of newImages) {
+                    const gpsData = await getExifData(file);
+                    
+                    // MEMORY OPTIMIZATION: Use Blob URLs instead of Base64
+                    const blobUrl = URL.createObjectURL(file);
+                    const imgObj = { src: blobUrl, isBlob: true };
+                    
+                    if(gpsData) {
+                        imgObj.lat = gpsData.lat;
+                        imgObj.lng = gpsData.lng;
+                    }
+                    state.images.push(imgObj);
+                    processed++;
+                }
+                
+                if (processed === newImages.length) {
+                    state.currentIdx = state.images.length - newImages.length;
+                    if(state.isMapMode) toggleMapMode();
+                    renderImage(false);
+                    showToast(`Loaded ${newImages.length} Images`, "success");
+                    // Refresh photo markers if map is active later
+                    if(state.isMapMode && state.isPhotoMarkersVisible) togglePhotoMarkers(); 
+                }
             }
         }
 
         function loadCollection(key) {
+            if(state.isMapMode) toggleMapMode();
             if(PRESETS[key]) {
                 state.images = [...PRESETS[key]];
                 state.currentIdx = 0;
                 renderImage(false);
                 showToast(`Loaded ${key === 'solar' ? 'Solar System' : 'Landmarks'}`, 'success');
-                toggleCollections(); // Close modal
+                toggleCollections(); 
             }
         }
 
         function setTheme(theme) {
             state.theme = theme;
             els.appBody.className = `theme-${theme}`;
-            
-            // Adjust pattern opacity for 'void' theme
             if(theme === 'void') {
                 els.bgPattern.style.opacity = '0.1';
-                els.bgPattern.style.backgroundImage = 'radial-gradient(#ffffff 1px, transparent 1px)'; // White stars
-                els.bgPattern.style.backgroundSize = '80px 80px';
+                els.bgPattern.style.backgroundImage = 'radial-gradient(#ffffff 1px, transparent 1px)'; 
             } else {
                 els.bgPattern.style.opacity = '0.2';
                 els.bgPattern.style.backgroundImage = 'radial-gradient(#334155 1px, transparent 1px)';
-                els.bgPattern.style.backgroundSize = '40px 40px';
             }
             showToast(`Theme Set: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`, 'info');
+        }
+        
+        function toggleFilters() {
+            state.filterIndex = (state.filterIndex + 1) % 4;
+            const filters = [
+                'none',
+                'grayscale(100%)',
+                'sepia(100%)',
+                'contrast(150%) brightness(1.1)'
+            ];
+            const names = ['None', 'Noir', 'Sepia', 'Vivid'];
+            els.mainImage.style.filter = filters[state.filterIndex];
+            showToast(`Filter: ${names[state.filterIndex]}`, 'action');
         }
 
         function handleDrop(e) { e.preventDefault(); handleFiles(e.dataTransfer.files); }
         function handleDragOver(e) { e.preventDefault(); }
 
-        // Core Image Render
         function renderImage(withTransition = true, direction = 'next') {
             if (state.images.length === 0) return;
             els.imageWrapper.classList.remove('opacity-0');
 
+            // SMART PRELOADING: Load next/prev images in background
+            const nextIdx = (state.currentIdx + 1) % state.images.length;
+            const prevIdx = (state.currentIdx - 1 + state.images.length) % state.images.length;
+            const preloadNext = new Image(); preloadNext.src = state.images[nextIdx].src;
+            const preloadPrev = new Image(); preloadPrev.src = state.images[prevIdx].src;
+
             if (withTransition) {
                 handleImageTransition(direction, () => {
-                    els.mainImage.src = state.images[state.currentIdx];
-                    resetView(true); // Pass true to silence the toast
+                    els.mainImage.src = state.images[state.currentIdx].src;
+                    resetView(true); 
                     updateCounter();
                 });
             } else {
-                els.mainImage.src = state.images[state.currentIdx];
-                resetView(true); // Pass true to silence the toast
+                els.mainImage.src = state.images[state.currentIdx].src;
+                resetView(true);
                 updateCounter();
             }
         }
@@ -834,57 +1474,27 @@
         function handleImageTransition(direction, updateCallback) {
             if (state.isTransitioning) return;
             state.isTransitioning = true;
-
             const speed = userSettings.transitionSpeed;
-            let exitClass = 'anim-fade-out';
-            let enterClass = 'anim-fade-in';
-
-            // 1. Fade OUT the current image
             els.mainImage.style.transitionDuration = `${speed}ms`;
-            els.mainImage.classList.add('anim-base', exitClass);
+            els.mainImage.classList.add('anim-base', 'anim-fade-out');
 
-            // 2. Wait for fade out to finish
             setTimeout(() => {
-                // IMPORTANT: Ensure we stay hidden while loading new src
-                // Add enter class (opacity 0) BEFORE removing exit class
-                // This prevents any flash of the old image if opacity rules conflict
-                els.mainImage.classList.add(enterClass);
-                els.mainImage.classList.remove(exitClass);
-                
-                // Update UI counters/state
+                els.mainImage.classList.add('anim-fade-in');
+                els.mainImage.classList.remove('anim-fade-out');
                 updateCallback();
-
-                // 3. Set the new Source
-                const newSrc = state.images[state.currentIdx];
+                const newSrc = state.images[state.currentIdx].src;
                 els.mainImage.src = newSrc;
-
-                // 4. Wait for the new image to LOAD before showing it
-                // This prevents "ghosting" where the browser shows the old image while decoding the new one
                 els.mainImage.onload = () => {
-                    // Reset View Geometry (Zoom/Pan) while hidden
                     resetView(true); 
-                    
-                    // Force reflow to ensure styles apply
                     void els.mainImage.offsetWidth;
-
-                    // 5. Fade IN the new image
-                    els.mainImage.classList.remove(enterClass);
-                    
-                    // Cleanup classes after transition
+                    els.mainImage.classList.remove('anim-fade-in');
                     setTimeout(() => {
                         els.mainImage.classList.remove('anim-base');
                         els.mainImage.style.transitionDuration = '';
                         state.isTransitioning = false;
-                        els.mainImage.onload = null; // Clean up listener
+                        els.mainImage.onload = null;
                     }, speed);
                 };
-
-                // Fallback in case onload hangs (e.g. cached image might fire immediately or fail)
-                els.mainImage.onerror = () => {
-                     state.isTransitioning = false;
-                     els.mainImage.classList.remove(enterClass, 'anim-base');
-                };
-
             }, speed);
         }
 
@@ -893,22 +1503,30 @@
         }
 
         function resetView(silent = false) {
-            // Reset targets
-            state.targetScale = 1;
-            state.targetRotation = 0;
-            state.targetPanX = 0;
-            state.targetPanY = 0;
-            
-            // Force physics state to match
-            state.scale = 1;
-            state.rotation = 0;
-            state.panX = 0;
-            state.panY = 0;
-            
-            updateTransform();
-            
-            if (!silent) {
-                showToast("View Reset", "neutral");
+            // Reset Map
+            if(state.isMapMode && state.mapInstance) {
+                if (state.userLocation) {
+                    state.mapInstance.flyTo(state.userLocation, 16, {animate: true, duration: 1.5});
+                } else {
+                    state.mapInstance.setView([20, 0], 2);
+                }
+                state.targetScale = state.scale;
+                state.targetPanX = state.panX;
+                state.targetPanY = state.panY;
+                if (!silent) showToast("Map Reset", "neutral");
+            } 
+            // Reset Image
+            else {
+                state.targetScale = 1;
+                state.targetRotation = 0;
+                state.targetPanX = 0;
+                state.targetPanY = 0;
+                state.scale = 1;
+                state.rotation = 0;
+                state.panX = 0;
+                state.panY = 0;
+                updateTransform();
+                if (!silent) showToast("View Reset", "neutral");
             }
         }
 
@@ -920,12 +1538,14 @@
         }
 
         function nextImage() {
+            if(state.isMapMode) return;
             if (state.images.length <= 1 || state.isTransitioning) return;
             state.currentIdx = (state.currentIdx + 1) % state.images.length;
             renderImage(true, 'next');
         }
 
         function prevImage() {
+            if(state.isMapMode) return;
             if (state.images.length <= 1 || state.isTransitioning) return;
             state.currentIdx = (state.currentIdx - 1 + state.images.length) % state.images.length;
             renderImage(true, 'prev');
@@ -941,9 +1561,193 @@
                 document.getElementById('cam-toggle-text').innerText = "SHOW CAM";
             }
         }
+
+        // --- Map & 3D Terrain Logic ---
+        function initMap() {
+            if (state.mapInstance) return;
+            
+            const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Esri', maxNativeZoom: 19, maxZoom: 22
+            });
+
+            const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: 'CARTO', subdomains: 'abcd', maxNativeZoom: 18, maxZoom: 22
+            });
+
+            const terrain = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Esri', maxNativeZoom: 19, maxZoom: 22
+            });
+
+            state.mapLayers = { satellite, dark, terrain };
+            state.currentLayer = satellite;
+
+            const savedState = JSON.parse(localStorage.getItem('airtouch_map_state'));
+            const initialCenter = savedState ? savedState.center : [20, 0];
+            const initialZoom = savedState ? savedState.zoom : 2;
+
+            state.mapInstance = L.map('leaflet-map', {
+                zoomControl: false, attributionControl: false, zoomAnimation: false, 
+                zoomSnap: 0, minZoom: 2, maxZoom: 22, 
+                maxBoundsViscosity: 1.0, layers: [satellite]
+            }).setView(initialCenter, initialZoom);
+            
+            L.control.attribution({position: 'bottomright'}).addTo(state.mapInstance);
+            
+            // Marker Layer Group
+            state.photoLayer = L.layerGroup().addTo(state.mapInstance);
+
+            state.mapInstance.on('moveend', () => {
+                const center = state.mapInstance.getCenter();
+                const zoom = state.mapInstance.getZoom();
+                localStorage.setItem('airtouch_map_state', JSON.stringify({ center: [center.lat, center.lng], zoom: zoom }));
+            });
+
+            state.mapInstance.locate({setView: false, maxZoom: 16, watch: true});
+            state.mapInstance.on('locationfound', (e) => { 
+                state.userLocation = e.latlng; 
+                // Update or create user marker
+                if(state.userMarker) {
+                    state.userMarker.setLatLng(e.latlng);
+                } else {
+                    const pulseIcon = L.divIcon({
+                        className: 'user-marker',
+                        html: '<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_15px_#3b82f6] animate-pulse"></div>',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    });
+                    state.userMarker = L.marker(e.latlng, {icon: pulseIcon}).addTo(state.mapInstance);
+                }
+                
+                if(!savedState) state.mapInstance.flyTo(e.latlng, 16); 
+            });
+        }
+
+        function setMapLayer(type) {
+            if(!state.mapInstance || !state.mapLayers[type]) return;
+            if(state.currentLayer) state.mapInstance.removeLayer(state.currentLayer);
+            state.currentLayer = state.mapLayers[type];
+            state.mapInstance.addLayer(state.currentLayer);
+            toggleLayers();
+            showToast(`Layer Switched: ${type.charAt(0).toUpperCase() + type.slice(1)}`, 'info');
+        }
+
+        function togglePhotoMarkers() {
+            state.isPhotoMarkersVisible = !state.isPhotoMarkersVisible;
+            const btn = els.btnPhotos;
+            
+            if(state.isPhotoMarkersVisible) {
+                btn.classList.add('active-state', 'text-yellow-400');
+                plotPhotos();
+                showToast("Photos Plotted on Map", "success");
+            } else {
+                btn.classList.remove('active-state', 'text-yellow-400');
+                state.photoLayer.clearLayers();
+                showToast("Photos Hidden", "neutral");
+            }
+        }
+
+        function plotPhotos() {
+            if(!state.mapInstance || !state.photoLayer) return;
+            state.photoLayer.clearLayers();
+            
+            let count = 0;
+            state.images.forEach((img, idx) => {
+                if(img.lat && img.lng) {
+                    const icon = L.divIcon({
+                        className: 'photo-marker', // Class added here to wrapper
+                        html: `<div class="w-10 h-10 rounded-lg border-2 border-white overflow-hidden shadow-lg hover:scale-125 transition-transform bg-black"><img src="${img.src}" class="w-full h-full object-cover"></div>`,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 40]
+                    });
+                    
+                    const marker = L.marker([img.lat, img.lng], {icon: icon, interactive: true})
+                        .addTo(state.photoLayer)
+                        .bindPopup(`<div class="text-center"><img src="${img.src}" class="w-32 rounded mb-2"><br><button onclick="jumpToImage(${idx})" class="popup-btn text-xs bg-cyan-600 text-white px-2 py-1 rounded">View Full</button></div>`);
+                    count++;
+                }
+            });
+            
+            if(count === 0) showToast("No geotagged photos found", "warning");
+        }
         
-        // --- Slideshow ---
+        // Global helper for popup button
+        window.jumpToImage = (idx) => {
+            toggleMapMode(); // Exit map
+            state.currentIdx = idx;
+            renderImage(false);
+        };
+
+        // NEW: Toggle 3D CSS Mode
+        function toggle3DMap() {
+            if(!state.isMapMode) return;
+            state.is3DMapMode = !state.is3DMapMode;
+            
+            const mapEl = document.getElementById('leaflet-map');
+            const icon = els.map3dControls.querySelector('i');
+
+            if(state.is3DMapMode) {
+                // Activate 3D
+                mapEl.classList.add('map-3d-active');
+                icon.className = "fa-solid fa-cube text-cyan-400";
+                
+                // Auto switch to terrain if not already
+                setMapLayer('terrain'); 
+                
+                showToast("3D Terrain Mode Active", "success");
+            } else {
+                // Deactivate
+                mapEl.classList.remove('map-3d-active');
+                icon.className = "fa-solid fa-cube";
+                showToast("2D Map Mode", "neutral");
+            }
+        }
+
+        function toggleMapMode() {
+            state.isMapMode = !state.isMapMode;
+            // Disable 3D mode if exiting map
+            if(!state.isMapMode && state.is3DMapMode) toggle3DMap();
+
+            if (state.isMapMode) {
+                initMap();
+                els.mapWrapper.classList.remove('opacity-0', 'pointer-events-none');
+                els.imageWrapper.classList.add('opacity-0', 'pointer-events-none');
+                
+                els.navControls.classList.add('opacity-50', 'pointer-events-none');
+                els.grpFile.classList.add('opacity-50', 'pointer-events-none');
+                els.btnSlideshow.classList.add('opacity-50', 'pointer-events-none');
+                stopSlideshow();
+
+                els.btnMap.classList.add('active-state', 'text-emerald-400');
+                els.btnLayers.classList.remove('hidden'); 
+                els.btnPhotos.classList.remove('hidden'); // Show photo toggle
+                els.map3dControls.classList.remove('opacity-0', 'pointer-events-none'); // SHOW TILT
+                els.mapHint.classList.remove('opacity-0'); // Show Map Hint
+                showToast("Map Mode Active", "success");
+                
+                state.lastFramePanX = state.panX;
+                state.lastFramePanY = state.panY;
+                state.lastFrameScale = state.scale;
+                
+                setTimeout(() => { state.mapInstance.invalidateSize(); }, 300);
+            } else {
+                els.mapWrapper.classList.add('opacity-0', 'pointer-events-none');
+                els.imageWrapper.classList.remove('opacity-0', 'pointer-events-none');
+                
+                els.navControls.classList.remove('opacity-50', 'pointer-events-none');
+                els.grpFile.classList.remove('opacity-50', 'pointer-events-none');
+                els.btnSlideshow.classList.remove('opacity-50', 'pointer-events-none');
+                
+                els.btnMap.classList.remove('active-state', 'text-emerald-400');
+                els.btnLayers.classList.add('hidden');
+                els.btnPhotos.classList.add('hidden');
+                els.map3dControls.classList.add('opacity-0', 'pointer-events-none'); // HIDE TILT
+                els.mapHint.classList.add('opacity-0'); // Hide Map Hint
+                resetView(true);
+            }
+        }
+        
         function toggleSlideshow() {
+            if(state.isMapMode) return;
             if(state.slideshowTimer) {
                 clearInterval(state.slideshowTimer);
                 state.slideshowTimer = null;
@@ -952,9 +1756,7 @@
                 showToast("Slideshow Paused", "neutral");
             } else {
                 state.slideshowTimer = setInterval(() => {
-                    if(!state.isZooming && !state.isPanning && state.resetStartTime === 0) {
-                        nextImage();
-                    }
+                    if(!state.isZooming && !state.isPanning) nextImage();
                 }, userSettings.slideInterval);
                 els.btnSlideshow.innerHTML = '<i class="fa-solid fa-pause"></i>';
                 els.btnSlideshow.classList.add('active-state', 'text-cyan-400');
@@ -969,7 +1771,6 @@
         // --- Toast System ---
         function showToast(message, type = 'neutral') {
             const toast = document.createElement('div');
-            
             let bgClass = 'bg-slate-800/90 border-slate-600 text-white';
             if(type === 'action') bgClass = 'bg-cyan-500/90 border-cyan-400 text-white shadow-cyan-500/50';
             if(type === 'warning') bgClass = 'bg-yellow-500/90 border-yellow-400 text-black font-bold';
@@ -990,101 +1791,98 @@
 
         function toggleHelp() {
             state.isHelpOpen = !state.isHelpOpen;
-            if (state.isHelpOpen) {
-                els.helpModal.classList.remove('opacity-0', 'pointer-events-none');
-                if(state.isSettingsOpen) toggleSettings();
-                if(state.isCollectionsOpen) toggleCollections();
-            } else {
-                els.helpModal.classList.add('opacity-0', 'pointer-events-none');
-            }
+            els.helpModal.classList.toggle('opacity-0', !state.isHelpOpen);
+            els.helpModal.classList.toggle('pointer-events-none', !state.isHelpOpen);
+            if(state.isHelpOpen) { if(state.isSettingsOpen) toggleSettings(); if(state.isCollectionsOpen) toggleCollections(); if(state.isLayersOpen) toggleLayers(); }
         }
 
         function toggleSettings() {
             state.isSettingsOpen = !state.isSettingsOpen;
-            if (state.isSettingsOpen) {
-                els.settingsModal.classList.remove('opacity-0', 'pointer-events-none');
-                if(state.isHelpOpen) toggleHelp();
-                if(state.isCollectionsOpen) toggleCollections();
-            } else {
-                els.settingsModal.classList.add('opacity-0', 'pointer-events-none');
-            }
+            els.settingsModal.classList.toggle('opacity-0', !state.isSettingsOpen);
+            els.settingsModal.classList.toggle('pointer-events-none', !state.isSettingsOpen);
+            if(state.isSettingsOpen) { if(state.isHelpOpen) toggleHelp(); if(state.isCollectionsOpen) toggleCollections(); if(state.isLayersOpen) toggleLayers(); }
         }
 
         function toggleCollections() {
             state.isCollectionsOpen = !state.isCollectionsOpen;
-            if (state.isCollectionsOpen) {
-                els.collectionsModal.classList.remove('opacity-0', 'pointer-events-none');
-                if(state.isHelpOpen) toggleHelp();
-                if(state.isSettingsOpen) toggleSettings();
-            } else {
-                els.collectionsModal.classList.add('opacity-0', 'pointer-events-none');
-            }
+            els.collectionsModal.classList.toggle('opacity-0', !state.isCollectionsOpen);
+            els.collectionsModal.classList.toggle('pointer-events-none', !state.isCollectionsOpen);
+            if(state.isCollectionsOpen) { if(state.isHelpOpen) toggleHelp(); if(state.isSettingsOpen) toggleSettings(); if(state.isLayersOpen) toggleLayers(); }
+        }
+
+        function toggleLayers() {
+            state.isLayersOpen = !state.isLayersOpen;
+            els.layersModal.classList.toggle('opacity-0', !state.isLayersOpen);
+            els.layersModal.classList.toggle('pointer-events-none', !state.isLayersOpen);
+            if(state.isLayersOpen) { if(state.isHelpOpen) toggleHelp(); if(state.isSettingsOpen) toggleSettings(); if(state.isCollectionsOpen) toggleCollections(); }
         }
 
         function toggleCinemaMode() {
             state.isCinemaMode = !state.isCinemaMode;
             if (state.isCinemaMode) {
                 els.uiLayer.classList.add('opacity-0', 'pointer-events-none');
-                // Cursor logic removed to keep it visible
+                
+                // Hide map label in cinema mode
+                if (els.mapHint) els.mapHint.classList.add('opacity-0');
+                
                 document.getElementById('cinema-icon').className = "fa-solid fa-compress";
-                showToast("Cinema Mode On (Press Space to Exit)", "neutral");
+                showToast("Cinema Mode On (Space to Exit)", "neutral");
             } else {
                 els.uiLayer.classList.remove('opacity-0', 'pointer-events-none');
-                // Cursor logic removed
+                
+                // Show map label if in map mode
+                if (els.mapHint && state.isMapMode) els.mapHint.classList.remove('opacity-0');
+                
                 document.getElementById('cinema-icon').className = "fa-solid fa-expand";
             }
         }
 
         function updateStatus(text, type) {
             els.gestureState.innerText = text;
-            if(type === 'error') {
-                els.statusDot.className = "w-2 h-2 rounded-full bg-red-500 animate-pulse";
-            } else if (type === 'active') {
-                els.statusDot.className = "w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)]";
-            } else if (type === 'wait') {
-                els.statusDot.className = "w-2 h-2 rounded-full bg-yellow-400";
-            } else {
-                els.statusDot.className = "w-2 h-2 rounded-full bg-slate-500";
-            }
+            if(type === 'error') els.statusDot.className = "w-2 h-2 rounded-full bg-red-500 animate-pulse";
+            else if (type === 'active') els.statusDot.className = "w-2 h-2 rounded-full bg-[var(--accent-color)] shadow-[0_0_8px_var(--accent-glow)]";
+            else if (type === 'wait') els.statusDot.className = "w-2 h-2 rounded-full bg-yellow-400";
+            else els.statusDot.className = "w-2 h-2 rounded-full bg-slate-500";
         }
 
-        // --- Settings Logic ---
         function updateSetting(key, value) {
-            if(key !== 'transitionEffect') {
-                value = parseFloat(value);
-            }
+            if(key !== 'transitionEffect' && key !== 'accentColor') value = parseFloat(value);
             userSettings[key] = value;
-            
-            // UI Updates
             let displayText = value;
-            if(key === 'edgeZone') displayText = Math.round(value * 100) + '%';
-            else if(key === 'slideInterval') { 
-                displayText = (value / 1000).toFixed(1) + 's'; 
-                // Restart if running
-                if(state.slideshowTimer) { toggleSlideshow(); toggleSlideshow(); }
-            }
-            else if(key === 'sensitivity') displayText = Math.round(value);
-            else if(key === 'smoothing' && typeof value === 'number') displayText = value.toFixed(2);
-            else if(key === 'navDelay') displayText = value + 'fr';
+            
+            if(key === 'slideInterval') displayText = (value / 1000).toFixed(1) + 's'; 
             else if(key === 'resetHoldTime') displayText = value + 'ms';
-            else if(key === 'pinchThreshold') displayText = value.toFixed(2);
-            else if(key === 'rotationThreshold') displayText = value + '°';
+            else if(key === 'navDelay') displayText = value + 'fr';
+            else if(key === 'collectionDwellTime') displayText = value + 'ms';
+            else if(key === 'transitionSpeed') displayText = value + 'ms';
+            else if(key === 'edgeZone') displayText = Math.round(value * 100) + '%';
+            else if(key === 'uiScale') { 
+                displayText = value + 'x';
+                document.documentElement.style.setProperty('--ui-scale', value);
+            }
+            else if(key === 'accentColor') {
+                document.documentElement.style.setProperty('--accent-color', value);
+                // Convert hex to rgba for glow
+                const r = parseInt(value.slice(1, 3), 16);
+                const g = parseInt(value.slice(3, 5), 16);
+                const b = parseInt(value.slice(5, 7), 16);
+                document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.5)`);
+            }
             
             const displayEl = document.getElementById(`val-${key}`);
             if(displayEl) displayEl.innerText = displayText;
-
-            localStorage.setItem('airtouch_settings_v2', JSON.stringify(userSettings));
+            localStorage.setItem('airtouch_settings_v4', JSON.stringify(userSettings));
         }
 
         function restoreDefaults() {
             userSettings = { ...DEFAULT_SETTINGS };
-            localStorage.setItem('airtouch_settings_v2', JSON.stringify(userSettings));
+            localStorage.setItem('airtouch_settings_v4', JSON.stringify(userSettings));
             syncSettingsUI();
             showToast("Settings Reset", "neutral");
         }
 
         function syncSettingsUI() {
-            ['sensitivity', 'smoothing', 'slideInterval', 'navDelay', 'rotationThreshold', 'resetHoldTime', 'pinchThreshold'].forEach(key => {
+            ['sensitivity', 'resetHoldTime', 'smoothing', 'pinchThreshold', 'slideInterval', 'navDelay', 'rotationThreshold', 'collectionDwellTime', 'accentColor', 'uiScale', 'transitionSpeed', 'edgeZone'].forEach(key => {
                 const input = document.getElementById(`inp-${key}`);
                 if(input) input.value = userSettings[key];
                 updateSetting(key, userSettings[key]);
@@ -1098,18 +1896,15 @@
          */
 
         function onResults(results) {
-            // FPS Calculation
+            // FPS
             const now = performance.now();
             if(state.lastFrameTime) {
                 const fps = 1000 / (now - state.lastFrameTime);
                 state.frameCount++;
-                if(state.frameCount % 10 === 0) {
-                    els.fpsCounter.innerText = Math.round(fps);
-                }
+                if(state.frameCount % 10 === 0) els.fpsCounter.innerText = Math.round(fps);
             }
             state.lastFrameTime = now;
 
-            // Draw to canvas
             els.ctx.save();
             els.ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
             els.ctx.translate(els.canvas.width, 0);
@@ -1120,8 +1915,9 @@
 
             if (handCount === 2) {
                 stopSlideshow(); 
-                state.resetStartTime = 0;
-                setCursorResetProgress(0); // Reset UI
+                state.resetStartTime = 0; // Reset peace timer if 2 hands
+                setCursorResetProgress(0); 
+                if(state.isRadialMenuOpen) closeRadialMenu(); // Force close menu on multi-touch
                 updateStatus("MULTI-TOUCH", "active");
                 handleTwoHandGestures(results.multiHandLandmarks);
                 resetNavVisuals();
@@ -1129,10 +1925,18 @@
 
             } else if (handCount === 1) {
                 stopSlideshow();
-                updateStatus("NAVIGATION", "active");
-                handleOneHandNavigation(results.multiHandLandmarks[0]);
-                // Ensure grid is hidden if not zooming
-                els.transformGrid.classList.remove('opacity-100');
+                // Logic branch: Menu vs Nav
+                const lm = results.multiHandLandmarks[0];
+                
+                if (state.isRadialMenuOpen) {
+                    // Menu Interaction Mode
+                    updateStatus("MENU SELECT", "active");
+                    handleMenuInteraction(lm);
+                } else {
+                    // Normal Nav Mode
+                    updateStatus("NAVIGATION", "active");
+                    handleOneHandNavigation(lm);
+                }
             } else {
                 updateStatus("IDLE", "wait");
                 state.navLocked = false;
@@ -1140,10 +1944,13 @@
                 state.isZooming = false;
                 state.smoothedHandX = null;
                 state.resetStartTime = 0; // Reset
-                setCursorResetProgress(0);
+                setCursorResetProgress(0); // Reset
                 resetNavVisuals();
                 setCursorState('hidden');
-                els.transformGrid.classList.remove('opacity-100');
+                resetDwell();
+                
+                // If hand lost, close menu
+                if(state.isRadialMenuOpen) closeRadialMenu();
             }
 
             els.ctx.restore();
@@ -1153,7 +1960,7 @@
             els.cursor.className = `fixed transition-all duration-200 ${
                 type === 'hidden' ? 'opacity-0' : 'opacity-100'
             } ${
-                type === 'hover' ? 'cursor-hover' : 
+                type === 'hover' ? 'cursor-hover cursor-pulse' : 
                 type === 'grab' ? 'cursor-grab' : 
                 type === 'fist' ? 'cursor-fist' :
                 type === 'peace' ? 'cursor-peace' :
@@ -1161,103 +1968,117 @@
             }`;
         }
         
-        // Progress is 0 to 1
         function setCursorResetProgress(progress) {
              const circle = els.cursorProgress.querySelector('circle');
              if(progress <= 0) {
                  els.cursorProgress.style.opacity = '0';
                  return;
              }
-             
              els.cursorProgress.style.opacity = '1';
-             // Circumference ~ 144
              const dashOffset = 144 - (144 * progress);
              circle.style.strokeDashoffset = dashOffset;
         }
 
         function resetNavVisuals() {
-            els.zonePrev.classList.remove('opacity-100', 'bg-cyan-500/10');
-            els.zoneNext.classList.remove('opacity-100', 'bg-cyan-500/10');
+            els.zonePrev.classList.remove('opacity-100');
+            els.zoneNext.classList.remove('opacity-100');
             els.zonePrev.classList.add('opacity-0');
             els.zoneNext.classList.add('opacity-0');
-            
             els.progPrev.style.height = '0%';
             els.progNext.style.height = '0%';
             state.edgeTimer = 0;
         }
 
+        function handleMenuInteraction(landmarks) {
+             drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#ef4444', lineWidth: 1});
+             drawLandmarks(els.ctx, landmarks, {color: '#ffffff', lineWidth: 1, radius: 2});
+
+             const indexTip = landmarks[8];
+             const x = indexTip.x;
+             const y = indexTip.y;
+             
+             // Move cursor
+             els.cursor.style.left = `${(1 - x) * 100}%`;
+             els.cursor.style.top = `${y * 100}%`;
+             
+             // Check if open hand (to move) or fist (to select)
+             // Actually, simplest is: Open Hand moves cursor. Dwell to click.
+             if (isFist(landmarks)) {
+                 // Maybe close if they hold fist again without selecting?
+                 // Or treat fist as "Click" immediately?
+                 // Let's rely on Dwell for now as it's safer.
+                 setCursorState('fist');
+             } else {
+                 setCursorState('default');
+             }
+             
+             updateRadialMenuLogic((1 - x) * window.innerWidth, y * window.innerHeight);
+        }
+
         function handleTwoHandGestures(landmarksArray) {
             if(state.isTransitioning) return; 
-            
             state.navLocked = false;
-
-            // Debug Skeleton
             for (const landmarks of landmarksArray) {
                 drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#06b6d4', lineWidth: 2});
-                drawLandmarks(els.ctx, landmarks, {color: '#ffffff', lineWidth: 1, radius: 2});
             }
 
             const p1 = getPinch(landmarksArray[0]);
             const p2 = getPinch(landmarksArray[1]);
 
-            // CASE 1: Both Pinching -> ZOOM & ROTATE
+            // CASE 1: ZOOM
             if (p1.isPinching && p2.isPinching) {
                 state.isPanning = false;
                 state.smoothedHandX = null;
-                updateStatus("ZOOM/ROTATE", "active");
-                els.transformGrid.classList.add('opacity-100'); // Show grid
+                updateStatus(state.isMapMode ? "ZOOMING MAP" : "ZOOMING", "active");
 
-                const currentDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                const rawDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                if (state.smoothedZoomDist === null) state.smoothedZoomDist = rawDist;
+                state.smoothedZoomDist = lerp(state.smoothedZoomDist, rawDist, 0.15); 
+                
+                const currentDist = state.smoothedZoomDist;
                 const currentAngle = getAngle(p1, p2);
 
                 if (!state.isZooming) {
-                    // FIRST FRAME OF ZOOM
                     state.isZooming = true;
                     state.zoomStartDist = currentDist;
-                    state.zoomStartScale = state.targetScale; // Use current target for relative math
+                    state.zoomStartScale = state.targetScale; 
                     state.zoomStartAngle = currentAngle;
                     state.startRotation = state.targetRotation;
                 } else {
-                    // SUBSEQUENT FRAMES
-                    // 1. Calculate relative scale factor
-                    // Prevent div by zero
                     if(state.zoomStartDist > 0.01) {
                          const scaleMultiplier = currentDist / state.zoomStartDist;
                          let newScale = state.zoomStartScale * scaleMultiplier;
-                         // Clamp
-                         newScale = Math.max(CONSTANTS.MIN_SCALE, Math.min(CONSTANTS.MAX_SCALE, newScale));
+                         
+                         if (!state.isMapMode) {
+                            newScale = Math.max(CONSTANTS.MIN_SCALE, Math.min(CONSTANTS.MAX_SCALE, newScale));
+                         } else {
+                            newScale = Math.max(0.0001, Math.min(100000, newScale));
+                         }
                          state.targetScale = newScale;
                     }
 
-                    // 2. Calculate relative rotation
-                    let angleDelta = currentAngle - state.zoomStartAngle;
-                    
-                    // Normalize angle to prevent 360 jump glitches (Wrap-around fix)
-                    if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
-                    if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
+                    // Rotation Logic (Fixed: Restored)
+                    if (!state.isMapMode) {
+                        let angleDelta = currentAngle - state.zoomStartAngle;
+                        // Normalize angle jump
+                        if (angleDelta > Math.PI) angleDelta -= 2 * Math.PI;
+                        if (angleDelta < -Math.PI) angleDelta += 2 * Math.PI;
+                        const degDelta = angleDelta * (180 / Math.PI);
 
-                    // Convert radians to degrees
-                    const degDelta = angleDelta * (180 / Math.PI);
-                    
-                    // Apply Threshold / Deadzone logic
-                    if (Math.abs(degDelta) > userSettings.rotationThreshold) {
-                         // Apply rotation but subtract threshold to avoid "jump" on activation
-                         const effectiveDeg = degDelta > 0 
-                            ? degDelta - userSettings.rotationThreshold 
-                            : degDelta + userSettings.rotationThreshold;
-                         
-                         state.targetRotation = state.startRotation + effectiveDeg;
-                    } else {
-                        // Stay locked to original angle if within threshold (magnetic snap)
-                        state.targetRotation = state.startRotation;
+                        if (Math.abs(degDelta) > userSettings.rotationThreshold) {
+                             const effectiveDeg = degDelta > 0 
+                                ? degDelta - userSettings.rotationThreshold 
+                                : degDelta + userSettings.rotationThreshold;
+                             state.targetRotation = state.startRotation + effectiveDeg;
+                        }
                     }
                 }
             } 
-            // CASE 2: One Pinching + One Open -> PAN
+            // CASE 2: PAN
             else if (p1.isPinching || p2.isPinching) {
-                state.isZooming = false; // Reset zoom state
-                els.transformGrid.classList.remove('opacity-100');
-                updateStatus("PANNING", "active");
+                state.isZooming = false; 
+                state.smoothedZoomDist = null;
+                updateStatus(state.isMapMode ? "PANNING MAP" : "PANNING", "active");
                 
                 let navHand = p1.isPinching ? landmarksArray[1] : landmarksArray[0];
                 const rawNavX = navHand[9].x;
@@ -1267,7 +2088,6 @@
                     state.smoothedHandX = rawNavX;
                     state.smoothedHandY = rawNavY;
                 } else {
-                    // Apply heavy smoothing to the INPUT hand coordinate
                     state.smoothedHandX = lerp(state.smoothedHandX, rawNavX, userSettings.smoothing); 
                     state.smoothedHandY = lerp(state.smoothedHandY, rawNavY, userSettings.smoothing);
                 }
@@ -1280,31 +2100,43 @@
                     state.panStartImgY = state.targetPanY;
                 }
 
-                // Delta movement
                 let deltaX = (state.panStartHandX - state.smoothedHandX);
                 let deltaY = (state.smoothedHandY - state.panStartHandY);
-
-                // Apply Sensitivity
-                state.targetPanX = state.panStartImgX + (deltaX * userSettings.sensitivity);
-                state.targetPanY = state.panStartImgY + (deltaY * userSettings.sensitivity);
+                
+                // Adjust sensitivity based on zoom level for Maps
+                let sens = userSettings.sensitivity;
+                state.targetPanX = state.panStartImgX + (deltaX * sens);
+                state.targetPanY = state.panStartImgY + (deltaY * sens);
 
             } else {
                 state.isPanning = false;
                 state.isZooming = false;
                 state.smoothedHandX = null;
-                els.transformGrid.classList.remove('opacity-100');
+                state.smoothedZoomDist = null;
             }
         }
 
         function handleOneHandNavigation(landmarks) {
             if(state.isTransitioning) return; 
             
-            // CHECK FOR PEACE SIGN (RESET)
+            drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#22d3ee', lineWidth: 1});
+            drawLandmarks(els.ctx, landmarks, {color: '#ffffff', lineWidth: 1, radius: 2});
+
+            const indexTip = landmarks[8];
+            const x = indexTip.x;
+            const y = indexTip.y;
+            
+            els.cursor.style.left = `${(1 - x) * 100}%`;
+            els.cursor.style.top = `${y * 100}%`;
+
+            // Check Hover Interactions (Dwell Click)
+            handleHoverInteractions(1 - x, y);
+
+            // 1. CHECK FOR PEACE SIGN (RESET) - FIXED: Restored Logic
             if (isPeaceSign(landmarks)) {
                  updateStatus("RESETTING...", "wait");
                  setCursorState('peace'); 
                  
-                 // Handle Hold Logic
                  if(state.resetStartTime === 0) {
                      state.resetStartTime = performance.now();
                  }
@@ -1315,35 +2147,47 @@
 
                  if(progress >= 1) {
                      resetView();
-                     state.resetStartTime = 0; // Prevent loop
-                     setCursorResetProgress(0); // Hide ring
+                     state.resetStartTime = 0; 
+                     setCursorResetProgress(0); 
+                 }
+                 resetNavVisuals();
+                 return; // Priority over other gestures
+            } else {
+                state.resetStartTime = 0;
+                // Only reset progress if not dwelling on an item (handled inside Hover Logic)
+                // But for peace sign specifically, we can reset if peace is broken
+            }
+
+            // 2. FIST DETECTION (RADIAL MENU TRIGGER)
+            if (isFist(landmarks)) {
+                 updateStatus("HOLD FIST...", "wait");
+                 setCursorState('fist'); 
+                 
+                 if(state.fistHoldStart === 0) {
+                     state.fistHoldStart = performance.now();
                  }
                  
-                 // Reset visuals for nav since we are resetting
-                 resetNavVisuals();
+                 const elapsed = performance.now() - state.fistHoldStart;
+                 const progress = Math.min(1, elapsed / userSettings.resetHoldTime);
+                 setCursorResetProgress(progress);
+
+                 if(progress >= 1) {
+                     openRadialMenu(1 - x, y);
+                     state.fistHoldStart = 0; 
+                     setCursorResetProgress(0); 
+                 }
                  return;
             } else {
-                // Not holding peace sign, reset timer
-                state.resetStartTime = 0;
-                setCursorResetProgress(0);
+                state.fistHoldStart = 0;
+                if(!state.dwellStartTime && state.resetStartTime === 0) setCursorResetProgress(0);
             }
 
             setCursorState('default');
-
             state.isPanning = false; 
             state.isZooming = false;
-            state.smoothedHandX = null;
-            
-            drawConnectors(els.ctx, landmarks, HAND_CONNECTIONS, {color: '#22d3ee', lineWidth: 1});
-            drawLandmarks(els.ctx, landmarks, {color: '#ffffff', lineWidth: 1, radius: 2});
 
-            const indexTip = landmarks[8];
-            const x = indexTip.x;
-            const y = indexTip.y;
-            
-            // Always update cursor position
-            els.cursor.style.left = `${(1 - x) * 100}%`;
-            els.cursor.style.top = `${y * 100}%`;
+            // EDGE NAV (Image Mode Only)
+            if (state.isMapMode) return;
 
             const zoneSize = userSettings.edgeZone;
             const leftTrigger = 1 - zoneSize; 
@@ -1392,14 +2236,89 @@
             }
         }
 
+        // --- Hover / Dwell Logic ---
+        function handleHoverInteractions(x, y) {
+            // Convert normalized (0-1) to screen coords
+            const screenX = x * window.innerWidth;
+            const screenY = y * window.innerHeight;
+
+            const el = document.elementFromPoint(screenX, screenY);
+            if (!el) {
+                resetDwell();
+                return;
+            }
+
+            // 1. Collections Logic (Modal Open)
+            if (state.isCollectionsOpen) {
+                const card = el.closest('.collection-card');
+                if (card) {
+                    handleDwell(card, userSettings.collectionDwellTime, () => {
+                        const type = card.dataset.collection;
+                        if(type) loadCollection(type);
+                    });
+                    return; 
+                }
+            }
+
+            // 2. Map Marker Logic (Map Mode Open)
+            if (state.isMapMode) {
+                // Hover Marker -> Open Popup (Fast Dwell)
+                // Updated Selector to include custom photo markers
+                const markerIcon = el.closest('.leaflet-marker-icon, .photo-marker');
+                
+                if (markerIcon) {
+                     handleDwell(markerIcon, 500, () => { // 0.5s to open popup
+                         markerIcon.click(); 
+                     }, true);
+                     return;
+                }
+
+                // Hover Popup Button -> View Full Image (Normal Dwell)
+                const popupBtn = el.closest('.popup-btn'); 
+                if (popupBtn) {
+                     handleDwell(popupBtn, userSettings.collectionDwellTime, () => { 
+                         popupBtn.click();
+                     });
+                     return;
+                }
+            }
+            
+            // If nothing interactive found
+            resetDwell();
+        }
+
+        function handleDwell(element, threshold, callback, showProgress = true) {
+            if (state.dwellTarget !== element) {
+                state.dwellTarget = element;
+                state.dwellStartTime = performance.now();
+                if(showProgress) setCursorState('hover'); // Visual feedback
+            }
+
+            const elapsed = performance.now() - state.dwellStartTime;
+            
+            if(showProgress) {
+                const progress = Math.min(1, elapsed / threshold);
+                setCursorResetProgress(progress);
+            }
+
+            if (elapsed > threshold) {
+                callback();
+                resetDwell(); // Reset after trigger
+            }
+        }
+
+        function resetDwell() {
+            state.dwellTarget = null;
+            state.dwellStartTime = 0;
+            // setCursorResetProgress(0); // Handled by main loop now to avoid conflict
+        }
+
         // --- Gesture Helpers ---
 
         function isFingerExtended(landmarks, tipIdx, pipIdx) {
             const wrist = landmarks[0];
             const tip = landmarks[tipIdx];
             const pip = landmarks[pipIdx];
-            // Check if tip is further from wrist than PIP is from wrist
-            // This generally works to distinguish extended vs curled for simple gestures
             return Math.hypot(tip.x - wrist.x, tip.y - wrist.y) > Math.hypot(pip.x - wrist.x, pip.y - wrist.y);
         }
 
@@ -1408,10 +2327,16 @@
              const middleExt = isFingerExtended(landmarks, 12, 10);
              const ringExt = isFingerExtended(landmarks, 16, 14);
              const pinkyExt = isFingerExtended(landmarks, 20, 18);
-             
-             // Strict peace: Index & Middle UP, Ring & Pinky DOWN
-             // Note: Thumb position can vary so we ignore it for robustness
              return indexExt && middleExt && !ringExt && !pinkyExt;
+        }
+
+        function isFist(landmarks) {
+            const indexExt = isFingerExtended(landmarks, 8, 6);
+            const middleExt = isFingerExtended(landmarks, 12, 10);
+            const ringExt = isFingerExtended(landmarks, 16, 14);
+            const pinkyExt = isFingerExtended(landmarks, 20, 18);
+            // Thumb is tricky, ignore it for robustness
+            return !indexExt && !middleExt && !ringExt && !pinkyExt;
         }
 
         function getPinch(landmarks) {
@@ -1420,70 +2345,58 @@
             const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
             const midX = (indexTip.x + thumbTip.x) / 2;
             const midY = (indexTip.y + thumbTip.y) / 2;
-            
-            return {
-                isPinching: distance < userSettings.pinchThreshold,
-                x: midX,
-                y: midY
-            };
+            return { isPinching: distance < userSettings.pinchThreshold, x: midX, y: midY };
         }
 
         /**
          * ------------------------------------------------------------------
-         * INITIALIZATION
+         * INIT
          * ------------------------------------------------------------------
          */
 
-        const hands = new Hands({locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-        }});
-
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
         hands.setOptions({
             maxNumHands: 2,
             modelComplexity: 1,
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
         });
-
         hands.onResults(onResults);
 
-        const camera = new Camera(els.video, {
-            onFrame: async () => {
-                await hands.send({image: els.video});
-            },
-            width: 640,
-            height: 480
-        });
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } });
+                els.video.srcObject = stream;
+                await new Promise((resolve) => els.video.onloadedmetadata = resolve);
+                await els.video.play();
+                updateStatus("CAMERA ACTIVE", "active");
+                const processFrame = async () => {
+                    if (els.video.paused || els.video.ended) return;
+                    await hands.send({image: els.video});
+                    requestAnimationFrame(processFrame);
+                };
+                processFrame();
+            } catch (err) {
+                console.error("Camera access failed:", err);
+                updateStatus("CAMERA BLOCKED", "error");
+                showToast("Camera error: " + (err.message || "Access denied"), "warning");
+            }
+        }
 
-        camera.start().then(() => {
-            updateStatus("CAMERA ACTIVE", "active");
-        }).catch(err => {
-            console.error(err);
-            updateStatus("CAMERA BLOCKED", "error");
-            showToast("Camera access denied. Please allow access.", "warning");
-        });
-
-        // Set Render Resolution
+        startCamera();
         els.canvas.width = 320;
         els.canvas.height = 240;
 
-        // Listeners
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight') nextImage();
             if (e.key === 'ArrowLeft') prevImage();
-            if (e.key === ' ') { 
-                e.preventDefault(); 
-                toggleCinemaMode(); 
-            }
+            if (e.key === ' ') { e.preventDefault(); toggleCinemaMode(); }
             if (e.key === 'Escape') {
+                if(state.isRadialMenuOpen) closeRadialMenu();
                 if(state.isCinemaMode) toggleCinemaMode();
                 if(state.isHelpOpen) toggleHelp();
                 if(state.isSettingsOpen) toggleSettings();
             }
-        });
-
-        els.workspace.addEventListener('click', () => {
-             if (state.isCinemaMode) toggleCinemaMode();
         });
 
         init();
