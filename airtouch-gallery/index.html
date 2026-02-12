@@ -225,12 +225,16 @@
         }
 
         /* 3D Map Mode Perspective Container */
+        :root {
+            --map-tilt: 60deg;
+        }
         .map-3d-perspective {
             perspective: 1200px;
             overflow: hidden;
         }
         .map-3d-active {
-            transform: rotateX(55deg) scale(1.4);
+            transform: rotateX(var(--map-tilt)) scale(3.2) translateY(-15%);
+            transform-origin: center center;
         }
 
         /* Radial Menu */
@@ -325,16 +329,8 @@
         <div id="map-wrapper" class="absolute inset-0 z-10 opacity-0 pointer-events-none transition-opacity duration-700 map-3d-perspective">
              <div id="leaflet-map" class="w-full h-full"></div>
              <!-- Map Mode Overlay -->
-             <div class="absolute top-24 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur px-4 py-1 rounded-full text-xs font-mono text-cyan-400 border border-cyan-500/20 pointer-events-none z-[1000]">
+             <div id="gesture-map-label" class="absolute top-24 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur px-4 py-1 rounded-full text-xs font-mono text-cyan-400 border border-cyan-500/20 pointer-events-none z-[1000] transition-opacity duration-300">
                 GESTURE MAP CONTROL
-             </div>
-             
-             <!-- 3D Toggle (Visible in Map Mode) -->
-             <div id="map-3d-controls" class="absolute bottom-32 right-6 z-[1000] flex flex-col gap-2">
-                 <button onclick="toggle3DMap()" class="w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 text-white hover:text-cyan-400 hover:border-cyan-400/50 flex items-center justify-center shadow-lg backdrop-blur transition-all">
-                     <i class="fa-solid fa-cube text-lg"></i>
-                 </button>
-                 <div class="text-[10px] text-center bg-black/50 rounded px-1 text-white/70 font-mono">TILT</div>
              </div>
         </div>
 
@@ -466,7 +462,7 @@
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </button>
                 
-                <button onclick="toggleCinemaMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-yellow-400" title="Cinema Mode (Space)">
+                <button onclick="toggleCinemaMode(event)" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-yellow-400" title="Cinema Mode (Space)">
                     <i id="cinema-icon" class="fa-solid fa-expand"></i>
                 </button>
 
@@ -480,6 +476,14 @@
                     <i class="fa-solid fa-question"></i>
                 </button>
             </div>
+        </div>
+
+        <!-- 3D Toggle (Moved to UI Layer to prevent 3D Map overlap) -->
+        <div id="map-3d-controls" class="absolute bottom-32 right-6 z-[1000] flex flex-col gap-2 pointer-events-auto transition-opacity duration-300 opacity-0 pointer-events-none">
+             <button onclick="toggle3DMap()" class="cursor-pointer w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 text-white hover:text-cyan-400 hover:border-cyan-400/50 flex items-center justify-center shadow-lg backdrop-blur transition-all">
+                 <i class="fa-solid fa-cube text-lg pointer-events-none"></i>
+             </button>
+             <div class="text-[10px] text-center bg-black/50 rounded px-1 text-white/70 font-mono pointer-events-none">TILT</div>
         </div>
     </div>
 
@@ -599,6 +603,21 @@
                     </div>
                 </div>
                 
+                <!-- Section: Map Options -->
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                    <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
+                        <span>Map Options</span>
+                    </div>
+                    <!-- Tilt Angle -->
+                    <div class="mb-2">
+                        <div class="flex justify-between mb-1 text-sm text-slate-300">
+                            <span>3D Tilt Angle</span>
+                            <span id="val-tiltAngle" class="text-cyan-400 font-mono text-xs">60°</span>
+                        </div>
+                        <input type="range" id="inp-tiltAngle" min="20" max="80" step="1" class="w-full accent-cyan-400 cursor-pointer" oninput="updateSetting('tiltAngle', this.value)">
+                    </div>
+                </div>
+
                 <!-- Section: Timing (RESTORED) -->
                 <div class="bg-white/5 p-4 rounded-xl border border-white/5">
                     <div class="flex justify-between mb-4 text-xs uppercase tracking-wider font-semibold text-slate-300 border-b border-white/10 pb-2">
@@ -783,7 +802,8 @@
             slideInterval: 3000,
             rotationThreshold: 25, 
             resetHoldTime: 1200,
-            collectionDwellTime: 1500 // New setting
+            collectionDwellTime: 1500, // New setting
+            tiltAngle: 60 // Map Tilt Setting
         };
 
         const PRESETS = {
@@ -815,6 +835,7 @@
         if(!userSettings.resetHoldTime) userSettings.resetHoldTime = DEFAULT_SETTINGS.resetHoldTime;
         if(!userSettings.pinchThreshold) userSettings.pinchThreshold = DEFAULT_SETTINGS.pinchThreshold;
         if(!userSettings.collectionDwellTime) userSettings.collectionDwellTime = DEFAULT_SETTINGS.collectionDwellTime;
+        if(!userSettings.tiltAngle) userSettings.tiltAngle = DEFAULT_SETTINGS.tiltAngle;
 
         const state = {
             images: [...SAMPLE_IMAGES],
@@ -848,6 +869,7 @@
             // Radial Menu State
             isRadialMenuOpen: false,
             fistHoldStart: 0,
+            peaceHoldStart: 0,
             activeSlice: -1,
             dwellTimer: 0,
             
@@ -898,6 +920,7 @@
             mainImage: document.getElementById('main-image'),
             imageWrapper: document.getElementById('image-wrapper'),
             mapWrapper: document.getElementById('map-wrapper'),
+            gestureMapLabel: document.getElementById('gesture-map-label'),
             map3dControls: document.getElementById('map-3d-controls'), 
             counter: document.getElementById('counter'),
             cursor: document.getElementById('virtual-cursor'),
@@ -1103,27 +1126,24 @@
 
             // 2. Map Mode Logic
             if (state.isMapMode && state.mapInstance) {
-                // Skip if in 3D Mode (Locked View)
-                if(!state.is3DMapMode) {
-                    if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) return;
+                if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) return;
 
-                    const dX = state.panX - state.lastFramePanX;
-                    const dY = state.panY - state.lastFramePanY;
-                    let dScale = state.scale / (state.lastFrameScale || 1);
+                const dX = state.panX - state.lastFramePanX;
+                const dY = state.panY - state.lastFramePanY;
+                let dScale = state.scale / (state.lastFrameScale || 1);
 
-                    if (dScale > 0.992 && dScale < 1.008) dScale = 1;
+                if (dScale > 0.992 && dScale < 1.008) dScale = 1;
 
-                    if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000) {
-                         state.mapInstance.panBy([-dX, -dY], {animate: false});
-                    }
+                if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000) {
+                     state.mapInstance.panBy([-dX, -dY], {animate: false});
+                }
 
-                    if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
-                        const currentZoom = state.mapInstance.getZoom();
-                        let newZoom = currentZoom + Math.log2(dScale);
-                        newZoom = Math.max(state.mapInstance.getMinZoom(), Math.min(22, newZoom));
-                        if(!isNaN(newZoom) && Math.abs(newZoom - currentZoom) > 0.02) {
-                             state.mapInstance.setZoom(newZoom, {animate: false});
-                        }
+                if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
+                    const currentZoom = state.mapInstance.getZoom();
+                    let newZoom = currentZoom + Math.log2(dScale);
+                    newZoom = Math.max(state.mapInstance.getMinZoom(), Math.min(22, newZoom));
+                    if(!isNaN(newZoom) && Math.abs(newZoom - currentZoom) > 0.02) {
+                         state.mapInstance.setZoom(newZoom, {animate: false});
                     }
                 }
             } else {
@@ -1421,7 +1441,10 @@
             if(state.currentLayer) state.mapInstance.removeLayer(state.currentLayer);
             state.currentLayer = state.mapLayers[type];
             state.mapInstance.addLayer(state.currentLayer);
-            toggleLayers();
+            
+            // BUG FIX: Only toggle layers menu if it is currently open
+            if(state.isLayersOpen) toggleLayers();
+            
             showToast(`Layer Switched: ${type.charAt(0).toUpperCase() + type.slice(1)}`, 'info');
         }
 
@@ -1484,10 +1507,7 @@
                 mapEl.classList.add('map-3d-active');
                 icon.className = "fa-solid fa-cube text-cyan-400";
                 
-                // Auto switch to terrain if not already
-                setMapLayer('terrain'); 
-                
-                showToast("3D Terrain Mode Active", "success");
+                showToast("3D Tilt Mode Active", "success");
             } else {
                 // Deactivate
                 mapEl.classList.remove('map-3d-active');
@@ -1514,6 +1534,7 @@
                 els.btnMap.classList.add('active-state', 'text-emerald-400');
                 els.btnLayers.classList.remove('hidden'); 
                 els.btnPhotos.classList.remove('hidden'); // Show photo toggle
+                els.map3dControls.classList.remove('opacity-0', 'pointer-events-none');
                 showToast("Map Mode Active", "success");
                 
                 state.lastFramePanX = state.panX;
@@ -1532,6 +1553,7 @@
                 els.btnMap.classList.remove('active-state', 'text-emerald-400');
                 els.btnLayers.classList.add('hidden');
                 els.btnPhotos.classList.add('hidden');
+                els.map3dControls.classList.add('opacity-0', 'pointer-events-none');
                 resetView(true);
             }
         }
@@ -1607,14 +1629,18 @@
             if(state.isLayersOpen) { if(state.isHelpOpen) toggleHelp(); if(state.isSettingsOpen) toggleSettings(); if(state.isCollectionsOpen) toggleCollections(); }
         }
 
-        function toggleCinemaMode() {
+        function toggleCinemaMode(e) {
+            // Added e to allow prevent bubbling
+            if (e) e.stopPropagation();
             state.isCinemaMode = !state.isCinemaMode;
             if (state.isCinemaMode) {
                 els.uiLayer.classList.add('opacity-0', 'pointer-events-none');
+                if (els.gestureMapLabel) els.gestureMapLabel.classList.add('opacity-0');
                 document.getElementById('cinema-icon').className = "fa-solid fa-compress";
                 showToast("Cinema Mode On (Space to Exit)", "neutral");
             } else {
                 els.uiLayer.classList.remove('opacity-0', 'pointer-events-none');
+                if (els.gestureMapLabel) els.gestureMapLabel.classList.remove('opacity-0');
                 document.getElementById('cinema-icon').className = "fa-solid fa-expand";
             }
         }
@@ -1635,6 +1661,10 @@
             else if(key === 'resetHoldTime') displayText = value + 'ms';
             else if(key === 'navDelay') displayText = value + 'fr';
             else if(key === 'collectionDwellTime') displayText = value + 'ms';
+            else if(key === 'tiltAngle') {
+                displayText = value + '°';
+                document.documentElement.style.setProperty('--map-tilt', `${value}deg`);
+            }
             
             const displayEl = document.getElementById(`val-${key}`);
             if(displayEl) displayEl.innerText = displayText;
@@ -1649,7 +1679,7 @@
         }
 
         function syncSettingsUI() {
-            ['sensitivity', 'resetHoldTime', 'smoothing', 'pinchThreshold', 'slideInterval', 'navDelay', 'rotationThreshold', 'collectionDwellTime'].forEach(key => {
+            ['sensitivity', 'resetHoldTime', 'smoothing', 'pinchThreshold', 'slideInterval', 'navDelay', 'rotationThreshold', 'collectionDwellTime', 'tiltAngle'].forEach(key => {
                 const input = document.getElementById(`inp-${key}`);
                 if(input) input.value = userSettings[key];
                 updateSetting(key, userSettings[key]);
@@ -1687,6 +1717,8 @@
                 handleTwoHandGestures(results.multiHandLandmarks);
                 resetNavVisuals();
                 setCursorState('hidden');
+                state.fistHoldStart = 0;
+                state.peaceHoldStart = 0;
 
             } else if (handCount === 1) {
                 stopSlideshow();
@@ -1711,6 +1743,8 @@
                 resetNavVisuals();
                 setCursorState('hidden');
                 resetDwell();
+                state.fistHoldStart = 0;
+                state.peaceHoldStart = 0;
                 
                 // If hand lost, close menu
                 if(state.isRadialMenuOpen) closeRadialMenu();
@@ -1788,13 +1822,15 @@
             const p1 = getPinch(landmarksArray[0]);
             const p2 = getPinch(landmarksArray[1]);
 
-            // CASE 1: ZOOM
+            // CASE 1: ZOOM & ROTATE
             if (p1.isPinching && p2.isPinching) {
                 state.isPanning = false;
                 state.smoothedHandX = null;
-                updateStatus(state.isMapMode ? "ZOOMING MAP" : "ZOOMING", "active");
+                updateStatus(state.isMapMode ? "ZOOMING MAP" : "ZOOM & ROTATE", "active");
 
                 const rawDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                const rawAngle = getAngle(p1, p2) * (180 / Math.PI); // Extract raw angle
+
                 if (state.smoothedZoomDist === null) state.smoothedZoomDist = rawDist;
                 state.smoothedZoomDist = lerp(state.smoothedZoomDist, rawDist, 0.15); 
                 
@@ -1804,7 +1840,10 @@
                     state.isZooming = true;
                     state.zoomStartDist = currentDist;
                     state.zoomStartScale = state.targetScale; 
+                    state.zoomStartAngle = rawAngle; // Log angle on start
+                    state.zoomStartRotation = state.targetRotation; // Log initial rotation
                 } else {
+                    // Zoom logic
                     if(state.zoomStartDist > 0.01) {
                          const scaleMultiplier = currentDist / state.zoomStartDist;
                          let newScale = state.zoomStartScale * scaleMultiplier;
@@ -1816,12 +1855,26 @@
                          }
                          state.targetScale = newScale;
                     }
+
+                    // BUG FIX: Rotation logic integrated
+                    if (!state.isMapMode) {
+                        let angleDiff = rawAngle - state.zoomStartAngle;
+                        
+                        // Handle wrap-around constraints (e.g. going from 179 to -179)
+                        if (angleDiff > 180) angleDiff -= 360;
+                        if (angleDiff < -180) angleDiff += 360;
+
+                        if (Math.abs(angleDiff) > userSettings.rotationThreshold) {
+                            // Apply angular difference beyond deadzone
+                            const sign = Math.sign(angleDiff);
+                            const effectiveDiff = angleDiff - (sign * userSettings.rotationThreshold);
+                            state.targetRotation = state.zoomStartRotation + effectiveDiff;
+                        }
+                    }
                 }
             } 
             // CASE 2: PAN
             else if (p1.isPinching || p2.isPinching) {
-                if(state.is3DMapMode) return; // Disable pan in 3D Mode (Locked Perspective)
-                
                 state.isZooming = false; 
                 state.smoothedZoomDist = null;
                 updateStatus(state.isMapMode ? "PANNING MAP" : "PANNING", "active");
@@ -1897,8 +1950,27 @@
                      setCursorResetProgress(0); 
                  }
                  return;
+            } else if (isPeaceSign(landmarks)) {
+                 updateStatus("HOLD PEACE...", "wait");
+                 setCursorState('peace'); 
+                 
+                 if(state.peaceHoldStart === 0) {
+                     state.peaceHoldStart = performance.now();
+                 }
+                 
+                 const elapsed = performance.now() - state.peaceHoldStart;
+                 const progress = Math.min(1, elapsed / userSettings.resetHoldTime);
+                 setCursorResetProgress(progress);
+
+                 if(progress >= 1) {
+                     resetView();
+                     state.peaceHoldStart = 0; 
+                     setCursorResetProgress(0); 
+                 }
+                 return;
             } else {
                 state.fistHoldStart = 0;
+                state.peaceHoldStart = 0;
                 // Only reset if not dwelling on an item
                 if(!state.dwellStartTime) setCursorResetProgress(0);
             }
@@ -2052,6 +2124,14 @@
             return !indexExt && !middleExt && !ringExt && !pinkyExt;
         }
 
+        function isPeaceSign(landmarks) {
+            const indexExt = isFingerExtended(landmarks, 8, 6);
+            const middleExt = isFingerExtended(landmarks, 12, 10);
+            const ringExt = isFingerExtended(landmarks, 16, 14);
+            const pinkyExt = isFingerExtended(landmarks, 20, 18);
+            return indexExt && middleExt && !ringExt && !pinkyExt;
+        }
+
         function getPinch(landmarks) {
             const indexTip = landmarks[8];
             const thumbTip = landmarks[4];
@@ -2111,6 +2191,17 @@
                 if(state.isSettingsOpen) toggleSettings();
             }
         });
+
+        // BUG FIX: Tap Screen to Exit Cinema Mode natively on touch/mouse
+        window.addEventListener('pointerdown', (e) => {
+            if (state.isCinemaMode) {
+                // Ensure we don't catch the actual hud-button click itself to prevent instant re-trigger
+                const btn = e.target.closest('.hud-btn');
+                if (!btn) {
+                    toggleCinemaMode();
+                }
+            }
+        }, true); // use capture phase to catch it before map/images swallow it
 
         init();
 
