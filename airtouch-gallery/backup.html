@@ -109,6 +109,10 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
 
+        /* Hide scrollbar for HUD but keep functionality */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         .hud-btn {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -427,70 +431,70 @@
 
         <!-- BOTTOM DOCK -->
         <div class="flex justify-center px-4 mb-4">
-            <div class="hud-panel px-2 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 md:gap-4 pointer-events-auto shadow-2xl overflow-x-auto max-w-full">
+            <div class="hud-panel px-2 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 md:gap-4 pointer-events-auto shadow-2xl overflow-x-auto max-w-full no-scrollbar">
                 
                 <!-- File Input -->
-                <div class="tooltip-wrapper relative group" id="grp-file">
+                <div class="tooltip-wrapper relative group shrink-0" id="grp-file">
                     <button onclick="document.getElementById('fileInput').click()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white/80">
                         <i class="fa-solid fa-folder-plus text-lg"></i>
                     </button>
                     <input type="file" id="fileInput" hidden multiple accept="image/*" onchange="handleFiles(this.files)">
                 </div>
 
-                <div class="w-px h-8 bg-white/10 mx-1"></div>
+                <div class="w-px h-8 bg-white/10 mx-1 shrink-0"></div>
 
                 <!-- Collections Button -->
-                <button onclick="toggleCollections()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Collections (Fist Menu)">
+                <button onclick="toggleCollections()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 shrink-0" title="Collections (Fist Menu)">
                     <i class="fa-solid fa-earth-americas"></i>
                 </button>
 
                 <!-- MAP TOGGLE -->
-                <button id="btn-map" onclick="toggleMapMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Switch Mode">
+                <button id="btn-map" onclick="toggleMapMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 shrink-0" title="Switch Mode">
                     <i class="fa-solid fa-map"></i>
                 </button>
 
                 <!-- LAYERS TOGGLE -->
-                <button id="btn-layers" onclick="toggleLayers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hidden" title="Map Layers">
+                <button id="btn-layers" onclick="toggleLayers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hidden shrink-0" title="Map Layers">
                     <i class="fa-solid fa-layer-group"></i>
                 </button>
 
                 <!-- PHOTO PLOT TOGGLE (Visible in Map Mode) -->
-                <button id="btn-photos" onclick="togglePhotoMarkers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hidden" title="Show Uploaded Photos">
+                <button id="btn-photos" onclick="togglePhotoMarkers()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 hidden shrink-0" title="Show Uploaded Photos">
                     <i class="fa-solid fa-camera"></i>
                 </button>
 
-                <div class="w-px h-8 bg-white/10 mx-1" id="sep-nav"></div>
+                <div class="w-px h-8 bg-white/10 mx-1 shrink-0" id="sep-nav"></div>
 
                 <!-- Nav -->
-                <div id="nav-controls" class="flex items-center gap-2 md:gap-4">
+                <div id="nav-controls" class="flex items-center gap-2 md:gap-4 shrink-0">
                     <button onclick="prevImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-backward-step"></i></button>
                     <div class="font-mono text-sm md:text-base font-bold min-w-[60px] text-center select-none" style="color: var(--accent-color);" id="counter">-- / --</div>
                     <button onclick="nextImage()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/70 hover:text-white"><i class="fa-solid fa-forward-step"></i></button>
                 </div>
 
-                <div class="w-px h-8 bg-white/10 mx-1"></div>
+                <div class="w-px h-8 bg-white/10 mx-1 shrink-0"></div>
 
                 <!-- Playback -->
-                <button id="btn-slideshow" onclick="toggleSlideshow()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Slideshow">
+                <button id="btn-slideshow" onclick="toggleSlideshow()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 shrink-0" title="Slideshow">
                     <i class="fa-solid fa-play"></i>
                 </button>
 
                 <!-- Tools -->
-                <button onclick="toggleFilters()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80" title="Filters">
+                <button onclick="toggleFilters()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/80 shrink-0" title="Filters">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </button>
                 
-                <button onclick="toggleCinemaMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-yellow-400" title="Cinema Mode (Space)">
+                <button onclick="toggleCinemaMode()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-yellow-400 shrink-0" title="Cinema Mode (Space)">
                     <i id="cinema-icon" class="fa-solid fa-expand"></i>
                 </button>
 
-                <div class="w-px h-8 bg-white/10 mx-1"></div>
+                <div class="w-px h-8 bg-white/10 mx-1 shrink-0"></div>
 
-                <button onclick="toggleSettings()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/60">
+                <button onclick="toggleSettings()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-white/60 shrink-0">
                     <i class="fa-solid fa-sliders"></i>
                 </button>
 
-                <button onclick="toggleHelp()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl text-cyan-400 border border-cyan-500/30 bg-cyan-500/10">
+                <button onclick="toggleHelp()" class="hud-btn w-10 h-10 md:w-12 md:h-12 rounded-xl border border-white/20 bg-white/5 shrink-0" style="color: var(--accent-color);">
                     <i class="fa-solid fa-question"></i>
                 </button>
             </div>
@@ -1059,6 +1063,19 @@
             els.workspace.addEventListener('touchstart', handleTouchStart, {passive: false});
             els.workspace.addEventListener('touchmove', handleTouchMove, {passive: false});
             els.workspace.addEventListener('touchend', handleTouchEnd);
+            
+            // Handle Resize / Orientation Change
+            window.addEventListener('resize', () => {
+                if(state.mapInstance) {
+                    setTimeout(() => { state.mapInstance.invalidateSize(); }, 200);
+                }
+            });
+
+            // Mobile Check for Camera
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                toggleCameraView(); // Auto-collapse camera on mobile
+            }
 
             requestAnimationFrame(renderLoop);
         }
@@ -1068,7 +1085,8 @@
             // If in Map Mode, let Leaflet handle it unless 3D logic
             if (state.isMapMode) return;
             
-            e.preventDefault(); // Stop scrolling on workspace
+            // Prevent default unless it's a multi-touch which might be system zoom (we want to block system zoom)
+            if(e.cancelable) e.preventDefault(); 
             state.isTouching = true;
             
             if (e.touches.length === 1) {
@@ -1089,7 +1107,7 @@
 
         function handleTouchMove(e) {
             if (state.isMapMode || !state.isTouching) return;
-            e.preventDefault();
+            if(e.cancelable) e.preventDefault();
 
             if (e.touches.length === 1) {
                 // Pan Logic
@@ -1122,7 +1140,8 @@
             // Swipe Detection (if 1 finger and scale is roughly 1)
             if (e.changedTouches.length === 1 && state.scale < 1.1) {
                 const deltaX = e.changedTouches[0].clientX - state.touchStartX;
-                if (Math.abs(deltaX) > 100) { // Threshold
+                // Threshold 80px for better sensitivity
+                if (Math.abs(deltaX) > 80) { 
                     if (deltaX > 0) prevImage();
                     else nextImage();
                 }
@@ -2355,9 +2374,12 @@
          */
 
         const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        // Mobile Optimization: Use lower complexity model
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
         hands.setOptions({
             maxNumHands: 2,
-            modelComplexity: 1,
+            modelComplexity: isMobile ? 0 : 1, // 0 for Lite (Mobile), 1 for Full (Desktop)
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
         });
@@ -2365,17 +2387,26 @@
 
         async function startCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } });
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: isMobile ? 480 : 640, // Lower res for mobile
+                        height: isMobile ? 360 : 480, 
+                        facingMode: "user" 
+                    } 
+                });
                 els.video.srcObject = stream;
                 await new Promise((resolve) => els.video.onloadedmetadata = resolve);
                 await els.video.play();
                 updateStatus("CAMERA ACTIVE", "active");
+                
+                // Start processing loop
                 const processFrame = async () => {
                     if (els.video.paused || els.video.ended) return;
                     await hands.send({image: els.video});
                     requestAnimationFrame(processFrame);
                 };
                 processFrame();
+
             } catch (err) {
                 console.error("Camera access failed:", err);
                 updateStatus("CAMERA BLOCKED", "error");
@@ -2384,19 +2415,27 @@
         }
 
         startCamera();
+
         els.canvas.width = 320;
         els.canvas.height = 240;
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight') nextImage();
             if (e.key === 'ArrowLeft') prevImage();
-            if (e.key === ' ') { e.preventDefault(); toggleCinemaMode(); }
+            if (e.key === ' ') { 
+                e.preventDefault(); 
+                toggleCinemaMode(); 
+            }
             if (e.key === 'Escape') {
                 if(state.isRadialMenuOpen) closeRadialMenu();
                 if(state.isCinemaMode) toggleCinemaMode();
                 if(state.isHelpOpen) toggleHelp();
                 if(state.isSettingsOpen) toggleSettings();
             }
+        });
+
+        els.workspace.addEventListener('click', () => {
+             if (state.isCinemaMode) toggleCinemaMode();
         });
 
         init();
