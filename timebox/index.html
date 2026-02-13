@@ -6,6 +6,47 @@
     <title>TimeBox 3D</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
+
+#back-link {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    z-index: 50;
+    opacity: 0.25;   /* ↓ lower = more transparent */
+    transition: opacity 0.3s ease;
+}
+
+#back-link a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+#back-link a:hover {
+    color: #00ffff;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(0, 255, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+#back-link .arrow {
+    transition: transform 0.3s ease;
+}
+
+#back-link a:hover .arrow {
+    transform: translateX(-4px);
+}
+
+
         @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Montserrat:wght@400;900&family=Orbitron:wght@400;900&family=Playfair+Display:wght@900&display=swap');
 
         body {
@@ -201,10 +242,21 @@
 
     <div id="loader">INITIALIZING TIME...</div>
 
+    <!-- Back Button -->
+ <div id="back-link">
+    <a href="/projects/">
+        <span class="arrow">←</span>
+        <span class="label">Back to Projects</span>
+    </a>
+</div>
+
+
     <div id="canvas-container"></div>
 
     <div id="ui-layer">
+
         <div id="settings-panel">
+
             <div class="control-group">
                 <label>Theme Preset</label>
                 <select id="preset-select"></select>
