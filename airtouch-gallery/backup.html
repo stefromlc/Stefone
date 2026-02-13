@@ -27,7 +27,7 @@
     <meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/airtouch-gallery.png" />
 
     <!-- Optional -->
-    <meta name="theme-color" content="#0ea5e9" />c
+    <meta name="theme-color" content="#0ea5e9" />
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -933,6 +933,7 @@
             
             // Location
             userLocation: null, 
+            hasAutoCentered: false, // Fix for random resets
 
             // Slideshow
             slideshowTimer: null,
@@ -1337,27 +1338,34 @@
 
             // 2. Map Mode Logic
             if (state.isMapMode && state.mapInstance) {
-                // --- 3D MAP CONTROL LOGIC ---
-                if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) return;
+                // HARDENING: Check for NaN or invalid values and reset if necessary
+                if (isNaN(state.panX) || isNaN(state.panY) || isNaN(state.scale) || state.scale <= 0) {
+                    state.panX = 0; state.panY = 0; state.scale = 1;
+                    state.targetPanX = 0; state.targetPanY = 0; state.targetScale = 1;
+                } else {
+                     // --- 3D MAP CONTROL LOGIC ---
+                    const dX = state.panX - state.lastFramePanX;
+                    const dY = state.panY - state.lastFramePanY;
+                    let dScale = state.scale / (state.lastFrameScale || 1);
 
-                const dX = state.panX - state.lastFramePanX;
-                const dY = state.panY - state.lastFramePanY;
-                let dScale = state.scale / (state.lastFrameScale || 1);
+                    if (dScale > 0.992 && dScale < 1.008) dScale = 1;
 
-                if (dScale > 0.992 && dScale < 1.008) dScale = 1;
+                    // Pan works normally - Added clamp for dY as well
+                    if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000 && Math.abs(dY) < 1000) {
+                         state.mapInstance.panBy([-dX, -dY], {animate: false});
+                    }
 
-                // Pan works normally
-                if ((Math.abs(dX) > 0.1 || Math.abs(dY) > 0.1) && Math.abs(dX) < 1000) {
-                     state.mapInstance.panBy([-dX, -dY], {animate: false});
-                }
+                    // Zoom works normally (visual perspective handled by CSS)
+                    if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
+                        const currentZoom = state.mapInstance.getZoom();
+                        const zoomStrength = 1.8; // try 1.2 (subtle), 1.6 (strong), 2.0 (very strong)
+let newZoom = currentZoom + Math.log2(dScale) * zoomStrength;
+                        newZoom = Math.max(state.mapInstance.getMinZoom(), Math.min(22, newZoom));
 
-                // Zoom works normally (visual perspective handled by CSS)
-                if (dScale !== 1 && dScale > 0 && dScale < 5 && dScale > 0.2) {
-                    const currentZoom = state.mapInstance.getZoom();
-                    let newZoom = currentZoom + Math.log2(dScale);
-                    newZoom = Math.max(state.mapInstance.getMinZoom(), Math.min(22, newZoom));
-                    if(!isNaN(newZoom) && Math.abs(newZoom - currentZoom) > 0.02) {
-                         state.mapInstance.setZoom(newZoom, {animate: false});
+
+                        if(!isNaN(newZoom) && Math.abs(newZoom - currentZoom) > 0.02) {
+                             state.mapInstance.setZoom(newZoom, {animate: true});
+                        }
                     }
                 }
             } else {
@@ -1408,14 +1416,22 @@
             const newImages = Array.from(fileList).filter(f => f.type.startsWith('image/'));
             
             if (newImages.length > 0) {
+                // Cleanup old blobs to prevent memory leaks
+                state.images.forEach(img => {
+                    if (img.isBlob && img.src) URL.revokeObjectURL(img.src);
+                });
+
                 if(state.images.length > 0 && state.images[0].src === SAMPLE_IMAGES[0].src) state.images = [];
                 
+                // Track if map mode was active
+                const wasMapMode = state.isMapMode;
+                if(state.isMapMode) toggleMapMode(); // Temporarily switch to view mode
+
                 let processed = 0;
                 // Process sequentially to keep order
                 for (const file of newImages) {
                     const gpsData = await getExifData(file);
                     
-                    // MEMORY OPTIMIZATION: Use Blob URLs instead of Base64
                     const blobUrl = URL.createObjectURL(file);
                     const imgObj = { src: blobUrl, isBlob: true };
                     
@@ -1429,23 +1445,35 @@
                 
                 if (processed === newImages.length) {
                     state.currentIdx = state.images.length - newImages.length;
-                    if(state.isMapMode) toggleMapMode();
                     renderImage(false);
                     showToast(`Loaded ${newImages.length} Images`, "success");
-                    // Refresh photo markers if map is active later
-                    if(state.isMapMode && state.isPhotoMarkersVisible) togglePhotoMarkers(); 
+                    
+                    // If map mode was active, restore it and update markers
+                    if(wasMapMode) {
+                        toggleMapMode(); 
+                        if(state.isPhotoMarkersVisible) togglePhotoMarkers(); // Refresh markers
+                    }
                 }
             }
         }
 
         function loadCollection(key) {
-            if(state.isMapMode) toggleMapMode();
+            // Track if map mode was active
+            const wasMapMode = state.isMapMode;
+            if(state.isMapMode) toggleMapMode(); // Temporarily switch to view mode
+
             if(PRESETS[key]) {
                 state.images = [...PRESETS[key]];
                 state.currentIdx = 0;
                 renderImage(false);
                 showToast(`Loaded ${key === 'solar' ? 'Solar System' : 'Landmarks'}`, 'success');
                 toggleCollections(); 
+
+                // If map mode was active, restore it and update markers
+                if(wasMapMode) {
+                    toggleMapMode(); 
+                    if(state.isPhotoMarkersVisible) togglePhotoMarkers(); // Refresh markers
+                }
             }
         }
 
@@ -1491,14 +1519,19 @@
             if (withTransition) {
                 handleImageTransition(direction, () => {
                     els.mainImage.src = state.images[state.currentIdx].src;
-                    resetView(true); 
-                    updateCounter();
+                    // Reset View Logic removed here to avoid redundancy with onload
                 });
             } else {
                 els.mainImage.src = state.images[state.currentIdx].src;
-                resetView(true);
-                updateCounter();
+                // No need to call resetView here as onload handles it
             }
+
+            // Consolidated onload handler
+            els.mainImage.onload = () => {
+                resetView(true); 
+                updateCounter();
+                els.mainImage.onload = null; // Clean up
+            };
         }
 
         function handleImageTransition(direction, updateCallback) {
@@ -1511,20 +1544,17 @@
             setTimeout(() => {
                 els.mainImage.classList.add('anim-fade-in');
                 els.mainImage.classList.remove('anim-fade-out');
-                updateCallback();
-                const newSrc = state.images[state.currentIdx].src;
-                els.mainImage.src = newSrc;
-                els.mainImage.onload = () => {
-                    resetView(true); 
-                    void els.mainImage.offsetWidth;
+                
+                updateCallback(); // Change SRC
+
+                // Wait for onload to handle visibility reset in renderImage
+                // But we still need to clear animation classes
+                setTimeout(() => {
                     els.mainImage.classList.remove('anim-fade-in');
-                    setTimeout(() => {
-                        els.mainImage.classList.remove('anim-base');
-                        els.mainImage.style.transitionDuration = '';
-                        state.isTransitioning = false;
-                        els.mainImage.onload = null;
-                    }, speed);
-                };
+                    els.mainImage.classList.remove('anim-base');
+                    els.mainImage.style.transitionDuration = '';
+                    state.isTransitioning = false;
+                }, speed);
             }, speed);
         }
 
@@ -1616,7 +1646,7 @@
             const initialZoom = savedState ? savedState.zoom : 2;
 
             state.mapInstance = L.map('leaflet-map', {
-                zoomControl: false, attributionControl: false, zoomAnimation: false, 
+                zoomControl: false, attributionControl: false, zoomAnimation: true, markerZoomAnimation: true, fadeAnimation: false, 
                 zoomSnap: 0, minZoom: 2, maxZoom: 22, 
                 maxBoundsViscosity: 1.0, layers: [satellite]
             }).setView(initialCenter, initialZoom);
@@ -1648,7 +1678,11 @@
                     state.userMarker = L.marker(e.latlng, {icon: pulseIcon}).addTo(state.mapInstance);
                 }
                 
-                if(!savedState) state.mapInstance.flyTo(e.latlng, 16); 
+                // Prevent random resets: Only auto-center once per session unless manual reset
+                if(!savedState && !state.hasAutoCentered) {
+                    state.mapInstance.flyTo(e.latlng, 16); 
+                    state.hasAutoCentered = true;
+                }
             });
         }
 
@@ -1682,7 +1716,8 @@
             
             let count = 0;
             state.images.forEach((img, idx) => {
-                if(img.lat && img.lng) {
+                // Correctly check for null/undefined (handles 0 coordinates)
+                if(img.lat != null && img.lng != null) {
                     const icon = L.divIcon({
                         className: 'photo-marker', // Class added here to wrapper
                         html: `<div class="w-10 h-10 rounded-lg border-2 border-white overflow-hidden shadow-lg hover:scale-125 transition-transform bg-black"><img src="${img.src}" class="w-full h-full object-cover"></div>`,
@@ -2180,7 +2215,8 @@
             handleHoverInteractions(1 - x, y);
 
             // 1. CHECK FOR PEACE SIGN (RESET) - FIXED: Restored Logic
-            if (isPeaceSign(landmarks)) {
+            // Safety: Don't allow peace sign reset in map mode to avoid accidental view jumps
+            if (isPeaceSign(landmarks) && !state.isMapMode) {
                  updateStatus("RESETTING...", "wait");
                  setCursorState('peace'); 
                  
