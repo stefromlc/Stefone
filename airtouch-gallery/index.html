@@ -510,11 +510,6 @@
         </div>
     </div>
 
-    <!-- Map Mode Overlay (Moved out of map-wrapper for z-index layering) -->
-    <div id="map-mode-label" class="fixed top-24 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur px-4 py-1 rounded-full text-xs font-mono border border-white/20 pointer-events-none z-50 transition-opacity duration-300 opacity-0" style="color: var(--accent-color);">
-        GESTURE MAP CONTROL
-    </div>
-
     <!-- 3D Toggle (Moved to root for z-index accessibility) -->
     <div id="map-3d-controls" class="fixed bottom-32 right-6 z-50 flex flex-col gap-2 opacity-0 pointer-events-none transition-opacity duration-300">
          <button id="btn-tilt-toggle" onclick="toggle3DMap()" class="w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 text-white hover:text-[var(--accent-color)] hover:border-[var(--accent-color)] flex items-center justify-center shadow-lg backdrop-blur transition-all pointer-events-auto">
