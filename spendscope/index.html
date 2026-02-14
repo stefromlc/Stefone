@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpendScope - UK Multi-Item Savings Hub</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'blob': 'blob 10s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 20px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(99, 102, 241, 0.3); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(99, 102, 241, 0.5); }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(99, 102, 241, 0.6); }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none;  scrollbar-width: none; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .product-image {
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .group:hover .product-image {
+            transform: scale(1.1);
+        }
+
+        .impact-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        }
+
+        .glass-badge {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(35px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .dark .glass-badge {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-900 transition-colors duration-500 selection:bg-indigo-500 selection:text-white overflow-x-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // Enhanced Icon Set
+        const Icons = {
+            ArrowLeft: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>,
+            Trash2: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>,
+            Plus: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>,
+            Check: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+            Sun: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
+            Moon: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>,
+            TrendingUp: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+            Zap: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+            Calendar: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>,
+            Layers: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>,
+            PieChart: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10Z"/></svg>
+        };
+
+        const CURRENCIES = {
+            GBP: { symbol: '£', rate: 0.79, locale: 'en-GB' },
+            USD: { symbol: '$', rate: 1.0, locale: 'en-US' },
+            EUR: { symbol: '€', rate: 0.92, locale: 'de-DE' },
+        };
+
+        const PERIODS = {
+            day: { label: 'Day', multiplier: 365 },
+            week: { label: 'Week', multiplier: 52 },
+            month: { label: 'Month', multiplier: 12 },
+        };
+
+        const PRESETS = [
+            { name: 'Meal Deal', cost: 3.40, frequency: 5, period: 'week', icon: '🥪' },
+            { name: 'Fancy Coffee', cost: 3.80, frequency: 1, period: 'day', icon: '☕️' },
+            { name: 'Disposable Vape', cost: 6.00, frequency: 2, period: 'week', icon: '💨' },
+            { name: 'Pack of Cigs', cost: 16.50, frequency: 1, period: 'day', icon: '🚬' },
+            { name: 'Pint of Lager', cost: 6.50, frequency: 2, period: 'week', icon: '🍺' },
+            { name: 'Takeaway', cost: 14.00, frequency: 2, period: 'week', icon: '🍔' },
+            { name: 'Avocado Brunch', cost: 16.00, frequency: 1, period: 'week', icon: '🥑' },
+            { name: 'Gym Membership', cost: 35.00, frequency: 1, period: 'month', icon: '🏋️' },
+            { name: 'Lottery Tickets', cost: 6.00, frequency: 1, period: 'week', icon: '🎟️' },
+            { name: 'Taxi / Uber', cost: 20.00, frequency: 2, period: 'week', icon: '🚕' },
+            { name: 'Streaming Service', cost: 15.00, frequency: 1, period: 'month', icon: '📺' },
+        ];
+
+        const BENCHMARKS = [
+            { name: 'Meal Deal', baseCostUSD: 5.7, img: 'https://i2-prod.hulldailymail.co.uk/article8387931.ece/ALTERNATES/s1200c/3_IMG_3757.jpg' },
+            { name: 'Fancy Latte', baseCostUSD: 4.8, img: 'https://upload.wikimedia.org/wikipedia/commons/d/d8/Caffe_Latte_at_Pulse_Cafe.jpg' },
+            { name: 'Pint of Lager', baseCostUSD: 8.2, img: 'https://www.yorkshireeveningpost.co.uk/jpim-static/image/2022/10/26/10/AdobeStock_512690395.jpeg?crop=3:2,smart&trim=&width=1200&auto=webp&quality=75' },
+            { name: 'Cinema Ticket', baseCostUSD: 15.2, img: 'https://www.odeon.co.uk/media/s2iord0r/imax-seats.jpg?width=1200&height=630&v=1daa60ef9378810' },
+            { name: 'Paperback Book', baseCostUSD: 19, img: 'https://blog.bookbaby.com/wp-content/uploads/2022/10/PaperbackVsHardcover_Feature.jpg' },
+            { name: 'Basic Haircut', baseCostUSD: 25.3, img: 'https://d375139ucebi94.cloudfront.net/region2/gb/41289/cover/bbf96c6eab4948429eb02a5e8b9b88-the-barber-shop-3948c38077f54fa1bbaa80eb075095-booksy.jpeg' },
+            { name: 'Takeaway Pizza', baseCostUSD: 35.4, img: 'https://tastewise.io/nitropack_static/aPohMRnUAesmicbodbFPKWssEccFSxfi/assets/images/optimized/rev-46865c4/tastewise.io/wp-content/uploads/2025/10/Dominos-Trending-Pizza_-Products.png' },
+            { name: 'Vape Starter Kit', baseCostUSD: 57, img: 'https://greyhaze.co.uk/cdn/shop/articles/Best_Vape_Starter_Kits_33376535-c865-44b0-a5b3-15913f072f54.png?v=1761045205&width=1600' },
+            { name: 'New Video Game', baseCostUSD: 76, img: 'https://i.ytimg.com/vi/M9iPrrA0T3g/maxresdefault.jpg' },
+            { name: 'Nice Hoodie', baseCostUSD: 76, img: 'https://images.laguna-live.sd.co.uk/zoom/upload9223368955665736586.jpg?format=jpg&width=375' },
+            { name: 'Gaming Keyboard', baseCostUSD: 126, img: 'https://cdn.mos.cms.futurecdn.net/iQQXB5JYodVP8rRBB5SVo9.jpg' },
+            { name: 'Air Fryer', baseCostUSD: 152, img: 'https://images.immediate.co.uk/production/volatile/sites/30/2023/05/Philips-HD9280-91-Connected-XL-air-fryer-39a12b0.jpg?quality=90&resize=708,643' },
+            { name: 'Coffee Machine', baseCostUSD: 190, img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcT9P2KIFs8PZ7f40Ub3l9H9fkket0rUVf-w&s' },
+            { name: 'Designer Trainers', baseCostUSD: 215, img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Designer Sunnies', baseCostUSD: 250, img: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Nintendo Switch', baseCostUSD: 354, img: 'https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?auto=format&fit=crop&w=600&q=80' },
+            { name: 'iPad', baseCostUSD: 417, img: 'https://i.ebayimg.com/images/g/iDkAAOSwa8pkjcZI/s-l1200.jpg' },
+            { name: 'Wireless Earbuds', baseCostUSD: 443, img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Short Weekend Break', baseCostUSD: 633, img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Dyson Airwrap', baseCostUSD: 633, img: 'https://cdn.shopify.com/s/files/1/0630/5362/7541/files/123698-01_1_1.jpg?v=1764759868' },
+            { name: 'Electric Scooter', baseCostUSD: 822, img: 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcTMY2o05md75R0c8Ruf-mnzGKWbRBgvN9xA_6HkmHVrYjdi0oix6XMtCkNKKONyTtAinqzI3vR7Nnp5ctLQX4wtRDCaCL6iYz4I0GrxDqByEFVYBM0mUkpG' },
+            { name: 'USA Return Flight', baseCostUSD: 950, img: 'https://static0.simpleflyingimages.com/wordpress/wp-content/uploads/2025/03/hubs_thumbnail.jpg?q=49&fit=crop&w=360&h=240&dpr=2' },
+            { name: 'iPhone 16 Pro', baseCostUSD: 1265, img: 'https://images.unsplash.com/photo-1616348436168-de43ad0db179?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Emergency Fund', baseCostUSD: 1265, img: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=600&q=80' },
+            { name: 'MacBook Air M3', baseCostUSD: 1392, img: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Designer Handbag', baseCostUSD: 2531, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Pro VR Headset', baseCostUSD: 3797, img: 'https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Pro Gamer PC Hub', baseCostUSD: 4430, img: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Used VW Golf', baseCostUSD: 13924, img: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Rolex Submariner', baseCostUSD: 15822, img: 'https://www.marklittler.com/wp-content/uploads/2024/11/Submariner.jpg' },
+            { name: 'Garden Office Pod', baseCostUSD: 22784, img: 'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcQEJVdJh1ZWFcEcsXQ6Xn4CwnFwV-aCczsh1ThzcEwdFvdMujtHJnq3qbLMiSAPewVGOouwGed6f85t-tlBTzLIHwdbpXmqJi5Y9hZXEYw' },
+            { name: 'Kitchen Renovation', baseCostUSD: 35443, img: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Dream Wedding', baseCostUSD: 44303, img: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Tesla Model Y', baseCostUSD: 53152, img: 'https://media.autoexpress.co.uk/image/private/s--X-WVjvBW--/f_auto,t_content-image-full-desktop@1/v1679933008/autoexpress/2023/03/Tesla%20Model%20Y%20Long%20Range%20UK%20019_tswxae.jpg' },
+            { name: 'UK House Deposit', baseCostUSD: 120000, img: 'https://assets.bwbx.io/images/users/iqjWHBFdfxIU/ivNQQaeUsWjw/v1/-1x-1.webp' },
+            { name: 'London Flat Deposit', baseCostUSD: 180000, img: 'https://www.berkeleygroup.co.uk/-/media/migration/berkeley-group/berkeley-inspiration/london-with-amazing-views/london-dock-amazing-views.ashx?h=450&w=1185&rev=c827d26a50fc4e7e8b3f4a5f6a5abfd1&hash=0953AF2CB2212EA09A972834EA767274' },
+            { name: 'Ferrari F8 Tribute', baseCostUSD: 316455, img: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?auto=format&fit=crop&w=600&q=80' },
+            { name: 'Space Flight Trip', baseCostUSD: 759493, img: 'https://images.unsplash.com/photo-1517976487492-5750f3195933?auto=format&fit=crop&w=600&q=80' }
+        ];
+
+        const AnimatedValue = ({ value, format }) => {
+            const [displayValue, setDisplayValue] = useState(0);
+            const startTime = useRef(null);
+            const startValue = useRef(0);
+            const duration = 1000; 
+
+            useEffect(() => {
+                startValue.current = displayValue;
+                startTime.current = null;
+                let frame;
+                const animate = (t) => {
+                    if (!startTime.current) startTime.current = t;
+                    const progress = t - startTime.current;
+                    const ease = (x) => 1 - Math.pow(1 - x, 4);
+                    if (progress < duration) {
+                        setDisplayValue(startValue.current + (value - startValue.current) * ease(progress / duration));
+                        frame = requestAnimationFrame(animate);
+                    } else { setDisplayValue(value); }
+                };
+                frame = requestAnimationFrame(animate);
+                return () => cancelAnimationFrame(frame);
+            }, [value]);
+            return <span>{format(displayValue)}</span>;
+        };
+
+        function App() {
+            const [items, setItems] = useState([]);
+            const [newItem, setNewItem] = useState({ name: '', cost: '', frequency: '1', period: 'day' });
+            const [currencyCode, setCurrencyCode] = useState('GBP');
+            const [darkMode, setDarkMode] = useState(true);
+            const [loaded, setLoaded] = useState(false);
+            const [powerTimeframe, setPowerTimeframe] = useState(1); 
+
+            useEffect(() => {
+                const saved = localStorage.getItem('spendscope_v12_data');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    setItems(data.items || []);
+                    setCurrencyCode(data.currencyCode || 'GBP');
+                    setPowerTimeframe(data.powerTimeframe || 1);
+                    if (data.darkMode !== undefined) setDarkMode(data.darkMode);
+                }
+                setLoaded(true);
+            }, []);
+
+            useEffect(() => {
+                if (loaded) {
+                    localStorage.setItem('spendscope_v12_data', JSON.stringify({ items, currencyCode, darkMode, powerTimeframe }));
+                    if (darkMode) document.documentElement.classList.add('dark');
+                    else document.documentElement.classList.remove('dark');
+                }
+            }, [items, currencyCode, darkMode, powerTimeframe, loaded]);
+
+            const calculations = useMemo(() => {
+                let yearly = 0;
+                items.forEach(i => { if (i.active) yearly += i.cost * i.frequency * PERIODS[i.period].multiplier; });
+                
+                // Investment returns calculation (assumed 7% annual return)
+                const rate = 0.07;
+                // FV = P * (((1+r)^n - 1) / r)
+                const invest10 = yearly * ((Math.pow(1 + rate, 10) - 1) / rate);
+                
+                return { 
+                    yearly, 
+                    monthly: yearly / 12, 
+                    weekly: yearly / 52,
+                    daily: yearly / 365,
+                    fiveYear: yearly * 5, 
+                    tenYear: yearly * 10,
+                    twentyYear: yearly * 20,
+                    invest10: invest10
+                };
+            }, [items]);
+
+            const formatMoney = (amount, precise = false) => {
+                const config = CURRENCIES[currencyCode];
+                return new Intl.NumberFormat(config.locale, {
+                    style: 'currency', currency: currencyCode,
+                    minimumFractionDigits: precise ? 2 : 0,
+                    maximumFractionDigits: precise ? 2 : 0,
+                }).format(amount);
+            };
+
+            const handleAddItem = (e) => {
+                e.preventDefault();
+                if (!newItem.name || !newItem.cost) return;
+                setItems([{ id: Date.now(), ...newItem, cost: parseFloat(newItem.cost), frequency: parseFloat(newItem.frequency), active: true }, ...items]);
+                setNewItem({ name: '', cost: '', frequency: '1', period: 'day' });
+            };
+
+            const toggleItemActive = (id) => {
+                setItems(items.map(item => item.id === id ? { ...item, active: !item.active } : item));
+            };
+
+            const deleteItem = (id) => {
+                setItems(items.filter(item => item.id !== id));
+            };
+
+            if (!loaded) return null;
+
+            return (
+                <div className={`relative min-h-screen transition-all duration-700 ${darkMode ? 'bg-[#0b0f19] text-white' : 'bg-[#f8fafc] text-slate-900'} font-sans pb-20`}>
+                    
+                    <div className={`fixed inset-0 pointer-events-none transition-opacity duration-1000 ${darkMode ? 'opacity-30' : 'opacity-50'}`}>
+                        <div className="absolute top-[-10%] left-[-10%] w-[50rem] h-[50rem] bg-indigo-600/10 rounded-full blur-[128px] animate-blob"></div>
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[50rem] h-[50rem] bg-purple-600/10 rounded-full blur-[128px] animate-blob animation-delay-2000"></div>
+                    </div>
+
+                    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-[#0b0f19]/70 border-b border-slate-200 dark:border-white/10 px-6 py-4">
+                        <div className="max-w-7xl mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                                <a href="/projects/" className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-all text-slate-500 dark:text-slate-300">
+                                    <Icons.ArrowLeft size={20} />
+                                </a>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg">
+                                        <Icons.TrendingUp size={18} strokeWidth={3} />
+                                    </div>
+                                    <span className="text-xl font-black tracking-tighter uppercase font-sans">SpendScope Hub</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <select 
+                                    value={currencyCode} 
+                                    onChange={(e) => setCurrencyCode(e.target.value)}
+                                    className="bg-transparent font-bold text-sm outline-none cursor-pointer text-inherit"
+                                >
+                                    {Object.entries(CURRENCIES).map(([code, { symbol }]) => <option key={code} value={code} className="text-black">{code} ({symbol})</option>)}
+                                </select>
+                                <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full dark:bg-white/5 border border-transparent dark:border-white/10">
+                                    {darkMode ? <Icons.Sun size={20} /> : <Icons.Moon size={20} />}
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 relative z-10">
+                        
+                        {/* Quick Add Bar */}
+                        <div className="mb-12 animate-slide-up text-center lg:text-left">
+                             <div className="flex items-center justify-center lg:justify-start gap-2 mb-4 px-1">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-indigo-300 opacity-60">Quick Add Items</span>
+                             </div>
+                             <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar px-1">
+                                {PRESETS.map((p) => (
+                                    <button
+                                        key={p.name}
+                                        onClick={() => setNewItem({ name: p.name, cost: p.cost, frequency: p.frequency, period: p.period })}
+                                        className="shrink-0 px-6 py-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800/40 hover:border-indigo-500 transition-all shadow-sm flex items-center gap-3 group backdrop-blur-md"
+                                    >
+                                        <span className="text-2xl filter drop-shadow-sm group-hover:scale-110 transition-transform">{p.icon}</span>
+                                        <span className="text-sm font-bold opacity-80 group-hover:opacity-100">{p.name}</span>
+                                    </button>
+                                ))}
+                             </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-20">
+                            
+                            <div className="lg:col-span-5 space-y-8">
+                                <div className="glass-panel p-10 rounded-[3rem] relative overflow-hidden">
+                                    <h3 className="text-lg font-black uppercase tracking-widest mb-8 flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                                            <Icons.Plus size={20} />
+                                        </div>
+                                        Customise Item
+                                    </h3>
+                                    <form onSubmit={handleAddItem} className="space-y-6">
+                                        <input type="text" placeholder="Habit Name (e.g. Daily Coffee)" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold text-lg shadow-inner text-slate-900 dark:text-white" />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="relative">
+                                                <span className="absolute left-5 top-5 text-slate-400 font-bold">{CURRENCIES[currencyCode].symbol}</span>
+                                                <input type="number" step="0.01" value={newItem.cost} onChange={(e) => setNewItem({...newItem, cost: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl pl-12 pr-6 py-5 font-bold text-lg shadow-inner text-slate-900 dark:text-white" />
+                                            </div>
+                                            <select value={newItem.period} onChange={(e) => setNewItem({...newItem, period: e.target.value})} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-5 font-bold text-lg outline-none cursor-pointer text-slate-900 dark:text-white">
+                                                {Object.entries(PERIODS).map(([k, { label }]) => <option key={k} value={k}>{label}</option>)}
+                                            </select>
+                                        </div>
+                                        <button type="submit" className="w-full impact-gradient py-6 rounded-3xl font-black text-white shadow-2xl shadow-indigo-500/40 hover:scale-[1.02] transition-all active:scale-95 uppercase tracking-widest text-lg font-sans">Save Habit</button>
+                                    </form>
+                                </div>
+
+                                {items.length > 0 && (
+                                    <div className="glass-panel rounded-[3rem] overflow-hidden max-h-[400px] flex flex-col">
+                                        <div className="p-8 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
+                                            <h3 className="font-black uppercase tracking-widest text-xs opacity-50">Saved Habits</h3>
+                                            <span className="text-[10px] font-black bg-indigo-500/10 px-3 py-1.5 rounded-full text-indigo-500 uppercase font-sans">
+                                                {formatMoney(calculations.yearly)} Impact
+                                            </span>
+                                        </div>
+                                        <div className="overflow-y-auto custom-scrollbar p-4 space-y-3">
+                                            {items.map(item => (
+                                                <div key={item.id} className={`p-5 rounded-3xl flex items-center justify-between transition-all ${item.active ? 'bg-white dark:bg-white/5 shadow-sm border border-slate-200 dark:border-white/5' : 'opacity-40 grayscale'}`}>
+                                                    <div className="flex items-center gap-4">
+                                                        <button onClick={() => toggleItemActive(item.id)} className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all ${item.active ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'border-slate-300 dark:border-slate-600'}`}>
+                                                            {item.active && <Icons.Check size={16} />}
+                                                        </button>
+                                                        <div>
+                                                            <div className="font-bold text-base leading-tight truncate max-w-[140px]">{item.name}</div>
+                                                            <div className="text-[10px] uppercase font-black opacity-30 mt-1">{formatMoney(item.cost, true)} / {item.period}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="text-right">
+                                                            <div className="text-sm font-black">{formatMoney(item.cost * item.frequency * PERIODS[item.period].multiplier)}</div>
+                                                            <div className="text-[8px] uppercase font-black opacity-40">Per Year</div>
+                                                        </div>
+                                                        <button onClick={() => deleteItem(item.id)} className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-colors">
+                                                            <Icons.Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Enhanced Financial Impact Hub - The requested enhancement area */}
+                            <div className="lg:col-span-7 flex flex-col h-full gap-6">
+                                
+                                {/* 1. Hero Annual Card */}
+                                <div className="glass-panel p-10 rounded-[3.5rem] relative overflow-hidden group flex-1 min-h-[300px] flex flex-col justify-center">
+                                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] -mr-64 -mt-64"></div>
+                                    <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-pink-600/5 rounded-full blur-[80px] -ml-32 -mb-32"></div>
+                                    
+                                    <div className="relative z-10 text-center lg:text-left">
+                                        <div className="flex items-center justify-center lg:justify-start gap-3 mb-6 opacity-50">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></div>
+                                            <h3 className="font-black uppercase tracking-[0.3em] text-[11px]">Total Annual Impact</h3>
+                                        </div>
+                                        
+                                        <div className="text-[15vw] lg:text-[7rem] xl:text-[8.5rem] font-black tracking-tighter leading-none mb-4 bg-clip-text text-transparent bg-gradient-to-br from-slate-900 via-slate-600 to-slate-800 dark:from-white dark:via-slate-200 dark:to-slate-400 font-sans transform transition-transform hover:scale-[1.01] duration-700">
+                                            <AnimatedValue value={calculations.yearly} format={(v) => formatMoney(v)} />
+                                        </div>
+                                        <div className="inline-block px-5 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider">
+                                            Projected Cash Savings
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 2. Short Term Grid (Daily, Weekly, Monthly) */}
+                                <div className="grid grid-cols-3 gap-4 lg:gap-6">
+                                    {[
+                                        { label: 'Daily', val: calculations.daily, icon: <Icons.Sun size={18} />, color: 'text-amber-500' },
+                                        { label: 'Weekly', val: calculations.weekly, icon: <Icons.Calendar size={18} />, color: 'text-blue-500' },
+                                        { label: 'Monthly', val: calculations.monthly, icon: <Icons.Moon size={18} />, color: 'text-indigo-500' }
+                                    ].map((stat, i) => (
+                                        <div key={i} className="glass-panel p-6 rounded-[2.5rem] flex flex-col items-center lg:items-start text-center lg:text-left hover:bg-white/5 transition-colors">
+                                            <div className={`mb-3 p-2.5 rounded-2xl bg-white dark:bg-white/5 shadow-sm ${stat.color} w-fit`}>
+                                                {stat.icon}
+                                            </div>
+                                            <div className="text-[10px] uppercase font-black opacity-40 tracking-widest mb-1">{stat.label}</div>
+                                            <div className="text-lg lg:text-2xl font-black tracking-tight">
+                                                <AnimatedValue value={stat.val} format={(v) => formatMoney(v, true)} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* 3. Long Term & Wealth Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                                    
+                                    {/* 5 Year Block */}
+                                    <div className="glass-panel p-8 rounded-[2.5rem] relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                                            <Icons.Layers size={60} />
+                                        </div>
+                                        <div className="relative z-10">
+                                            <div className="text-[10px] uppercase font-black opacity-40 tracking-widest mb-3">5 Years</div>
+                                            <div className="text-3xl lg:text-4xl font-black tracking-tighter">
+                                                <AnimatedValue value={calculations.fiveYear} format={(v) => formatMoney(v)} />
+                                            </div>
+                                            <div className="mt-2 text-[10px] font-bold opacity-30">Cash Accumulation</div>
+                                        </div>
+                                    </div>
+
+                                    {/* 10 Year Block */}
+                                    <div className="glass-panel p-8 rounded-[2.5rem] relative overflow-hidden group">
+                                         <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                                            <Icons.PieChart size={60} />
+                                        </div>
+                                        <div className="relative z-10">
+                                            <div className="text-[10px] uppercase font-black opacity-40 tracking-widest mb-3">Decade</div>
+                                            <div className="text-3xl lg:text-4xl font-black tracking-tighter text-indigo-500">
+                                                <AnimatedValue value={calculations.tenYear} format={(v) => formatMoney(v)} />
+                                            </div>
+                                            <div className="mt-2 text-[10px] font-bold opacity-30">Cash Accumulation</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Investment Potential Block (New) */}
+                                    <div className="md:col-span-2 lg:col-span-1 bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-8 rounded-[2.5rem] relative overflow-hidden shadow-xl shadow-indigo-500/20">
+                                        <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] mix-blend-overlay opacity-0 hover:opacity-100 transition-opacity"></div>
+                                        <div className="absolute -right-4 -top-4 text-white/10 rotate-12">
+                                            <Icons.Zap size={100} strokeWidth={1} />
+                                        </div>
+                                        
+                                        <div className="relative z-10 h-full flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Icons.Zap size={14} className="text-yellow-300 fill-yellow-300" />
+                                                    <span className="text-[10px] uppercase font-black tracking-widest text-indigo-100">Wealth Potential</span>
+                                                </div>
+                                                <div className="text-3xl lg:text-4xl font-black tracking-tighter text-white drop-shadow-md">
+                                                    <AnimatedValue value={calculations.invest10} format={(v) => formatMoney(v)} />
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 pt-4 border-t border-white/10">
+                                                <p className="text-[10px] font-medium text-indigo-100 leading-relaxed">
+                                                    Projected value over <span className="font-bold text-white">10 years</span> if invested with a <span className="font-bold text-white">7%</span> annual return.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Purchasing Power Gallery */}
+                        <div className="mb-24">
+                            <div className="flex flex-col md:flex-row items-end md:items-center justify-between mb-16 gap-8 px-4">
+                                <div>
+                                    <h3 className="text-5xl font-black tracking-tighter mb-4 font-sans leading-none">The Reward Gallery</h3>
+                                    <p className="opacity-40 font-bold text-lg leading-relaxed max-w-lg">Achievements projected over <span className="text-indigo-500 dark:text-indigo-400">{powerTimeframe} Year{powerTimeframe > 1 ? 's' : ''}</span>.</p>
+                                </div>
+                                <div className="flex bg-slate-200 dark:bg-slate-800 p-2 rounded-[2rem] shadow-inner border border-white/5 backdrop-blur-md">
+                                    {[1, 5, 10].map(yr => (
+                                        <button key={yr} onClick={() => setPowerTimeframe(yr)} className={`px-10 py-4 rounded-[1.5rem] text-sm font-black transition-all ${powerTimeframe === yr ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'opacity-40 hover:opacity-100'}`}>
+                                            {yr}Y
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 px-4">
+                                {BENCHMARKS.map((b) => {
+                                    const savedTotal = calculations.yearly * powerTimeframe;
+                                    const costLocal = b.baseCostUSD * CURRENCIES[currencyCode].rate;
+                                    const multRaw = savedTotal / costLocal;
+                                    
+                                    const multDisplay = Math.floor(multRaw);
+                                    const isEarned = multRaw >= 1;
+                                    
+                                    const progressPercentage = Math.min(Math.floor(multRaw * 100), 100);
+
+                                    return (
+                                        <div key={b.name} className={`group relative rounded-[3rem] overflow-hidden glass-panel transition-all duration-700 ${isEarned ? 'ring-2 ring-indigo-500/50 shadow-2xl scale-100' : 'opacity-50 grayscale hover:grayscale-0 hover:opacity-100 scale-[0.97] hover:scale-100'}`}>
+                                            <div className="aspect-[4/3] overflow-hidden relative">
+                                                <img 
+                                                    src={b.img} 
+                                                    alt={b.name}
+                                                    className="product-image w-full h-full object-cover" 
+                                                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=600&auto=format&fit=crop'; }}
+                                                />
+                                                
+                                                {/* Achievement Multiplier Badge */}
+                                                {multDisplay > 0 && (
+                                                    <div className="absolute top-6 right-6 z-20">
+                                                        <div className={`glass-badge px-7 py-4 rounded-[1.5rem] font-black text-xl tracking-tighter backdrop-blur-3xl shadow-2xl transition-all duration-500 group-hover:scale-110 flex items-center justify-center min-w-[75px] text-white bg-indigo-600/60 border-indigo-400`}>
+                                                            {multDisplay}x
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                                
+                                                <div className="absolute bottom-8 left-8 right-8 text-white z-10">
+                                                    <h4 className="font-black text-2xl leading-tight mb-2 drop-shadow-2xl font-sans">{b.name}</h4>
+                                                    <div className="text-[10px] uppercase font-black opacity-60 tracking-[0.2em] mb-4">{formatMoney(costLocal)} EACH</div>
+                                                    
+                                                    {/* Subtle progress bar for tracking toward first unit */}
+                                                    {!isEarned && (
+                                                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-xl border border-white/10 shadow-inner">
+                                                            <div 
+                                                                className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 transition-all duration-1000 shadow-[0_0_15px_rgba(99,102,241,0.8)]"
+                                                                style={{ width: `${progressPercentage}%` }}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

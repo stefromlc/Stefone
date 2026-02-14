@@ -1,5 +1,23 @@
 [
   {
+    "demoUrl": "",
+    "repoUrl": "",
+    "title": "SpendScope",
+    "slug": "spendscope",
+    "description": "SpendScope Hub is a powerful yet easy-to-use savings tracker that shows how your everyday habits add up over time. Add your regular spends and instantly see your daily, monthly, yearly, and even long-term wealth potential — plus what those savings could buy in the Reward Gallery ",
+    "thumbnail": "assets/thumbs/spendscope.png",
+    "tags": [
+      "Financial",
+      "Scope",
+      "Spend",
+      "Tracker",
+      "Wealth"
+    ],
+    "category": "Experiments",
+    "featured": true,
+    "date": "2026-02-14"
+  },
+  {
     "title": "TimeBox",
     "slug": "timebox",
     "description": "TimeBox is a cinematic 3D word clock that turns time into something you can explore. A glowing cube drifts, spins, and breathes in space, lighting up words to tell the current time with clarity and style. Switch between bold visual presets, dynamic backgrounds, and immersive camera modes—from slow orbit to handheld drift—to shape the mood. Fine-tune glow, focus, rotation, and perspective, or simply let it run as a living, ambient centerpiece in your browser.",
