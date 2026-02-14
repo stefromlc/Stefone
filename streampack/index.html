@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Primary Meta Tags -->
+<title>StreamPack – Smart Media USB Staging Tool</title>
+<meta name="title" content="StreamPack – Smart Media USB Staging Tool" />
+<meta name="description" content="Load shows and movies onto a USB with clarity and control. Auto-group episodes, build transfer queues, and track storage—all locally in your browser." />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.stefone.com/streampack/" />
+<meta property="og:title" content="StreamPack – Smart Media USB Staging Tool" />
+<meta property="og:description" content="Load shows and movies onto a USB with clarity and control. Auto-group episodes, build transfer queues, and track storage—all locally in your browser." />
+<meta property="og:image" content="https://www.stefone.com/assets/thumbs/streampack.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="StreamPack media staging and USB transfer interface preview" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="StreamPack – Smart Media USB Staging Tool" />
+<meta name="twitter:description" content="Load shows and movies onto a USB with clarity and control. Auto-group episodes, build transfer queues, and track storage—all locally in your browser." />
+<meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/streampack.png" />
+
+<!-- Optional -->
+<meta name="theme-color" content="#10b981" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+        /* Diagonal stripe pattern for projected space */
+        .pattern-diagonal-lines {
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.1) 5px, rgba(0,0,0,0.1) 10px);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 overflow-hidden">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useCallback } = React;
+
+        // --- ICONS ---
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const icons = {
+                FolderOpen: <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 2H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z" />,
+                HardDrive: <><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></>,
+                ArrowRight: <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>,
+                CheckCircle: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>,
+                AlertCircle: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
+                Film: <><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></>,
+                Tv: <><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></>,
+                Save: <><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>,
+                Trash2: <><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>,
+                RefreshCw: <><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
+                Search: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+                FileVideo: <><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="m10 13 5 3-5 3v-6Z"/></>,
+                Plus: <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+                Minus: <><line x1="5" y1="12" x2="19" y2="12"/></>,
+                ChevronRight: <><polyline points="9 18 15 12 9 6"/></>,
+                ChevronDown: <><polyline points="6 9 12 15 18 9"/></>,
+                Layers: <><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>,
+                List: <><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></>,
+BackArrow: <path d="M19 12H5M12 19l-7-7 7-7" />,
+        Logo: <><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></>
+
+            };
+
+            return (
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width={size} 
+                    height={size} 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className={className}
+                >
+                    {icons[name] || null}
+                </svg>
+            );
+        };
+
+        // --- UTILITY FUNCTIONS ---
+        const formatBytes = (bytes, decimals = 2) => {
+            if (!+bytes) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+        };
+
+        const hasFileSystemAccess = () => 'showDirectoryPicker' in window;
+
+        const checkCompatibility = (filename) => {
+            const ext = filename.split('.').pop().toLowerCase();
+            const safe = ['mp4', 'mkv', 'mov', 'avi', 'webm'];
+            const risky = ['flv', 'wmv', 'iso', 'ts'];
+            if (safe.includes(ext)) return { status: 'safe', label: 'Likely Compatible', color: 'text-green-400' };
+            if (risky.includes(ext)) return { status: 'risky', label: 'Transcode Needed?', color: 'text-yellow-400' };
+            return { status: 'unknown', label: 'Unknown Format', color: 'text-gray-400' };
+        };
+
+        // Parse Filename for Show/Season/Episode
+        const parseMediaInfo = (filename) => {
+            // Common regex for S01E01 or 1x01
+            // Captures: 1=ShowName, 2=Season, 3=Episode
+            const regex = /(.+?)[ ._-]+[sS](\d+)[eE](\d+)/i;
+            const match = filename.match(regex);
+            
+            if (match) {
+                return {
+                    isTv: true,
+                    show: match[1].replace(/[._-]/g, ' ').trim(),
+                    season: parseInt(match[2], 10),
+                    episode: parseInt(match[3], 10)
+                };
+            }
+            return { isTv: false, show: 'Other', season: 0, episode: 0 };
+        };
+
+        // --- COMPONENTS ---
+
+        // Collapsible Accordion Group
+        const Accordion = ({ title, subTitle, children, action, depth = 0 }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            
+            return (
+                <div className={`border-b border-slate-800 ${depth > 0 ? 'ml-4 border-l border-slate-700' : ''}`}>
+                    <div className="flex items-center justify-between p-2 hover:bg-slate-800 transition-colors group">
+                        <div 
+                            className="flex items-center gap-2 flex-1 cursor-pointer"
+                            onClick={() => setIsOpen(!isOpen)}
+                        >
+                            <span className="text-slate-500">
+                                {isOpen ? <Icon name="ChevronDown" size={16} /> : <Icon name="ChevronRight" size={16} />}
+                            </span>
+                            <div>
+                                <div className="font-medium text-slate-200 text-sm">{title}</div>
+                                {subTitle && <div className="text-xs text-slate-500">{subTitle}</div>}
+                            </div>
+                        </div>
+                        {action && <div className="ml-2">{action}</div>}
+                    </div>
+                    {isOpen && <div>{children}</div>}
+                </div>
+            );
+        };
+
+        function App() {
+            // --- STATE ---
+            const [sourceHandle, setSourceHandle] = useState(null);
+            const [destHandle, setDestHandle] = useState(null);
+            const [sourceFiles, setSourceFiles] = useState([]);
+            const [destFiles, setDestFiles] = useState([]);
+            
+            // Queue & History
+            const [queue, setQueue] = useState([]); // Array of file objects
+            const [transferHistory, setTransferHistory] = useState(() => {
+                const saved = localStorage.getItem('mediaMoverHistory');
+                return saved ? new Set(JSON.parse(saved)) : new Set();
+            });
+            const [recentlyAdded, setRecentlyAdded] = useState(new Set()); // Session-based recently added files
+
+            // UI State
+            // Split scanning state so they don't affect each other's UI
+            const [scanningSource, setScanningSource] = useState(false);
+            const [scanningDest, setScanningDest] = useState(false);
+
+            const [processingQueue, setProcessingQueue] = useState(false);
+            const [currentTransfer, setCurrentTransfer] = useState(null); // { name, progress }
+            const [viewMode, setViewMode] = useState('smart'); // 'smart' | 'list'
+            const [rightTab, setRightTab] = useState('queue'); // 'queue' | 'usb'
+            
+            // Filters
+            const [searchTerm, setSearchTerm] = useState('');
+            const [filterType, setFilterType] = useState('all'); 
+            const [maxSizeGB, setMaxSizeGB] = useState(0); 
+
+            // USB Stats
+            const [usbTotalSize, setUsbTotalSize] = useState(128 * 1024 * 1024 * 1024);
+            const [usbUsedSize, setUsbUsedSize] = useState(0);
+
+            // --- EFFECTS ---
+            useEffect(() => {
+                const used = destFiles.reduce((acc, file) => acc + file.size, 0);
+                setUsbUsedSize(used);
+            }, [destFiles]);
+
+            useEffect(() => {
+                localStorage.setItem('mediaMoverHistory', JSON.stringify([...transferHistory]));
+            }, [transferHistory]);
+
+            // --- COMPUTED ---
+            const queueSize = useMemo(() => queue.reduce((acc, f) => acc + f.size, 0), [queue]);
+            
+            const availableExtensions = useMemo(() => {
+                const exts = new Set(sourceFiles.map(f => f.type));
+                return Array.from(exts).sort();
+            }, [sourceFiles]);
+
+            const filteredSourceFiles = useMemo(() => {
+                return sourceFiles.filter(file => {
+                    if (searchTerm && !file.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+                    if (filterType.startsWith('.')) {
+                        if (file.type !== filterType.substring(1)) return false;
+                    } else {
+                        const compat = checkCompatibility(file.name);
+                        if (filterType === 'safe' && compat.status !== 'safe') return false;
+                        if (filterType === 'risky' && compat.status === 'safe') return false;
+                    }
+                    if (maxSizeGB > 0 && file.size > maxSizeGB * 1024 * 1024 * 1024) return false;
+                    return true;
+                });
+            }, [sourceFiles, searchTerm, filterType, maxSizeGB]);
+
+            // Smart Grouping Logic
+            const groupedFiles = useMemo(() => {
+                const groups = {};
+                const other = [];
+
+                filteredSourceFiles.forEach(file => {
+                    const info = parseMediaInfo(file.name);
+                    if (info.isTv) {
+                        if (!groups[info.show]) groups[info.show] = {};
+                        if (!groups[info.show][info.season]) groups[info.show][info.season] = [];
+                        groups[info.show][info.season].push({ ...file, ...info });
+                    } else {
+                        other.push(file);
+                    }
+                });
+                
+                // Sort seasons and episodes
+                Object.keys(groups).forEach(show => {
+                    Object.keys(groups[show]).forEach(season => {
+                        groups[show][season].sort((a, b) => a.episode - b.episode);
+                    });
+                });
+
+                return { shows: groups, other };
+            }, [filteredSourceFiles]);
+
+            // --- HANDLERS ---
+            const scanDirectory = async (dirHandle, isSource = true) => {
+                const fileList = [];
+                // Set appropriate scanning state
+                if (isSource) setScanningSource(true);
+                else setScanningDest(true);
+
+                async function traverse(handle, path = '') {
+                    for await (const entry of handle.values()) {
+                        if (entry.kind === 'file') {
+                            const ext = entry.name.split('.').pop().toLowerCase();
+                            const mediaExts = ['mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', 'm4v', 'ts', 'iso'];
+                            if (mediaExts.includes(ext)) {
+                                try {
+                                    const fileData = await entry.getFile();
+                                    fileList.push({
+                                        id: path + entry.name,
+                                        name: entry.name,
+                                        path: path,
+                                        size: fileData.size,
+                                        handle: entry,
+                                        lastModified: fileData.lastModified,
+                                        type: ext
+                                    });
+                                } catch (err) { console.warn("Skip", entry.name); }
+                            }
+                        } else if (entry.kind === 'directory') {
+                            await traverse(entry, path + entry.name + '/');
+                        }
+                    }
+                }
+                try {
+                    await traverse(dirHandle);
+                    if (isSource) setSourceFiles(fileList);
+                    else setDestFiles(fileList);
+                } catch (err) { alert("Error scanning. " + err.message); } 
+                finally { 
+                    // Clear appropriate scanning state
+                    if (isSource) setScanningSource(false);
+                    else setScanningDest(false);
+                }
+            };
+
+            const addToQueue = (files) => {
+                const newFiles = Array.isArray(files) ? files : [files];
+                // Filter out duplicates already in queue
+                const uniqueNew = newFiles.filter(nf => !queue.some(qf => qf.id === nf.id));
+                // Filter out files already on USB
+                const notOnUsb = uniqueNew.filter(nf => !destFiles.some(df => df.name === nf.name));
+                
+                if (notOnUsb.length === 0) return; // Nothing new
+                
+                setQueue(prev => [...prev, ...notOnUsb]);
+                setRightTab('queue'); // Switch to queue view to show action
+            };
+
+            const removeFromQueue = (fileId) => {
+                setQueue(prev => prev.filter(f => f.id !== fileId));
+            };
+
+            const processQueue = async () => {
+                if (!destHandle) return alert("Select USB Drive first.");
+                if (queue.length === 0) return;
+                
+                // Check space
+                const available = usbTotalSize - usbUsedSize;
+                if (queueSize > available) {
+                    return alert(`Not enough space! Queue needs ${formatBytes(queueSize)}, but only ${formatBytes(available)} free.`);
+                }
+
+                setProcessingQueue(true);
+
+                for (const fileObj of queue) {
+                    setCurrentTransfer({ name: fileObj.name, progress: 0 });
+                    try {
+                        const sourceFile = await fileObj.handle.getFile();
+                        const newFileHandle = await destHandle.getFileHandle(fileObj.name, { create: true });
+                        const writable = await newFileHandle.createWritable();
+                        
+                        const totalSize = sourceFile.size;
+                        const CHUNK_SIZE = 1024 * 1024 * 10; // 10MB
+                        let loaded = 0;
+
+                        for (let offset = 0; offset < totalSize; offset += CHUNK_SIZE) {
+                            const chunk = sourceFile.slice(offset, offset + CHUNK_SIZE);
+                            await writable.write(chunk);
+                            loaded += chunk.size;
+                            setCurrentTransfer(prev => ({ ...prev, progress: Math.min(100, Math.round((loaded / totalSize) * 100)) }));
+                        }
+                        await writable.close();
+                        
+                        // Success handling
+                        setTransferHistory(prev => new Set(prev).add(fileObj.id));
+                        setRecentlyAdded(prev => new Set(prev).add(fileObj.name)); // Track this session's adds
+                        
+                        // Remove from Queue locally
+                        setQueue(prev => prev.filter(f => f.id !== fileObj.id));
+                        // Refresh Dest Files (Optional: optimize by adding manually)
+                        await scanDirectory(destHandle, false);
+
+                    } catch (err) {
+                        console.error(err);
+                        alert(`Failed to copy ${fileObj.name}`);
+                        break; // Stop on error
+                    }
+                }
+                setProcessingQueue(false);
+                setCurrentTransfer(null);
+                setRightTab('usb'); // Auto-switch to USB view to see new files
+            };
+
+            // Common "Add" Button Component
+            const AddButton = ({ onClick, disabled, label = "" }) => (
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onClick(); }}
+                    disabled={disabled}
+                    className={`p-1.5 rounded-md transition-all flex items-center gap-1 text-xs
+                        ${disabled 
+                            ? 'text-slate-600 bg-slate-800/50 cursor-not-allowed' 
+                            : 'bg-blue-600 hover:bg-blue-500 text-white shadow hover:shadow-blue-500/20 active:scale-95'
+                        }`}
+                >
+                    <Icon name="Plus" size={14} /> {label}
+                </button>
+            );
+
+            return (
+                <div className="flex flex-col h-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
+                    {/* HEADER */}
+                    <header className="flex-none bg-slate-950 border-b border-slate-800 p-3 shadow-lg z-10 flex justify-between items-center">
+                        <div className="flex items-center gap-6">
+                            <a href="/projects/" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group">
+                                <div className="p-1.5 rounded-full bg-slate-800 group-hover:bg-slate-700 transition-colors">
+                                    <Icon name="BackArrow" size={16} />
+                                </div>
+                                <span className="font-medium hidden sm:inline">Back to Projects</span>
+                            </a>
+                            
+                            <div className="h-8 w-px bg-white/10 mx-2"></div>
+
+                            <div className="flex items-center gap-3 select-none">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-accent to-brand-secondary flex items-center justify-center shadow-lg shadow-brand-accent/20">
+                                    <Icon name="Logo" size={24} className="text-white" />
+                                </div>
+                                <div>
+                                    <h1 className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
+                                        StreamPack
+                                    </h1>
+                                    <p className="text-[10px] text-brand-secondary font-medium tracking-widest uppercase">Smart Media, Ready to Go.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* MAIN CONTENT */}
+                    <div className="flex-1 grid grid-cols-12 overflow-hidden h-full">
+                        
+                        {/* LEFT: LIBRARY */}
+                        <div className="col-span-7 flex flex-col border-r border-slate-800 bg-slate-900/50 h-full min-h-0">
+                            {/* Toolbar */}
+                            <div className="flex-none p-3 border-b border-slate-800 bg-slate-900 z-10 space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="font-semibold flex items-center gap-2 text-slate-200">
+                                        <Icon name="Film" className="text-blue-400" size={18} /> Source Library
+                                    </h2>
+                                    <div className="flex gap-2">
+                                        <div className="bg-slate-800 rounded p-0.5 flex">
+                                            <button 
+                                                onClick={() => setViewMode('smart')}
+                                                className={`p-1.5 rounded text-xs flex items-center gap-1 ${viewMode === 'smart' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                                            >
+                                                <Icon name="Layers" size={14} /> Smart View
+                                            </button>
+                                            <button 
+                                                onClick={() => setViewMode('list')}
+                                                className={`p-1.5 rounded text-xs flex items-center gap-1 ${viewMode === 'list' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                                            >
+                                                <Icon name="List" size={14} /> List
+                                            </button>
+                                        </div>
+                                        <button onClick={() => window.showDirectoryPicker({mode:'read'}).then(h=>{setSourceHandle(h);scanDirectory(h,true)})} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-700">
+                                            {sourceHandle ? 'Rescan' : 'Select Folder'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <Icon name="Search" size={14} className="absolute left-3 top-2 text-slate-500" />
+                                        <input type="text" placeholder="Filter library..." className="w-full bg-slate-950 border border-slate-800 rounded py-1.5 pl-9 pr-2 text-xs focus:border-blue-500 outline-none" value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} />
+                                    </div>
+                                    <select className="bg-slate-950 border border-slate-800 rounded px-2 text-xs outline-none" value={filterType} onChange={e=>setFilterType(e.target.value)}>
+                                        <option value="all">All Types</option>
+                                        <option value="safe">TV Safe</option>
+                                        {availableExtensions.map(ext => <option key={ext} value={`.${ext}`}>{ext.toUpperCase()}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* List Content */}
+                            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
+                                {scanningSource && <div className="p-10 text-center text-slate-500 animate-pulse">Scanning Library...</div>}
+                                
+                                {/* SMART VIEW */}
+                                {!scanningSource && viewMode === 'smart' && (
+                                    <div className="pb-4">
+                                        {Object.keys(groupedFiles.shows).length === 0 && groupedFiles.other.length === 0 && (
+                                            <div className="p-8 text-center text-slate-600 text-sm">No files found. Select a source folder.</div>
+                                        )}
+
+                                        {/* TV SHOWS */}
+                                        {Object.entries(groupedFiles.shows).map(([showName, seasons]) => (
+                                            <Accordion 
+                                                key={showName} 
+                                                title={showName} 
+                                                subTitle={`${Object.keys(seasons).length} Seasons`}
+                                                action={<AddButton onClick={() => addToQueue(Object.values(seasons).flat())} label="Show" />}
+                                            >
+                                                {Object.entries(seasons).map(([seasonNum, episodes]) => (
+                                                    <Accordion 
+                                                        key={seasonNum} 
+                                                        title={`Season ${seasonNum}`} 
+                                                        subTitle={`${episodes.length} Episodes`}
+                                                        depth={1}
+                                                        action={<AddButton onClick={() => addToQueue(episodes)} label="Season" />}
+                                                    >
+                                                        {episodes.map(ep => (
+                                                            <div key={ep.id} className="pl-8 py-2 pr-2 flex justify-between items-center hover:bg-slate-800 border-b border-slate-800/50 group/item">
+                                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                                    <div className="w-8 text-slate-500 text-xs font-mono">E{ep.episode.toString().padStart(2, '0')}</div>
+                                                                    <div className="text-sm truncate text-slate-300 group-hover/item:text-white" title={ep.name}>{ep.name}</div>
+                                                                    {transferHistory.has(ep.id) && <span className="text-[9px] bg-green-900/50 text-green-400 px-1 rounded">COPIED</span>}
+                                                                    {destFiles.some(d => d.name === ep.name) && <span className="text-[9px] bg-blue-900/50 text-blue-400 px-1 rounded">ON USB</span>}
+                                                                </div>
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className="text-xs text-slate-500">{formatBytes(ep.size)}</span>
+                                                                    <AddButton onClick={() => addToQueue(ep)} />
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </Accordion>
+                                                ))}
+                                            </Accordion>
+                                        ))}
+
+                                        {/* OTHER FILES */}
+                                        {groupedFiles.other.length > 0 && (
+                                            <div className="mt-4">
+                                                <div className="px-4 py-2 bg-slate-800/30 text-xs font-bold text-slate-500 uppercase tracking-wider">Movies & Others</div>
+                                                {groupedFiles.other.map(file => (
+                                                    <div key={file.id} className="px-4 py-2 flex justify-between items-center hover:bg-slate-800 border-b border-slate-800/50">
+                                                        <div className="flex items-center gap-2 overflow-hidden">
+                                                            <Icon name="FileVideo" size={14} className="text-slate-600" />
+                                                            <div className="text-sm truncate text-slate-300">{file.name}</div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-xs text-slate-500">{formatBytes(file.size)}</span>
+                                                            <AddButton onClick={() => addToQueue(file)} />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* LIST VIEW */}
+                                {!scanningSource && viewMode === 'list' && filteredSourceFiles.map(file => (
+                                    <div key={file.id} className="p-3 flex justify-between items-center hover:bg-slate-800 border-b border-slate-800">
+                                        <div className="flex items-center gap-2 truncate">
+                                            <Icon name="FileVideo" size={16} className="text-slate-500" />
+                                            <span className="text-sm text-slate-300 truncate">{file.name}</span>
+                                        </div>
+                                        <AddButton onClick={() => addToQueue(file)} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* RIGHT: QUEUE & USB */}
+                        <div className="col-span-5 flex flex-col bg-slate-950 h-full min-h-0 border-l border-slate-800">
+                            
+                            {/* Tabs */}
+                            <div className="flex border-b border-slate-800">
+                                <button 
+                                    onClick={() => setRightTab('queue')}
+                                    className={`flex-1 py-3 text-xs font-medium uppercase tracking-wide flex items-center justify-center gap-2 transition-colors border-b-2
+                                    ${rightTab === 'queue' ? 'border-blue-500 text-white bg-slate-900' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                                >
+                                    Transfer Queue ({queue.length})
+                                </button>
+                                <button 
+                                    onClick={() => setRightTab('usb')}
+                                    className={`flex-1 py-3 text-xs font-medium uppercase tracking-wide flex items-center justify-center gap-2 transition-colors border-b-2
+                                    ${rightTab === 'usb' ? 'border-teal-500 text-white bg-slate-900' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                                >
+                                    USB Content
+                                </button>
+                            </div>
+
+                            {/* Status Bar (Always Visible) */}
+                            <div className="p-4 bg-slate-900 border-b border-slate-800">
+                                <div className="flex justify-between text-[10px] uppercase text-slate-400 font-bold mb-1">
+                                    <span>Storage Usage</span>
+                                    <span>{formatBytes(Math.max(0, usbTotalSize - usbUsedSize - queueSize))} Projected Free</span>
+                                </div>
+                                <div className="h-4 bg-slate-800 rounded-full overflow-hidden relative flex">
+                                    {/* Used Space */}
+                                    <div className="bg-teal-600 h-full transition-all duration-500" style={{ width: `${Math.min((usbUsedSize / usbTotalSize) * 100, 100)}%` }}></div>
+                                    {/* Queued Space (Projected) */}
+                                    <div className="bg-yellow-600/70 h-full transition-all duration-500 pattern-diagonal-lines" style={{ width: `${Math.min((queueSize / usbTotalSize) * 100, 100)}%` }}></div>
+                                </div>
+                                <div className="flex justify-between items-center mt-2 text-xs">
+                                    <div className="flex gap-3">
+                                        <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-teal-600"></div> Used</span>
+                                        <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-yellow-600/70"></div> Queue</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-slate-500">Total:</span>
+                                        <input type="number" className="w-10 bg-transparent text-right text-slate-300 outline-none border-b border-slate-700 focus:border-blue-500" 
+                                            value={Math.round(usbTotalSize / (1024*1024*1024))}
+                                            onChange={e => setUsbTotalSize(e.target.value * 1024*1024*1024)} 
+                                        />
+                                        <span className="text-slate-500">GB</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Content Area */}
+                            <div className="flex-1 overflow-y-auto min-h-0 bg-slate-950 p-2 space-y-1">
+                                
+                                {/* QUEUE TAB */}
+                                {rightTab === 'queue' && (
+                                    <>
+                                        {queue.length === 0 ? (
+                                            <div className="h-full flex flex-col items-center justify-center text-slate-600 p-8 text-center">
+                                                <Icon name="Layers" size={40} className="mb-4 opacity-20" />
+                                                <p className="text-sm">Queue is empty.</p>
+                                                <p className="text-xs mt-2">Add items from the library to stage them here.</p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {queue.map(file => (
+                                                    <div key={file.id} className="p-2 bg-slate-900 rounded border border-slate-800 flex justify-between items-center group">
+                                                        <div className="min-w-0 pr-2">
+                                                            <div className="text-xs text-slate-300 truncate">{file.name}</div>
+                                                            <div className="text-[10px] text-yellow-500/70 font-mono">{formatBytes(file.size)}</div>
+                                                        </div>
+                                                        <button onClick={() => removeFromQueue(file.id)} className="text-slate-600 hover:text-red-400 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Icon name="Trash2" size={14} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* USB TAB */}
+                                {rightTab === 'usb' && (
+                                    <>
+                                        {!destHandle ? (
+                                            <div className="h-full flex flex-col items-center justify-center text-slate-600 text-center p-8">
+                                                <button onClick={() => window.showDirectoryPicker({mode:'readwrite'}).then(h=>{setDestHandle(h);scanDirectory(h,false)})} className="mb-4 px-4 py-2 bg-teal-600 text-white rounded shadow hover:bg-teal-500">Select USB Drive</button>
+                                                <p className="text-xs">Connect a folder to view contents.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col h-full">
+                                                {scanningDest && <div className="p-4 text-center text-teal-500 animate-pulse text-xs">Refreshing USB content...</div>}
+                                                
+                                                {!scanningDest && destFiles.map(file => {
+                                                    const isNew = recentlyAdded.has(file.name);
+                                                    return (
+                                                        <div key={file.id} className={`p-2 rounded border flex justify-between items-center transition-all ${isNew ? 'bg-teal-900/20 border-teal-500/50' : 'bg-slate-900/50 border-slate-800/50'}`}>
+                                                            <div className="min-w-0 pr-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className={`text-xs truncate ${isNew ? 'text-teal-200 font-medium' : 'text-slate-400'}`}>{file.name}</div>
+                                                                    {isNew && <span className="text-[9px] bg-teal-500 text-slate-900 font-bold px-1.5 rounded-sm animate-pulse">NEW</span>}
+                                                                </div>
+                                                                <div className="text-[10px] text-teal-500/70 font-mono">{formatBytes(file.size)}</div>
+                                                            </div>
+                                                            <button onClick={async () => { 
+                                                                if(confirm(`Delete ${file.name}?`)) {
+                                                                    await destHandle.removeEntry(file.name);
+                                                                    scanDirectory(destHandle, false);
+                                                                }
+                                                            }} className="text-slate-700 hover:text-red-400 p-1">
+                                                                <Icon name="Trash2" size={14} />
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })}
+                                                {!scanningDest && destFiles.length === 0 && (
+                                                    <div className="text-center text-slate-600 text-xs p-4">Drive is empty</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+
+                            {/* ACTION FOOTER */}
+                            {rightTab === 'queue' && (
+                                <div className="p-4 border-t border-slate-800 bg-slate-900">
+                                    {processingQueue ? (
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-xs text-blue-300">
+                                                <span className="truncate pr-4">Copying: {currentTransfer?.name}</span>
+                                                <span>{currentTransfer?.progress}%</span>
+                                            </div>
+                                            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                                <div className="h-full bg-blue-500 transition-all duration-200" style={{width: `${currentTransfer?.progress}%`}}></div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button 
+                                            onClick={processQueue}
+                                            disabled={queue.length === 0 || !destHandle}
+                                            className={`w-full py-3 rounded-lg font-bold uppercase tracking-wider text-xs shadow-lg transition-all
+                                            ${queue.length > 0 && destHandle 
+                                                ? 'bg-gradient-to-r from-blue-600 to-teal-500 text-white hover:brightness-110 active:scale-[0.98]' 
+                                                : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}
+                                        >
+                                            {destHandle ? `Start Copy (${formatBytes(queueSize)})` : 'Select USB Drive First'}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

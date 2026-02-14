@@ -139,6 +139,24 @@
     "date": "2026-02-07"
   },
   {
+    "title": "StreamPack",
+    "slug": "streampack",
+    "description": "StreamPack is a smart, self-hosted media staging tool for loading shows and movies onto a USB drive with clarity and control. Connect your own media library, auto-group episodes by show and season, and build a transfer queue in seconds. A clear storage bar shows what’s used, what’s queued, and what’s left, so nothing overflows. It runs locally on your server and in your browser—fast, private, and fully under your control.",
+    "thumbnail": "assets/thumbs/streampack.png",
+    "tags": [
+      "File",
+      "Jellyfin",
+      "Manager",
+      "Media",
+      "Tools"
+    ],
+    "category": "Tools",
+    "featured": false,
+    "date": "2026-02-13",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "LifeStats",
