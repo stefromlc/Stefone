@@ -1,641 +1,524 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SecureConnect Monitor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="site-root" content="./" />
+  <!-- Primary Meta Tags -->
+  <title>Stefone – Games, Tools & AI Experiments</title>
+  <meta name="title" content="Stefone – Games, Tools & AI Experiments" />
+  <meta name="description" content="I turn random ideas into real apps. Hi, I’m Stefone—I build games, tools, and experiments using AI. No overthinking, just vibes and shipping ideas." />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.stefone.com/" />
+  <meta property="og:title" content="Stefone – Games, Tools & AI Experiments" />
+  <meta property="og:description" content="I turn random ideas into real apps. Hi, I’m Stefone—I build games, tools, and experiments using AI. No overthinking, just vibes and shipping ideas." />
+  <meta property="og:image" content="https://www.stefone.com/assets/thumbs/me169.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Stefone developer portfolio and AI experiments preview" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Stefone – Games, Tools & AI Experiments" />
+  <meta name="twitter:description" content="I turn random ideas into real apps. Hi, I’m Stefone—I build games, tools, and experiments using AI. No overthinking, just vibes and shipping ideas." />
+  <meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/me169.png" />
+
+  <!-- Optional -->
+  <meta name="theme-color" content="#0f172a" />
+
+<link rel="icon" href="/favicon.png" type="image/png">
+
+  
+  <!-- Keep your original CSS link -->
+  <link rel="stylesheet" href="assets/styles.css" />
+
+  <style>
+    /* --- MODERN THEME OVERRIDES --- */
+    :root {
+      --bg-dark: #050505; /* Deep black/gray */
+      --glass-surface: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-highlight: rgba(255, 255, 255, 0.15);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.4);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --radius: 20px;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding-top: 100px;
+      min-height: 100vh;
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    /* --- FIXED BACKGROUND LAYERS (Fixes the hard line/scrolling issue) --- */
+    .fixed-background {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -2;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #050505 60%);
+    }
+
+    .grid-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+      pointer-events: none;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+      -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+    }
+
+    /* Animated Orbs */
+    .orb-container {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.5;
+      animation: float-orb 25s infinite ease-in-out;
+      transform: translate3d(0, 0, 0); /* HW accel */
+    }
+
+    .orb-1 {
+      top: -10%; left: -10%; width: 60vw; height: 60vw;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      bottom: -10%; right: -20%; width: 50vw; height: 50vw;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+      animation-delay: -8s;
+    }
+
+    @keyframes float-orb {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(20px, -20px) scale(1.05); }
+    }
+
+    a { text-decoration: none; color: inherit; transition: all 0.2s ease; }
     
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
-        /* Hide scrollbar for clean UI */
-        ::-webkit-scrollbar { display: none; }
-        
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        }
-        
-        .glass-button {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s ease;
-        }
-        .glass-button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
 
-        .animate-pulse-slow {
-            animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 0.3; transform: scale(1.05); }
-        }
-        
-        video {
-            transform: scaleX(-1); /* Mirror effect for natural feel */
-            object-fit: cover;
-        }
-        /* Except for remote video which shouldn't always be mirrored depending on use case */
-        .no-mirror { transform: none; }
+    /* Header */
+    header {
+      position: fixed;
+      top: 20px; left: 0; right: 0;
+      z-index: 100;
+      pointer-events: none; /* Let clicks pass through around the nav */
+    }
 
-        /* Custom gradient text */
-        .text-gradient {
-            background: linear-gradient(135deg, #34d399 0%, #22d3ee 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
+    .nav-pill {
+      pointer-events: auto;
+      background: rgba(15, 15, 20, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      padding: 12px 24px;
+      border-radius: 100px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+    }
+    
+    .navlinks { display: flex; gap: 24px; font-size: 0.9rem; font-weight: 500; }
+    .nav-item { color: var(--text-muted); transition: color 0.2s; }
+    .nav-item:hover { color: var(--text-main); }
+
+    /* Hero Section */
+    .hero { padding: 80px 0 100px; }
+
+    .grid-hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    @media (max-width: 800px) {
+      .grid-hero { grid-template-columns: 1fr; gap: 40px; }
+      .nav-pill { margin: 0 20px; }
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 32px;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+    }
+
+    .status-dot {
+      width: 6px; height: 6px; background: #60a5fa; border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.7);
+      animation: pulse-blue 2s infinite;
+    }
+
+    @keyframes pulse-blue {
+      0% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(96, 165, 250, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0); }
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      line-height: 1;
+      margin: 0 0 24px 0;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+      background: linear-gradient(to bottom right, #fff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sub {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      background: var(--text-main);
+      color: #000;
+      transition: all 0.2s;
+      box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    }
+    .btn-primary:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 4px 25px rgba(255,255,255,0.25); 
+    }
+
+    /* Stack Card */
+    .stack-card {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 30px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      display: block;
+      font-weight: 600;
+    }
+
+    .tool-grid {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 30px;
+      padding-bottom: 30px; border-bottom: 1px solid var(--glass-border);
+    }
+
+    .tool-icon {
+      width: 50px; height: 50px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tool-icon:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--text-muted);
+      transform: translateY(-4px);
+    }
+    .tool-icon svg { width: 24px; height: 24px; opacity: 0.8; }
+    .tool-icon:hover svg { opacity: 1; }
+
+    .link-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+      border-radius: 10px;
+      transition: 0.2s;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+    .link-row:hover { background: var(--glass-surface); }
+    .link-row span { color: var(--text-muted); }
+    .link-row:hover span { color: var(--text-main); }
+
+    /* Featured Projects */
+    .section-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 30px;
+    }
+    .section-head h2 { font-size: 2rem; margin: 0; letter-spacing: -0.02em; }
+    
+    #featuredRoot {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 30px;
+      margin-bottom: 80px;
+    }
+
+    /* Generic Card Styles for Projects */
+    #featuredRoot > div {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #featuredRoot > div:hover {
+      border-color: var(--glass-highlight);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px -20px rgba(0,0,0,0.7);
+      background: rgba(255,255,255,0.04);
+    }
+    
+    /* Layout Logic for Card Content */
+    #featuredRoot img {
+      width: 100%; border-radius: 12px; 
+      margin-bottom: 12px; /* Decreased from 20px to reduce gap */
+      background: #111; aspect-ratio: 16/9; object-fit: cover;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Titles inside cards (Assuming h3 or strong from generated JS) */
+    #featuredRoot h3, #featuredRoot strong {
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    /* Description text */
+    #featuredRoot p {
+      margin-bottom: 24px; /* Increased to push tags down */
+      color: var(--text-muted);
+      flex-grow: 1; /* Pushes the bottom elements (tags) down */
+    }
+
+    /* Story Section */
+    .story-card {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Subtle gradient spotlight for story */
+    .story-card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.02));
+      pointer-events: none;
+    }
+
+    .story-card h2 { margin-top: 0; font-size: 1.8rem; }
+    .story-card p { 
+      color: #cbd5e1; max-width: 700px; margin-bottom: 20px; font-size: 1.05rem; 
+    }
+    .story-card strong { color: #fff; font-weight: 600; }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--glass-border);
+      padding: 60px 0;
+      margin-top: 100px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
 </head>
-<body class="h-screen w-full flex flex-col overflow-hidden relative">
+<body>
 
-    <!-- Ambient Background -->
-    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div class="absolute -top-[20%] -left-[10%] w-[50vw] h-[50vw] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse-slow"></div>
-        <div class="absolute -bottom-[20%] -right-[10%] w-[50vw] h-[50vw] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse-slow" style="animation-delay: 2s;"></div>
+  <!-- FIXED BACKGROUNDS -->
+  <div class="fixed-background"></div>
+  <div class="grid-overlay"></div>
+  <div class="orb-container">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <header>
+    <div class="nav-pill">
+      <a class="brand" href="./">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        Stefone
+      </a>
+
+      <nav class="navlinks">
+        <a class="nav-item" href="./projects/">Projects</a>
+        <a class="nav-item" href="https://github.com/stefromlc/" target="_blank">GitHub</a>
+      </nav>
     </div>
+  </header>
 
-    <!-- Navbar -->
-    <nav class="flex justify-between items-center px-6 py-5 z-50 absolute top-0 w-full pointer-events-none">
-        <div class="flex items-center gap-4 pointer-events-auto">
-            <a href="/projects/" class="glass-button w-10 h-10 rounded-full flex items-center justify-center text-white/70 hover:text-white group" aria-label="Back to Projects">
-                <i class="fas fa-arrow-left text-sm group-hover:-translate-x-0.5 transition-transform"></i>
-            </a>
-            <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                    <i class="fas fa-shield-alt text-white text-xs"></i>
-                </div>
-                <span class="font-semibold tracking-tight text-white/90 hidden sm:block">SecureConnect</span>
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="grid-hero">
+          
+          <!-- Left: Intro -->
+          <div>
+            <div class="status-badge">
+              <span class="status-dot"></span>
+              Working on: MusicMap
             </div>
-        </div>
-        <div id="connectionStatus" class="hidden pointer-events-auto px-4 py-1.5 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20 backdrop-blur-md shadow-lg shadow-black/10">
-            Disconnected
-        </div>
-    </nav>
 
-    <!-- Main Container -->
-    <main id="app" class="flex-grow flex flex-col items-center justify-center p-4 relative z-10">
-        
-        <!-- SETUP SCREEN (For Local Use) -->
-        <div id="configScreen" class="hidden w-full max-w-lg glass-panel p-8 rounded-3xl border border-yellow-500/20 shadow-2xl relative z-50">
-            <h2 class="text-2xl font-bold text-white mb-2">Configuration Required</h2>
-            <p class="text-slate-400 text-sm mb-6">
-                This app uses Firebase for connections. Since you are running locally, the environment variables are missing.
+            <h1>I turn random ideas into real apps.</h1>
+            <p class="sub">
+              Hi, I’m Stefone. I build games, tools, and experiments using AI.
             </p>
-            <ol class="text-slate-300 text-xs list-decimal pl-5 mb-6 space-y-2">
-                <li>Go to the <a href="https://console.firebase.google.com/" target="_blank" class="text-cyan-400 underline">Firebase Console</a> and create a project.</li>
-                <li>Go to Project Settings > General > Add Web App.</li>
-                <li>Copy the <code class="bg-black/30 px-1 py-0.5 rounded text-yellow-400">firebaseConfig</code> object (JSON) and paste it below.</li>
-                <li>Ensure <strong>Firestore Database</strong> and <strong>Authentication (Anonymous)</strong> are enabled in your console.</li>
-            </ol>
-            <textarea id="manualConfigInput" rows="6" placeholder='{ "apiKey": "...", "authDomain": "...", ... }' class="w-full bg-black/40 border border-slate-700 rounded-xl p-4 text-xs font-mono text-white mb-4 focus:outline-none focus:border-cyan-500/50"></textarea>
-            <button onclick="window.manualInit()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all">
-                Initialize App
-            </button>
+
+            <div class="actions">
+              <a class="btn-primary" href="./projects/">Browse Projects</a>
+            </div>
+          </div>
+
+          <!-- Right: Stack & Connect -->
+          <div class="stack-card">
+            <span class="section-label">My Vibe Stack</span>
+            <div class="tool-grid">
+               <!-- OpenAI -->
+              <div class="tool-icon" title="OpenAI / ChatGPT">
+                 <svg viewBox="0 0 24 24" role="img"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a1.54 1.54 0 0 1 .7279 1.356v5.8217a4.4627 4.4627 0 0 1-5.1844 2.9513zm-3.5014-1.6363a4.4674 4.4674 0 0 1-1.248-2.414l1.4083.8096a.7924.7924 0 0 0 .7924 0l5.835-3.3752v2.3336a1.54 1.54 0 0 1-.7671 1.3391l-6.0206 3.4727v-.0804a4.466 4.466 0 0 1 0-.0854zm-4.2233-5.2662a4.4717 4.4717 0 0 1-.2208-3.0488l1.3963.8116a.7953.7953 0 0 0 .7924 0l5.835-3.3728v2.3312a1.54 1.54 0 0 1-.772 1.3391l-6.0157 3.4751a4.521 4.521 0 0 1-1.0152-1.5354zm1.1923-6.9158a4.457 4.457 0 0 1 2.8716-1.0408l-.1419.0804-4.7735 2.7508a.7924.7924 0 0 0-.3927.6837v6.7417l-2.02-1.1686a1.54 1.54 0 0 1-.7279-1.356v-5.8217a4.4674 4.4674 0 0 1 5.1844-2.8695zM15.7725 3.23a4.4674 4.4674 0 0 1 1.2528 2.414l-1.4132-.8096a.7924.7924 0 0 0-.7924 0l-5.835 3.3752V5.8759a1.54 1.54 0 0 1 .7671-1.3391l6.0206-3.4727v.0804a4.466 4.466 0 0 1 0 .0854zm4.2233 5.2662a4.4717 4.4717 0 0 1 .2208 3.0488l-1.3963-.8116a.7953.7953 0 0 0-.7924 0l-5.835 3.3728v-2.3312a1.54 1.54 0 0 1 .772-1.3391l6.0157-3.4751a4.521 4.521 0 0 1 1.0152 1.5354z" fill="white"/></svg>
+              </div>
+              <!-- Gemini -->
+              <div class="tool-icon" title="Google Gemini">
+                <svg viewBox="0 0 24 24" role="img"><path d="M12 24c0-6.627-5.373-12-12-12 6.627 0 12-5.373 12-12 0 6.627 5.373 12 12 12-6.627 0-12 5.373-12 12z" fill="white"/></svg>
+              </div>
+              <!-- Python -->
+              <div class="tool-icon" title="Python">
+                <svg viewBox="0 0 24 24" role="img"><path d="M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-2.9l-.05-.51-.13-.44-.2-.37-.26-.3-.31-.24-.34-.18-.35-.13-.34-.09-.31-.06-.25-.03-.16-.01H6.1l-.25.03-.32.08-.34.13-.34.2-.31.25-.27.31-.2.38-.15.46-.1.55-.03.64v1.72l.01.21.04.2.06.18.09.16.1.13.13.11.14.08.15.06.16.03.14.01h3.38l.14.01.13.04.12.06.1.09.09.12.06.14.04.16.01.16v1.31l-.01.16-.04.16-.06.14-.09.12-.1.09-.12.06-.13.04-.14.01H2.4l-.15-.01-.15-.05-.14-.08-.12-.11-.1-.13-.08-.15-.06-.17-.03-.18V8.26l.03-.66.09-.64.15-.6.23-.55.29-.49.36-.42.42-.35.47-.28.52-.2.57-.12.6-.06.62-.02h6.63l.63.03.6.09.57.16.53.23.49.31.43.39.38.46.31.54.24.6.17.67.08.72.03.49v.15h1.76l.02-.03.04-.13.06-.21.09-.3.12-.37.16-.44.21-.49.26-.54.32-.57.38-.58.44-.56.5-.53.57-.47.64-.39.71-.28.77-.17.84-.06.91.05zm-5.46 4.47c-.05-.05-.12-.09-.19-.11-.08-.02-.15-.02-.22-.01-.08.01-.15.04-.2.08-.05.05-.09.12-.1.19-.02.08-.01.15.01.22.02.08.06.14.1.19.05.05.12.09.19.11.08.02.15.02.22.01.08-.02.14-.05.19-.09.05-.05.09-.12.11-.19.02-.07.02-.15.01-.22-.02-.07-.06-.13-.11-.18zm-2.7 13.91l.24.49.32.44.38.38.44.31.49.23.54.15.58.07.61.02h5.18l.19.01.17.03.17.06.15.08.13.1.11.12.09.13.06.15.04.16.01.16v1.31l-.01.16-.04.15-.06.15-.09.12-.11.1-.13.08-.15.06-.17.03-.19.01H9.86l-.14-.01-.16-.04-.16-.06-.15-.09-.13-.12-.1-.14-.07-.15-.05-.17-.02-.18v-1.72l-.02-.63-.09-.56-.15-.46-.2-.37-.27-.31-.31-.25-.34-.2-.34-.13-.32-.08-.25-.03H3.63l-.16.01-.25.03-.31.06-.34.09-.35.13-.34.18-.31.24-.26.3-.2.37-.13.44-.05.51v2.9l.05.24.1.24.16.22.21.19.26.15.3.1.34.05h.06l.32.05.36.1.4.16.42.24.42.33.4.44.36.57.32.71.24.87.16 1.04.06 1.22-.05 1.23-.14 1.05-.21.88-.28.73-.32.59-.35.46-.36.36-.36.26-.35.18-.32.12-.28.07-.21.03H7.66v-3.06l-.02-.21-.04-.27-.07-.32-.1-.35-.15-.37-.2-.36-.27-.35-.33-.32-.41-.27-.5-.22-.59-.14-.69-.05H2.3l-.21-.02-.26-.04-.3-.07-.33-.1-.35-.14-.35-.19-.33-.25-.3-.31-.26-.38-.21-.46-.13-.55-.05-.63v-8.5l-.01-.13.02-.2.04-.26.1-.3.16-.33.25-.34.34-.34.45-.32.59-.3.73-.26.9-.2H14.25v-.15l.03-.49.08-.72.17-.67.24-.6.31-.54.38-.46.43-.39.49-.31.53-.23.57-.16.6-.09.63-.03zM15.22 20.35c-.05.05-.09.12-.11.19-.02.07-.02.15-.01.22.02.07.06.13.11.18.05.05.12.09.19.11.08.02.15.02.22.01.07-.02.14-.06.19-.1.05-.05.09-.11.11-.19.02-.07.01-.15-.01-.22-.02-.07-.05-.14-.1-.18-.04-.05-.11-.09-.18-.11-.08-.02-.15-.01-.22.01-.08.02-.14.05-.19.09z" fill="white"/></svg>
+              </div>
+              <!-- AWS -->
+              <div class="tool-icon" title="AWS">
+                <svg viewBox="0 0 24 24" role="img"><path d="M12.9 14.2c-1.1 1.6-2.9 2.5-4.8 2.5-4.2 0-6.7-3.2-6.7-7.2 0-3.6 2.5-6.8 6.5-6.8 2.4 0 4.1 1.2 5 2.5l-1.6 1.3c-.5-.9-1.6-1.7-3.3-1.7-2.3 0-4.1 2-4.1 4.7 0 2.8 1.6 4.9 4.3 4.9 1.1 0 2.3-.5 3-1.6l1.7 1.4zm6.6-8.7v10.8h-2.3v-1.8c-.8 1.3-2.3 2.1-3.8 2.1-2.8 0-4.5-2.2-4.5-5 0-2.5 1.7-4.9 4.8-4.9 1.4 0 2.6.5 3.5 1.6V5.5h2.3zm-2.3 7.5c0-1.8-1.2-3-2.9-3-1.7 0-2.8 1.2-2.8 3 0 1.9 1.1 3.2 2.9 3.2 1.7 0 2.8-1.4 2.8-3.2z" fill="white"/></svg>
+              </div>
+               <!-- Github -->
+              <div class="tool-icon" title="GitHub">
+                 <svg viewBox="0 0 24 24" role="img"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" fill="white"/></svg>
+              </div>
+            </div>
+
+            <div class="link-list">
+              <a href="https://x.com/" target="_blank" class="link-row">
+                <span>Follow on X</span>
+                <span class="link-arrow">→</span>
+              </a>
+              <a href="https://github.com/your-username" target="_blank" class="link-row">
+                <span>GitHub</span>
+                <span class="link-arrow">→</span>
+              </a>
+            </div>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <!-- MODE SELECTION (Home) -->
-        <div id="homeScreen" class="hidden w-full max-w-md space-y-8 transition-all duration-500 ease-out transform translate-y-0 opacity-100">
-            <div class="text-center space-y-3 mb-10">
-                <h1 class="text-4xl font-bold text-white tracking-tight">
-                    <span class="text-gradient">Remote Monitor</span>
-                </h1>
-                <p class="text-slate-400 text-sm font-medium">Turn this device into a security camera or a monitor.</p>
-            </div>
-
-            <div class="grid grid-cols-1 gap-5">
-                <!-- Viewer Button -->
-                <button onclick="app.setMode('viewer')" class="group relative p-6 rounded-2xl glass-panel hover:bg-white/[0.08] transition-all duration-300 border-l-4 border-emerald-500 text-left hover:shadow-xl hover:shadow-emerald-900/10 hover:-translate-y-1">
-                    <div class="absolute right-6 top-6 w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/20 group-hover:scale-110 transition-all duration-300">
-                        <i class="fas fa-desktop text-xl"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-1.5">Create Code</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed w-3/4">Use this device as the <strong>Monitor</strong>. Generate a code to link a camera.</p>
-                </button>
-
-                <!-- Camera Button -->
-                <button onclick="app.setMode('camera')" class="group relative p-6 rounded-2xl glass-panel hover:bg-white/[0.08] transition-all duration-300 border-l-4 border-cyan-500 text-left hover:shadow-xl hover:shadow-cyan-900/10 hover:-translate-y-1">
-                    <div class="absolute right-6 top-6 w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500/20 group-hover:scale-110 transition-all duration-300">
-                        <i class="fas fa-video text-xl"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-1.5">Enter Code</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed w-3/4">Use this device as the <strong>Camera</strong>. Connect to a remote monitor.</p>
-                </button>
-            </div>
-        </div>
-
-        <!-- VIEWER INTERFACE -->
-        <div id="viewerScreen" class="hidden w-full h-full flex flex-col items-center justify-center relative">
-            
-            <!-- Code Display -->
-            <div id="codeDisplay" class="absolute z-10 flex flex-col items-center justify-center bg-slate-900/90 inset-0 backdrop-blur-md transition-all duration-500">
-                <div class="p-10 rounded-3xl glass-panel text-center max-w-sm w-full mx-4 border border-emerald-500/20 shadow-[0_0_80px_rgba(16,185,129,0.1)]">
-                    <p class="text-emerald-400/80 text-xs font-bold uppercase tracking-widest mb-6">Connection Code</p>
-                    <div id="generatedCode" class="text-6xl font-mono font-bold text-white tracking-widest mb-8 select-all drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                        ...
-                    </div>
-                    <div class="flex items-center justify-center gap-3 text-slate-300 text-sm bg-white/5 py-2 px-4 rounded-full w-fit mx-auto border border-white/5">
-                        <i class="fas fa-circle-notch fa-spin text-emerald-400"></i>
-                        <span>Waiting for camera...</span>
-                    </div>
-                    <button onclick="app.reset()" class="mt-8 text-slate-500 hover:text-white text-sm font-medium transition-colors">Cancel</button>
-                </div>
-            </div>
-
-            <!-- Remote Stream Container -->
-            <div class="w-full h-full rounded-2xl overflow-hidden relative bg-black shadow-2xl flex items-center justify-center border border-white/5 ring-1 ring-white/5">
-                <video id="remoteVideo" autoplay playsinline class="w-full h-full no-mirror object-contain"></video>
-                <div id="streamPlaceholder" class="absolute inset-0 flex items-center justify-center text-slate-700/50">
-                    <i class="fas fa-video-slash text-7xl"></i>
-                </div>
-            </div>
-
-            <!-- Viewer Controls -->
-            <div class="absolute bottom-8 left-0 right-0 flex justify-center gap-4 z-20 pointer-events-none">
-                <div class="bg-black/40 backdrop-blur-xl p-2 rounded-full border border-white/10 flex gap-2 pointer-events-auto shadow-2xl">
-                    <button onclick="app.toggleMuteRemote()" id="btnMute" class="w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-all hover:scale-105 active:scale-95">
-                        <i class="fas fa-volume-up"></i>
-                    </button>
-                    <button onclick="app.toggleFullscreen()" class="w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-all hover:scale-105 active:scale-95">
-                        <i class="fas fa-expand"></i>
-                    </button>
-                    <div class="w-px h-8 bg-white/10 self-center mx-1"></div>
-                    <button onclick="app.reset()" class="w-12 h-12 rounded-full bg-red-500/80 text-white flex items-center justify-center hover:bg-red-600 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20">
-                        <i class="fas fa-phone-slash"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- CAMERA INTERFACE -->
-        <div id="cameraScreen" class="hidden w-full max-w-md flex flex-col items-center">
-            
-            <!-- Code Input Form -->
-            <div id="codeInputForm" class="w-full glass-panel p-8 rounded-3xl border border-cyan-500/20 shadow-2xl">
-                <div class="text-center mb-8">
-                    <div class="w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-cyan-400 shadow-inner border border-white/5">
-                        <i class="fas fa-camera text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white">Connect Camera</h3>
-                    <p class="text-slate-400 text-xs mt-2">Enter the code displayed on the Monitor device.</p>
-                </div>
-
-                <div class="space-y-4">
-                    <input type="number" id="codeJump" placeholder="000 000" class="w-full bg-black/30 border border-slate-700/50 rounded-xl p-4 text-center text-2xl font-mono tracking-widest text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all placeholder-slate-700">
-                    <button onclick="app.connectCamera()" id="btnConnect" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-cyan-900/20 hover:shadow-cyan-900/40 hover:-translate-y-0.5 flex items-center justify-center gap-2">
-                        <span>Start Streaming</span>
-                        <i class="fas fa-arrow-right text-sm"></i>
-                    </button>
-                    <button onclick="app.reset()" class="w-full text-slate-500 text-sm py-2 hover:text-slate-300 transition-colors">Cancel</button>
-                </div>
-            </div>
-
-            <!-- Active Camera View (Hidden until connected usually, but we show preview) -->
-            <div id="cameraPreviewContainer" class="hidden fixed inset-0 z-50 bg-black">
-                <video id="localVideo" autoplay playsinline muted class="w-full h-full object-cover opacity-70"></video>
-                
-                <!-- Overlay UI -->
-                <div class="absolute inset-0 flex flex-col items-center justify-between p-8 pt-20">
-                    <div class="bg-red-500 text-white px-4 py-1.5 rounded-full text-xs font-bold animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.4)] border border-red-400/50 backdrop-blur-sm">
-                        <i class="fas fa-circle text-[8px] mr-2 align-middle"></i>LIVE STREAMING
-                    </div>
-                    
-                    <div class="text-center space-y-4 w-full max-w-xs mb-8">
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                             <button onclick="app.toggleCamera()" class="h-14 rounded-2xl bg-black/40 backdrop-blur-md text-white hover:bg-white/10 transition-colors border border-white/10 flex items-center justify-center">
-                                <i class="fas fa-video text-xl"></i>
-                            </button>
-                            <button onclick="app.toggleMic()" class="h-14 rounded-2xl bg-black/40 backdrop-blur-md text-white hover:bg-white/10 transition-colors border border-white/10 flex items-center justify-center">
-                                <i class="fas fa-microphone text-xl"></i>
-                            </button>
-                        </div>
-
-                        <button onclick="app.reset()" class="w-full bg-red-500/90 backdrop-blur hover:bg-red-600 text-white font-bold py-4 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2">
-                            <i class="fas fa-stop"></i>
-                            <span>Stop Stream</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Error Toast -->
-    <div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-red-500/90 backdrop-blur-md text-white px-6 py-3 rounded-2xl shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[60] text-sm font-medium flex items-center gap-3 border border-red-400/20 translate-y-4">
-        <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-            <i class="fas fa-exclamation text-xs"></i>
-        </div>
-        <span id="toastMsg">Error message</span>
-    </div>
-
-    <!-- Firebase Scripts -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, arrayUnion, deleteDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global variables for the app instance
-        let firebaseApp, auth, db, appId;
-
-        // WebRTC Config
-        const rtcConfig = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
-        };
-
-        // Application State
-        class SecureConnect {
-            constructor() {
-                this.localStream = null;
-                this.peerConnection = null;
-                this.unsubscribe = null;
-                this.currentDocPath = null;
-                this.role = null; // 'viewer' or 'camera'
-                
-                // UI Elements
-                this.els = {
-                    configScreen: document.getElementById('configScreen'),
-                    home: document.getElementById('homeScreen'),
-                    viewer: document.getElementById('viewerScreen'),
-                    camera: document.getElementById('cameraScreen'),
-                    codeDisplay: document.getElementById('codeDisplay'),
-                    generatedCode: document.getElementById('generatedCode'),
-                    remoteVideo: document.getElementById('remoteVideo'),
-                    localVideo: document.getElementById('localVideo'),
-                    cameraPreview: document.getElementById('cameraPreviewContainer'),
-                    codeInput: document.getElementById('codeInputForm'),
-                    status: document.getElementById('connectionStatus'),
-                    streamPlaceholder: document.getElementById('streamPlaceholder'),
-                    toast: document.getElementById('toast'),
-                    toastMsg: document.getElementById('toastMsg'),
-                    inputField: document.getElementById('codeJump'),
-                    btnConnect: document.getElementById('btnConnect')
-                };
-
-                this.checkEnvironment();
-            }
-
-            checkEnvironment() {
-                // Check if running in Canvas (env vars exist) or Local (env vars undefined)
-                if (typeof __firebase_config !== 'undefined') {
-                    // Running in Canvas
-                    const config = JSON.parse(__firebase_config);
-                    appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
-                    this.initializeFirebase(config);
-                    this.els.home.classList.remove('hidden'); // Show home immediately
-                } else {
-                    // Running Locally - Show Config Screen
-                    this.els.configScreen.classList.remove('hidden');
-                }
-            }
-
-            async initializeFirebase(config) {
-                try {
-                    firebaseApp = initializeApp(config);
-                    auth = getAuth(firebaseApp);
-                    db = getFirestore(firebaseApp);
-                    
-                    // Auth Flow
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    console.log("Authenticated");
-                    this.authReady = true;
-                } catch (error) {
-                    console.error("Firebase Init Error:", error);
-                    this.showError("Failed to initialize Firebase. Check config.");
-                }
-            }
-
-            // Called by the manual init button
-            async manualInitialize(configJson) {
-                try {
-                    const config = JSON.parse(configJson);
-                    // Use a generic app ID for local testing
-                    appId = 'local-dev-app';
-                    await this.initializeFirebase(config);
-                    
-                    // Transition UI
-                    this.els.configScreen.classList.add('hidden');
-                    this.els.home.classList.remove('hidden');
-                } catch (e) {
-                    this.showError("Invalid JSON Configuration");
-                }
-            }
-
-            // --- UI LOGIC ---
-
-            setMode(mode) {
-                this.role = mode;
-                this.els.home.classList.add('opacity-0', '-translate-y-4');
-                setTimeout(() => {
-                    this.els.home.classList.add('hidden');
-                    this.els.home.classList.remove('opacity-0', '-translate-y-4');
-                    
-                    if (mode === 'viewer') {
-                        this.els.viewer.classList.remove('hidden');
-                        this.startViewer();
-                    } else {
-                        this.els.camera.classList.remove('hidden');
-                        this.els.cameraPreview.classList.add('hidden');
-                        this.els.codeInput.classList.remove('hidden');
-                        this.els.inputField.focus();
-                    }
-                }, 300);
-            }
-
-            reset() {
-                // Cleanup WebRTC
-                if (this.localStream) {
-                    this.localStream.getTracks().forEach(track => track.stop());
-                    this.localStream = null;
-                }
-                if (this.peerConnection) {
-                    this.peerConnection.close();
-                    this.peerConnection = null;
-                }
-                
-                // Cleanup Firestore
-                if (this.unsubscribe) this.unsubscribe();
-                // Ideally delete the doc if we created it
-                if (this.role === 'viewer' && this.currentDocPath && db) {
-                    deleteDoc(doc(db, this.currentDocPath)).catch(e => console.log("Cleanup warning:", e));
-                }
-
-                // Reset UI
-                this.els.home.classList.remove('hidden');
-                this.els.viewer.classList.add('hidden');
-                this.els.camera.classList.add('hidden');
-                this.els.cameraPreview.classList.add('hidden');
-                this.els.codeDisplay.classList.remove('hidden'); // Show code overlay again for next time
-                this.els.status.classList.add('hidden');
-                this.els.remoteVideo.srcObject = null;
-                this.els.localVideo.srcObject = null;
-                this.els.inputField.value = '';
-                this.els.btnConnect.disabled = false;
-                this.els.btnConnect.innerHTML = `<span>Start Streaming</span><i class="fas fa-arrow-right text-sm"></i>`;
-                
-                this.role = null;
-            }
-
-            showError(msg) {
-                this.els.toastMsg.innerText = msg;
-                this.els.toast.classList.remove('opacity-0', 'translate-y-4');
-                setTimeout(() => this.els.toast.classList.add('opacity-0', 'translate-y-4'), 3000);
-            }
-
-            setStatus(status) {
-                const el = this.els.status;
-                el.classList.remove('hidden');
-                if (status === 'connected') {
-                    el.className = "px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-md shadow-lg shadow-emerald-500/10";
-                    el.innerHTML = '<i class="fas fa-wifi mr-1.5"></i> Connected';
-                    // Hide code overlay on viewer
-                    if (this.role === 'viewer') {
-                        this.els.codeDisplay.classList.add('hidden');
-                        this.els.streamPlaceholder.classList.add('hidden');
-                    }
-                } else if (status === 'connecting') {
-                    el.className = "px-4 py-1.5 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 backdrop-blur-md";
-                    el.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-1.5"></i> Connecting...';
-                } else {
-                    el.className = "px-4 py-1.5 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20 backdrop-blur-md";
-                    el.innerHTML = 'Disconnected';
-                }
-            }
-
-            // --- VIEWER LOGIC (Host) ---
-
-            async startViewer() {
-                if (!this.authReady) return this.showError("Not connected to database");
-                
-                const code = Math.floor(100000 + Math.random() * 900000).toString();
-                this.els.generatedCode.innerText = code.substring(0,3) + ' ' + code.substring(3,6);
-                
-                // Firestore Path: public/data/sessions/{code}
-                const sessionPath = `artifacts/${appId}/public/data/sessions`;
-                const docRef = doc(db, sessionPath, code);
-                this.currentDocPath = `${sessionPath}/${code}`;
-
-                try {
-                    // Create session
-                    await setDoc(docRef, { created: new Date().toISOString() });
-                    
-                    // Listen for camera joining (OFFER)
-                    this.unsubscribe = onSnapshot(docRef, async (snapshot) => {
-                        const data = snapshot.data();
-                        if (!data) return;
-
-                        // 1. If we receive an OFFER from camera
-                        if (data.offer && !this.peerConnection) {
-                            this.setStatus('connecting');
-                            await this.createViewerPeerConnection(docRef, data.offer);
-                        }
-
-                        // 2. Add ICE candidates from camera
-                        if (data.cameraCandidates && this.peerConnection) {
-                            for (const candidate of data.cameraCandidates) {
-                                await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-                            }
-                        }
-                    });
-
-                } catch (e) {
-                    console.error(e);
-                    this.showError("Failed to create connection code.");
-                }
-            }
-
-            async createViewerPeerConnection(docRef, offer) {
-                this.peerConnection = new RTCPeerConnection(rtcConfig);
-
-                // Handle incoming stream
-                this.peerConnection.ontrack = (event) => {
-                    this.els.remoteVideo.srcObject = event.streams[0];
-                    this.setStatus('connected');
-                };
-
-                // Collect Viewer ICE candidates
-                this.peerConnection.onicecandidate = (event) => {
-                    if (event.candidate) {
-                        updateDoc(docRef, {
-                            viewerCandidates: arrayUnion(event.candidate.toJSON())
-                        });
-                    }
-                };
-
-                // State handling
-                this.peerConnection.onconnectionstatechange = () => {
-                    if (this.peerConnection.connectionState === 'disconnected') {
-                        this.setStatus('disconnected');
-                        this.showError("Camera disconnected");
-                        // Optional: Reset to code screen
-                        this.els.codeDisplay.classList.remove('hidden');
-                        this.els.streamPlaceholder.classList.remove('hidden');
-                    }
-                };
-
-                // Set Remote & Create Answer
-                await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-                const answer = await this.peerConnection.createAnswer();
-                await this.peerConnection.setLocalDescription(answer);
-
-                const answerData = {
-                    type: answer.type,
-                    sdp: answer.sdp
-                };
-
-                await updateDoc(docRef, { answer: answerData });
-            }
-
-            toggleMuteRemote() {
-                this.els.remoteVideo.muted = !this.els.remoteVideo.muted;
-                const btn = document.getElementById('btnMute');
-                btn.innerHTML = this.els.remoteVideo.muted ? '<i class="fas fa-volume-mute text-red-400"></i>' : '<i class="fas fa-volume-up"></i>';
-            }
-
-            toggleFullscreen() {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen();
-                } else {
-                    document.exitFullscreen();
-                }
-            }
-
-
-            // --- CAMERA LOGIC (Client) ---
-
-            async connectCamera() {
-                if (!this.authReady) return this.showError("Not connected to database");
-
-                const rawCode = this.els.inputField.value.replace(/\s/g, ''); // Remove spaces
-                if (rawCode.length !== 6) {
-                    this.showError("Please enter a valid 6-digit code.");
-                    return;
-                }
-
-                this.els.btnConnect.disabled = true;
-                this.els.btnConnect.innerHTML = `<i class="fas fa-circle-notch fa-spin text-sm"></i> Connecting...`;
-
-                const sessionPath = `artifacts/${appId}/public/data/sessions`;
-                const docRef = doc(db, sessionPath, rawCode);
-                this.currentDocPath = `${sessionPath}/${rawCode}`;
-
-                try {
-                    // Check if code exists first (security)
-                    // Note: In real app, we should use getDoc first, but onSnapshot handles it too. 
-                    // Let's attach listener immediately.
-                    
-                    // Get User Media
-                    this.localStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: 'environment' }, // Try back camera first
-                        audio: true 
-                    });
-                    
-                    this.els.localVideo.srcObject = this.localStream;
-                    this.els.codeInput.classList.add('hidden');
-                    this.els.cameraPreview.classList.remove('hidden');
-
-                    this.peerConnection = new RTCPeerConnection(rtcConfig);
-
-                    // Add Tracks
-                    this.localStream.getTracks().forEach(track => {
-                        this.peerConnection.addTrack(track, this.localStream);
-                    });
-
-                    // ICE Candidates
-                    this.peerConnection.onicecandidate = (event) => {
-                        if (event.candidate) {
-                            updateDoc(docRef, {
-                                cameraCandidates: arrayUnion(event.candidate.toJSON())
-                            });
-                        }
-                    };
-
-                    // Listen for Answer
-                    this.unsubscribe = onSnapshot(docRef, async (snapshot) => {
-                        const data = snapshot.data();
-                        if (!data) {
-                            this.showError("Invalid Code or Session Expired");
-                            this.reset();
-                            return;
-                        }
-
-                        // Set Remote Description (Answer)
-                        if (data.answer && !this.peerConnection.currentRemoteDescription) {
-                             const answer = new RTCSessionDescription(data.answer);
-                             await this.peerConnection.setRemoteDescription(answer);
-                             this.setStatus('connected');
-                        }
-
-                        // Add Viewer ICE candidates
-                        if (data.viewerCandidates) {
-                            for (const candidate of data.viewerCandidates) {
-                                await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-                            }
-                        }
-                    });
-
-                    // Create Offer
-                    const offer = await this.peerConnection.createOffer();
-                    await this.peerConnection.setLocalDescription(offer);
-
-                    const offerData = {
-                        type: offer.type,
-                        sdp: offer.sdp
-                    };
-
-                    await updateDoc(docRef, { offer: offerData });
-
-
-                } catch (error) {
-                    console.error("Camera Error:", error);
-                    this.showError("Access denied or connection failed.");
-                    this.reset();
-                }
-            }
-
-            toggleCamera() {
-                const videoTrack = this.localStream.getVideoTracks()[0];
-                if(videoTrack) {
-                    videoTrack.enabled = !videoTrack.enabled;
-                    this.showError(videoTrack.enabled ? "Camera On" : "Camera Off");
-                }
-            }
-
-            toggleMic() {
-                const audioTrack = this.localStream.getAudioTracks()[0];
-                if(audioTrack) {
-                    audioTrack.enabled = !audioTrack.enabled;
-                    this.showError(audioTrack.enabled ? "Mic On" : "Mic Muted");
-                }
-            }
-        }
-
-        // Initialize App
-        window.app = new SecureConnect();
+    <section class="section">
+      <div class="container">
         
-        // Expose manual init to window for the button click
-        window.manualInit = () => {
-            const val = document.getElementById('manualConfigInput').value;
-            window.app.manualInitialize(val);
-        };
-    </script>
+        <div class="section-head">
+          <h2>Featured projects</h2>
+          <a class="btn-primary" style="padding: 10px 20px; font-size: 0.9rem;" href="./projects/">All Projects</a>
+        </div>
+
+        <!-- Logic preserved: Cards render here -->
+        <div id="featuredRoot"></div>
+
+        <!-- Updated About Section -->
+        <div id="about" class="story-card">
+          <h2 style="margin:0 0 20px; font-size:1.5rem; color: #fff;">The Story</h2>
+          
+          <p>
+            Hey, I’m Stefone. I started experimenting with AI in 2023, mainly out of curiosity and a desire to build things without going through the traditional “learn to code for years first” route.
+          </p>
+
+          <p>
+            One of my first serious projects was a football prediction system. Using Python scripts, I pulled together data on upcoming matches, team performance, historical statistics, and head-to-head results. I then used basic data analysis to generate predictions, with everything tracked and organised in Excel.
+          </p>
+
+          <p>
+            Since then, I’ve continued building and experimenting with AI-assisted development. I use tools like <strong>ChatGPT</strong> to explore ideas and structure logic, and <strong>Google Gemini</strong> to help speed up building web apps, small tools, and experiments.
+          </p>
+
+          <p>
+            Most of what I’ve learned has come through hands-on trial and error — including an early lesson about testing carefully after accidentally burning through £20 of OpenAI credits in about 15 minutes 😅
+          </p>
+        </div>
+
+
+      </div>
+    </section>
+
+    <section class="footer">
+      <div class="container">
+        <div>
+          <span>© <span id="year"></span> Stefone</span> — <span>Vibe Coding Experiments</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    window.StefoneSite.renderFeatured({ rootId: "featuredRoot", limit: 6 });
+  </script>
 </body>
 </html>
