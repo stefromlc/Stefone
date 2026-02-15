@@ -4,7 +4,7 @@
     "repoUrl": "",
     "title": "SpendScope",
     "slug": "spendscope",
-    "description": "SpendScope Hub is a powerful yet easy-to-use savings tracker that shows how your everyday habits add up over time. Add your regular spends and instantly see your daily, monthly, yearly, and even long-term wealth potential — plus what those savings could buy in the Reward Gallery ",
+    "description": "Track recurring spending and see exactly how small habits compound over days, months, and years. Explore long-term “wealth potential” and fun goals in the Reward Gallery.",
     "thumbnail": "assets/thumbs/spendscope.png",
     "tags": [
       "Financial",
@@ -18,9 +18,11 @@
     "date": "2026-02-14"
   },
   {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "TimeBox",
     "slug": "timebox",
-    "description": "TimeBox is a cinematic 3D word clock that turns time into something you can explore. A glowing cube drifts, spins, and breathes in space, lighting up words to tell the current time with clarity and style. Switch between bold visual presets, dynamic backgrounds, and immersive camera modes—from slow orbit to handheld drift—to shape the mood. Fine-tune glow, focus, rotation, and perspective, or simply let it run as a living, ambient centerpiece in your browser.",
+    "description": "A cinematic 3D word clock that turns the current time into a floating, glowing scene. Tweak presets, camera motion, and glow settings—or let it run as an ambient screensaver.",
     "thumbnail": "assets/thumbs/timebox.png",
     "tags": [
       "Clock",
@@ -30,16 +32,14 @@
     ],
     "category": "Apps",
     "featured": true,
-    "date": "2026-02-13",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-02-13"
   },
   {
     "demoUrl": "",
     "repoUrl": "",
     "title": "AirTouch Gallery",
     "slug": "airtouch-gallery",
-    "description": "AirTouch Gallery is a hands-free, gesture-controlled image and map viewer that turns your webcam into a remote. Drop in photos, glide to the edges to browse, pinch to pan, zoom, and rotate, or switch to Map Mode to explore the world with the same natural gestures. Toggle cinema mode for distraction-free viewing, and fine-tune smoothing and sensitivity so everything feels just right. Everything runs locally in your browser for private, seamless control.",
+    "description": "Browse photos or explore maps with hands-free gestures using your webcam. Pinch, pan, zoom, rotate, and switch modes, all running locally for smooth, private control.",
     "thumbnail": "assets/thumbs/airtouch-gallery.png",
     "tags": [
       "Gesture Control",
@@ -56,7 +56,7 @@
     "repoUrl": "",
     "title": "Open95",
     "slug": "open95",
-    "description": "Open95 is a browser-based retro operating system inspired by Windows 95, complete with a functional desktop, classic apps, and persistent storage. It includes a real built-in Marketplace where all apps are free, blending nostalgia with modern web technology in a playful, fully interactive experience.",
+    "description": "A browser-based retro OS inspired by Windows 95, complete with a working desktop, classic apps, and saved state. Includes a built-in Marketplace where every app is free.",
     "thumbnail": "assets/thumbs/open95.png",
     "tags": [
       "Nostalgia",
@@ -72,7 +72,7 @@
     "repoUrl": "",
     "title": "Tune 3310",
     "slug": "tune-3310",
-    "description": "Ever miss the classic Nokia days? Tune 3310 lets you create your own old-school 3310-style ringtone by tapping out a melody, tweaking the notes, and saving the result. It’s simple, playful, and designed as a small throwback to an era of monochrome screens and iconic beeps.",
+    "description": "Make your own Nokia 3310-style ringtone by tapping in notes and shaping the melody. A tiny, nostalgic tool for iconic beeps and monochrome-era vibes.",
     "thumbnail": "assets/thumbs/tune-3310.png",
     "tags": [
       "Fun",
@@ -88,9 +88,27 @@
   {
     "demoUrl": "",
     "repoUrl": "",
+    "title": "PromptVault",
+    "slug": "promptvault",
+    "description": "A focused place to write, store, and reuse AI prompts without clutter. Everything stays organized, searchable, and available offline with a calm, writing-first layout.",
+    "thumbnail": "assets/thumbs/promptvault.png",
+    "tags": [
+      "AI Tools",
+      "Organization",
+      "Productivity",
+      "Prompts",
+      "Writing"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-02-07"
+  },
+  {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "Sonar",
     "slug": "sonar",
-    "description": "Sonar is a retro-inspired naval tactics game with classic Battleship vibes. Command your fleet, hunt enemy ships, and rely on sonar pings to guide each move. Wrapped in a glowing CRT-style interface with smart AI and punchy sound effects, it’s easy to learn but packed with strategic tension.",
+    "description": "A retro naval tactics game with Battleship energy and a CRT-glow interface. Hunt ships with sonar pings, smart AI, and punchy sound for tight, strategic rounds.",
     "thumbnail": "assets/thumbs/sonar.png",
     "tags": [
       "Arcade",
@@ -107,27 +125,9 @@
   {
     "demoUrl": "",
     "repoUrl": "",
-    "title": "PromptVault",
-    "slug": "promptvault",
-    "description": "PromptVault is a clean, focused app for writing, saving, and reusing AI prompts. Built for people who work with prompts often, it keeps everything organized, searchable, and available offline. The calm layout keeps writing front and center, with helpful tools nearby but never distracting.",
-    "thumbnail": "assets/thumbs/promptvault.png",
-    "tags": [
-      "AI Tools",
-      "Organization",
-      "Productivity",
-      "Prompts",
-      "Writing"
-    ],
-    "category": "Tools",
-    "featured": true,
-    "date": "2026-02-07"
-  },
-  {
-    "demoUrl": "",
-    "repoUrl": "",
     "title": "Sound Canvas",
     "slug": "sound-canvas",
-    "description": "Sound Canvas turns audio into living, animated visuals. Explore different styles, adjust the look in real time, and export eye-catching audio art with ease. It’s a playful space for experimenting with sound and visuals, whether you’re exploring ideas or creating something worth sharing.",
+    "description": "Turn audio into animated visuals you can tweak in real time. Explore styles, dial in the look, and export shareable audio art in a few clicks.",
     "thumbnail": "assets/thumbs/sound-canvas.png",
     "tags": [
       "Audio",
@@ -143,9 +143,28 @@
   {
     "demoUrl": "",
     "repoUrl": "",
+    "title": "MetaView",
+    "slug": "metaview",
+    "description": "Preview how any URL will look on social, search, and messaging, then refine titles, descriptions, and images live. Includes quick audits and copy-ready meta tags for a clean finish.",
+    "thumbnail": "assets/thumbs/metaview.png",
+    "tags": [
+      "Audit",
+      "Productivity",
+      "SEO",
+      "Social Preview",
+      "Tools",
+      "Web"
+    ],
+    "category": "Tools",
+    "featured": false,
+    "date": "2026-02-08"
+  },
+  {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "Split PDF",
     "slug": "split-pdf",
-    "description": "Split PDF is a simple, friendly tool for breaking large PDFs into smaller files directly in your browser. Split by page count or into equal parts with no uploads, no sign-ups, and no tracking. Everything stays on your device, making it fast, private, and easy to use.",
+    "description": "Split PDFs right in your browser—by page count or equal chunks—with no uploads and no fuss. Fast, private, and fully on-device.",
     "thumbnail": "assets/thumbs/split-pdf.png",
     "tags": [
       "PDF",
@@ -157,9 +176,11 @@
     "date": "2026-02-07"
   },
   {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "StreamPack",
     "slug": "streampack",
-    "description": "StreamPack is a smart, self-hosted media staging tool for loading shows and movies onto a USB drive with clarity and control. Connect your own media library, auto-group episodes by show and season, and build a transfer queue in seconds. A clear storage bar shows what’s used, what’s queued, and what’s left, so nothing overflows. It runs locally on your server and in your browser—fast, private, and fully under your control.",
+    "description": "A self-hosted staging tool for packing shows and movies onto a USB drive with clarity and control. Auto-group episodes, build a queue fast, and track storage so nothing overflows.",
     "thumbnail": "assets/thumbs/streampack.png",
     "tags": [
       "File",
@@ -170,16 +191,14 @@
     ],
     "category": "Tools",
     "featured": false,
-    "date": "2026-02-13",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-02-13"
   },
   {
     "demoUrl": "",
     "repoUrl": "",
     "title": "LifeStats",
     "slug": "lifestats",
-    "description": "LifeStats offers a playful way to see your life from a different perspective. Enter your birth date and watch time turn into relatable numbers—heartbeats, sleep, steps, and more. It’s not about precision, but about making time feel tangible, surprising, and quietly meaningful.",
+    "description": "Convert your age into surprisingly relatable numbers like sleep, heartbeats, and steps. More playful perspective than precision—made to make time feel tangible.",
     "thumbnail": "assets/thumbs/lifestats.png",
     "tags": [
       "Data",
@@ -189,25 +208,6 @@
       "Time"
     ],
     "category": "Apps",
-    "featured": false,
-    "date": "2026-02-08"
-  },
-  {
-    "demoUrl": "",
-    "repoUrl": "",
-    "title": "MetaView",
-    "slug": "metaview",
-    "description": "MetaView is a clean, visual tool for exploring and refining a page’s metadata. Paste in any URL to see how it appears across social platforms, search results, and messaging apps, then tweak titles, descriptions, and images in real time. With instant previews, simple audits, and copy-ready meta tags, it makes polishing link previews feel fast, calm, and a little satisfying.",
-    "thumbnail": "assets/thumbs/metaview.png",
-    "tags": [
-      "Audit",
-      "Productivity",
-      "SEO",
-      "Social Preview",
-      "Tools",
-      "Web"
-    ],
-    "category": "Tools",
     "featured": false,
     "date": "2026-02-08"
   }
