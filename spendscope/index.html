@@ -537,9 +537,27 @@
                 setGoals(goals.filter(goal => goal.id !== id));
             };
 
-            // Enhanced Share Logic
+            // Enhanced Share Logic with Goals
             const getShareText = () => {
-                return `SpendScope Projection:\nI could save ${formatMoney(calculations.yearly)} per year and have ${formatMoney(calculations.invest10)} in 10 years by reducing my habits.\n\nCalculate yours at stefone.com/spendscope #SpendScope`;
+                const yearly = calculations.yearly;
+                const tenYear = calculations.invest10;
+                
+                let text = `SpendScope Projection:\nI could save ${formatMoney(yearly)} per year and have ${formatMoney(tenYear)} in 10 years by reducing my habits.`;
+
+                // Add Goal Context if available
+                if (goals.length > 0 && yearly > 0) {
+                    const goal = goals[0];
+                    const daysToGoal = (goal.target / yearly) * 365;
+                    let timeString = '';
+                    if (daysToGoal < 30) timeString = `${Math.ceil(daysToGoal)} days`;
+                    else if (daysToGoal < 365) timeString = `${Math.ceil(daysToGoal/30)} months`;
+                    else timeString = `${(daysToGoal/365).toFixed(1)} years`;
+                    
+                    text += `\n\nI could reach my goal of "${goal.name}" in ${timeString}!`;
+                }
+
+                text += `\n\nCalculate yours at https://stefone.com/spendscope`;
+                return text;
             };
 
             const shareNative = async () => {
@@ -549,6 +567,7 @@
                         await navigator.share({
                             title: 'My SpendScope Projection',
                             text: text,
+                            url: 'https://stefone.com/spendscope'
                         });
                     } catch (err) {
                         console.error('Error sharing:', err);
@@ -600,15 +619,12 @@
                 setGeneratingImage(true);
 
                 try {
-                    // Capture the HIDDEN, FIXED-SIZE element (shareCardCaptureRef)
-                    // This ensures the image is always 800x800 px regardless of device screen size
-
-                    if (document.fonts && document.fonts.ready) {
-                    await document.fonts.ready;
+                     if (document.fonts && document.fonts.ready) {
+                        await document.fonts.ready;
                     }
                     await new Promise(requestAnimationFrame);
-                
-                    const scale = 1; // super crisp export (makes a larger file)
+                    
+                    const scale = 1.5; // Slightly higher quality for share
 
                     const canvas = await html2canvas(shareCardCaptureRef.current, {
                         backgroundColor: null,
@@ -616,35 +632,32 @@
                         logging: false,
                         useCORS: true,
                         allowTaint: false,
-
-                        scrollX: 0,
-                        scrollY: 0,
-
-                        // Force exact capture box
                         width: 800,
                         height: 800,
                         windowWidth: 800,
                         windowHeight: 800,
                     });
 
-
-
                     canvas.toBlob(async (blob) => {
-                        const file = new File([blob], 'my-spendscope-projection.png', { type: 'image/png' });
-                        
-                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        const file = new File([blob], 'spendscope-projection.png', { type: 'image/png' });
+                        const shareData = {
+                            title: 'My SpendScope Projection',
+                            text: getShareText(),
+                            files: [file]
+                        };
+
+                        // 1. Try Native Share with Files (Mobile/Supported Browsers)
+                        if (navigator.canShare && navigator.canShare(shareData)) {
                             try {
-                                await navigator.share({
-                                    files: [file],
-                                    title: 'My SpendScope Stats',
-                                    text: getShareText()
-                                });
+                                await navigator.share(shareData);
                             } catch (err) {
-                                console.error("Share failed", err);
-                                // Fallback to download if sharing fails
-                                downloadImage(canvas);
+                                if (err.name !== 'AbortError') {
+                                    console.error('Share failed', err);
+                                    downloadImage(canvas); // Fallback to download on actual error
+                                }
                             }
                         } else {
+                            // 2. Fallback to Download
                             downloadImage(canvas);
                         }
                         setGeneratingImage(false);
