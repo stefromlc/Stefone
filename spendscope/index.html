@@ -79,16 +79,45 @@
         }
 
         .glass-badge {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(35px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.4);
-        }
+  position: relative;
+  overflow: hidden;
 
-        .dark .glass-badge {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+  /* translucent glass base */
+  background: rgba(255, 255, 255, 0.10);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+
+  /* thin glass edge */
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-top-color: rgba(255, 255, 255, 0.35);
+
+  /* depth */
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* optional: add a soft "sheen" reflection */
+.glass-badge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.10) 25%,
+    rgba(255, 255, 255, 0.00) 60%
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.dark .glass-badge {
+  background: rgba(15, 23, 42, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-top-color: rgba(255, 255, 255, 0.28);
+}
+
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-900 transition-colors duration-500 selection:bg-indigo-500 selection:text-white overflow-x-hidden">
@@ -539,7 +568,8 @@
                                                 {/* Achievement Multiplier Badge */}
                                                 {multDisplay > 0 && (
                                                     <div className="absolute top-6 right-6 z-20">
-                                                        <div className={`glass-badge px-7 py-4 rounded-[1.5rem] font-black text-xl tracking-tighter backdrop-blur-3xl shadow-2xl transition-all duration-500 group-hover:scale-110 flex items-center justify-center min-w-[75px] text-white bg-indigo-600/60 border-indigo-400`}>
+                                                        <div className="glass-badge px-7 py-4 rounded-[1.5rem] font-black text-xl tracking-tighter transition-all duration-500 group-hover:scale-110 flex items-center justify-center min-w-[75px] text-white">
+
                                                             {multDisplay}x
                                                         </div>
                                                     </div>
