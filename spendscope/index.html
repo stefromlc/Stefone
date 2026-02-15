@@ -2,7 +2,7 @@
 <html lang="en-GB">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <!-- Primary Meta Tags -->
 <title>SpendScope – Track Recurring Spending Over Time</title>
@@ -38,6 +38,9 @@
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                     },
+                    screens: {
+                        'xs': '475px',
+                    },
                     animation: {
                         'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                         'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -67,12 +70,15 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- HTML2Canvas for Image Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 20px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(99, 102, 241, 0.3); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); }
@@ -154,13 +160,19 @@
             border: 1px solid rgba(255, 255, 255, 0.18);
             border-top-color: rgba(255, 255, 255, 0.28);
         }
+        
+        /* Pattern for Share Card - CSS Only to avoid CORS */
+        .share-pattern {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-900 transition-colors duration-500 selection:bg-indigo-500 selection:text-white overflow-x-hidden">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo, useRef } = React;
+        const { useState, useEffect, useMemo, useRef, useLayoutEffect } = React;
 
         // Enhanced Icon Set
         const Icons = {
@@ -188,6 +200,8 @@
             Mail: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>,
             Smartphone: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>,
             Linkedin: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>,
+            Facebook: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.791-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
+            Reddit: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>,
         };
 
         const CURRENCIES = {
@@ -302,6 +316,65 @@
             return <span>{format(displayValue)}</span>;
         };
 
+        // --- NEW COMPONENT: Fixed Size Share Card (800x800 for Socials) ---
+        // This component is rendered TWICE:
+        // 1. Off-screen at full 800x800 resolution for image capture.
+        // 2. Scaled down inside the modal for preview.
+        const ShareCardContent = ({ calculations, habitCount, formatMoney }) => (
+            <div className="w-[800px] h-[800px] relative bg-gradient-to-br from-indigo-600 via-purple-700 to-slate-900 flex flex-col items-center justify-center text-white p-16 shrink-0">
+                 {/* Background Pattern - Pure CSS to prevent CORS/Loading issues */}
+                 <div className="absolute inset-0 opacity-10 share-pattern"></div>
+                 
+                 {/* Abstract Shapes */}
+                 <div className="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] bg-pink-500 rounded-full blur-[120px] opacity-40"></div>
+                 <div className="absolute bottom-[-20%] right-[-20%] w-[500px] h-[500px] bg-indigo-400 rounded-full blur-[120px] opacity-40"></div>
+
+                 {/* Foreground Content */}
+                 <div className="relative z-10 text-center w-full max-w-[650px] flex flex-col items-center">
+                    
+                    <div className="flex items-center gap-3 mb-6 bg-white/10 px-5 py-2 rounded-full backdrop-blur-none border border-white/20">
+                         <div className="bg-white text-indigo-600 p-1 rounded">
+                             <Icons.TrendingUp size={20} strokeWidth={4} />
+                         </div>
+                         <span className="text-sm font-black uppercase tracking-[0.2em]">SpendScope</span>
+                    </div>
+                    
+                    <div className="text-xl font-bold uppercase tracking-widest opacity-80 mb-2">By reducing bad habits, I can save</div>
+                    
+                    <div className="text-[8rem] leading-none font-black tracking-tighter mb-6 drop-shadow-lg">
+                        {formatMoney(calculations.yearly)}
+                    </div>
+                    
+                    <div className="inline-flex items-center justify-center mt-12 bg-white text-indigo-900 px-10 py-3 rounded-full font-black text-xl leading-[1] text-center mb-12 shadow-xl -rotate-2">
+                        <span>Every Single Year</span>
+                    </div>
+
+
+
+
+
+                    
+                    <div className="grid grid-cols-2 gap-8 w-full">
+                        <div className="bg-slate-900 rounded-[2rem] p-8 border border-white/0 shadow-xl">
+                            <div className="text-sm uppercase font-bold opacity-60 mb-2 tracking-wider">Decade (Cash)</div>
+                            <div className="text-4xl font-black tracking-tight text-emerald-400">
+                            {formatMoney(calculations.tenYear)}
+                            </div>
+
+                        </div>
+                        <div className="bg-slate-900 rounded-[2rem] p-8 border border-white/0 shadow-xl">
+                            <div className="text-sm uppercase font-bold opacity-60 mb-2 tracking-wider">Cutting Back</div>
+                            <div className="text-4xl font-black tracking-tight">{habitCount} <span className="text-2xl text-white/60">Habit{habitCount !== 1 ? 's' : ''}</span></div>
+                        </div>
+                    </div>
+                 </div>
+                 
+                 <div className="absolute bottom-8 text-sm font-bold opacity-50 uppercase tracking-[0.3em]">
+                    stefone.com/spendscope
+                 </div>
+            </div>
+        );
+
         function App() {
             const [items, setItems] = useState([]);
             const [goals, setGoals] = useState([]);
@@ -317,7 +390,13 @@
             const [loaded, setLoaded] = useState(false);
             const [powerTimeframe, setPowerTimeframe] = useState(1); 
             const [investmentRate, setInvestmentRate] = useState(7);
+            
+            // Sharing & Preview State
             const [showShareModal, setShowShareModal] = useState(false);
+            const shareCardCaptureRef = useRef(null); // The invisible, high-res one
+            const previewContainerRef = useRef(null); // The wrapper for the visible one
+            const [previewScale, setPreviewScale] = useState(1);
+            const [generatingImage, setGeneratingImage] = useState(false);
 
             useEffect(() => {
                 const saved = localStorage.getItem('spendscope_v13_data');
@@ -353,6 +432,24 @@
                     else document.documentElement.classList.remove('dark');
                 }
             }, [items, goals, currencyCode, darkMode, powerTimeframe, investmentRate, loaded]);
+
+            // Calculate Preview Scale dynamically based on screen width
+            useLayoutEffect(() => {
+                const updateScale = () => {
+                    if (showShareModal && previewContainerRef.current) {
+                        const containerWidth = previewContainerRef.current.offsetWidth;
+                        const cardWidth = 800; // Fixed width of our share card
+                        // Scale down if container is smaller than card, otherwise 1 (or max 1)
+                        const padding = 40; // visual padding
+                        const newScale = Math.min((containerWidth - padding) / cardWidth, 0.6); // Cap at 0.6 so it's not huge on desktop
+                        setPreviewScale(Math.max(newScale, 0.3)); // Min scale
+                    }
+                };
+
+                updateScale();
+                window.addEventListener('resize', updateScale);
+                return () => window.removeEventListener('resize', updateScale);
+            }, [showShareModal]);
 
             const calculations = useMemo(() => {
                 let yearly = 0;
@@ -466,16 +563,24 @@
                 window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
             };
 
+            const shareFacebook = () => {
+                const url = encodeURIComponent("https://stefone.com/spendscope");
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodeURIComponent(getShareText())}`, '_blank');
+            };
+
+            const shareReddit = () => {
+                const url = encodeURIComponent("https://stefone.com/spendscope");
+                const title = encodeURIComponent(getShareText());
+                window.open(`https://reddit.com/submit?url=${url}&title=${title}`, '_blank');
+            };
+
             const shareWhatsApp = () => {
                 const text = encodeURIComponent(getShareText());
                 window.open(`https://wa.me/?text=${text}`, '_blank');
             };
 
              const shareLinkedIn = () => {
-                const url = encodeURIComponent(window.location.href); 
-                // Since this is likely a local file or demo without a public URL, we just share a generic link or rely on copy.
-                // However, user asked for "social media etc", so we provide the button.
-                // Best effort for LinkedIn which requires a URL.
+                const url = encodeURIComponent("https://stefone.com/spendscope"); 
                 window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
             };
 
@@ -488,6 +593,75 @@
             const copyShareSummary = () => {
                 navigator.clipboard.writeText(getShareText());
                 alert("Summary copied to clipboard!");
+            };
+
+            const handleGenerateImage = async () => {
+                if (!shareCardCaptureRef.current) return;
+                setGeneratingImage(true);
+
+                try {
+                    // Capture the HIDDEN, FIXED-SIZE element (shareCardCaptureRef)
+                    // This ensures the image is always 800x800 px regardless of device screen size
+
+                    if (document.fonts && document.fonts.ready) {
+                    await document.fonts.ready;
+                    }
+                    await new Promise(requestAnimationFrame);
+                
+                    const scale = 1; // super crisp export (makes a larger file)
+
+                    const canvas = await html2canvas(shareCardCaptureRef.current, {
+                        backgroundColor: null,
+                        scale,
+                        logging: false,
+                        useCORS: true,
+                        allowTaint: false,
+
+                        scrollX: 0,
+                        scrollY: 0,
+
+                        // Force exact capture box
+                        width: 800,
+                        height: 800,
+                        windowWidth: 800,
+                        windowHeight: 800,
+                    });
+
+
+
+                    canvas.toBlob(async (blob) => {
+                        const file = new File([blob], 'my-spendscope-projection.png', { type: 'image/png' });
+                        
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            try {
+                                await navigator.share({
+                                    files: [file],
+                                    title: 'My SpendScope Stats',
+                                    text: getShareText()
+                                });
+                            } catch (err) {
+                                console.error("Share failed", err);
+                                // Fallback to download if sharing fails
+                                downloadImage(canvas);
+                            }
+                        } else {
+                            downloadImage(canvas);
+                        }
+                        setGeneratingImage(false);
+                    }, 'image/png');
+
+                } catch (err) {
+                    console.error("Image generation failed", err);
+                    alert("Could not generate image. Please try again.");
+                    setGeneratingImage(false);
+                }
+            };
+
+            const downloadImage = (canvas) => {
+                const link = document.createElement('a');
+                link.download = 'spendscope-projection.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
             };
 
             if (!loaded) return null;
@@ -506,7 +680,7 @@
                         <div className="absolute bottom-[-10%] right-[-10%] w-[50rem] h-[50rem] bg-purple-600/10 rounded-full blur-[128px] animate-blob animation-delay-2000"></div>
                     </div>
 
-                    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-[#0b0f19]/70 border-b border-slate-200 dark:border-white/10 px-6 py-4">
+                    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-[#0b0f19]/70 border-b border-slate-200 dark:border-white/10 px-4 sm:px-6 py-4">
                         <div className="max-w-7xl mx-auto flex justify-between items-center">
                             <div className="flex items-center gap-4">
                                 <a href="/projects/" className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-all text-slate-500 dark:text-slate-300">
@@ -516,10 +690,11 @@
                                     <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg">
                                         <Icons.TrendingUp size={18} strokeWidth={3} />
                                     </div>
-                                    <span className="text-xl font-black tracking-tighter uppercase font-sans">SpendScope Hub</span>
+                                    <span className="text-xl font-black tracking-tighter uppercase font-sans hidden xs:inline">SpendScope Hub</span>
+                                    <span className="text-xl font-black tracking-tighter uppercase font-sans xs:hidden">SpendScope</span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 sm:gap-4">
                                 <button onClick={() => setShowShareModal(true)} className="p-2 rounded-full hover:bg-indigo-500/10 text-indigo-500 transition-all">
                                     <Icons.Share2 size={20} />
                                 </button>
@@ -537,32 +712,32 @@
                         </div>
                     </header>
 
-                    <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 relative z-10">
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 relative z-10">
                         
                         {/* Quick Add Bar */}
                         <div className="mb-12 animate-slide-up text-center lg:text-left">
                              <div className="flex items-center justify-center lg:justify-start gap-2 mb-4 px-1">
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-indigo-300 opacity-60">Quick Add Items</span>
                              </div>
-                             <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar px-1">
+                             <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar px-1 touch-pan-x">
                                 {PRESETS.map((p) => (
                                     <button
                                         key={p.name}
                                         onClick={() => setNewItem({ name: p.name, cost: p.cost, frequency: p.frequency, period: p.period, category: p.category })}
-                                        className="shrink-0 px-6 py-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800/40 hover:border-indigo-500 transition-all shadow-sm flex items-center gap-3 group backdrop-blur-md"
+                                        className="shrink-0 px-6 py-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800/40 hover:border-indigo-500 transition-all shadow-sm flex items-center gap-3 group backdrop-blur-md active:scale-95"
                                     >
                                         <span className="text-2xl filter drop-shadow-sm group-hover:scale-110 transition-transform">{p.icon}</span>
-                                        <span className="text-sm font-bold opacity-80 group-hover:opacity-100">{p.name}</span>
+                                        <span className="text-sm font-bold opacity-80 group-hover:opacity-100 whitespace-nowrap">{p.name}</span>
                                     </button>
                                 ))}
                              </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-20">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 mb-20">
                             
-                            <div className="lg:col-span-5 space-y-8">
+                            <div className="lg:col-span-5 space-y-6 lg:space-y-8 order-2 lg:order-1">
                                 {/* Customise Item Form */}
-                                <div className="glass-panel p-10 rounded-[3rem] relative overflow-hidden">
+                                <div className="glass-panel p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] relative overflow-hidden">
                                     <h3 className="text-lg font-black uppercase tracking-widest mb-8 flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
                                             <Icons.Plus size={20} />
@@ -571,16 +746,16 @@
                                     </h3>
                                     <form onSubmit={handleAddItem} className="space-y-6">
                                         <input type="text" placeholder="Habit Name (e.g. Daily Coffee)" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold text-lg shadow-inner text-slate-900 dark:text-white" />
-                                        <div className="grid grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-3 gap-3 sm:gap-4">
                                             <div className="relative">
-                                                <span className="absolute left-5 top-5 text-slate-400 font-bold">{CURRENCIES[currencyCode].symbol}</span>
-                                                <input type="number" step="0.01" value={newItem.cost} onChange={(e) => setNewItem({...newItem, cost: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl pl-12 pr-6 py-5 font-bold text-lg shadow-inner text-slate-900 dark:text-white" />
+                                                <span className="absolute left-4 sm:left-5 top-5 text-slate-400 font-bold">{CURRENCIES[currencyCode].symbol}</span>
+                                                <input type="number" step="0.01" value={newItem.cost} onChange={(e) => setNewItem({...newItem, cost: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl pl-10 sm:pl-12 pr-4 sm:pr-6 py-5 font-bold text-lg shadow-inner text-slate-900 dark:text-white" />
                                             </div>
                                             <div className="relative">
-                                                <span className="absolute left-5 top-5 text-slate-400 font-bold text-sm">x</span>
-                                                <input type="number" min="1" step="1" value={newItem.frequency} onChange={(e) => setNewItem({...newItem, frequency: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl pl-10 pr-4 py-5 font-bold text-lg shadow-inner text-slate-900 dark:text-white" />
+                                                <span className="absolute left-4 sm:left-5 top-5 text-slate-400 font-bold text-sm">x</span>
+                                                <input type="number" min="1" step="1" value={newItem.frequency} onChange={(e) => setNewItem({...newItem, frequency: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl pl-8 sm:pl-10 pr-2 sm:pr-4 py-5 font-bold text-lg shadow-inner text-slate-900 dark:text-white" />
                                             </div>
-                                            <select value={newItem.period} onChange={(e) => setNewItem({...newItem, period: e.target.value})} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-5 font-bold text-lg outline-none cursor-pointer text-slate-900 dark:text-white">
+                                            <select value={newItem.period} onChange={(e) => setNewItem({...newItem, period: e.target.value})} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl px-2 sm:px-4 py-5 font-bold text-lg outline-none cursor-pointer text-slate-900 dark:text-white">
                                                 {Object.entries(PERIODS).map(([k, { label }]) => <option key={k} value={k}>{label}</option>)}
                                             </select>
                                         </div>
@@ -593,29 +768,29 @@
 
                                 {/* Saved Habits List */}
                                 {items.length > 0 && (
-                                    <div className="glass-panel rounded-[3rem] overflow-hidden max-h-[600px] flex flex-col">
-                                        <div className="p-8 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
+                                    <div className="glass-panel rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden max-h-[600px] flex flex-col">
+                                        <div className="p-6 sm:p-8 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
                                             <h3 className="font-black uppercase tracking-widest text-xs opacity-50">Saved Habits</h3>
                                             <span className="text-[10px] font-black bg-indigo-500/10 px-3 py-1.5 rounded-full text-indigo-500 uppercase font-sans">
                                                 {formatMoney(calculations.yearly)} Impact
                                             </span>
                                         </div>
-                                        <div className="overflow-y-auto custom-scrollbar p-4 space-y-3">
+                                        <div className="overflow-y-auto custom-scrollbar p-3 sm:p-4 space-y-3">
                                             {items.map(item => (
-                                                <div key={item.id} className={`p-5 rounded-3xl transition-all ${item.reductionFactor > 0 ? 'bg-white dark:bg-white/5 shadow-sm border border-slate-200 dark:border-white/5' : 'bg-slate-50 dark:bg-white/5 opacity-60'}`}>
+                                                <div key={item.id} className={`p-4 sm:p-5 rounded-3xl transition-all ${item.reductionFactor > 0 ? 'bg-white dark:bg-white/5 shadow-sm border border-slate-200 dark:border-white/5' : 'bg-slate-50 dark:bg-white/5 opacity-60'}`}>
                                                     <div className="flex items-center justify-between mb-3">
-                                                        <div className="flex items-center gap-4">
+                                                        <div className="flex items-center gap-3 sm:gap-4">
                                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${CATEGORIES[item.category].bg} bg-opacity-10 ${CATEGORIES[item.category].color}`}>
                                                                 {CATEGORIES[item.category].icon}
                                                             </div>
                                                             <div>
-                                                                <div className="font-bold text-base leading-tight truncate max-w-[140px]">{item.name}</div>
+                                                                <div className="font-bold text-base leading-tight truncate max-w-[120px] sm:max-w-[140px]">{item.name}</div>
                                                                 <div className="text-[10px] uppercase font-black opacity-30 mt-1">
                                                                     {formatMoney(item.cost, true)} {item.frequency > 1 ? `x ${item.frequency}` : ''} / {item.period}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-3">
+                                                        <div className="flex items-center gap-2 sm:gap-3">
                                                             <div className="text-right">
                                                                 <div className="text-sm font-black">{formatMoney(item.cost * item.frequency * PERIODS[item.period].multiplier * item.reductionFactor)}</div>
                                                                 <div className="text-[8px] uppercase font-black opacity-40">Saved/Yr</div>
@@ -651,7 +826,7 @@
 
                                 {/* Category Breakdown Chart */}
                                 {items.length > 0 && (
-                                    <div className="glass-panel p-8 rounded-[3rem]">
+                                    <div className="glass-panel p-6 sm:p-8 rounded-[2.5rem] sm:rounded-[3rem]">
                                         <h3 className="font-black uppercase tracking-widest text-xs opacity-50 mb-6 flex items-center gap-2">
                                             <Icons.BarChart2 size={14} /> Category Breakdown
                                         </h3>
@@ -676,10 +851,10 @@
                             </div>
 
                             {/* Enhanced Financial Impact Hub */}
-                            <div className="lg:col-span-7 flex flex-col h-full gap-6">
+                            <div className="lg:col-span-7 flex flex-col h-full gap-6 order-1 lg:order-2">
                                 
                                 {/* 1. Hero Annual Card */}
-                                <div className="glass-panel p-10 rounded-[3.5rem] relative overflow-hidden group flex-1 min-h-[300px] flex flex-col justify-center">
+                                <div className="glass-panel p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3.5rem] relative overflow-hidden group flex-1 min-h-[300px] flex flex-col justify-center">
                                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] -mr-64 -mt-64"></div>
                                     <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-pink-600/5 rounded-full blur-[80px] -ml-32 -mb-32"></div>
                                     
@@ -689,7 +864,7 @@
                                             <h3 className="font-black uppercase tracking-[0.3em] text-[11px]">Total Annual Impact</h3>
                                         </div>
                                         
-                                        <div className="text-[15vw] lg:text-[7rem] xl:text-[8.5rem] font-black tracking-tighter leading-none mb-4 bg-clip-text text-transparent bg-gradient-to-br from-slate-900 via-slate-600 to-slate-800 dark:from-white dark:via-slate-200 dark:to-slate-400 font-sans transform transition-transform hover:scale-[1.01] duration-700">
+                                        <div className="text-[14vw] sm:text-[15vw] lg:text-[7rem] xl:text-[8.5rem] font-black tracking-tighter leading-none mb-4 bg-clip-text text-transparent bg-gradient-to-br from-slate-900 via-slate-600 to-slate-800 dark:from-white dark:via-slate-200 dark:to-slate-400 font-sans transform transition-transform hover:scale-[1.01] duration-700">
                                             <AnimatedValue value={calculations.yearly} format={(v) => formatMoney(v)} />
                                         </div>
                                         <div className="inline-block px-5 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider">
@@ -699,18 +874,18 @@
                                 </div>
 
                                 {/* 2. Short Term Grid (Daily, Weekly, Monthly) */}
-                                <div className="grid grid-cols-3 gap-4 lg:gap-6">
+                                <div className="grid grid-cols-3 gap-3 lg:gap-6">
                                     {[
                                         { label: 'Daily', val: calculations.daily, icon: <Icons.Sun size={18} />, color: 'text-amber-500' },
                                         { label: 'Weekly', val: calculations.weekly, icon: <Icons.Calendar size={18} />, color: 'text-blue-500' },
                                         { label: 'Monthly', val: calculations.monthly, icon: <Icons.Moon size={18} />, color: 'text-indigo-500' }
                                     ].map((stat, i) => (
-                                        <div key={i} className="glass-panel p-6 rounded-[2.5rem] flex flex-col items-center lg:items-start text-center lg:text-left hover:bg-white/5 transition-colors">
-                                            <div className={`mb-3 p-2.5 rounded-2xl bg-white dark:bg-white/5 shadow-sm ${stat.color} w-fit`}>
+                                        <div key={i} className="glass-panel p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center lg:items-start text-center lg:text-left hover:bg-white/5 transition-colors">
+                                            <div className={`mb-2 sm:mb-3 p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-white/5 shadow-sm ${stat.color} w-fit`}>
                                                 {stat.icon}
                                             </div>
-                                            <div className="text-[10px] uppercase font-black opacity-40 tracking-widest mb-1">{stat.label}</div>
-                                            <div className="text-lg lg:text-2xl font-black tracking-tight">
+                                            <div className="text-[9px] sm:text-[10px] uppercase font-black opacity-40 tracking-widest mb-1">{stat.label}</div>
+                                            <div className="text-sm sm:text-lg lg:text-2xl font-black tracking-tight">
                                                 <AnimatedValue value={stat.val} format={(v) => formatMoney(v, true)} />
                                             </div>
                                         </div>
@@ -721,7 +896,7 @@
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                                     
                                     {/* 5 Year Block */}
-                                    <div className="glass-panel p-8 rounded-[2.5rem] relative overflow-hidden group">
+                                    <div className="glass-panel p-6 sm:p-8 rounded-[2.5rem] relative overflow-hidden group">
                                         <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                                             <Icons.Layers size={60} />
                                         </div>
@@ -735,7 +910,7 @@
                                     </div>
 
                                     {/* 10 Year Block */}
-                                    <div className="glass-panel p-8 rounded-[2.5rem] relative overflow-hidden group">
+                                    <div className="glass-panel p-6 sm:p-8 rounded-[2.5rem] relative overflow-hidden group">
                                          <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                                             <Icons.PieChart size={60} />
                                         </div>
@@ -749,7 +924,7 @@
                                     </div>
 
                                     {/* Adjustable Investment Block */}
-                                    <div className="md:col-span-2 lg:col-span-1 bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-8 rounded-[2.5rem] relative overflow-hidden shadow-xl shadow-indigo-500/20 flex flex-col justify-between">
+                                    <div className="md:col-span-2 lg:col-span-1 bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 sm:p-8 rounded-[2.5rem] relative overflow-hidden shadow-xl shadow-indigo-500/20 flex flex-col justify-between">
                                         <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] mix-blend-overlay opacity-0 hover:opacity-100 transition-opacity"></div>
                                         
                                         <div className="relative z-10">
@@ -797,20 +972,20 @@
 
                         {/* Custom Goals System */}
                         <div className="mb-20">
-                            <div className="flex items-center justify-between mb-8">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
                                 <h3 className="text-3xl font-black tracking-tighter font-sans flex items-center gap-3">
                                     <Icons.Target className="text-indigo-500" /> Your Custom Goals
                                 </h3>
                                 <button 
                                     onClick={() => setShowGoalForm(!showGoalForm)}
-                                    className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 ${showGoalForm ? 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'}`}
+                                    className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 w-full sm:w-auto ${showGoalForm ? 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'}`}
                                 >
                                     {showGoalForm ? <><Icons.X size={16} /> Cancel</> : <><Icons.Plus size={16} /> New Goal</>}
                                 </button>
                             </div>
                             
                             {showGoalForm && (
-                                <div className="glass-panel p-8 rounded-[3rem] mb-10 animate-fade-in">
+                                <div className="glass-panel p-6 sm:p-8 rounded-[3rem] mb-10 animate-fade-in">
                                     <form onSubmit={handleAddGoal} className="flex flex-col gap-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div>
@@ -825,14 +1000,14 @@
 
                                         {/* Image Selector Section */}
                                         <div className="bg-white/30 dark:bg-black/10 rounded-3xl p-6 border border-white/5">
-                                            <div className="flex items-center gap-4 mb-4 overflow-x-auto pb-2 no-scrollbar">
-                                                <button type="button" onClick={() => setGoalImageMode('preset')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${goalImageMode === 'preset' ? 'bg-indigo-600 text-white' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>
+                                            <div className="flex items-center gap-4 mb-4 overflow-x-auto pb-2 custom-scrollbar">
+                                                <button type="button" onClick={() => setGoalImageMode('preset')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${goalImageMode === 'preset' ? 'bg-indigo-600 text-white' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>
                                                     <Icons.Image size={14} /> Presets
                                                 </button>
-                                                <button type="button" onClick={() => setGoalImageMode('url')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${goalImageMode === 'url' ? 'bg-indigo-600 text-white' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>
+                                                <button type="button" onClick={() => setGoalImageMode('url')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${goalImageMode === 'url' ? 'bg-indigo-600 text-white' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>
                                                     <Icons.Link size={14} /> URL
                                                 </button>
-                                                <button type="button" onClick={() => setGoalImageMode('upload')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${goalImageMode === 'upload' ? 'bg-indigo-600 text-white' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>
+                                                <button type="button" onClick={() => setGoalImageMode('upload')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${goalImageMode === 'upload' ? 'bg-indigo-600 text-white' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>
                                                     <Icons.Upload size={14} /> Upload
                                                 </button>
                                             </div>
@@ -911,7 +1086,7 @@
                             )}
 
                             {goals.length > 0 && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                                     {goals.map(goal => {
                                         // Calculate metrics
                                         const annualPace = calculations.yearly;
@@ -936,7 +1111,7 @@
                                         const opacityClass = hasImage ? 'opacity-80' : 'opacity-50';
 
                                         return (
-                                            <div key={goal.id} className="glass-panel p-8 rounded-[2.5rem] relative overflow-hidden flex flex-col justify-between group min-h-[220px]">
+                                            <div key={goal.id} className="glass-panel p-6 sm:p-8 rounded-[2.5rem] relative overflow-hidden flex flex-col justify-between group min-h-[220px]">
                                                 
                                                 {/* Background Image logic */}
                                                 {hasImage ? (
@@ -998,21 +1173,21 @@
 
                         {/* Purchasing Power Gallery */}
                         <div className="mb-24">
-                            <div className="flex flex-col md:flex-row items-end md:items-center justify-between mb-16 gap-8 px-4">
+                            <div className="flex flex-col md:flex-row items-end md:items-center justify-between mb-16 gap-8 px-2 sm:px-4">
                                 <div>
-                                    <h3 className="text-5xl font-black tracking-tighter mb-4 font-sans leading-none">The Reward Gallery</h3>
-                                    <p className="opacity-40 font-bold text-lg leading-relaxed max-w-lg">Achievements projected over <span className="text-indigo-500 dark:text-indigo-400">{powerTimeframe} Year{powerTimeframe > 1 ? 's' : ''}</span>.</p>
+                                    <h3 className="text-4xl sm:text-5xl font-black tracking-tighter mb-4 font-sans leading-none">The Reward Gallery</h3>
+                                    <p className="opacity-40 font-bold text-base sm:text-lg leading-relaxed max-w-lg">Achievements projected over <span className="text-indigo-500 dark:text-indigo-400">{powerTimeframe} Year{powerTimeframe > 1 ? 's' : ''}</span>.</p>
                                 </div>
-                                <div className="flex bg-slate-200 dark:bg-slate-800 p-2 rounded-[2rem] shadow-inner border border-white/5 backdrop-blur-md">
+                                <div className="flex bg-slate-200 dark:bg-slate-800 p-2 rounded-[2rem] shadow-inner border border-white/5 backdrop-blur-md overflow-x-auto w-full md:w-auto">
                                     {[1, 5, 10].map(yr => (
-                                        <button key={yr} onClick={() => setPowerTimeframe(yr)} className={`px-10 py-4 rounded-[1.5rem] text-sm font-black transition-all ${powerTimeframe === yr ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'opacity-40 hover:opacity-100'}`}>
+                                        <button key={yr} onClick={() => setPowerTimeframe(yr)} className={`flex-1 md:flex-none px-6 sm:px-10 py-4 rounded-[1.5rem] text-sm font-black transition-all ${powerTimeframe === yr ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'opacity-40 hover:opacity-100'}`}>
                                             {yr}Y
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 px-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-10 px-0 sm:px-4">
                                 {BENCHMARKS.map((b) => {
                                     const savedTotal = calculations.yearly * powerTimeframe;
                                     const costLocal = b.baseCostUSD * CURRENCIES[currencyCode].rate;
@@ -1024,7 +1199,7 @@
                                     const progressPercentage = Math.min(Math.floor(multRaw * 100), 100);
 
                                     return (
-                                        <div key={b.name} className={`group relative rounded-[3rem] overflow-hidden glass-panel transition-all duration-700 ${isEarned ? 'ring-2 ring-indigo-500/50 shadow-2xl scale-100' : 'opacity-50 grayscale hover:grayscale-0 hover:opacity-100 scale-[0.97] hover:scale-100'}`}>
+                                        <div key={b.name} className={`group relative rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden glass-panel transition-all duration-700 ${isEarned ? 'ring-2 ring-indigo-500/50 shadow-2xl scale-100' : 'opacity-50 grayscale hover:grayscale-0 hover:opacity-100 scale-[0.97] hover:scale-100'}`}>
                                             <div className="aspect-[4/3] overflow-hidden relative">
                                                 <img 
                                                     src={b.img} 
@@ -1066,53 +1241,96 @@
                             </div>
                         </div>
 
-                        {/* Share Modal */}
+                        {/* Share Modal - Completely Redesigned & Fixed Scroll */}
                         {showShareModal && (
                             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowShareModal(false)}></div>
-                                <div className="relative bg-white dark:bg-slate-900 w-full max-w-md rounded-[3rem] overflow-hidden shadow-2xl animate-fade-in border border-white/10">
-                                    <div className="h-40 bg-gradient-to-br from-indigo-600 to-purple-700 relative overflow-hidden flex items-center justify-center">
-                                        <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                                        <div className="text-center relative z-10 p-6">
-                                            <h3 className="text-white text-3xl font-black tracking-tighter mb-1">SpendScope</h3>
-                                            <p className="text-indigo-200 text-xs font-bold uppercase tracking-widest">Share Your Projection</p>
+                                <div className="relative bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl animate-fade-in border border-white/10 flex flex-col max-h-[90vh]">
+                                    
+                                    {/* 1. INVISIBLE CAPTURE CONTAINER
+                                        Positioned off-screen so user never sees it, but html2canvas can capture it at full resolution (800x800).
+                                    */}
+                                    <div style={{ position: 'fixed', left: 0, top: 0, opacity: 0, pointerEvents: 'none' }}>
+                                        <div ref={shareCardCaptureRef}>
+                                            <ShareCardContent 
+                                                calculations={calculations} 
+                                                habitCount={items.length} 
+                                                formatMoney={(v) => formatMoney(v)} 
+                                            />
                                         </div>
-                                        <button onClick={() => setShowShareModal(false)} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors"><Icons.X size={24} /></button>
                                     </div>
-                                    <div className="p-8 space-y-6">
-                                        <div className="text-center space-y-2">
-                                            <p className="text-sm font-bold opacity-50 uppercase tracking-widest">Potential Annual Savings</p>
-                                            <p className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">{formatMoney(calculations.yearly)}</p>
-                                        </div>
+
+                                    {/* MAIN SCROLLABLE WRAPPER: Ensures buttons are reachable on small screens */}
+                                    <div className="overflow-y-auto custom-scrollbar flex-1 flex flex-col">
                                         
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <button onClick={shareWhatsApp} className="flex flex-col items-center justify-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] p-4 rounded-2xl transition-all">
-                                                <Icons.MessageCircle size={24} />
-                                                <span className="text-xs font-bold">WhatsApp</span>
-                                            </button>
-                                            <button onClick={shareTwitter} className="flex flex-col items-center justify-center gap-2 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-900 dark:text-white p-4 rounded-2xl transition-all">
-                                                <Icons.Twitter size={24} />
-                                                <span className="text-xs font-bold">X / Twitter</span>
-                                            </button>
-                                            <button onClick={shareLinkedIn} className="flex flex-col items-center justify-center gap-2 bg-[#0077b5]/10 hover:bg-[#0077b5]/20 text-[#0077b5] p-4 rounded-2xl transition-all">
-                                                <Icons.Linkedin size={24} />
-                                                <span className="text-xs font-bold">LinkedIn</span>
-                                            </button>
-                                            <button onClick={shareEmail} className="flex flex-col items-center justify-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 p-4 rounded-2xl transition-all">
-                                                <Icons.Mail size={24} />
-                                                <span className="text-xs font-bold">Email</span>
-                                            </button>
+                                        {/* 2. VISIBLE PREVIEW CONTAINER */}
+                                        <div className="relative bg-slate-100 dark:bg-black/40 shrink-0 flex items-center justify-center py-8" ref={previewContainerRef} style={{ height: 800 * previewScale + 64 }}>
+
+                                             <div 
+                                                style={{ 
+                                                    width: 800, 
+                                                    height: 800, 
+                                                    transform: `scale(${previewScale})`,
+                                                    transformOrigin: 'center center',
+                                                }}
+                                                className="flex-shrink-0 shadow-2xl rounded-3xl overflow-hidden"
+                                             >
+                                                <ShareCardContent 
+                                                    calculations={calculations} 
+                                                    habitCount={items.length} 
+                                                    formatMoney={(v) => formatMoney(v)} 
+                                                />
+                                             </div>
+                                            <button onClick={() => setShowShareModal(false)} className="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center bg-black/20 backdrop-blur-md rounded-full text-white/70 hover:text-white transition-colors"><Icons.X size={18} /></button>
                                         </div>
 
-                                        <div className="flex gap-3">
-                                            <button onClick={copyShareSummary} className="flex-1 py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-                                                <Icons.Copy size={18} /> Copy Text
-                                            </button>
-                                            {navigator.share && (
-                                                <button onClick={shareNative} className="px-6 py-4 rounded-2xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 font-bold flex items-center justify-center transition-all">
-                                                    <Icons.Smartphone size={20} />
+                                        {/* Action Buttons */}
+                                        <div className="p-6 sm:p-8 space-y-6 bg-white dark:bg-slate-900 flex-1">
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                <button 
+                                                    onClick={handleGenerateImage} 
+                                                    disabled={generatingImage}
+                                                    className="flex-1 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-500/20 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                                                >
+                                                    {generatingImage ? (
+                                                        <span className="animate-pulse">Generating...</span>
+                                                    ) : (
+                                                        <>
+                                                            <Icons.Image size={20} />
+                                                            <span>Share Image</span>
+                                                        </>
+                                                    )}
                                                 </button>
-                                            )}
+                                                <button onClick={copyShareSummary} className="flex-1 py-4 rounded-2xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-900 dark:text-white font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
+                                                    <Icons.Copy size={18} /> Copy Text
+                                                </button>
+                                            </div>
+
+                                            <div className="border-t border-slate-100 dark:border-white/5 pt-6">
+                                                <p className="text-center text-[10px] uppercase font-bold opacity-40 mb-4 tracking-widest">Post to Socials</p>
+                                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
+                                                    <button onClick={shareFacebook} className="flex flex-col items-center justify-center gap-2 bg-[#1877F2]/10 hover:bg-[#1877F2]/20 text-[#1877F2] p-3 rounded-2xl transition-all h-20">
+                                                        <Icons.Facebook size={24} />
+                                                        <span className="text-[10px] font-bold">Facebook</span>
+                                                    </button>
+                                                    <button onClick={shareWhatsApp} className="flex flex-col items-center justify-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] p-3 rounded-2xl transition-all h-20">
+                                                        <Icons.MessageCircle size={24} />
+                                                        <span className="text-[10px] font-bold">WhatsApp</span>
+                                                    </button>
+                                                    <button onClick={shareReddit} className="flex flex-col items-center justify-center gap-2 bg-[#FF4500]/10 hover:bg-[#FF4500]/20 text-[#FF4500] p-3 rounded-2xl transition-all h-20">
+                                                        <Icons.Reddit size={24} />
+                                                        <span className="text-[10px] font-bold">Reddit</span>
+                                                    </button>
+                                                    <button onClick={shareTwitter} className="flex flex-col items-center justify-center gap-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-900 dark:text-white p-3 rounded-2xl transition-all h-20">
+                                                        <Icons.Twitter size={24} />
+                                                        <span className="text-[10px] font-bold">X / Tweet</span>
+                                                    </button>
+                                                    <button onClick={shareLinkedIn} className="flex flex-col items-center justify-center gap-2 bg-[#0077b5]/10 hover:bg-[#0077b5]/20 text-[#0077b5] p-3 rounded-2xl transition-all h-20">
+                                                        <Icons.Linkedin size={24} />
+                                                        <span className="text-[10px] font-bold">LinkedIn</span>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
