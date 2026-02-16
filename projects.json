@@ -141,6 +141,25 @@
     "date": "2026-02-07"
   },
   {
+    "title": "JobHunter",
+    "slug": "jobhunter",
+    "description": "A comprehensive career command center designed to handle the job search grind. Track applications on a Kanban board, build STAR method interview stories, scan resumes for keywords, and generate tailored cover letters—all while keeping your data private and offline.",
+    "thumbnail": "assets/thumbs/jobhunter.png",
+    "tags": [
+      "Apps",
+      "Hunter",
+      "Job",
+      "Organization",
+      "Productivity",
+      "Tools"
+    ],
+    "category": "Experiments",
+    "featured": false,
+    "date": "2026-02-16",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "Sound Canvas",
@@ -156,6 +175,22 @@
     ],
     "category": "Tools",
     "featured": false,
+    "date": "2026-02-07"
+  },
+  {
+    "demoUrl": "",
+    "repoUrl": "",
+    "title": "Split PDF",
+    "slug": "split-pdf",
+    "description": "Split PDFs right in your browser—by page count or equal chunks—with no uploads and no fuss. Fast, private, and fully on-device.",
+    "thumbnail": "assets/thumbs/split-pdf.png",
+    "tags": [
+      "PDF",
+      "Productivity",
+      "Tools"
+    ],
+    "category": "Tools",
+    "featured": true,
     "date": "2026-02-07"
   },
   {
@@ -180,18 +215,20 @@
   {
     "demoUrl": "",
     "repoUrl": "",
-    "title": "Split PDF",
-    "slug": "split-pdf",
-    "description": "Split PDFs right in your browser—by page count or equal chunks—with no uploads and no fuss. Fast, private, and fully on-device.",
-    "thumbnail": "assets/thumbs/split-pdf.png",
+    "title": "LifeStats",
+    "slug": "lifestats",
+    "description": "Convert your age into surprisingly relatable numbers like sleep, heartbeats, and steps. More playful perspective than precision—made to make time feel tangible.",
+    "thumbnail": "assets/thumbs/lifestats.png",
     "tags": [
-      "PDF",
-      "Productivity",
-      "Tools"
+      "Data",
+      "Interactive",
+      "Life",
+      "Reflection",
+      "Time"
     ],
-    "category": "Tools",
-    "featured": true,
-    "date": "2026-02-07"
+    "category": "Apps",
+    "featured": false,
+    "date": "2026-02-08"
   },
   {
     "demoUrl": "",
@@ -210,23 +247,5 @@
     "category": "Tools",
     "featured": false,
     "date": "2026-02-13"
-  },
-  {
-    "demoUrl": "",
-    "repoUrl": "",
-    "title": "LifeStats",
-    "slug": "lifestats",
-    "description": "Convert your age into surprisingly relatable numbers like sleep, heartbeats, and steps. More playful perspective than precision—made to make time feel tangible.",
-    "thumbnail": "assets/thumbs/lifestats.png",
-    "tags": [
-      "Data",
-      "Interactive",
-      "Life",
-      "Reflection",
-      "Time"
-    ],
-    "category": "Apps",
-    "featured": false,
-    "date": "2026-02-08"
   }
 ]

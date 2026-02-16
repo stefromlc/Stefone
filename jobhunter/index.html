@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Primary Meta Tags -->
+<title>JobHunter – Your Private Job Search Command Center</title>
+<meta name="title" content="JobHunter – Your Private Job Search Command Center" />
+<meta name="description" content="Track applications on a Kanban board, build STAR interview stories, scan resumes for keywords, and generate tailored cover letters—all locally." />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.stefone.com/jobhunter/" />
+<meta property="og:title" content="JobHunter – Your Private Job Search Command Center" />
+<meta property="og:description" content="Track applications on a Kanban board, build STAR interview stories, scan resumes for keywords, and generate tailored cover letters—all locally." />
+<meta property="og:image" content="https://www.stefone.com/assets/thumbs/jobhunter.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="JobHunter job search tracking and resume optimization preview" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="JobHunter – Your Private Job Search Command Center" />
+<meta name="twitter:description" content="Track applications on a Kanban board, build STAR interview stories, scan resumes for keywords, and generate tailored cover letters—all locally." />
+<meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/jobhunter.png" />
+
+<!-- Optional -->
+<meta name="theme-color" content="#f97316" />
+
+    <style>
+        :root {
+            --bg-body: #f3f4f6;
+            --bg-sidebar: #1e293b;
+            --bg-card: #ffffff;
+            --bg-column: #e2e8f0;
+            --bg-input: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-sidebar: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --border: #e5e7eb;
+            --radius: 8px;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+
+        /* Dark Mode Variables */
+        body.dark-mode {
+            --bg-body: #0f172a;
+            --bg-sidebar: #020617;
+            --bg-card: #1e293b;
+            --bg-column: #334155;
+            --bg-input: #0f172a;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-sidebar: #cbd5e1;
+            --border: #334155;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+        }
+
+        /* Reset & Base */
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-body); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; transition: background 0.3s, color 0.3s; }
+        
+        /* Layout */
+        #sidebar { width: 250px; background: var(--bg-sidebar); color: white; display: flex; flex-direction: column; padding: 1rem; flex-shrink: 0; transition: transform 0.3s; border-right: 1px solid rgba(255,255,255,0.05); }
+        #main-content { flex: 1; overflow-y: auto; padding: 2rem; position: relative; }
+        
+        /* Sidebar */
+        .brand { font-size: 1.25rem; font-weight: bold; margin-bottom: 2rem; color: white; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-item { padding: 0.75rem 1rem; color: var(--text-sidebar); text-decoration: none; border-radius: var(--radius); margin-bottom: 0.5rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: 0.2s; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; }
+        .sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        .data-btn { font-size: 0.8rem; background: none; border: 1px solid var(--text-sidebar); color: var(--text-sidebar); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; margin-right: 0.5rem; display: block; width: 100%; text-align: left; margin-bottom: 0.5rem;}
+        
+        /* Special Back Button */
+        .back-link { display: block; margin-bottom: 1rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border-radius: var(--radius); color: #fff; text-decoration: none; font-size: 0.85rem; text-align: center; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
+        .back-link:hover { background: rgba(255,255,255,0.1); }
+
+        /* Views */
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Typography & Components */
+        h1 { margin-bottom: 1.5rem; font-size: 1.8rem; }
+        h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+        h3 { font-size: 1rem; margin-bottom: 0.75rem; color: var(--text-primary); font-weight: 600; }
+        .btn { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius); cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; transition: 0.2s; }
+        .btn:hover { background: var(--accent-hover); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+        
+        .card { background: var(--bg-card); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; border: 1px solid var(--border); }
+        .input-group { margin-bottom: 1rem; }
+        .input-group label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 500; }
+        input, textarea, select { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; background: var(--bg-input); color: var(--text-primary); }
+        input:focus, textarea:focus { border-color: var(--accent); ring: 2px solid var(--accent); }
+
+        /* KANBAN BOARD */
+        .board { display: flex; overflow-x: auto; gap: 1rem; height: calc(100vh - 200px); padding-bottom: 1rem; }
+        .column { min-width: 280px; width: 280px; background: var(--bg-column); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; }
+        .column-header { font-weight: bold; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+        .column-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; min-height: 100px; }
+        .job-card { background: var(--bg-card); padding: 1rem; border-radius: var(--radius); box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: grab; transition: transform 0.2s, box-shadow 0.2s; border-left: 3px solid transparent; position: relative; border: 1px solid var(--border); }
+        .job-card:active { cursor: grabbing; }
+        .job-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .job-card h3 { font-size: 1rem; margin-bottom: 0.25rem; }
+        .job-card p { font-size: 0.85rem; color: var(--text-secondary); }
+        .job-meta { font-size: 0.75rem; color: var(--text-secondary); display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;}
+        .tag { font-size: 0.7rem; padding: 2px 6px; background: var(--bg-body); border-radius: 4px; display: inline-block; border: 1px solid var(--border); }
+        .tag.tag-pill { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+        body.dark-mode .tag.tag-pill { background: #0c4a6e; color: #bae6fd; border-color: #0369a1; }
+        .job-actions { position: absolute; top: 0.5rem; right: 0.5rem; opacity: 0; transition: opacity 0.2s; }
+        .job-card:hover .job-actions { opacity: 1; }
+        .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1rem; padding: 2px; }
+        .icon-btn:hover { color: var(--text-primary); }
+
+        /* Color coding columns */
+        .col-apply { border-top: 4px solid var(--text-secondary); }
+        .col-applied { border-top: 4px solid var(--accent); }
+        .col-interview { border-top: 4px solid var(--warning); }
+        .col-offer { border-top: 4px solid var(--success); }
+        .col-rejected { border-top: 4px solid var(--danger); }
+
+        /* DOCS */
+        .doc-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .doc-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); }
+        .doc-info { display: flex; align-items: center; gap: 0.75rem; }
+        .doc-icon { font-size: 1.25rem; }
+
+        /* ANALYTICS CHARTS (CSS ONLY) */
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .chart-container { height: 200px; display: flex; align-items: flex-end; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--border); position: relative; }
+        .bar { background: var(--accent); width: 100%; border-radius: 4px 4px 0 0; position: relative; transition: height 0.5s ease; min-height: 2px; }
+        .bar:hover { background: var(--accent-hover); }
+        .bar-label { position: absolute; bottom: -25px; left: 0; right: 0; text-align: center; font-size: 0.7rem; color: var(--text-secondary); }
+        .bar-value { position: absolute; top: -20px; left: 0; right: 0; text-align: center; font-size: 0.75rem; font-weight: bold; }
+        .ratio-box { text-align: center; padding: 1.5rem; }
+        .ratio-circle { width: 100px; height: 100px; border-radius: 50%; border: 8px solid var(--accent); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 1.5rem; font-weight: bold; }
+        .momentum-strip { display: flex; gap: 5px; margin-top: 1rem; }
+        .momentum-day { width: 15px; height: 15px; background: var(--bg-column); border-radius: 3px; }
+        .momentum-day.active { background: var(--success); }
+
+        /* INTERVIEW & STAR */
+        .interview-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        .question-card { font-size: 1.25rem; padding: 2rem; background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 1.5rem; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-left: 5px solid var(--accent); border: 1px solid var(--border); border-left-width: 5px; }
+        .timer-display { font-size: 2.5rem; font-family: monospace; font-weight: bold; margin: 1rem 0; color: var(--text-primary); text-align: center; }
+        .controls { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; }
+        .star-guide { background: #f0f9ff; border: 1px solid #bae6fd; padding: 1rem; border-radius: var(--radius); font-size: 0.9rem; margin-bottom: 1rem; display: none; color: #0369a1; }
+        body.dark-mode .star-guide { background: #0c4a6e; border-color: #075985; color: #e0f2fe; }
+        .star-guide.visible { display: block; }
+        .recorder-box { background: var(--bg-body); border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius); text-align: center; margin-bottom: 1rem; }
+        .rubric-item { margin-bottom: 0.5rem; }
+        .rubric-item label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 2px; }
+        .history-item { font-size: 0.85rem; border-bottom: 1px solid var(--border); padding: 0.5rem 0; }
+        .star-card { border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem; background: var(--bg-body); cursor: pointer; transition: 0.2s; }
+        .star-card:hover { border-color: var(--accent); background: var(--bg-card); }
+
+        /* TIMELINE (DASHBOARD) */
+        .timeline { position: relative; margin-top: 1rem; }
+        .timeline::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+        .timeline-group { margin-bottom: 1.5rem; position: relative; }
+        .timeline-label { font-size: 0.8rem; font-weight: bold; color: var(--text-secondary); margin-left: 40px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .timeline-item { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; position: relative; }
+        .timeline-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0; }
+        .timeline-content { background: var(--bg-card); border: 1px solid var(--border); padding: 0.75rem; border-radius: var(--radius); flex: 1; }
+        .timeline-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem; }
+        .timeline-title { font-weight: 600; font-size: 0.95rem; }
+        .timeline-time { font-size: 0.8rem; color: var(--text-secondary); }
+        .timeline-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
+
+        /* NETWORKING & SPRINT */
+        .table-container { background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: var(--bg-column); font-weight: 600; font-size: 0.875rem; color: var(--text-secondary); }
+        tr:hover { background: var(--bg-body); }
+        
+        .progress-container { margin-bottom: 2rem; }
+        progress { width: 100%; height: 20px; border-radius: 10px; border: 1px solid var(--border); }
+        progress::-webkit-progress-bar { background-color: var(--bg-column); border-radius: 10px; }
+        progress::-webkit-progress-value { background-color: var(--accent); border-radius: 10px; }
+
+        /* UTILS */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.2s; backdrop-filter: blur(2px); }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal { background: var(--bg-card); width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; border-radius: var(--radius); padding: 2rem; transform: scale(0.95); transition: 0.2s; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .modal-overlay.open .modal { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .hidden { display: none; }
+        .empty-state { text-align: center; color: var(--text-secondary); padding: 2rem; font-style: italic; }
+        
+        /* RESUME SCANNER */
+        .scanner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; height: calc(100vh - 200px); }
+        .scanner-box { display: flex; flex-direction: column; height: 100%; position: relative; }
+        .scanner-box textarea { flex: 1; resize: none; font-family: monospace; font-size: 0.9rem; }
+        .results-area { background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); overflow-y: auto; }
+        .keyword-tag { display: inline-block; padding: 4px 10px; margin: 3px; border-radius: 12px; font-size: 0.85rem; border: 1px solid transparent; }
+        .k-match { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+        .k-missing { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+        body.dark-mode .k-match { background: #064e3b; color: #6ee7b7; border-color: #065f46; }
+        body.dark-mode .k-missing { background: #7f1d1d; color: #fca5a5; border-color: #991b1b; }
+        
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow: auto; }
+            #sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 0.5rem; align-items: center; border-right: none; border-bottom: 1px solid var(--border); }
+            .brand { margin-bottom: 0; margin-right: 1rem; font-size: 1rem; }
+            .nav-item { margin-bottom: 0; padding: 0.5rem; white-space: nowrap; }
+            .sidebar-footer { display: none; }
+            #main-content { padding: 1rem; overflow: visible; }
+            .board { height: auto; flex-direction: column; }
+            .column { width: 100%; min-width: 0; }
+            .scanner-grid { grid-template-columns: 1fr; height: auto; }
+            .scanner-box { height: 300px; margin-bottom: 1rem; }
+            .two-col, .interview-layout, .charts-grid { grid-template-columns: 1fr; }
+        }
+
+        /* PRINT STYLES */
+        @media print {
+            #sidebar, .back-link, button, .modal-overlay, #theme-toggle { display: none !important; }
+            body { height: auto; overflow: visible; background: white; color: black; }
+            #main-content { padding: 0; margin: 0; }
+            .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; background: white; color: black; }
+            .view-section { display: none !important; }
+            #view-reports { display: block !important; }
+            * { color: black !important; background-color: transparent !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+    <div class="brand">🚀 JobHunter</div>
+    <a href="/projects/" class="back-link">← Back to Projects</a>
+    
+    <div class="nav-item active" onclick="app.router('dashboard')">📊 Analytics & Home</div>
+    <div class="nav-item" onclick="app.router('kanban')">📋 Kanban Board</div>
+    <div class="nav-item" onclick="app.router('star')">🧠 STAR Stories</div>
+    <div class="nav-item" onclick="app.router('documents')">📂 Documents</div>
+    <div class="nav-item" onclick="app.router('scanner')">🔍 Resume Scanner</div>
+    <div class="nav-item" onclick="app.router('coverletter')">✍️ Cover Letter</div>
+    <div class="nav-item" onclick="app.router('interview')">🎤 Interview Prep</div>
+    <div class="nav-item" onclick="app.router('network')">🤝 Networking</div>
+    <div class="nav-item" onclick="app.router('reports')">📄 Reports / Export</div>
+    
+    <!-- Theme Toggle -->
+    <div style="padding: 0 1rem; margin-top: 1rem;">
+        <button id="theme-toggle" class="btn-outline" style="width: 100%; padding: 0.5rem; color: var(--text-sidebar); border-color: var(--text-sidebar);" onclick="app.toggleTheme()">
+            🌙 Dark Mode
+        </button>
+    </div>
+
+    <div class="sidebar-footer">
+        <button class="data-btn" onclick="app.exportData()">⬇ Export JSON</button>
+        <button class="data-btn" onclick="document.getElementById('file-input').click()">⬆ Import</button>
+        <input type="file" id="file-input" style="display:none" onchange="app.importData(this)" accept=".json">
+    </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main id="main-content">
+
+    <!-- VIEW: DASHBOARD (ANALYTICS) -->
+    <section id="view-dashboard" class="view-section active">
+        <h1>Overview & Analytics</h1>
+        
+        <div class="charts-grid">
+            <!-- Ratios -->
+            <div class="card">
+                <h3>Conversion Funnel</h3>
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+                    <div style="text-align: center;">
+                        <div class="ratio-circle" id="ratio-interview">0%</div>
+                        <p style="font-size:0.85rem; color:var(--text-secondary)">App to Interview</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="ratio-circle" id="ratio-offer" style="border-color: var(--success)">0%</div>
+                        <p style="font-size:0.85rem; color:var(--text-secondary)">Interview to Offer</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Chart -->
+            <div class="card">
+                <h3>Activity (Last 7 Days)</h3>
+                <div class="chart-container" id="activity-chart">
+                    <!-- Bars injected here -->
+                </div>
+            </div>
+
+            <!-- Momentum -->
+            <div class="card">
+                <h3>Goal Momentum</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <div>
+                        <h1 style="margin:0; font-size:2.5rem;" id="streak-count">0</h1>
+                        <p style="font-size:0.8rem; color:var(--text-secondary); margin-top: -5px;">DAY STREAK</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <h2 style="margin:0; color:var(--accent);" id="weekly-goal-display">0/10</h2>
+                        <p style="font-size:0.8rem; color:var(--text-secondary)">WEEKLY GOAL</p>
+                    </div>
+                </div>
+                <progress id="sprint-progress" value="0" max="10"></progress>
+                <div class="momentum-strip" id="momentum-dots"></div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>📅 Upcoming Reminders</h3>
+                <button class="btn btn-sm" onclick="app.openReminderModal()">+ Add Reminder</button>
+            </div>
+            <div class="timeline" id="dashboard-timeline">
+                <p class="empty-state">No upcoming follow-ups or interviews.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW: KANBAN -->
+    <section id="view-kanban" class="view-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h1>Job Tracker</h1>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="tag-filter" placeholder="Filter by Tag..." style="padding: 0.5rem; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 4px;" onkeyup="app.renderKanban()">
+                <button class="btn" onclick="app.openJobModal()">+ Add Job</button>
+            </div>
+        </div>
+        
+        <div class="board">
+            <div class="column col-apply" ondrop="app.drop(event, 'to-apply')" ondragover="app.allowDrop(event)">
+                <div class="column-header">To Apply <span id="count-to-apply">0</span></div>
+                <div class="column-content" id="col-to-apply"></div>
+            </div>
+            <div class="column col-applied" ondrop="app.drop(event, 'applied')" ondragover="app.allowDrop(event)">
+                <div class="column-header">Applied <span id="count-applied">0</span></div>
+                <div class="column-content" id="col-applied"></div>
+            </div>
+            <div class="column col-interview" ondrop="app.drop(event, 'interview')" ondragover="app.allowDrop(event)">
+                <div class="column-header">Interview <span id="count-interview">0</span></div>
+                <div class="column-content" id="col-interview"></div>
+            </div>
+            <div class="column col-offer" ondrop="app.drop(event, 'offer')" ondragover="app.allowDrop(event)">
+                <div class="column-header">Offer <span id="count-offer">0</span></div>
+                <div class="column-content" id="col-offer"></div>
+            </div>
+            <div class="column col-rejected" ondrop="app.drop(event, 'rejected')" ondragover="app.allowDrop(event)">
+                <div class="column-header">Rejected <span id="count-rejected">0</span></div>
+                <div class="column-content" id="col-rejected"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW: STAR BUILDER -->
+    <section id="view-star" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h1>Behavioral Stories (STAR)</h1>
+            <button class="btn" onclick="app.openStarModal()">+ New Story</button>
+        </div>
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Prepare your behavioral stories here. Link them to competencies like 'Leadership' or 'Conflict' to see them during interview practice.</p>
+        
+        <div class="two-col" id="star-list">
+            <!-- Populated by JS -->
+        </div>
+    </section>
+
+    <!-- VIEW: REPORTS -->
+    <section id="view-reports" class="view-section">
+        <h1>Reports & Export</h1>
+        <p class="no-print" style="margin-bottom: 1rem; color: var(--text-secondary);">Generate a printable report. Use your browser's "Print > Save as PDF" feature.</p>
+        
+        <div class="card no-print">
+            <div class="two-col">
+                <div class="input-group">
+                    <label>Report Type</label>
+                    <select id="report-type">
+                        <option value="summary">Application Summary</option>
+                        <option value="interview">Interview Log</option>
+                        <option value="networking">Networking Report</option>
+                    </select>
+                </div>
+                <div class="input-group" style="display:flex; align-items:flex-end;">
+                    <button class="btn" style="width:100%" onclick="app.generateReport()">📄 Generate View</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="report-content" style="background: var(--bg-card); padding: 2rem; border: 1px solid var(--border); min-height: 500px; display:none;">
+            <!-- Report HTML goes here -->
+        </div>
+        
+        <div style="margin-top: 1rem; text-align: right;" class="no-print" id="print-actions">
+            <button class="btn" onclick="window.print()">🖨 Print / Save PDF</button>
+        </div>
+    </section>
+
+    <!-- VIEW: DOCUMENTS -->
+    <section id="view-documents" class="view-section">
+        <h1>Document Library</h1>
+        <p style="margin-bottom: 1rem; color: var(--text-secondary);">Store different versions of your Resume and Cover Letters here. (Stored locally in browser)</p>
+
+        <div class="two-col">
+            <!-- CVs -->
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:1rem; align-items: center;">
+                    <h3>📄 CVs / Resumes</h3>
+                    <input type="file" id="upload-cv" hidden accept=".pdf,.doc,.docx,.txt" onchange="app.handleFileUpload(this, 'resume')">
+                    <button class="btn btn-sm" onclick="document.getElementById('upload-cv').click()">+ Upload CV</button>
+                </div>
+                <div class="doc-list" id="list-resume">
+                    <p class="empty-state">No CVs uploaded.</p>
+                </div>
+            </div>
+
+            <!-- Cover Letters -->
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:1rem; align-items: center;">
+                    <h3>✉️ Cover Letters</h3>
+                    <input type="file" id="upload-cl" hidden accept=".pdf,.doc,.docx,.txt" onchange="app.handleFileUpload(this, 'coverletter')">
+                    <button class="btn btn-sm" onclick="document.getElementById('upload-cl').click()">+ Upload CL</button>
+                </div>
+                <div class="doc-list" id="list-coverletter">
+                    <p class="empty-state">No Cover Letters uploaded.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW: SCANNER -->
+    <section id="view-scanner" class="view-section">
+        <h1>Smart Resume Scanner 2.0</h1>
+        
+        <div class="scanner-grid">
+            <div class="scanner-box">
+                <label style="font-weight:bold; margin-bottom:0.5rem">1. Job Description</label>
+                <textarea id="scan-job" placeholder="Paste Job Description here..." style="margin-bottom:1rem;"></textarea>
+                
+                <label style="font-weight:bold; margin-bottom:0.5rem">2. Your Resume Content</label>
+                <textarea id="scan-resume" placeholder="Paste your Resume text here..."></textarea>
+                
+                <button class="btn" style="margin-top: 1rem;" onclick="app.scanKeywords()">Run Smart Scan</button>
+            </div>
+            <div class="scanner-box">
+                <div class="results-area" id="scan-results" style="text-align: center;">
+                    <div style="margin-top:2rem; color: var(--text-secondary);">
+                        <div style="font-size:3rem; margin-bottom:1rem;">🔍</div>
+                        <p>Waiting for input...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW: COVER LETTER -->
+    <section id="view-coverletter" class="view-section">
+        <h1>Cover Letter Generator</h1>
+        <div class="scanner-grid">
+            <!-- INPUTS -->
+            <div class="scanner-box" style="overflow-y:auto; padding-right: 1rem;">
+                <div style="border-bottom: 1px solid var(--border); margin-bottom: 1rem; padding-bottom: 0.5rem;">
+                    <h3>1. Job Details</h3>
+                    <div class="input-group"><label>Target Company</label><input type="text" id="cl-company" placeholder="e.g. Acme Corp"></div>
+                    <div class="input-group"><label>Job Title</label><input type="text" id="cl-role" placeholder="e.g. Senior Developer"></div>
+                    <div class="input-group"><label>Hiring Manager (Optional)</label><input type="text" id="cl-manager" placeholder="e.g. Sarah Smith"></div>
+                </div>
+
+                <div style="border-bottom: 1px solid var(--border); margin-bottom: 1rem; padding-bottom: 0.5rem;">
+                    <h3>2. About You (Saved)</h3>
+                     <div class="input-group"><label>Your Name</label><input type="text" id="cl-name"></div>
+                     <div class="two-col">
+                        <div class="input-group"><label>Current Role</label><input type="text" id="cl-current-role" placeholder="e.g. Web Dev"></div>
+                        <div class="input-group"><label>Years Experience</label><input type="number" id="cl-years" placeholder="e.g. 5"></div>
+                    </div>
+                </div>
+                
+                <div style="border-bottom: 1px solid var(--border); margin-bottom: 1rem; padding-bottom: 0.5rem;">
+                    <h3>3. The "Hook"</h3>
+                    <div class="input-group">
+                        <label>Top 3 Hard Skills</label>
+                        <input type="text" id="cl-skills" placeholder="e.g. React, Python, AWS">
+                    </div>
+                    <div class="input-group">
+                        <label>Key Achievement / Project (Evidence)</label>
+                        <textarea id="cl-achievement" rows="3" placeholder="e.g. 'I reduced page load times by 40%, boosting conversions.'"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Why this company? (Motivation)</label>
+                        <textarea id="cl-why" rows="2" placeholder="e.g. 'I admire your commitment to open source tools.'"></textarea>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <h3>4. Style</h3>
+                    <div class="input-group">
+                        <label>Tone</label>
+                        <select id="cl-tone">
+                            <option value="standard">Standard Professional</option>
+                            <option value="modern">Modern & Direct</option>
+                            <option value="enthusiastic">High Energy / Startup</option>
+                            <option value="confident">Senior / Confident</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn" style="width: 100%" onclick="app.generateCoverLetter()">✨ Generate Letter</button>
+            </div>
+
+            <!-- PREVIEW -->
+            <div class="scanner-box">
+                <h3>Preview</h3>
+                <textarea id="cl-output" style="flex:1; margin-bottom:1rem; font-family:'Times New Roman', serif; line-height:1.6; padding:1.5rem; font-size: 1.05rem; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); background: #fff; color: black;"></textarea>
+                <div style="display:flex; gap:1rem;">
+                    <button class="btn btn-outline" style="flex:1" onclick="app.copyToClipboard()">📋 Copy</button>
+                    <button class="btn" style="flex:1" onclick="app.saveGeneratedCL()">💾 Save to Library</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW: INTERVIEW -->
+    <section id="view-interview" class="view-section">
+        <h1>Interview Simulator</h1>
+        
+        <div class="interview-layout">
+            <!-- Left: Question & Active Tools -->
+            <div>
+                <div class="input-group" style="width: 200px; margin-bottom: 1rem;">
+                    <select id="interview-category">
+                        <option value="general">General / Intro</option>
+                        <option value="behavioral">Behavioral (STAR)</option>
+                        <option value="technical">Technical / Logic</option>
+                    </select>
+                </div>
+
+                <div class="question-card">
+                    <p id="interview-question">Select a category and press Start.</p>
+                </div>
+
+                <div id="star-hint" class="star-guide">
+                    <strong>💡 STAR Method Guide:</strong><br>
+                    • <strong>S</strong>ituation: Describe the context/challenge.<br>
+                    • <strong>T</strong>ask: What was your responsibility?<br>
+                    • <strong>A</strong>ction: What steps did you take?<br>
+                    • <strong>R</strong>esult: What was the outcome? Use numbers!
+                </div>
+                
+                <div class="timer-display" id="timer">00:00</div>
+                
+                <div class="controls">
+                    <button class="btn" onclick="app.startInterview()">▶ Start New Question</button>
+                    <button class="btn btn-outline" onclick="app.stopTimer()">⏸ Pause</button>
+                </div>
+
+                <!-- Suggested STAR Stories -->
+                <div id="suggested-stories" style="margin-bottom: 1rem; display:none;">
+                    <h4>💡 Relevant Stories:</h4>
+                    <div id="suggested-stories-list" style="display:flex; gap:0.5rem; overflow-x:auto; padding:0.5rem 0;"></div>
+                </div>
+
+                <!-- Recorder -->
+                <div class="recorder-box">
+                    <h3 style="margin-bottom:0.5rem">🎤 Voice Recorder (Offline)</h3>
+                    <div style="display:flex; gap:1rem; justify-content:center; align-items:center; margin-bottom:0.5rem">
+                        <button class="btn btn-sm btn-danger" id="rec-start" onclick="app.startRecording()">● Record</button>
+                        <button class="btn btn-sm btn-outline" id="rec-stop" disabled onclick="app.stopRecording()">■ Stop</button>
+                    </div>
+                    <audio id="audio-playback" controls style="width: 100%; height: 40px;"></audio>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <label style="font-weight:bold">My Notes / Draft Answer:</label>
+                    <textarea id="interview-notes" rows="4" placeholder="Jot down key points for your answer here..."></textarea>
+                </div>
+            </div>
+
+            <!-- Right: Self-Evaluation & History -->
+            <div style="display:flex; flex-direction:column; height: 100%;">
+                <div class="card" style="margin-bottom:1rem">
+                    <h3>Self-Evaluation</h3>
+                    <div class="rubric-item">
+                        <label><span>Clarity</span> <span id="val-clarity">5</span>/10</label>
+                        <input type="range" id="rate-clarity" min="1" max="10" value="5" oninput="document.getElementById('val-clarity').innerText=this.value">
+                    </div>
+                    <div class="rubric-item">
+                        <label><span>Content/STAR</span> <span id="val-content">5</span>/10</label>
+                        <input type="range" id="rate-content" min="1" max="10" value="5" oninput="document.getElementById('val-content').innerText=this.value">
+                    </div>
+                    <div class="rubric-item">
+                        <label><span>Confidence</span> <span id="val-confidence">5</span>/10</label>
+                        <input type="range" id="rate-confidence" min="1" max="10" value="5" oninput="document.getElementById('val-confidence').innerText=this.value">
+                    </div>
+                    <button class="btn btn-sm btn-outline" style="width:100%; margin-top:0.5rem" onclick="app.saveInterviewSession()">💾 Save Session</button>
+                </div>
+
+                <div class="card" style="flex:1; overflow-y:auto">
+                    <h3>Practice History</h3>
+                    <div id="interview-history-list">
+                        <p class="empty-state">No sessions saved yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW: NETWORK -->
+    <section id="view-network" class="view-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h1>Networking Tracker</h1>
+            <button class="btn" onclick="app.openContactModal()">+ Add Contact</button>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Company</th>
+                        <th>Last Contact</th>
+                        <th>Next Follow-up</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="contact-list">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<!-- MODAL: ADD/EDIT JOB -->
+<div class="modal-overlay" id="job-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modal-title">Add Application</h2>
+            <button class="close-modal" onclick="app.closeModals()">×</button>
+        </div>
+        <form id="job-form" onsubmit="app.saveJob(event)">
+            <input type="hidden" id="job-id">
+            <div class="two-col">
+                <div class="input-group">
+                    <label>Company</label>
+                    <input type="text" id="job-company" required>
+                </div>
+                <div class="input-group">
+                    <label>Position</label>
+                    <input type="text" id="job-position" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Job URL</label>
+                <input type="url" id="job-url" placeholder="https://...">
+            </div>
+
+             <div class="input-group">
+                <label>Contact Email</label>
+                <input type="email" id="job-email" placeholder="hr@company.com">
+            </div>
+
+            <div class="input-group">
+                <label>Tags (comma separated)</label>
+                <input type="text" id="job-tags" placeholder="e.g. Remote, Startup, Referral, Big Tech">
+            </div>
+
+            <div class="two-col">
+                <div class="input-group">
+                    <label>Status</label>
+                    <select id="job-status">
+                        <option value="to-apply">To Apply</option>
+                        <option value="applied">Applied</option>
+                        <option value="interview">Interview</option>
+                        <option value="offer">Offer</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Date</label>
+                    <input type="date" id="job-date">
+                </div>
+            </div>
+
+            <div class="two-col" style="background: var(--bg-body); padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem;">
+                <div class="input-group">
+                    <label>Resume Used</label>
+                    <select id="job-resume">
+                        <option value="">-- Select Resume --</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Cover Letter Used</label>
+                    <select id="job-coverletter">
+                        <option value="">-- Select Cover Letter --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Notes</label>
+                <textarea id="job-notes" rows="3"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="app.closeModals()">Cancel</button>
+                <button type="submit" class="btn">Save Job</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: ADD CONTACT -->
+<div class="modal-overlay" id="contact-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Add Contact</h2>
+            <button class="close-modal" onclick="app.closeModals()">×</button>
+        </div>
+        <form id="contact-form" onsubmit="app.saveContact(event)">
+            <input type="hidden" id="contact-id">
+            <div class="input-group">
+                <label>Name</label>
+                <input type="text" id="contact-name" required>
+            </div>
+            <div class="input-group">
+                <label>Company/Role</label>
+                <input type="text" id="contact-company">
+            </div>
+            <div class="input-group">
+                <label>Last Contacted</label>
+                <input type="date" id="contact-last">
+            </div>
+            <div class="input-group">
+                <label>Next Follow-up</label>
+                <input type="date" id="contact-next">
+            </div>
+            <div class="input-group">
+                <label>Notes</label>
+                <textarea id="contact-notes" rows="2"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="app.closeModals()">Cancel</button>
+                <button type="submit" class="btn">Save Contact</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: REMINDER -->
+<div class="modal-overlay" id="reminder-modal">
+    <div class="modal" style="width: 400px;">
+        <div class="modal-header">
+            <h2 id="rem-modal-title">Add Reminder</h2>
+            <button class="close-modal" onclick="app.closeModals()">×</button>
+        </div>
+        <form id="reminder-form" onsubmit="app.saveReminder(event)">
+            <input type="hidden" id="rem-id">
+            <div class="input-group">
+                <label>Title</label>
+                <input type="text" id="rem-title" placeholder="e.g. Email Recruitment Agency" required>
+            </div>
+            <div class="input-group">
+                <label>Date</label>
+                <input type="date" id="rem-date" required>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="app.closeModals()">Cancel</button>
+                <button type="submit" class="btn">Save Reminder</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: STAR STORY -->
+<div class="modal-overlay" id="star-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Add STAR Story</h2>
+            <button class="close-modal" onclick="app.closeModals()">×</button>
+        </div>
+        <form id="star-form" onsubmit="app.saveStarStory(event)">
+            <input type="hidden" id="star-id">
+            <div class="input-group">
+                <label>Story Title (e.g. "Database Migration Crisis")</label>
+                <input type="text" id="star-title" required>
+            </div>
+            <div class="input-group">
+                <label>Core Competency</label>
+                <select id="star-competency">
+                    <option value="Conflict">Conflict Resolution</option>
+                    <option value="Leadership">Leadership</option>
+                    <option value="Failure">Failure/Mistake</option>
+                    <option value="Technical">Technical Challenge</option>
+                    <option value="Success">Success/Goal</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Situation</label>
+                <textarea id="star-s" rows="2" placeholder="What was the context?"></textarea>
+            </div>
+            <div class="input-group">
+                <label>Task</label>
+                <textarea id="star-t" rows="2" placeholder="What was your specific responsibility?"></textarea>
+            </div>
+            <div class="input-group">
+                <label>Action</label>
+                <textarea id="star-a" rows="2" placeholder="What steps did you take?"></textarea>
+            </div>
+            <div class="input-group">
+                <label>Result</label>
+                <textarea id="star-r" rows="2" placeholder="What was the outcome? Use numbers!"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="app.closeModals()">Cancel</button>
+                <button type="submit" class="btn">Save Story</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+/**
+ * JobHunter Logic
+ */
+
+const db = {
+    dbName: 'JobHunterDB',
+    version: 1,
+    storeName: 'files',
+    
+    init: function() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, this.version);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(this.storeName)) {
+                    db.createObjectStore(this.storeName, { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = (e) => { this.db = e.target.result; resolve(this.db); };
+            request.onerror = (e) => reject(e);
+        });
+    },
+    saveFile: function(fileRecord) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction([this.storeName], 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const request = store.put(fileRecord);
+            request.onsuccess = () => resolve(fileRecord.id);
+            request.onerror = (e) => reject(e);
+        });
+    },
+    getFile: function(id) {
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction([this.storeName], 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const request = store.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = (e) => reject(e);
+        });
+    },
+    deleteFile: function(id) {
+         return new Promise((resolve, reject) => {
+            const tx = this.db.transaction([this.storeName], 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const request = store.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = (e) => reject(e);
+        });
+    }
+};
+
+const app = {
+    data: {
+        jobs: [],
+        contacts: [],
+        documents: [], 
+        interviewSessions: [],
+        customReminders: [],
+        starStories: [],
+        appActivity: {},
+        settings: {
+            sprintGoal: 10,
+            profile: { name: '', currentRole: '', years: '' },
+            theme: 'light'
+        }
+    },
+    
+    interviewTimer: null,
+    timerSeconds: 0,
+    mediaRecorder: null,
+    audioChunks: [],
+    
+    questions: {
+        general: ["Tell me about yourself.", "Why do you want to work here?", "Where do you see yourself in 5 years?"],
+        behavioral: ["Tell me about a time you faced a conflict.", "Describe a time you failed.", "Give an example of a goal you reached."],
+        technical: ["Explain a complex technical concept.", "How do you debug a critical issue?", "What is your favorite tech stack?"]
+    },
+
+    init: async function() {
+        await db.init(); 
+        this.loadData();
+        this.applyTheme();
+        this.renderAll();
+        if(this.data.settings.profile) {
+            document.getElementById('cl-name').value = this.data.settings.profile.name || '';
+            document.getElementById('cl-current-role').value = this.data.settings.profile.currentRole || '';
+            document.getElementById('cl-years').value = this.data.settings.profile.years || '';
+        }
+        this.router('dashboard');
+    },
+
+    saveData: function() {
+        localStorage.setItem('jobHunterData', JSON.stringify(this.data));
+        this.renderAll();
+    },
+
+    loadData: function() {
+        const stored = localStorage.getItem('jobHunterData');
+        if (stored) {
+            this.data = JSON.parse(stored);
+            if(!this.data.starStories) this.data.starStories = [];
+            if(!this.data.appActivity) this.data.appActivity = {};
+            if(!this.data.customReminders) this.data.customReminders = [];
+            if(!this.data.settings.theme) this.data.settings.theme = 'light';
+        }
+    },
+
+    // --- THEME ---
+    toggleTheme: function() {
+        this.data.settings.theme = this.data.settings.theme === 'light' ? 'dark' : 'light';
+        this.applyTheme();
+        this.saveData();
+    },
+    applyTheme: function() {
+        const body = document.body;
+        const btn = document.getElementById('theme-toggle');
+        if(this.data.settings.theme === 'dark') {
+            body.classList.add('dark-mode');
+            btn.innerText = '☀️ Light Mode';
+        } else {
+            body.classList.remove('dark-mode');
+            btn.innerText = '🌙 Dark Mode';
+        }
+    },
+
+    logActivity: function() {
+        const today = new Date().toISOString().split('T')[0];
+        this.data.appActivity[today] = (this.data.appActivity[today] || 0) + 1;
+        this.saveData();
+    },
+
+    router: function(viewId) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('view-' + viewId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        if(viewId === 'dashboard') this.renderDashboard();
+        if(viewId === 'star') this.renderStarStories();
+    },
+
+    // --- ANALYTICS & DASHBOARD ---
+    renderDashboard: function() {
+        const jobs = this.data.jobs;
+        
+        const applied = jobs.length;
+        const interviewCount = jobs.filter(j => ['interview', 'offer'].includes(j.status)).length;
+        const offerCount = jobs.filter(j => j.status === 'offer').length;
+
+        const iRatio = applied ? Math.round((interviewCount / applied) * 100) : 0;
+        const oRatio = interviewCount ? Math.round((offerCount / interviewCount) * 100) : 0;
+
+        document.getElementById('ratio-interview').innerText = iRatio + "%";
+        document.getElementById('ratio-offer').innerText = oRatio + "%";
+
+        const chart = document.getElementById('activity-chart');
+        chart.innerHTML = '';
+        const days = [];
+        for(let i=6; i>=0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            days.push(d.toISOString().split('T')[0]);
+        }
+        
+        const maxVal = Math.max(...days.map(d => this.data.appActivity[d] || 0), 5);
+        
+        days.forEach(d => {
+            const val = this.data.appActivity[d] || 0;
+            const pct = (val / maxVal) * 100;
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = pct + '%';
+            bar.innerHTML = `<span class="bar-value">${val > 0 ? val : ''}</span><span class="bar-label">${d.slice(5)}</span>`;
+            chart.appendChild(bar);
+        });
+
+        let streak = 0;
+        const sortedDates = Object.keys(this.data.appActivity).sort().reverse();
+        if(sortedDates.length > 0) {
+            const today = new Date().toISOString().split('T')[0];
+            let currentCheck = new Date();
+            if (this.data.appActivity[today]) streak++;
+            for (let i = 1; i < 365; i++) {
+                currentCheck.setDate(currentCheck.getDate() - 1);
+                const iso = currentCheck.toISOString().split('T')[0];
+                if (this.data.appActivity[iso]) streak++;
+                else break;
+            }
+        }
+        document.getElementById('streak-count').innerText = streak;
+
+        const weeklyGoal = this.data.settings.sprintGoal || 10;
+        const recentCount = days.reduce((sum, d) => sum + (this.data.appActivity[d] || 0), 0);
+        document.getElementById('weekly-goal-display').innerText = `${recentCount}/${weeklyGoal}`;
+        document.getElementById('sprint-progress').value = recentCount;
+        document.getElementById('sprint-progress').max = weeklyGoal;
+
+        this.renderTimeline();
+    },
+
+    renderTimeline: function() {
+        const timeline = document.getElementById('dashboard-timeline');
+        timeline.innerHTML = '';
+        let reminders = [];
+        this.data.jobs.filter(j => j.status === 'interview' && j.date).forEach(j => {
+            reminders.push({ type: 'Interview', name: j.company, date: j.date, sort: new Date(j.date), icon: '🎤', id: j.id, category: 'job' });
+        });
+        this.data.contacts.filter(c => c.nextFollowUp).forEach(c => {
+            reminders.push({ type: 'Follow-up', name: c.name, date: c.nextFollowUp, sort: new Date(c.nextFollowUp), icon: '✉️', id: c.id, category: 'contact' });
+        });
+        if(this.data.customReminders) {
+            this.data.customReminders.forEach(r => {
+                 reminders.push({ type: 'Reminder', name: r.title, date: r.date, sort: new Date(r.date), icon: '🔔', id: r.id, category: 'custom' });
+            });
+        }
+        reminders.sort((a,b) => a.sort - b.sort);
+        if(reminders.length===0) { timeline.innerHTML = '<p class="empty-state">No upcoming events.</p>'; return; }
+        
+        reminders.slice(0, 10).forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'timeline-item';
+            div.innerHTML = `
+                <div class="timeline-dot" style="border-color:var(--accent)">${item.icon}</div>
+                <div class="timeline-content">
+                    <div style="font-weight:bold">${item.type}: ${item.name}</div>
+                    <div style="color:var(--text-secondary); font-size:0.85rem">${item.date}</div>
+                </div>`;
+            timeline.appendChild(div);
+        });
+    },
+
+    // --- KANBAN & TAGS ---
+    renderKanban: function() {
+        const filter = document.getElementById('tag-filter').value.toLowerCase();
+        const statuses = ['to-apply', 'applied', 'interview', 'offer', 'rejected'];
+        
+        statuses.forEach(s => {
+            document.getElementById('col-'+s).innerHTML = '';
+            document.getElementById('count-'+s).innerText = '0';
+        });
+
+        let displayJobs = this.data.jobs;
+        if(filter) {
+            displayJobs = displayJobs.filter(j => j.tags && j.tags.toLowerCase().includes(filter));
+        }
+
+        displayJobs.forEach(job => {
+            const card = document.createElement('div');
+            card.className = 'job-card';
+            card.draggable = true;
+            card.ondragstart = (e) => app.drag(e, job.id);
+            
+            let tagsHtml = '';
+            if(job.tags) {
+                tagsHtml = `<div style="margin-top:0.5rem">` + job.tags.split(',').map(t => `<span class="tag tag-pill">${t.trim()}</span>`).join('') + `</div>`;
+            }
+
+            card.innerHTML = `
+                <h3>${job.company}</h3>
+                <p>${job.position}</p>
+                <div class="job-meta"><span class="tag">${job.date || 'No Date'}</span></div>
+                ${tagsHtml}
+                <div class="job-actions">
+                    <button class="icon-btn" onclick="app.editJob(${job.id})">✎</button>
+                    <button class="icon-btn" onclick="app.deleteJob(${job.id})">🗑</button>
+                </div>
+            `;
+            const col = document.getElementById('col-' + job.status);
+            if (col) col.appendChild(card);
+        });
+        
+        statuses.forEach(s => {
+            const count = displayJobs.filter(j => j.status === s).length;
+            document.getElementById('count-'+s).innerText = count;
+        });
+    },
+
+    // --- STAR BUILDER ---
+    openStarModal: function() {
+        document.getElementById('star-form').reset();
+        document.getElementById('star-id').value = '';
+        document.getElementById('star-modal').classList.add('open');
+    },
+    saveStarStory: function(e) {
+        e.preventDefault();
+        const id = document.getElementById('star-id').value;
+        const story = {
+            id: id ? parseInt(id) : Date.now(),
+            title: document.getElementById('star-title').value,
+            competency: document.getElementById('star-competency').value,
+            s: document.getElementById('star-s').value,
+            t: document.getElementById('star-t').value,
+            a: document.getElementById('star-a').value,
+            r: document.getElementById('star-r').value
+        };
+        if(id) {
+            const idx = this.data.starStories.findIndex(s => s.id == id);
+            this.data.starStories[idx] = story;
+        } else {
+            this.data.starStories.push(story);
+        }
+        this.saveData();
+        this.closeModals();
+        this.renderStarStories();
+    },
+    renderStarStories: function() {
+        const list = document.getElementById('star-list');
+        list.innerHTML = '';
+        this.data.starStories.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'star-card';
+            div.onclick = () => app.editStar(s.id);
+            div.innerHTML = `
+                <div style="font-weight:bold; display:flex; justify-content:space-between;">
+                    ${s.title} 
+                    <span class="tag" style="background:var(--bg-body)">${s.competency}</span>
+                </div>
+                <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.5rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    S: ${s.s.substring(0,50)}...
+                </p>
+            `;
+            list.appendChild(div);
+        });
+    },
+    editStar: function(id) {
+        const s = this.data.starStories.find(s => s.id == id);
+        if(!s) return;
+        document.getElementById('star-id').value = s.id;
+        document.getElementById('star-title').value = s.title;
+        document.getElementById('star-competency').value = s.competency;
+        document.getElementById('star-s').value = s.s;
+        document.getElementById('star-t').value = s.t;
+        document.getElementById('star-a').value = s.a;
+        document.getElementById('star-r').value = s.r;
+        document.getElementById('star-modal').classList.add('open');
+    },
+
+    // --- REPORTS ---
+    generateReport: function() {
+        const type = document.getElementById('report-type').value;
+        const container = document.getElementById('report-content');
+        container.style.display = 'block';
+        container.innerHTML = `<h2 style="margin-bottom:1rem; border-bottom:2px solid var(--text-primary)">JobHunter Report: ${type.toUpperCase()}</h2>`;
+        
+        if (type === 'summary') {
+            const applied = this.data.jobs.filter(j => j.status === 'applied');
+            const active = this.data.jobs.filter(j => ['interview','offer'].includes(j.status));
+            
+            let html = `<h3>Active Applications</h3><ul>`;
+            active.forEach(j => html += `<li><strong>${j.company}</strong> - ${j.position} (${j.status.toUpperCase()}) - Last Update: ${j.date}</li>`);
+            html += `</ul><h3>Recent Applications</h3><ul>`;
+            applied.slice(0, 10).forEach(j => html += `<li>${j.company} - ${j.position} - ${j.date}</li>`);
+            html += `</ul>`;
+            container.innerHTML += html;
+        } else if (type === 'interview') {
+            let html = `<h3>Practice Log</h3><table style="width:100%; border-collapse:collapse; margin-top:1rem">
+                <tr style="background:#eee; text-align:left;"><th>Date</th><th>Question</th><th>Rating</th></tr>`;
+            this.data.interviewSessions.forEach(s => {
+                html += `<tr><td style="padding:8px; border-bottom:1px solid #ccc">${s.date}</td>
+                <td style="padding:8px; border-bottom:1px solid #ccc">${s.question}</td>
+                <td style="padding:8px; border-bottom:1px solid #ccc">Conf: ${s.scores.confidence}</td></tr>`;
+            });
+            html += `</table>`;
+            container.innerHTML += html;
+        } else {
+            let html = `<h3>Networking Contacts</h3><table style="width:100%; border-collapse:collapse; margin-top:1rem">
+                <tr style="background:#eee; text-align:left;"><th>Name</th><th>Company</th><th>Notes</th></tr>`;
+            this.data.contacts.forEach(c => {
+                html += `<tr><td style="padding:8px; border-bottom:1px solid #ccc">${c.name}</td>
+                <td style="padding:8px; border-bottom:1px solid #ccc">${c.company}</td>
+                <td style="padding:8px; border-bottom:1px solid #ccc">${c.notes || '-'}</td></tr>`;
+            });
+            html += `</table>`;
+            container.innerHTML += html;
+        }
+    },
+
+    // --- STANDARD MODAL OPS ---
+    closeModals: function() {
+        document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('open'));
+        document.getElementById('job-form').reset();
+        document.getElementById('contact-form').reset();
+        document.getElementById('reminder-form').reset();
+        document.getElementById('star-form').reset();
+        document.getElementById('job-id').value = '';
+        document.getElementById('rem-id').value = '';
+        document.getElementById('star-id').value = '';
+    },
+    
+    renderAll: function() {
+        this.renderKanban();
+        this.renderDashboard();
+        this.renderDocuments();
+    },
+
+    // --- JOB CRUD ---
+    openJobModal: function() {
+        document.getElementById('modal-title').innerText = 'Add Application';
+        document.getElementById('job-form').reset();
+        document.getElementById('job-id').value = '';
+        this.populateDocDropdowns();
+        document.getElementById('job-modal').classList.add('open');
+    },
+    saveJob: function(e) {
+        e.preventDefault();
+        const id = document.getElementById('job-id').value;
+        const jobData = {
+            id: id ? parseInt(id) : Date.now(),
+            company: document.getElementById('job-company').value,
+            position: document.getElementById('job-position').value,
+            status: document.getElementById('job-status').value,
+            date: document.getElementById('job-date').value,
+            notes: document.getElementById('job-notes').value,
+            url: document.getElementById('job-url').value,
+            email: document.getElementById('job-email').value,
+            tags: document.getElementById('job-tags').value,
+            resumeId: document.getElementById('job-resume').value,
+            clId: document.getElementById('job-coverletter').value
+        };
+        if (id) {
+            const index = this.data.jobs.findIndex(j => j.id == id);
+            this.data.jobs[index] = jobData;
+        } else {
+            this.data.jobs.push(jobData);
+            this.logActivity(); // Log activity on new job
+        }
+        this.saveData();
+        this.closeModals();
+    },
+    editJob: function(id) {
+        const job = this.data.jobs.find(j => j.id == id);
+        if (!job) return;
+        document.getElementById('modal-title').innerText = 'Edit Application';
+        document.getElementById('job-id').value = job.id;
+        document.getElementById('job-company').value = job.company;
+        document.getElementById('job-position').value = job.position;
+        document.getElementById('job-status').value = job.status;
+        document.getElementById('job-date').value = job.date;
+        document.getElementById('job-notes').value = job.notes || '';
+        document.getElementById('job-url').value = job.url || '';
+        document.getElementById('job-email').value = job.email || '';
+        document.getElementById('job-tags').value = job.tags || '';
+        this.populateDocDropdowns(job.resumeId, job.clId);
+        document.getElementById('job-modal').classList.add('open');
+    },
+    deleteJob: function(id) {
+        if(confirm('Delete application?')) {
+            this.data.jobs = this.data.jobs.filter(j => j.id != id);
+            this.saveData();
+        }
+    },
+    
+    // --- INTERVIEW SIM UPDATE ---
+    startInterview: function() {
+        const category = document.getElementById('interview-category').value;
+        const qList = this.questions[category];
+        const qIndex = Math.floor(Math.random() * qList.length);
+        document.getElementById('interview-question').innerText = qList[qIndex];
+        
+        // Show STAR Hint
+        const starHint = document.getElementById('star-hint');
+        if(category === 'behavioral') starHint.classList.add('visible');
+        else starHint.classList.remove('visible');
+
+        // Show Relevant Stories
+        const storiesDiv = document.getElementById('suggested-stories');
+        const storiesList = document.getElementById('suggested-stories-list');
+        storiesList.innerHTML = '';
+        
+        // Map category to competency (Simple logic)
+        let compFilter = [];
+        if(category === 'behavioral') compFilter = ['Conflict', 'Failure', 'Leadership', 'Success'];
+        if(category === 'technical') compFilter = ['Technical'];
+        
+        const relevantStories = this.data.starStories.filter(s => compFilter.includes(s.competency));
+        
+        if(relevantStories.length > 0) {
+            storiesDiv.style.display = 'block';
+            relevantStories.forEach(s => {
+                const badge = document.createElement('div');
+                badge.style = "padding:5px 10px; background:#e0f2fe; border-radius:15px; font-size:0.8rem; border:1px solid #bae6fd; white-space:nowrap; cursor:pointer;";
+                badge.innerText = s.title;
+                badge.title = `S: ${s.s}\nT: ${s.t}\nA: ${s.a}\nR: ${s.r}`; // Tooltip
+                storiesList.appendChild(badge);
+            });
+        } else {
+            storiesDiv.style.display = 'none';
+        }
+
+        this.timerSeconds = 0;
+        document.getElementById('timer').innerText = "00:00";
+        if(this.interviewTimer) clearInterval(this.interviewTimer);
+        this.interviewTimer = setInterval(() => {
+            this.timerSeconds++;
+            const mins = Math.floor(this.timerSeconds / 60).toString().padStart(2, '0');
+            const secs = (this.timerSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = `${mins}:${secs}`;
+        }, 1000);
+        document.getElementById('interview-notes').value = "";
+    },
+    stopTimer: function() { if(this.interviewTimer) clearInterval(this.interviewTimer); },
+    
+    // --- UTILS (Drag/Drop, etc) ---
+    allowDrop: function(ev) { ev.preventDefault(); },
+    drag: function(ev, id) { ev.dataTransfer.setData("text", id); },
+    drop: function(ev, newStatus) {
+        ev.preventDefault();
+        const id = ev.dataTransfer.getData("text");
+        const job = this.data.jobs.find(j => j.id == id);
+        if (job) { job.status = newStatus; this.saveData(); }
+    },
+    
+    // --- FILE/DOCS (FIXED) ---
+    populateDocDropdowns: function(selectedResume, selectedCL) {
+        const resumeSelect = document.getElementById('job-resume');
+        const clSelect = document.getElementById('job-coverletter');
+        resumeSelect.innerHTML = '<option value="">-- Select Resume --</option>';
+        clSelect.innerHTML = '<option value="">-- Select Cover Letter --</option>';
+        this.data.documents.forEach(doc => {
+            const opt = document.createElement('option');
+            opt.value = doc.id;
+            opt.innerText = doc.name;
+            if(doc.type === 'resume') {
+                resumeSelect.appendChild(opt);
+                if(selectedResume === doc.id) opt.selected = true;
+            } else {
+                clSelect.appendChild(opt);
+                if(selectedCL === doc.id) opt.selected = true;
+            }
+        });
+    },
+    handleFileUpload: async function(input, type) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const id = Date.now().toString();
+            try {
+                // Visual feedback
+                const btn = input.nextElementSibling;
+                const originalText = btn.innerText;
+                btn.innerText = "Uploading...";
+                
+                await db.saveFile({ id: id, blob: file, type: file.type });
+                
+                this.data.documents.push({
+                    id: id,
+                    name: file.name,
+                    type: type,
+                    date: new Date().toISOString().split('T')[0],
+                    size: (file.size / 1024).toFixed(1) + ' KB'
+                });
+                
+                this.saveData(); // Triggers renderAll -> renderDocuments
+                
+                btn.innerText = originalText;
+                alert("File uploaded successfully!");
+            } catch (err) {
+                console.error(err);
+                alert("Failed to save file. Browser storage might be full.");
+            }
+            input.value = ''; 
+        }
+    },
+    downloadFile: async function(id) {
+        try {
+            const record = await db.getFile(id);
+            if(!record) return alert("File not found.");
+            const url = URL.createObjectURL(record.blob);
+            const a = document.createElement('a'); a.href = url;
+            const meta = this.data.documents.find(d => d.id === id); a.download = meta ? meta.name : "download";
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        } catch(e) { alert("Error."); }
+    },
+    deleteDocument: async function(id) {
+        if(confirm("Delete doc?")) { await db.deleteFile(id); this.data.documents = this.data.documents.filter(d => d.id !== id); this.saveData(); }
+    },
+    renderDocuments: function() {
+        const renderList = (type, containerId) => {
+            const list = this.data.documents.filter(d => d.type === type);
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if(list.length === 0) {
+                container.innerHTML = `<p class="empty-state">No files.</p>`;
+                return;
+            }
+            list.forEach(doc => {
+                const item = document.createElement('div');
+                item.className = 'doc-item';
+                item.innerHTML = `
+                    <div class="doc-info">
+                        <span class="doc-icon">${type === 'resume' ? '📄' : '✉️'}</span>
+                        <div>
+                            <div style="font-weight:500">${doc.name}</div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary)">${doc.date} • ${doc.size}</div>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline btn-sm" onclick="app.downloadFile('${doc.id}')">View</button>
+                        <button class="btn btn-danger btn-sm" onclick="app.deleteDocument('${doc.id}')">×</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        };
+        renderList('resume', 'list-resume');
+        renderList('coverletter', 'list-coverletter');
+    },
+
+    // --- COVER LETTER ---
+    saveGeneratedCL: async function() {
+        const text = document.getElementById('cl-output').value;
+        if(!text) return alert("Generate content first!");
+        const name = prompt("Enter a name for this Cover Letter:", `Cover Letter - ${document.getElementById('cl-company').value || 'Draft'}`);
+        if(!name) return;
+        const blob = new Blob([text], {type: "text/plain"});
+        const id = Date.now().toString();
+        await db.saveFile({ id: id, blob: blob, type: "text/plain" });
+        this.data.documents.push({ id: id, name: name + ".txt", type: 'coverletter', date: new Date().toISOString().split('T')[0], size: (blob.size / 1024).toFixed(1) + ' KB' });
+        this.saveData();
+        this.router('documents');
+    },
+    generateCoverLetter: function() {
+        const company = document.getElementById('cl-company').value.trim() || "[Company Name]";
+        const role = document.getElementById('cl-role').value.trim() || "[Job Title]";
+        const manager = document.getElementById('cl-manager').value.trim();
+        const skills = document.getElementById('cl-skills').value.trim() || "[Key Skills]";
+        const achievement = document.getElementById('cl-achievement').value.trim();
+        const why = document.getElementById('cl-why').value.trim();
+        const tone = document.getElementById('cl-tone').value;
+        const name = document.getElementById('cl-name').value.trim() || "[Your Name]";
+        const currentRole = document.getElementById('cl-current-role').value.trim();
+        const years = document.getElementById('cl-years').value.trim();
+
+        this.data.settings.profile = { name, currentRole, years };
+        this.saveData();
+
+        const getSalutation = () => manager ? `Dear ${manager},` : "To the Hiring Manager,";
+        const getDate = () => new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        
+        const intros = {
+            standard: `I am writing to express my strong interest in the ${role} position at ${company}.`,
+            modern: `I am applying for the ${role} role because I believe ${company} is solving the right problems, and I want to help.`,
+            enthusiastic: `I was thrilled to see the opening for the ${role} position at ${company}! I have been following your work for some time.`,
+            confident: `With a proven track record in ${currentRole || "this field"}, I am submitting my application for the ${role} position at ${company}.`
+        };
+        const hooks = {
+            standard: `With ${years ? years + " years of" : "my"} experience as a ${currentRole || "professional"}, I have developed a strong foundation in this field.`,
+            modern: `Currently working as a ${currentRole || "specialist"}, I focus on building scalable and efficient solutions.`,
+            enthusiastic: `I bring ${years ? years + " years of" : ""} passion and energy from my background as a ${currentRole || "practitioner"}.`,
+            confident: `Throughout my ${years ? years + "-year" : ""} career as a ${currentRole || "leader"}, I have consistently driven results.`
+        };
+        const closings = {
+            standard: `I welcome the opportunity to discuss how my background fits your needs. Thank you for your time and consideration.`,
+            modern: `I’d love to chat about how I can contribute to the team. Thanks for looking at my application.`,
+            enthusiastic: `I would love the chance to bring my enthusiasm to your team! I look forward to potentially speaking with you.`,
+            confident: `I am confident that my experience will be an asset to your team. I look forward to discussing this role further.`
+        };
+        const signoffs = { standard: "Sincerely,", modern: "Best,", enthusiastic: "Best regards,", confident: "Regards," };
+
+        let letter = `${getDate()}\n\n${getSalutation()}\n\n${intros[tone]}\n\n`;
+        letter += `${hooks[tone]}`;
+        if (achievement) {
+            letter += ` In my recent work, I ${achievement.charAt(0).toLowerCase() + achievement.slice(1)}`;
+            if(!achievement.endsWith('.')) letter += ".";
+        } else { letter += ` I pride myself on delivering high-quality results.`; }
+        letter += `\n\nMy technical expertise includes ${skills}. I thrive in environments that challenge me to apply these skills to solve complex problems.\n\n`;
+        if (why) {
+            letter += `I am particularly drawn to ${company} because ${why.charAt(0).toLowerCase() + why.slice(1)}`;
+            if(!why.endsWith('.')) letter += ".";
+            letter += "\n\n";
+        }
+        letter += `${closings[tone]}\n\n${signoffs[tone]}\n${name}`;
+        document.getElementById('cl-output').value = letter;
+    },
+    copyToClipboard: function() {
+        const copyText = document.getElementById("cl-output");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); 
+        document.execCommand("copy");
+        alert("Copied to clipboard!");
+    },
+    
+    // --- REMINDERS & CONTACTS ---
+    saveReminder: function(e) {
+        e.preventDefault();
+        const id = document.getElementById('rem-id').value;
+        const newRem = { id: id ? parseInt(id) : Date.now(), title: document.getElementById('rem-title').value, date: document.getElementById('rem-date').value };
+        if(id) { const idx = this.data.customReminders.findIndex(r => r.id == id); if(idx !== -1) this.data.customReminders[idx] = newRem; } 
+        else { this.data.customReminders.push(newRem); }
+        this.saveData(); this.closeModals();
+    },
+    deleteReminder: function(id) { if(confirm("Del?")) { this.data.customReminders = this.data.customReminders.filter(r => r.id !== id); this.saveData(); } },
+    openReminderModal: function(id = null) {
+        document.getElementById('rem-modal-title').innerText = id ? 'Edit Reminder' : 'Add Reminder';
+        document.getElementById('reminder-form').reset();
+        document.getElementById('rem-id').value = '';
+        if(id) { const r = this.data.customReminders.find(x => x.id == id); if(r) { document.getElementById('rem-id').value=r.id; document.getElementById('rem-title').value=r.title; document.getElementById('rem-date').value=r.date; } }
+        document.getElementById('reminder-modal').classList.add('open');
+    },
+    
+    saveContact: function(e) {
+        e.preventDefault();
+        this.data.contacts.push({ id: Date.now(), name: document.getElementById('contact-name').value, company: document.getElementById('contact-company').value, lastContact: document.getElementById('contact-last').value, nextFollowUp: document.getElementById('contact-next').value, notes: document.getElementById('contact-notes').value });
+        this.saveData(); this.closeModals();
+    },
+    openContactModal: function() { document.getElementById('contact-modal').classList.add('open'); },
+    deleteContact: function(id) { if(confirm('Delete contact?')) { this.data.contacts = this.data.contacts.filter(c => c.id != id); this.saveData(); } },
+    
+    // --- OTHERS ---
+    exportData: function() {
+        alert("Note: File attachments are stored in your browser database and are NOT included in this JSON export.");
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "jobhunter_data_" + new Date().toISOString().split('T')[0] + ".json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    },
+    importData: function(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                app.data = imported;
+                if(!app.data.documents) app.data.documents = [];
+                if(!app.data.customReminders) app.data.customReminders = [];
+                if(!app.data.starStories) app.data.starStories = [];
+                app.saveData();
+                alert("Import successful!");
+                location.reload();
+            } catch (err) {
+                alert("Invalid JSON file.");
+            }
+        };
+        reader.readAsText(file);
+    },
+    
+    // Resume Scanner
+    scanKeywords: function() {
+        const jobText = document.getElementById('scan-job').value;
+        const resumeText = document.getElementById('scan-resume').value;
+        const resultsDiv = document.getElementById('scan-results');
+
+        if (!jobText || !resumeText) {
+            resultsDiv.innerHTML = '<p class="empty-state">Please paste both Job Description and Resume content.</p>';
+            return;
+        }
+
+        const techTerms = ["javascript", "python", "java", "html", "css", "sql", "react", "node", "aws", "docker", "kubernetes", "agile", "scrum", "communication", "leadership", "sales", "marketing", "excel", "analysis", "project management", "git", "ci/cd", "rest api", "graphql", "typescript", "c++", "c#", "go", "ruby"];
+        const clean = (txt) => txt.toLowerCase().replace(/[^\w\s]/g, ' ');
+        let potentialKeywords = [];
+        
+        const cleanJob = clean(jobText);
+        techTerms.forEach(term => { if(cleanJob.includes(term)) potentialKeywords.push(term); });
+        const regex = /(?<!^|\. |! |\? )[A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*/g;
+        const matches = jobText.match(regex) || [];
+        matches.forEach(m => { if(m.length > 2 && !["The", "A", "An", "This"].includes(m)) potentialKeywords.push(m.toLowerCase()); });
+        const uniqueKeywords = [...new Set(potentialKeywords)];
+        const cleanResume = clean(resumeText);
+        const matched = [];
+        const missing = [];
+        uniqueKeywords.forEach(k => { if(cleanResume.includes(k)) matched.push(k); else missing.push(k); });
+        const score = uniqueKeywords.length > 0 ? Math.round((matched.length / uniqueKeywords.length) * 100) : 0;
+        const color = score > 75 ? 'var(--success)' : score > 40 ? 'var(--warning)' : 'var(--danger)';
+
+        let html = `
+            <div class="ratio-circle" style="border-color:${color}; width:100px; height:100px; margin:0 auto 1.5rem; font-size:1.5rem;">${score}%</div>
+            <p style="margin-bottom:1rem; font-size:0.9rem; color:var(--text-secondary)">Found ${matched.length} of ${uniqueKeywords.length} key terms</p>
+        `;
+
+        html += `<h4>✅ Good Match (${matched.length})</h4><div style="margin-bottom:1.5rem">`;
+        if(matched.length === 0) html += `<span style="color:var(--text-secondary)">No keywords found.</span>`;
+        matched.forEach(w => html += `<span class="keyword-tag k-match">${w}</span>`);
+        html += `</div><h4>❌ Missing / Consider Adding (${missing.length})</h4><div>`;
+        if(missing.length === 0) html += `<span style="color:var(--text-secondary)">Perfect match!</span>`;
+        missing.forEach(w => html += `<span class="keyword-tag k-missing">${w}</span>`);
+        html += `</div>`;
+        resultsDiv.innerHTML = html;
+    },
+    
+    startRecording: async function() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return alert("Audio recording not supported.");
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.mediaRecorder = new MediaRecorder(stream);
+            this.audioChunks = [];
+            this.mediaRecorder.ondataavailable = (e) => this.audioChunks.push(e.data);
+            this.mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
+                document.getElementById('audio-playback').src = URL.createObjectURL(audioBlob);
+            };
+            this.mediaRecorder.start();
+            document.getElementById('rec-start').disabled = true;
+            document.getElementById('rec-stop').disabled = false;
+            document.getElementById('rec-start').innerText = "Recording...";
+        } catch(err) { console.error(err); alert("Could not access microphone."); }
+    },
+    stopRecording: function() {
+        if(this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            this.mediaRecorder.stop();
+            document.getElementById('rec-start').disabled = false;
+            document.getElementById('rec-stop').disabled = true;
+            document.getElementById('rec-start').innerText = "● Record";
+        }
+    },
+    saveInterviewSession: function() {
+        const question = document.getElementById('interview-question').innerText;
+        if(question.includes("Select a category")) return alert("Start a session first.");
+        const session = {
+            id: Date.now(),
+            date: new Date().toLocaleDateString(),
+            question: question,
+            notes: document.getElementById('interview-notes').value,
+            scores: {
+                clarity: document.getElementById('rate-clarity').value,
+                content: document.getElementById('rate-content').value,
+                confidence: document.getElementById('rate-confidence').value
+            }
+        };
+        this.data.interviewSessions.unshift(session);
+        this.saveData();
+        alert("Session saved!");
+    }
+};
+
+window.onload = () => app.init();
+</script>
+</body>
+</html>
