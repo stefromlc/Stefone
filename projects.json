@@ -1,5 +1,23 @@
 [
   {
+    "title": "Abstractify",
+    "slug": "abstractify",
+    "description": "Generate bold abstract art from any photo. Tweak styles and colors in real time, remix instantly, and export high-resolution results—all locally in your browser.",
+    "thumbnail": "assets/thumbs/abstractify.png",
+    "tags": [
+      "Abstract",
+      "Art",
+      "Generator",
+      "Image",
+      "Tool"
+    ],
+    "category": "Art",
+    "featured": true,
+    "date": "2026-02-16",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "SpendScope",

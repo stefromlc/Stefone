@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	
+<!-- Primary Meta Tags -->
+<title>Abstractify – Turn Photos Into Abstract Art</title>
+<meta name="title" content="Abstractify – Turn Photos Into Abstract Art" />
+<meta name="description" content="Transform any photo into striking abstract artwork. Explore generative styles, tweak colors in real time, remix presets, and export high-resolution results." />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.stefone.com/abstractify/" />
+<meta property="og:title" content="Abstractify – Turn Photos Into Abstract Art" />
+<meta property="og:description" content="Transform any photo into striking abstract artwork. Explore generative styles, tweak colors in real time, remix presets, and export high-resolution results." />
+<meta property="og:image" content="https://www.stefone.com/assets/thumbs/abstractify.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Abstractify generative abstract photo transformation preview" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Abstractify – Turn Photos Into Abstract Art" />
+<meta name="twitter:description" content="Transform any photo into striking abstract artwork. Explore generative styles, tweak colors in real time, remix presets, and export high-resolution results." />
+<meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/abstractify.png" />
+
+<!-- Optional -->
+<meta name="theme-color" content="#ec4899" />
+
+
+    <style>
+        body { font-family: 'Space Grotesk', sans-serif; }
+        
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #333;
+            border-radius: 2px;
+        }
+        
+        .art-btn.active {
+            border-color: #a855f7;
+            background-color: rgba(168, 85, 247, 0.1);
+        }
+        
+        .loading-overlay {
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Checkboard pattern for transparency */
+        .checkerboard {
+            background-image: 
+                linear-gradient(45deg, #1a1a1a 25%, transparent 25%), 
+                linear-gradient(-45deg, #1a1a1a 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #1a1a1a 75%), 
+                linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        /* Hide scrollbar for cleaner UI */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-black text-white flex flex-col h-screen overflow-hidden selection:bg-fuchsia-500">
+
+    <!-- HEADER -->
+    <header class="flex h-16 items-center justify-between border-b border-neutral-800 bg-neutral-900/50 backdrop-blur-md px-6 shrink-0 z-20">
+        <div class="flex items-center gap-4">
+            <a href="/projects/" class="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-all" title="Back to Projects">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </a>
+            <div class="h-6 w-px bg-neutral-800"></div>
+            <div class="flex items-center gap-3">
+                <div class="h-9 w-9 rounded-full bg-gradient-to-tr from-fuchsia-600 to-cyan-500 flex items-center justify-center shadow-[0_0_15px_rgba(192,38,211,0.4)]">
+                    <i data-lucide="palette" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white">Abstractify</h1>
+                    <p class="text-[10px] text-neutral-400 uppercase tracking-widest">Generative Art Engine</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button id="btn-save-preset" class="hidden md:flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-bold text-neutral-300 hover:bg-neutral-700 hover:text-white transition-all border border-neutral-700">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>Save Setup</span>
+            </button>
+            
+            <button id="btn-remix" class="hidden md:flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-bold text-fuchsia-400 hover:bg-neutral-700 hover:text-fuchsia-300 transition-all border border-neutral-700 hover:border-fuchsia-500/50">
+                <i data-lucide="shuffle" class="w-4 h-4"></i>
+                <span>Remix</span>
+            </button>
+            
+            <button onclick="document.getElementById('file-input').click()" class="flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium hover:bg-neutral-700 transition-all border border-neutral-700">
+                <i data-lucide="upload" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">New Image</span>
+            </button>
+            <input type="file" id="file-input" accept="image/*" class="hidden">
+            
+            <button id="btn-open-export" class="flex items-center gap-2 rounded-full bg-white px-6 py-2 text-sm font-bold text-black hover:bg-fuchsia-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] disabled:opacity-50 disabled:shadow-none" disabled>
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Export</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="flex flex-1 overflow-hidden relative">
+        
+        <!-- LEFT: ART CONTROLS -->
+        <aside class="w-80 flex-shrink-0 flex flex-col border-r border-neutral-800 bg-neutral-900/80 backdrop-blur-md z-10 overflow-hidden">
+            
+            <div class="p-6 space-y-8 overflow-y-auto custom-scrollbar h-full pb-20">
+                
+                <!-- 1. STYLE SELECTOR -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">Generator Style</label>
+                        <button id="btn-filter-fav" onclick="toggleFavFilter()" class="text-neutral-500 hover:text-fuchsia-400 transition-colors" title="Show Favorites Only">
+                            <i data-lucide="star" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-2" id="style-list-container">
+                        <!-- Styles Injected via JS -->
+                    </div>
+                </div>
+
+                <div class="w-full h-px bg-neutral-800"></div>
+
+                <!-- 2. DYNAMIC PARAMETERS -->
+                <div id="controls-area" class="space-y-6">
+                    <!-- Injected via JS based on style -->
+                </div>
+
+                <div class="w-full h-px bg-neutral-800"></div>
+
+                <!-- 3. COLOR PALETTE -->
+                <div class="space-y-3">
+                    <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">Color Palette</label>
+                    <div class="flex flex-wrap gap-2">
+                         <button onclick="setPalette('original')" class="w-8 h-8 rounded-full border border-neutral-600 bg-gradient-to-br from-white to-neutral-500 hover:scale-110 transition-transform" title="Original Colors"></button>
+                         <button onclick="setPalette('cyber')" class="w-8 h-8 rounded-full border border-neutral-600 bg-gradient-to-br from-fuchsia-600 to-cyan-500 hover:scale-110 transition-transform" title="Cyberpunk"></button>
+                         <button onclick="setPalette('heat')" class="w-8 h-8 rounded-full border border-neutral-600 bg-gradient-to-br from-yellow-400 to-red-600 hover:scale-110 transition-transform" title="Heatmap"></button>
+                         <button onclick="setPalette('noir')" class="w-8 h-8 rounded-full border border-neutral-600 bg-gradient-to-br from-gray-200 to-black hover:scale-110 transition-transform" title="Noir"></button>
+                         <button onclick="setPalette('toxic')" class="w-8 h-8 rounded-full border border-neutral-600 bg-gradient-to-br from-lime-400 to-slate-900 hover:scale-110 transition-transform" title="Toxic"></button>
+                         <button onclick="setPalette('pastel')" class="w-8 h-8 rounded-full border border-neutral-600 bg-gradient-to-br from-pink-300 to-blue-200 hover:scale-110 transition-transform" title="Pastel"></button>
+                         <button onclick="setPalette('blueprint')" class="w-8 h-8 rounded-full border border-neutral-600 bg-gradient-to-br from-blue-700 to-white hover:scale-110 transition-transform" title="Blueprint"></button>
+                    </div>
+                </div>
+
+                <div class="w-full h-px bg-neutral-800"></div>
+
+                <!-- 4. SAVED PRESETS -->
+                <div class="space-y-3">
+                    <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">My Saved Presets</label>
+                    <div id="presets-list" class="space-y-2">
+                        <!-- Populated by JS -->
+                        <div class="text-xs text-neutral-600 italic">No presets saved yet.</div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        <!-- CENTER: CANVAS -->
+        <div class="flex-1 bg-[#0a0a0a] relative flex items-center justify-center overflow-hidden p-8 checkerboard">
+            
+            <!-- Upload Prompt -->
+            <div id="upload-prompt" class="text-center">
+                <div class="w-24 h-24 bg-neutral-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-neutral-800 animate-pulse">
+                    <i data-lucide="image-plus" class="text-neutral-600 w-10 h-10"></i>
+                </div>
+                <h2 class="text-3xl font-bold mb-3 text-white">Create Abstract Art</h2>
+                <p class="text-neutral-500 mb-8 max-w-sm mx-auto">Upload any photo to generate unique, high-quality abstract digital artwork.</p>
+                <button onclick="document.getElementById('file-input').click()" class="bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-8 py-4 rounded-full font-bold text-lg transition-all hover:scale-105 shadow-[0_0_30px_rgba(192,38,211,0.3)]">
+                    Upload Source Image
+                </button>
+            </div>
+
+            <!-- Canvas Wrapper -->
+            <div id="canvas-wrapper" class="relative hidden shadow-2xl shadow-black group">
+                <canvas id="main-canvas" class="max-h-[85vh] max-w-full object-contain"></canvas>
+                
+                <!-- Compare Button -->
+                <button id="btn-compare" class="absolute bottom-4 right-4 bg-black/60 backdrop-blur text-white p-3 rounded-full hover:bg-black/90 transition-all border border-white/10 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300" title="Hold to see source">
+                    <i data-lucide="eye" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- EXPORT MODAL -->
+    <div id="export-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-5xl w-full max-h-[95vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-200" id="export-modal-content">
+            <div class="p-6 border-b border-neutral-800 flex justify-between items-center bg-neutral-900 z-10">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Export Masterpiece</h2>
+                    <p class="text-neutral-400 text-sm">Render high-resolution output for print or digital.</p>
+                </div>
+                <button onclick="closeExportModal()" class="p-2 hover:bg-neutral-800 rounded-full transition-colors text-neutral-400 hover:text-white">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-8 bg-[#050505] custom-scrollbar">
+                
+                <!-- Standard Presets -->
+                <h3 class="text-sm font-bold uppercase tracking-widest text-neutral-500 mb-4">Quick Presets</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" id="export-grid">
+                    <!-- Export Options Generated via JS -->
+                </div>
+
+                <div class="w-full h-px bg-neutral-800 mb-8"></div>
+
+                <!-- Custom Section -->
+                <div class="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-sm font-bold uppercase tracking-widest text-fuchsia-400 flex items-center gap-2">
+                            <i data-lucide="settings-2" class="w-4 h-4"></i>
+                            Custom Resolution
+                        </h3>
+                        
+                        <!-- Toggle Mode -->
+                        <div class="flex bg-neutral-800 rounded-lg p-1 text-xs font-medium">
+                            <button onclick="toggleCustomMode('px')" id="mode-px" class="px-3 py-1.5 rounded-md bg-neutral-700 text-white transition-colors">Pixels</button>
+                            <button onclick="toggleCustomMode('print')" id="mode-print" class="px-3 py-1.5 rounded-md text-neutral-400 hover:text-white transition-colors">Print (Inches)</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        
+                        <!-- Pixel Inputs -->
+                        <div id="inputs-px" class="contents">
+                            <div>
+                                <label class="block text-xs text-neutral-400 mb-2">Width (px)</label>
+                                <input type="number" id="custom-w" value="1920" class="w-full bg-black border border-neutral-700 rounded-lg px-4 py-2 text-white focus:border-fuchsia-500 focus:outline-none">
+                            </div>
+                            
+                            <!-- Lock Toggle Button -->
+                            <div class="flex items-center justify-center mb-2">
+                                <button id="lock-btn-px" class="p-2 rounded-full bg-neutral-800 text-neutral-500 hover:bg-neutral-700 hover:text-white transition-colors" title="Lock Aspect Ratio">
+                                    <i data-lucide="unlock" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-neutral-400 mb-2">Height (px)</label>
+                                <input type="number" id="custom-h" value="1080" class="w-full bg-black border border-neutral-700 rounded-lg px-4 py-2 text-white focus:border-fuchsia-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Print Inputs -->
+                        <div id="inputs-print" class="contents hidden">
+                            <div>
+                                <label class="block text-xs text-neutral-400 mb-2">Width (inches)</label>
+                                <input type="number" id="print-w" value="8.5" step="0.1" class="w-full bg-black border border-neutral-700 rounded-lg px-4 py-2 text-white focus:border-fuchsia-500 focus:outline-none">
+                            </div>
+
+                            <!-- Lock Toggle Button (Print) -->
+                             <div class="flex items-center justify-center mb-2">
+                                <button id="lock-btn-print" class="p-2 rounded-full bg-neutral-800 text-neutral-500 hover:bg-neutral-700 hover:text-white transition-colors" title="Lock Aspect Ratio">
+                                    <i data-lucide="unlock" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-neutral-400 mb-2">Height (inches)</label>
+                                <input type="number" id="print-h" value="11" step="0.1" class="w-full bg-black border border-neutral-700 rounded-lg px-4 py-2 text-white focus:border-fuchsia-500 focus:outline-none">
+                            </div>
+                            
+                            <div class="md:col-span-3 grid md:grid-cols-2 gap-6 mt-2">
+                                <div>
+                                    <label class="block text-xs text-neutral-400 mb-2">DPI (Quality)</label>
+                                    <input type="number" id="print-dpi" value="300" class="w-full bg-black border border-neutral-700 rounded-lg px-4 py-2 text-white focus:border-fuchsia-500 focus:outline-none">
+                                </div>
+                                <button onclick="handleCustomExport()" class="bg-white text-black font-bold py-2.5 rounded-lg hover:bg-fuchsia-200 transition-colors flex items-center justify-center gap-2 mt-auto h-[42px]">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    Render Custom
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Pixel Render Button (Print has its own layout above) -->
+                        <div id="btn-px-render" class="md:col-span-3">
+                             <button onclick="handleCustomExport()" class="w-full bg-white text-black font-bold py-2.5 rounded-lg hover:bg-fuchsia-200 transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                Render Custom
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="p-4 bg-neutral-900 border-t border-neutral-800 flex justify-center text-xs text-neutral-600 font-mono">
+                ABSTRACTIFY RENDER ENGINE V3.5 (SCALED)
+            </div>
+        </div>
+    </div>
+    
+    <!-- SAVE PRESET MODAL -->
+    <div id="save-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200" id="save-modal-content">
+            <h3 class="text-xl font-bold text-white mb-2">Save Preset</h3>
+            <p class="text-neutral-400 text-sm mb-6">Give your current setup a name to access it later.</p>
+            
+            <input type="text" id="preset-name-input" placeholder="e.g., Cyber Glitch 01" class="w-full bg-black border border-neutral-700 rounded-lg px-4 py-3 text-white focus:border-fuchsia-500 focus:outline-none mb-6" maxlength="30">
+            
+            <div class="flex gap-3">
+                <button onclick="closeSaveModal()" class="flex-1 py-3 rounded-lg font-medium text-neutral-300 hover:bg-neutral-800 transition-colors">Cancel</button>
+                <button onclick="confirmSavePreset()" class="flex-1 py-3 rounded-lg font-bold bg-white text-black hover:bg-fuchsia-200 transition-colors">Save Setup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SCRIPT -->
+    <script>
+        // --- CONFIGURATION ---
+        const ART_STYLES = {
+            polymesh: {
+                name: 'Polymesh',
+                icon: 'triangle',
+                desc: 'Low-poly triangulation',
+                color: 'text-fuchsia-500',
+                params: {
+                    detail: { name: 'Mesh Density', min: 10, max: 200, val: 50 },
+                    chaos: { name: 'Vertex Chaos', min: 0, max: 100, val: 20 },
+                    alpha: { name: 'Opacity', min: 50, max: 100, val: 90 }
+                }
+            },
+            flow: {
+                name: 'Fluid Flow',
+                icon: 'waves',
+                desc: 'Oil paint streaks',
+                color: 'text-cyan-500',
+                params: {
+                    strokes: { name: 'Stroke Count', min: 1000, max: 15000, val: 5000 },
+                    length: { name: 'Flow Length', min: 10, max: 100, val: 40 },
+                    width: { name: 'Brush Width', min: 1, max: 20, val: 5 }
+                }
+            },
+            neopop: {
+                name: 'Neo-Pop',
+                icon: 'grid-3x3',
+                desc: 'Halftone matrix',
+                color: 'text-yellow-500',
+                params: {
+                    size: { name: 'Dot Size', min: 5, max: 50, val: 15 },
+                    spacing: { name: 'Grid Spacing', min: 0, max: 20, val: 2 },
+                    threshold: { name: 'Contrast', min: 0, max: 255, val: 128 }
+                }
+            },
+            hex: {
+                name: 'Hex Grid',
+                icon: 'hexagon',
+                desc: 'Mosaic honeycomb',
+                color: 'text-orange-500',
+                params: {
+                    scale: { name: 'Hex Size', min: 10, max: 100, val: 30 },
+                    gap: { name: 'Gap', min: 0, max: 10, val: 2 },
+                    variance: { name: 'Color Variance', min: 0, max: 50, val: 0 }
+                }
+            },
+            bauhaus: {
+                name: 'Bauhaus',
+                icon: 'shapes',
+                desc: 'Geometric primitives',
+                color: 'text-blue-500',
+                params: {
+                    count: { name: 'Shape Count', min: 10, max: 100, val: 40 },
+                    minSize: { name: 'Min Size', min: 10, max: 100, val: 20 },
+                    maxSize: { name: 'Max Size', min: 100, max: 500, val: 300 }
+                }
+            },
+            scanline: {
+                name: 'Scanline',
+                icon: 'monitor',
+                desc: 'Modulated signals',
+                color: 'text-purple-400',
+                params: {
+                    density: { name: 'Line Density', min: 2, max: 20, val: 6 },
+                    amp: { name: 'Distortion', min: 0, max: 50, val: 20 },
+                    noise: { name: 'Signal Noise', min: 0, max: 100, val: 10 }
+                }
+            },
+            cybermosh: {
+                name: 'Cybermosh',
+                icon: 'zap',
+                desc: 'Digital decay',
+                color: 'text-red-500',
+                params: {
+                    sort: { name: 'Sort Power', min: 0, max: 100, val: 40 },
+                    shift: { name: 'RGB Shift', min: 0, max: 50, val: 10 },
+                    slices: { name: 'Slice Count', min: 0, max: 50, val: 10 }
+                }
+            },
+            neon: {
+                name: 'Neon Edge',
+                icon: 'activity',
+                desc: 'Glowing wireframe',
+                color: 'text-green-500',
+                params: {
+                    threshold: { name: 'Edge Detect', min: 10, max: 100, val: 30 },
+                    glow: { name: 'Glow Power', min: 0, max: 50, val: 20 },
+                    darkness: { name: 'Background', min: 0, max: 100, val: 90 }
+                }
+            },
+            crystal: {
+                name: 'Crystal',
+                icon: 'diamond',
+                desc: 'Shattered glass poly',
+                color: 'text-teal-400',
+                params: {
+                    shards: { name: 'Shard Count', min: 10, max: 200, val: 50 },
+                    jitter: { name: 'Irregularity', min: 0, max: 50, val: 20 },
+                    alpha: { name: 'Transparency', min: 0, max: 100, val: 60 }
+                }
+            },
+            sketch: {
+                name: 'Sketch',
+                icon: 'pen-tool',
+                desc: 'High contrast ink',
+                color: 'text-white',
+                params: {
+                    detail: { name: 'Detail Level', min: 1, max: 10, val: 2 },
+                    contrast: { name: 'Ink Weight', min: 0, max: 100, val: 50 },
+                    paper: { name: 'Paper Brightness', min: 0, max: 100, val: 95 }
+                }
+            },
+            ascii: {
+                name: 'ASCII',
+                icon: 'terminal',
+                desc: 'Text mode output',
+                color: 'text-green-400',
+                params: {
+                    density: { name: 'Char Density', min: 4, max: 20, val: 8 },
+                    color: { name: 'Color Mode', min: 0, max: 1, val: 1 } // 0=BW, 1=Color
+                }
+            }
+        };
+
+        const PALETTES = {
+            original: null,
+            cyber: [[10, 10, 20], [192, 38, 211], [6, 182, 212], [255, 255, 255]], 
+            heat: [[0, 0, 0], [180, 0, 0], [255, 200, 0], [255, 255, 255]], 
+            noir: [[0, 0, 0], [80, 80, 80], [180, 180, 180], [255, 255, 255]],
+            toxic: [[10, 20, 10], [50, 100, 50], [163, 230, 53], [255, 255, 255]], 
+            pastel: [[255, 200, 200], [200, 255, 255], [255, 255, 200], [200, 200, 255]],
+            blueprint: [[0, 20, 80], [0, 50, 150], [100, 150, 255], [255, 255, 255]]
+        };
+
+        const EXPORT_PRESETS = [
+            { name: 'Instagram Square', width: 1080, height: 1080, ratio: '1:1', icon: 'instagram' },
+            { name: 'Instagram Portrait', width: 1080, height: 1350, ratio: '4:5', icon: 'instagram' },
+            { name: 'Story / Reel', width: 1080, height: 1920, ratio: '9:16', icon: 'smartphone' },
+            { name: 'Desktop 4K', width: 3840, height: 2160, ratio: '16:9', icon: 'monitor' },
+            { name: 'Fine Art Print', width: 2480, height: 3508, ratio: 'custom', icon: 'printer' }
+        ];
+
+        // --- STATE ---
+        let state = {
+            sourceImage: null,
+            activeStyle: 'polymesh',
+            params: { ...ART_STYLES.polymesh.params }, 
+            activePalette: 'original',
+            renderTimeout: null,
+            showOriginal: false,
+            // Export State
+            lockedRatio: false,
+            aspectRatio: 16/9,
+            // Favorites
+            favorites: JSON.parse(localStorage.getItem('abstractify_favorites') || '[]'),
+            filterFavorites: false
+        };
+
+        const canvas = document.getElementById('main-canvas');
+        
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderStyleList();
+            lucide.createIcons();
+            setupUI();
+            generateExportGrid();
+            loadPresets();
+            setupExportLocks();
+        });
+
+        // --- UI HANDLERS ---
+        function setupUI() {
+            document.getElementById('file-input').addEventListener('change', handleFileUpload);
+            document.getElementById('btn-remix').addEventListener('click', randomizeParams);
+            document.getElementById('btn-save-preset').addEventListener('click', savePreset);
+            
+            const btnCompare = document.getElementById('btn-compare');
+            const toggle = (show) => toggleOriginal(show);
+            btnCompare.addEventListener('mousedown', () => toggle(true));
+            btnCompare.addEventListener('mouseup', () => toggle(false));
+            btnCompare.addEventListener('mouseleave', () => toggle(false));
+            btnCompare.addEventListener('touchstart', (e) => { e.preventDefault(); toggle(true); });
+            btnCompare.addEventListener('touchend', (e) => { e.preventDefault(); toggle(false); });
+
+            document.getElementById('btn-open-export').addEventListener('click', openExportModal);
+            
+            // Save Modal Enter Key
+            document.getElementById('preset-name-input').addEventListener('keydown', (e) => {
+                if(e.key === 'Enter') confirmSavePreset();
+                if(e.key === 'Escape') closeSaveModal();
+            });
+            
+            buildControls('polymesh');
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    state.sourceImage = img;
+                    document.getElementById('upload-prompt').classList.add('hidden');
+                    document.getElementById('canvas-wrapper').classList.remove('hidden');
+                    document.getElementById('btn-open-export').disabled = false;
+                    
+                    // Update export inputs to match image
+                    document.getElementById('custom-w').value = img.width;
+                    document.getElementById('custom-h').value = img.height;
+                    state.aspectRatio = img.width / img.height;
+
+                    triggerRender();
+                    updateThumbnails(); // Generate thumbnails for all styles
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function toggleFavFilter() {
+            state.filterFavorites = !state.filterFavorites;
+            const btn = document.getElementById('btn-filter-fav');
+            if(state.filterFavorites) {
+                btn.classList.add('text-fuchsia-400');
+                btn.classList.remove('text-neutral-500');
+                btn.innerHTML = `<i data-lucide="star" class="w-4 h-4 fill-current"></i>`;
+            } else {
+                btn.classList.remove('text-fuchsia-400');
+                btn.classList.add('text-neutral-500');
+                btn.innerHTML = `<i data-lucide="star" class="w-4 h-4"></i>`;
+            }
+            lucide.createIcons();
+            renderStyleList();
+            if(state.sourceImage) updateThumbnails();
+        }
+
+        function toggleFavorite(e, styleKey) {
+            e.stopPropagation();
+            if(state.favorites.includes(styleKey)) {
+                state.favorites = state.favorites.filter(k => k !== styleKey);
+            } else {
+                state.favorites.push(styleKey);
+            }
+            localStorage.setItem('abstractify_favorites', JSON.stringify(state.favorites));
+            renderStyleList();
+            if(state.sourceImage) updateThumbnails();
+        }
+
+        function renderStyleList() {
+            const container = document.getElementById('style-list-container');
+            container.innerHTML = '';
+            
+            const keys = Object.keys(ART_STYLES);
+            
+            // Sort: Favorites first
+            keys.sort((a, b) => {
+                const aFav = state.favorites.includes(a);
+                const bFav = state.favorites.includes(b);
+                if (aFav && !bFav) return -1;
+                if (!aFav && bFav) return 1;
+                return 0;
+            });
+
+            keys.forEach(key => {
+                const style = ART_STYLES[key];
+                const isFav = state.favorites.includes(key);
+                
+                if (state.filterFavorites && !isFav) return;
+
+                const isActive = state.activeStyle === key;
+                const activeClass = isActive ? 'active border-fuchsia-500 bg-neutral-800' : 'border-neutral-700 bg-neutral-800/50 hover:bg-neutral-800';
+                
+                const btn = document.createElement('button');
+                btn.className = `art-btn ${activeClass} p-2 rounded-xl border transition-all text-left group relative w-full flex items-center gap-3`;
+                btn.id = `style-${key}`;
+                btn.onclick = () => setArtStyle(key);
+                
+                btn.innerHTML = `
+                    <div class="relative w-12 h-12 shrink-0 bg-black rounded-lg overflow-hidden border border-neutral-700 group-hover:border-neutral-500 transition-colors">
+                        <canvas id="thumb-${key}" width="60" height="60" class="w-full h-full object-cover"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center opacity-30">
+                             <i data-lucide="${style.icon}" class="${style.color} w-6 h-6"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-sm truncate ${isActive ? 'text-white' : 'text-neutral-300'}">${style.name}</div>
+                        <div class="text-[10px] text-neutral-500 truncate">${style.desc}</div>
+                    </div>
+                    <div class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-neutral-700 transition-colors z-10" 
+                         onclick="event.stopPropagation(); window.toggleFavorite(event, '${key}')">
+                        <i data-lucide="star" class="w-3 h-3 ${isFav ? 'text-yellow-400 fill-current' : 'text-neutral-600 group-hover:text-neutral-400'}"></i>
+                    </div>
+                `;
+                container.appendChild(btn);
+            });
+            lucide.createIcons();
+            // Re-assign global function for HTML access
+            window.toggleFavorite = toggleFavorite;
+        }
+
+        function updateThumbnails() {
+            if(!state.sourceImage) return;
+            
+            const thumbW = 60;
+            const thumbH = 60;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = thumbW;
+            tempCanvas.height = thumbH;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            const sRatio = state.sourceImage.width / state.sourceImage.height;
+            let sx, sy, sWidth, sHeight;
+            if (sRatio > 1) { 
+                sHeight = state.sourceImage.height;
+                sWidth = sHeight;
+                sx = (state.sourceImage.width - sHeight) / 2;
+                sy = 0;
+            } else { 
+                sWidth = state.sourceImage.width;
+                sHeight = sWidth;
+                sx = 0;
+                sy = (state.sourceImage.height - sWidth) / 2;
+            }
+            tempCtx.drawImage(state.sourceImage, sx, sy, sWidth, sHeight, 0, 0, thumbW, thumbH);
+
+            Object.keys(ART_STYLES).forEach((key, index) => {
+                setTimeout(() => {
+                    const canvas = document.getElementById(`thumb-${key}`);
+                    if (!canvas) return; 
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0,0,thumbW,thumbH);
+                    
+                    const savedParams = state.params;
+                    state.params = ART_STYLES[key].params; 
+                    
+                    try {
+                        const scale = 1; // Thumbnails effectively "fit" 1:1 visually at small size
+                        // Actually, thumbnails are small (60px), but params like 'density' are tuned for ~1000px
+                        // We need a scale factor to make the effect look "normal" on a tiny thumb.
+                        // Scale = 60 / 1000 = 0.06
+                        const tScale = 0.06;
+
+                        switch(key) {
+                            case 'polymesh': renderPolymesh(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                            case 'flow': renderFlow(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                            case 'neopop': renderNeoPop(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                            case 'cybermosh': renderCybermosh(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                            case 'neon': renderNeon(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                            case 'hex': renderHex(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                            case 'bauhaus': renderBauhaus(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                            case 'scanline': renderScanline(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                            case 'crystal': renderCrystal(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                            case 'sketch': renderSketch(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                            case 'ascii': renderAscii(ctx, tempCtx, thumbW, thumbH, tScale); break;
+                        }
+                    } catch(e) {}
+                    
+                    state.params = savedParams;
+                    
+                }, index * 20);
+            });
+        }
+
+        function setArtStyle(styleKey) {
+            state.activeStyle = styleKey;
+            renderStyleList(); 
+            state.params = JSON.parse(JSON.stringify(ART_STYLES[styleKey].params));
+            buildControls(styleKey);
+            triggerRender();
+            if(state.sourceImage) {
+               setTimeout(updateThumbnails, 0); 
+            }
+        }
+
+        function buildControls(styleKey) {
+            const container = document.getElementById('controls-area');
+            container.innerHTML = '';
+            const style = ART_STYLES[styleKey];
+            
+            const header = document.createElement('div');
+            header.className = 'flex items-center justify-between mb-4';
+            header.innerHTML = `<h3 class="text-xs font-bold uppercase tracking-widest text-fuchsia-400">Parameters</h3>`;
+            container.appendChild(header);
+
+            Object.keys(style.params).forEach(key => {
+                const p = state.params[key];
+                const wrapper = document.createElement('div');
+                wrapper.className = 'group';
+                wrapper.innerHTML = `
+                    <div class="flex justify-between mb-2">
+                        <label class="text-sm text-neutral-300 font-medium group-hover:text-white transition-colors">${p.name}</label>
+                        <span id="val-${key}" class="text-xs text-neutral-500 font-mono bg-neutral-800 px-2 py-0.5 rounded">${p.val}</span>
+                    </div>
+                    <input type="range" id="param-${key}" min="${p.min}" max="${p.max}" value="${p.val}" 
+                           class="w-full h-1.5 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-fuchsia-500 hover:accent-fuchsia-400">
+                `;
+                container.appendChild(wrapper);
+                wrapper.querySelector(`input`).addEventListener('input', (e) => {
+                    const val = parseInt(e.target.value);
+                    state.params[key].val = val;
+                    document.getElementById(`val-${key}`).textContent = val;
+                    if (state.renderTimeout) clearTimeout(state.renderTimeout);
+                    state.renderTimeout = setTimeout(triggerRender, 50);
+                });
+            });
+        }
+
+        function setPalette(paletteKey) {
+            state.activePalette = paletteKey;
+            triggerRender();
+        }
+
+        function randomizeParams() {
+            Object.keys(state.params).forEach(key => {
+                const p = state.params[key];
+                const newVal = Math.floor(Math.random() * (p.max - p.min)) + p.min;
+                state.params[key].val = newVal;
+                const slider = document.getElementById(`param-${key}`);
+                if(slider) slider.value = newVal;
+                document.getElementById(`val-${key}`).textContent = newVal;
+            });
+            const paletteKeys = Object.keys(PALETTES);
+            state.activePalette = paletteKeys[Math.floor(Math.random() * paletteKeys.length)];
+            triggerRender();
+        }
+
+        function toggleOriginal(show) {
+            state.showOriginal = show;
+            const ctx = canvas.getContext('2d');
+            if (show && state.sourceImage) {
+                ctx.drawImage(state.sourceImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                triggerRender(); 
+            }
+        }
+
+        // --- PRESET MANAGER ---
+        
+        function savePreset() {
+            const modal = document.getElementById('save-modal');
+            const content = document.getElementById('save-modal-content');
+            const input = document.getElementById('preset-name-input');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+                input.focus();
+            }, 10);
+        }
+
+        function closeSaveModal() {
+            const modal = document.getElementById('save-modal');
+            const content = document.getElementById('save-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('preset-name-input').value = '';
+            }, 200);
+        }
+
+        function confirmSavePreset() {
+            const input = document.getElementById('preset-name-input');
+            const name = input.value.trim();
+            if (!name) {
+                input.classList.add('border-red-500');
+                setTimeout(() => input.classList.remove('border-red-500'), 500);
+                return;
+            }
+            const preset = {
+                id: Date.now().toString(),
+                name: name,
+                style: state.activeStyle,
+                params: JSON.parse(JSON.stringify(state.params)),
+                palette: state.activePalette
+            };
+            const existing = JSON.parse(localStorage.getItem('abstractify_presets') || '[]');
+            existing.push(preset);
+            localStorage.setItem('abstractify_presets', JSON.stringify(existing));
+            loadPresets(); 
+            closeSaveModal();
+        }
+
+        function loadPresets() {
+            const container = document.getElementById('presets-list');
+            const presets = JSON.parse(localStorage.getItem('abstractify_presets') || '[]');
+            if(presets.length === 0) {
+                container.innerHTML = '<div class="text-xs text-neutral-600 italic">No presets saved yet.</div>';
+                return;
+            }
+            container.innerHTML = presets.map(p => `
+                <div class="flex items-center justify-between p-3 bg-neutral-800 rounded-lg group hover:border hover:border-fuchsia-500/50 border border-transparent transition-all">
+                    <button onclick="applyPreset('${p.id}')" class="text-left flex-1">
+                        <div class="text-sm font-bold text-neutral-200 group-hover:text-white">${p.name}</div>
+                        <div class="text-[10px] text-neutral-500 uppercase tracking-wide">${ART_STYLES[p.style].name}</div>
+                    </button>
+                    <button onclick="deletePreset('${p.id}')" class="p-1.5 text-neutral-600 hover:text-red-500 hover:bg-neutral-900 rounded opacity-0 group-hover:opacity-100 transition-all">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function applyPreset(id) {
+            const presets = JSON.parse(localStorage.getItem('abstractify_presets') || '[]');
+            const preset = presets.find(p => p.id === id);
+            if (!preset) return;
+            setArtStyle(preset.style);
+            state.params = JSON.parse(JSON.stringify(preset.params));
+            Object.keys(state.params).forEach(key => {
+                const val = state.params[key].val;
+                const el = document.getElementById(`param-${key}`);
+                const display = document.getElementById(`val-${key}`);
+                if(el) el.value = val;
+                if(display) display.textContent = val;
+            });
+            setPalette(preset.palette);
+        }
+
+        function deletePreset(id) {
+            if(!confirm("Remove this preset?")) return;
+            const presets = JSON.parse(localStorage.getItem('abstractify_presets') || '[]');
+            const filtered = presets.filter(p => p.id !== id);
+            localStorage.setItem('abstractify_presets', JSON.stringify(filtered));
+            loadPresets();
+        }
+
+
+        // --- RENDER ENGINE ---
+
+        function triggerRender() {
+            if (!state.sourceImage) return;
+            requestAnimationFrame(() => {
+                render(canvas, state.sourceImage, false);
+            });
+        }
+
+        function render(targetCanvas, sourceImg, highRes) {
+            const ctx = targetCanvas.getContext('2d', { willReadFrequently: true });
+            let w = sourceImg.width;
+            let h = sourceImg.height;
+            
+            const MAX_PREVIEW = 1000;
+            if (!highRes && Math.max(w, h) > MAX_PREVIEW) {
+                const ratio = MAX_PREVIEW / Math.max(w, h);
+                w = Math.round(w * ratio);
+                h = Math.round(h * ratio);
+            }
+
+            if (targetCanvas.width !== w || targetCanvas.height !== h) {
+                targetCanvas.width = w;
+                targetCanvas.height = h;
+            }
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(sourceImg, 0, 0, w, h);
+            
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, w, h);
+            
+            // Calculate scale relative to reference size (1000px)
+            // This ensures effects look the same size relative to image content regardless of resolution
+            const scale = Math.max(w, h) / 1000;
+
+            switch(state.activeStyle) {
+                case 'polymesh': renderPolymesh(ctx, tempCtx, w, h, scale); break;
+                case 'flow': renderFlow(ctx, tempCtx, w, h, scale); break;
+                case 'neopop': renderNeoPop(ctx, tempCtx, w, h, scale); break;
+                case 'cybermosh': renderCybermosh(ctx, tempCtx, w, h, scale); break;
+                case 'neon': renderNeon(ctx, tempCtx, w, h, scale); break;
+                case 'hex': renderHex(ctx, tempCtx, w, h, scale); break;
+                case 'bauhaus': renderBauhaus(ctx, tempCtx, w, h, scale); break;
+                case 'scanline': renderScanline(ctx, tempCtx, w, h, scale); break;
+                case 'crystal': renderCrystal(ctx, tempCtx, w, h, scale); break;
+                case 'sketch': renderSketch(ctx, tempCtx, w, h, scale); break;
+                case 'ascii': renderAscii(ctx, tempCtx, w, h, scale); break;
+            }
+
+            if (state.activePalette !== 'original' && PALETTES[state.activePalette]) {
+                applyPalette(ctx, w, h, PALETTES[state.activePalette]);
+            }
+        }
+
+        // --- ALGORITHMS ---
+
+        function renderPolymesh(ctx, srcCtx, w, h, scale) {
+            const p = state.params;
+            const detail = p.detail.val; 
+            const chaos = p.chaos.val;
+            // Scale cell size so grid density is consistent
+            const baseCell = (200 - detail) + 10;
+            const cellSize = Math.max(5, baseCell * scale);
+            
+            const cols = Math.ceil(w / cellSize);
+            const rows = Math.ceil(h / cellSize);
+            const vertices = [];
+            
+            const chaosAmt = chaos * 2 * scale; // Scale chaos displacement too
+
+            for (let y = 0; y <= rows; y++) {
+                for (let x = 0; x <= cols; x++) {
+                    let vx = x * cellSize;
+                    let vy = y * cellSize;
+                    if (x > 0 && x < cols) vx += (Math.random() - 0.5) * chaosAmt;
+                    if (y > 0 && y < rows) vy += (Math.random() - 0.5) * chaosAmt;
+                    vertices.push({x: vx, y: vy});
+                }
+            }
+            
+            const srcData = srcCtx.getImageData(0, 0, w, h).data;
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = Math.max(1, 1 * scale);
+            
+            function drawTri(p1, p2, p3) {
+                const cx = Math.floor((p1.x + p2.x + p3.x) / 3);
+                const cy = Math.floor((p1.y + p2.y + p3.y) / 3);
+                if (cx < 0 || cx >= w || cy < 0) return;
+                const idx = (Math.min(h-1, Math.max(0, cy)) * w + Math.min(w-1, Math.max(0, cx))) * 4;
+                const r = srcData[idx], g = srcData[idx+1], b = srcData[idx+2];
+                ctx.fillStyle = ctx.strokeStyle = `rgba(${r},${g},${b},${p.alpha.val/100})`;
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            }
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const i = y * (cols + 1) + x;
+                    drawTri(vertices[i], vertices[i+1], vertices[i+cols+1]);
+                    drawTri(vertices[i+1], vertices[i+cols+2], vertices[i+cols+1]);
+                }
+            }
+        }
+
+        function renderFlow(ctx, srcCtx, w, h, scale) {
+            const p = state.params;
+            const count = p.strokes.val; 
+            // Note: Keep count absolute? Or density relative? Usually absolute count is fine, or scale it.
+            // Let's scale count slightly for higher res, or keep it fixed for artistic choice?
+            // Actually, for "Stroke Count", user expects a specific number. Let's keep it fixed or maybe scale it up if image is huge?
+            // Let's keep it fixed for now, as user controls "density" manually.
+            
+            const length = p.length.val * scale;
+            const width = Math.max(1, p.width.val * scale);
+            const srcData = srcCtx.getImageData(0, 0, w, h).data;
+            
+            const getB = (x, y) => {
+                if(x<0||x>=w||y<0||y>=h) return 0;
+                const i = (Math.floor(y)*w + Math.floor(x))*4;
+                return (srcData[i] + srcData[i+1] + srcData[i+2]) / (3 * 255);
+            };
+
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            for (let i = 0; i < count; i++) {
+                let x = Math.random() * w;
+                let y = Math.random() * h;
+                const idx = (Math.floor(y) * w + Math.floor(x)) * 4;
+                ctx.strokeStyle = `rgb(${srcData[idx]},${srcData[idx+1]},${srcData[idx+2]})`;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                // Step size for flow needs scaling too
+                const step = 2 * scale;
+                for (let j = 0; j < p.length.val; j++) { // Use original count for loop, scale step
+                    const angle = getB(x, y) * Math.PI * 4; 
+                    x += Math.cos(angle) * step; y += Math.sin(angle) * step;
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+        }
+
+        function renderNeoPop(ctx, srcCtx, w, h, scale) {
+            const p = state.params;
+            const size = Math.max(1, p.size.val * scale);
+            const spacing = p.spacing.val * scale;
+            ctx.fillStyle = '#111'; ctx.fillRect(0,0,w,h);
+            const srcData = srcCtx.getImageData(0,0,w,h).data;
+            const step = size + spacing;
+            
+            for(let y=0; y<h; y+=step) {
+                for(let x=0; x<w; x+=step) {
+                     const idx = (Math.floor(y) * w + Math.floor(x)) * 4;
+                     const avg = (srcData[idx] + srcData[idx+1] + srcData[idx+2]) / 3;
+                     const radius = (avg / 255) * (size/2);
+                     ctx.fillStyle = `rgb(${srcData[idx]}, ${srcData[idx+1]}, ${srcData[idx+2]})`;
+                     ctx.beginPath();
+                     ctx.arc(x + size/2, y + size/2, radius, 0, Math.PI*2);
+                     ctx.fill();
+                }
+            }
+        }
+
+        function renderHex(ctx, srcCtx, w, h, scale) {
+            const p = state.params;
+            const r = Math.max(2, p.scale.val * scale); 
+            const hGap = p.gap.val * scale;
+            const width = Math.sqrt(3) * r;
+            const height = 2 * r;
+            const xStep = width + hGap;
+            const yStep = (height * 3/4) + hGap;
+            const srcData = srcCtx.getImageData(0,0,w,h).data;
+
+            ctx.fillStyle = '#111'; ctx.fillRect(0,0,w,h);
+
+            for (let y = -r; y < h + r; y += yStep) {
+                const row = Math.floor(y / yStep);
+                const xOffset = (row % 2) * (width/2);
+                for (let x = -r + xOffset; x < w + r; x += xStep) {
+                    // Sample center
+                    const cx = Math.floor(x);
+                    const cy = Math.floor(y);
+                    if (cx >= 0 && cx < w && cy >= 0 && cy < h) {
+                        const idx = (cy * w + cx) * 4;
+                        // Variance
+                        const v = (Math.random()-0.5) * p.variance.val;
+                        const R = Math.min(255, Math.max(0, srcData[idx]+v));
+                        const G = Math.min(255, Math.max(0, srcData[idx+1]+v));
+                        const B = Math.min(255, Math.max(0, srcData[idx+2]+v));
+                        
+                        ctx.fillStyle = `rgb(${R},${G},${B})`;
+                        ctx.beginPath();
+                        for (let i = 0; i < 6; i++) {
+                            const angle = 2 * Math.PI / 6 * i;
+                            const hx = x + (r-hGap) * Math.sin(angle);
+                            const hy = y + (r-hGap) * Math.cos(angle);
+                            if (i === 0) ctx.moveTo(hx, hy);
+                            else ctx.lineTo(hx, hy);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+
+        function renderBauhaus(ctx, srcCtx, w, h, scale) {
+            const p = state.params;
+            const count = p.count.val; // Count stays same
+            const srcData = srcCtx.getImageData(0,0,w,h).data;
+            
+            // Draw a subtle base image
+            ctx.globalAlpha = 0.2;
+            ctx.drawImage(srcCtx.canvas, 0, 0);
+            ctx.globalAlpha = 1.0;
+            ctx.globalCompositeOperation = 'hard-light';
+
+            for (let i=0; i<count; i++) {
+                const cx = Math.random() * w;
+                const cy = Math.random() * h;
+                const minS = p.minSize.val * scale;
+                const maxS = p.maxSize.val * scale;
+                const size = Math.random() * (maxS - minS) + minS;
+                
+                // Sample color
+                const idx = (Math.floor(cy) * w + Math.floor(cx)) * 4;
+                const r = srcData[idx], g = srcData[idx+1], b = srcData[idx+2];
+                
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.beginPath();
+                
+                const type = Math.random();
+                if (type < 0.33) {
+                    // Rect
+                    ctx.rect(cx - size/2, cy - size/2, size, size);
+                } else if (type < 0.66) {
+                    // Circle
+                    ctx.arc(cx, cy, size/2, 0, Math.PI*2);
+                } else {
+                    // Arc/Semi
+                    ctx.arc(cx, cy, size/2, Math.random()*Math.PI, Math.random()*Math.PI + Math.PI);
+                }
+                ctx.fill();
+            }
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        function renderScanline(ctx, srcCtx, w, h, scale) {
+            const p = state.params;
+            const density = Math.max(1, p.density.val * scale);
+            const amp = p.amp.val * scale;
+            const noise = p.noise.val * scale;
+            
+            ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
+            const srcData = srcCtx.getImageData(0,0,w,h).data;
+            
+            ctx.lineWidth = density;
+            
+            for (let y = 0; y < h; y += density * 2) {
+                const sliceH = Math.max(1, density);
+                const midX = Math.floor(w/2);
+                const idx = (Math.floor(y) * w + midX) * 4;
+                const bright = (srcData[idx] + srcData[idx+1] + srcData[idx+2]) / (3*255);
+                const offset = (Math.random()-0.5) * noise + (Math.sin(y*0.1/scale) * amp * bright);
+                try {
+                    ctx.drawImage(srcCtx.canvas, 0, y, w, sliceH, offset, y, w, sliceH);
+                } catch(e) {}
+            }
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            // Scaled scanline overlay
+            const lineGap = 4 * scale;
+            for(let y=0; y<h; y+=lineGap) ctx.fillRect(0, y, w, Math.max(1, 1*scale));
+        }
+
+        function renderCybermosh(ctx, srcCtx, w, h, scale) {
+            const p = state.params;
+            ctx.drawImage(srcCtx.canvas, 0, 0);
+            const slices = p.slices.val; // Count stays absolute usually
+            const shift = p.shift.val * scale;
+            
+            if (shift > 0) {
+                const imgData = ctx.getImageData(0,0,w,h);
+                const d = imgData.data;
+                const copy = new Uint8ClampedArray(d);
+                for(let i=0; i<d.length; i+=4) {
+                    const offsetR = Math.floor(-shift) * 4;
+                    const offsetB = Math.floor(shift) * 4;
+                    if (i + offsetR >= 0) d[i] = copy[i+offsetR];
+                    if (i + offsetB < d.length) d[i+2] = copy[i+offsetB];
+                }
+                ctx.putImageData(imgData, 0, 0);
+            }
+            
+            const maxDisplace = (p.sort.val * 10) * scale;
+
+            for(let i=0; i<slices; i++) {
+                const sy = Math.floor(Math.random() * h);
+                const sh = Math.max(1, (Math.floor(Math.random() * 50) + 10) * scale);
+                if(sy+sh > h) continue;
+                const sliceData = ctx.getImageData(0, sy, w, sh);
+                const offset = (Math.random() - 0.5) * maxDisplace;
+                ctx.putImageData(sliceData, offset, sy);
+            }
+        }
+        
+        function renderNeon(ctx, srcCtx, w, h, scale) {
+             const p = state.params;
+             const srcData = srcCtx.getImageData(0,0,w,h);
+             const input = srcData.data;
+             const output = ctx.createImageData(w, h);
+             const out = output.data;
+             const threshold = p.threshold.val; // Threshold is color based, no scale needed
+             const kx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
+             const ky = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
+             
+             // Step can optimize large images? No, neon needs pixel precision
+             // But for very large images, maybe skip pixels? For quality, we iterate all.
+             
+             for (let y = 1; y < h-1; y++) {
+                 for (let x = 1; x < w-1; x++) {
+                     let gx = 0; let gy = 0;
+                     for(let i=-1; i<=1; i++) {
+                         for(let j=-1; j<=1; j++) {
+                             const idx = ((y+i)*w + (x+j)) * 4;
+                             const val = (input[idx] + input[idx+1] + input[idx+2]) / 3;
+                             gx += val * kx[i+1][j+1]; gy += val * ky[i+1][j+1];
+                         }
+                     }
+                     const mag = Math.sqrt(gx*gx + gy*gy);
+                     const isEdge = mag > (100 - threshold);
+                     const idx = (y*w + x)*4;
+                     if (isEdge) {
+                         out[idx] = Math.min(255, input[idx] * 1.5);
+                         out[idx+1] = Math.min(255, input[idx+1] * 1.5);
+                         out[idx+2] = Math.min(255, input[idx+2] * 1.5);
+                         out[idx+3] = 255;
+                     } else {
+                         const dark = 100 - p.darkness.val;
+                         out[idx] = input[idx] * (dark/100);
+                         out[idx+1] = input[idx+1] * (dark/100);
+                         out[idx+2] = input[idx+2] * (dark/100);
+                         out[idx+3] = 255;
+                     }
+                 }
+             }
+             ctx.putImageData(output, 0, 0);
+             if (p.glow.val > 0) {
+                 ctx.save();
+                 ctx.filter = `blur(${p.glow.val * scale}px)`;
+                 ctx.globalCompositeOperation = 'screen';
+                 ctx.drawImage(ctx.canvas, 0, 0);
+                 ctx.restore();
+             }
+        }
+
+        function renderCrystal(ctx, srcCtx, w, h, scale) {
+            const p = state.params;
+            const shards = p.shards.val; // Count invariant
+            const jitter = p.jitter.val * scale;
+            const alpha = p.alpha.val;
+            
+            const srcData = srcCtx.getImageData(0,0,w,h).data;
+            ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
+            
+            const size = Math.sqrt((w*h)/shards);
+            const cols = Math.ceil(w/size);
+            const rows = Math.ceil(h/size);
+            
+            for(let y=0; y<rows; y++) {
+                for(let x=0; x<cols; x++) {
+                    const cx = (x * size) + size/2 + (Math.random()-0.5)*jitter;
+                    const cy = (y * size) + size/2 + (Math.random()-0.5)*jitter;
+                    
+                    if (cx >= 0 && cx < w && cy >= 0 && cy < h) {
+                        const idx = (Math.floor(cy) * w + Math.floor(cx)) * 4;
+                        const r = srcData[idx], g = srcData[idx+1], b = srcData[idx+2];
+                        
+                        ctx.fillStyle = `rgba(${r},${g},${b},${alpha/100})`;
+                        ctx.beginPath();
+                        const polyPoints = Math.floor(Math.random() * 3) + 3;
+                        for(let i=0; i<polyPoints; i++) {
+                            const angle = (i / polyPoints) * Math.PI * 2;
+                            const rad = size * 0.7 + (Math.random()-0.5)*jitter;
+                            const px = cx + Math.cos(angle) * rad;
+                            const py = cy + Math.sin(angle) * rad;
+                            if(i===0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+
+        function renderSketch(ctx, srcCtx, w, h, scale) {
+            const p = state.params;
+            // Detail step needs to scale to grab features at same relative distance
+            const baseDetail = 11 - p.detail.val; 
+            const detail = Math.max(1, Math.round(baseDetail * scale));
+            const contrast = p.contrast.val;
+            const paper = p.paper.val; 
+            
+            const srcData = srcCtx.getImageData(0,0,w,h);
+            const input = srcData.data;
+            const output = ctx.createImageData(w, h);
+            const out = output.data;
+            
+            for(let i=0; i<input.length; i+=4) {
+                out[i] = out[i+1] = out[i+2] = 255 * (paper/100);
+                out[i+3] = 255;
+            }
+            
+            for (let y = 0; y < h - detail; y += 1) { // Step could optimize here too
+                for (let x = 0; x < w - detail; x += 1) {
+                    const i = (y * w + x) * 4;
+                    const j = ((y + detail) * w + (x + detail)) * 4;
+                    
+                    const b1 = (input[i] + input[i+1] + input[i+2]) / 3;
+                    const b2 = (input[j] + input[j+1] + input[j+2]) / 3;
+                    
+                    const diff = Math.abs(b1 - b2);
+                    
+                    if (diff > (100 - contrast)) {
+                        out[i] = out[i+1] = out[i+2] = 20; 
+                    }
+                }
+            }
+            ctx.putImageData(output, 0, 0);
+        }
+
+        function renderAscii(ctx, srcCtx, w, h, scale) {
+            const p = state.params;
+            const density = Math.max(4, p.density.val * scale); 
+            const isColor = p.color.val === 1;
+            
+            const chars = " .:-=+*#%@";
+            const srcData = srcCtx.getImageData(0,0,w,h).data;
+            
+            ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
+            ctx.font = `${density}px monospace`;
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            
+            // Adjust step based on scaled density
+            for(let y=0; y<h; y+=density) {
+                for(let x=0; x<w; x+=density/0.6) { 
+                    const cx = Math.floor(x);
+                    const cy = Math.floor(y);
+                    if (cx >= w || cy >= h) continue;
+                    
+                    const idx = (cy * w + cx) * 4;
+                    const r = srcData[idx], g = srcData[idx+1], b = srcData[idx+2];
+                    const avg = (r+g+b)/3;
+                    
+                    const charIdx = Math.floor((avg/255) * (chars.length-1));
+                    const char = chars[charIdx];
+                    
+                    ctx.fillStyle = isColor ? `rgb(${r},${g},${b})` : `rgb(${avg},${avg},${avg})`;
+                    ctx.fillText(char, x, y);
+                }
+            }
+        }
+
+        function applyPalette(ctx, w, h, palette) {
+            const imageData = ctx.getImageData(0,0,w,h);
+            const data = imageData.data;
+            const len = data.length;
+            for(let i=0; i<len; i+=4) {
+                const l = 0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2];
+                const index = Math.floor((l / 255) * (palette.length - 0.01));
+                const col = palette[index];
+                data[i] = col[0]; data[i+1] = col[1]; data[i+2] = col[2];
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        // --- EXPORT LOGIC ---
+
+        function generateExportGrid() {
+            const grid = document.getElementById('export-grid');
+            grid.innerHTML = EXPORT_PRESETS.map((p, idx) => `
+                <button onclick="handlePresetExport(${idx})" class="group relative flex flex-col items-start p-6 bg-neutral-800 border border-neutral-700 hover:border-fuchsia-500 rounded-xl transition-all text-left hover:bg-neutral-800/80 overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-fuchsia-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="flex items-center gap-3 mb-4 text-neutral-300 group-hover:text-fuchsia-400 z-10">
+                        <div class="p-2 bg-neutral-900 rounded-lg">
+                             <i data-lucide="${p.icon}" class="w-6 h-6"></i>
+                        </div>
+                        <span class="font-bold text-lg">${p.name}</span>
+                    </div>
+                    <div class="z-10 mt-auto">
+                        <div class="text-xs text-neutral-500 font-mono mb-1">${p.width} x ${p.height} px</div>
+                         <div class="inline-block px-2 py-1 bg-neutral-900 rounded text-[10px] text-neutral-400 font-bold tracking-wider">
+                            ${p.ratio.toUpperCase()}
+                        </div>
+                    </div>
+                </button>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function openExportModal() {
+            const modal = document.getElementById('export-modal');
+            const content = document.getElementById('export-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+            
+            // Sync current aspect ratio
+            if(state.sourceImage) {
+                state.aspectRatio = state.sourceImage.width / state.sourceImage.height;
+            }
+        }
+
+        function closeExportModal() {
+            const modal = document.getElementById('export-modal');
+            const content = document.getElementById('export-modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function setupExportLocks() {
+            const lockPx = document.getElementById('lock-btn-px');
+            const lockPrint = document.getElementById('lock-btn-print');
+            
+            const toggleLock = () => {
+                state.lockedRatio = !state.lockedRatio;
+                const icon = state.lockedRatio ? 'lock' : 'unlock';
+                const color = state.lockedRatio ? 'text-fuchsia-400 bg-fuchsia-500/20' : 'text-neutral-500 bg-neutral-800';
+                
+                // Update UI for both buttons
+                [lockPx, lockPrint].forEach(btn => {
+                    btn.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i>`;
+                    btn.className = `p-2 rounded-full transition-colors ${color} hover:text-white`;
+                });
+                lucide.createIcons();
+                
+                // If locking, update current aspect ratio
+                if(state.lockedRatio) {
+                    const w = parseFloat(document.getElementById('custom-w').value);
+                    const h = parseFloat(document.getElementById('custom-h').value);
+                    if(w && h) state.aspectRatio = w/h;
+                }
+            };
+            
+            lockPx.addEventListener('click', toggleLock);
+            lockPrint.addEventListener('click', toggleLock);
+            
+            // Input Listeners
+            const linkInputs = (wId, hId) => {
+                const wInput = document.getElementById(wId);
+                const hInput = document.getElementById(hId);
+                
+                wInput.addEventListener('input', () => {
+                    if(!state.lockedRatio) return;
+                    const val = parseFloat(wInput.value);
+                    if(val) hInput.value = (val / state.aspectRatio).toFixed(1).replace(/\.0$/, '');
+                });
+                
+                hInput.addEventListener('input', () => {
+                    if(!state.lockedRatio) return;
+                    const val = parseFloat(hInput.value);
+                    if(val) wInput.value = (val * state.aspectRatio).toFixed(1).replace(/\.0$/, '');
+                });
+            };
+            
+            linkInputs('custom-w', 'custom-h');
+            linkInputs('print-w', 'print-h');
+        }
+
+        function toggleCustomMode(mode) {
+            const btnPx = document.getElementById('mode-px');
+            const btnPrint = document.getElementById('mode-print');
+            const inputsPx = document.getElementById('inputs-px');
+            const inputsPrint = document.getElementById('inputs-print');
+            const btnPxRender = document.getElementById('btn-px-render');
+
+            if (mode === 'px') {
+                btnPx.classList.replace('text-neutral-400', 'text-white');
+                btnPx.classList.add('bg-neutral-700');
+                btnPrint.classList.replace('text-white', 'text-neutral-400');
+                btnPrint.classList.remove('bg-neutral-700');
+                inputsPx.classList.remove('hidden');
+                inputsPrint.classList.add('hidden');
+                btnPxRender.classList.remove('hidden');
+            } else {
+                btnPrint.classList.replace('text-neutral-400', 'text-white');
+                btnPrint.classList.add('bg-neutral-700');
+                btnPx.classList.replace('text-white', 'text-neutral-400');
+                btnPx.classList.remove('bg-neutral-700');
+                inputsPrint.classList.remove('hidden');
+                inputsPx.classList.add('hidden');
+                btnPxRender.classList.add('hidden');
+            }
+        }
+
+        function handleCustomExport() {
+            if (!state.sourceImage) return;
+
+            // Determine dimensions
+            let w, h;
+            const isPxMode = !document.getElementById('inputs-px').classList.contains('hidden');
+
+            if (isPxMode) {
+                w = parseInt(document.getElementById('custom-w').value) || 1920;
+                h = parseInt(document.getElementById('custom-h').value) || 1080;
+            } else {
+                const inchesW = parseFloat(document.getElementById('print-w').value) || 8.5;
+                const inchesH = parseFloat(document.getElementById('print-h').value) || 11;
+                const dpi = parseInt(document.getElementById('print-dpi').value) || 300;
+                w = Math.floor(inchesW * dpi);
+                h = Math.floor(inchesH * dpi);
+            }
+
+            performExport(w, h, 'custom');
+        }
+
+        function handlePresetExport(idx) {
+            const p = EXPORT_PRESETS[idx];
+            let w = p.width; 
+            let h = p.height;
+            performExport(w, h, p.name);
+        }
+
+        function performExport(targetW, targetH, nameSuffix) {
+            if (!state.sourceImage) return;
+
+            // Notify user
+            const originalText = document.activeElement ? document.activeElement.innerHTML : '';
+            if (document.activeElement) document.activeElement.innerHTML = `<span class="animate-pulse">Rendering...</span>`;
+
+            setTimeout(() => {
+                // 1. Calc Crop
+                const sRatio = state.sourceImage.width / state.sourceImage.height;
+                const tRatio = targetW / targetH;
+                let sx, sy, sWidth, sHeight;
+                
+                if (sRatio > tRatio) { // Source wider
+                    sHeight = state.sourceImage.height;
+                    sWidth = sHeight * tRatio;
+                    sx = (state.sourceImage.width - sWidth) / 2;
+                    sy = 0;
+                } else { // Source taller
+                    sWidth = state.sourceImage.width;
+                    sHeight = sWidth / tRatio;
+                    sx = 0;
+                    sy = (state.sourceImage.height - sHeight) / 2;
+                }
+
+                // 2. Crop
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = targetW;
+                cropCanvas.height = targetH;
+                const ctx = cropCanvas.getContext('2d');
+                ctx.drawImage(state.sourceImage, sx, sy, sWidth, sHeight, 0, 0, targetW, targetH);
+
+                // 3. Render
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = targetW;
+                finalCanvas.height = targetH;
+                render(finalCanvas, cropCanvas, true);
+
+                // 4. Download
+                const link = document.createElement('a');
+                link.download = `abstract-${state.activeStyle}-${nameSuffix.replace(/\s+/g,'-').toLowerCase()}-${Date.now()}.png`;
+                link.href = finalCanvas.toDataURL('image/png', 0.9);
+                link.click();
+
+                // Cleanup
+                if (document.activeElement) document.activeElement.innerHTML = originalText;
+                closeExportModal();
+            }, 100);
+        }
+
+    </script>
+</body>
+</html>
