@@ -141,9 +141,11 @@
     "date": "2026-02-07"
   },
   {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "JobHunter",
     "slug": "jobhunter",
-    "description": "A comprehensive career command center designed to handle the job search grind. Track applications on a Kanban board, build STAR method interview stories, scan resumes for keywords, and generate tailored cover letters—all while keeping your data private and offline.",
+    "description": "A private, offline job-hunt dashboard: track applications with Kanban, prep STAR stories, and tailor CVs or cover letters—securely stored on your device.",
     "thumbnail": "assets/thumbs/jobhunter.png",
     "tags": [
       "Apps",
@@ -155,9 +157,7 @@
     ],
     "category": "Experiments",
     "featured": false,
-    "date": "2026-02-16",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-02-16"
   },
   {
     "demoUrl": "",
