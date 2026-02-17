@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Timeline Visualizer | Memento Mori</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        void: '#050505',     // Darker background for canvas
+                        panel: '#0F0F0F',    // Sidebar background
+                        surface: '#1A1A1A',  // Card background
+                        border: '#2A2A2A',   // Border color
+                        accent: '#3b82f6', 
+                        future: '#2dd4bf', 
+                        gold: '#fbbf24',   
+                        goal: '#a855f7',   
+                        danger: '#ef4444',
+                        memory: '#f43f5e',
+                        dream: '#0ea5e9'
+                    },
+                    gridTemplateColumns: {
+                        '52': 'repeat(52, minmax(0, 1fr))',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #e5e5e5;
+            overflow: hidden; /* App-like feel */
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444; 
+        }
+
+        /* Dot Pattern Background for Canvas */
+        .bg-grid-pattern {
+            background-image: radial-gradient(#333 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* Dynamic Poster Variables */
+        #capture-target {
+            background-color: var(--poster-bg, #0a0a0a);
+            color: var(--poster-text, #ffffff);
+            font-family: var(--poster-font, 'Inter');
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform-origin: top center;
+        }
+
+        /* Grid Items */
+        #lifeGrid {
+            /* Rendering Optimization */
+            content-visibility: auto;
+            contain-intrinsic-size: 800px 900px;
+        }
+
+        .week-box {
+            aspect-ratio: 1;
+            border-radius: var(--grid-radius, 1px);
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .week-box:hover {
+            z-index: 50;
+            transform: scale(2.5); /* Enhanced Zoom on Hover */
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+            border: 1px solid #fff;
+            border-radius: 2px;
+            transition: transform 0.1s ease;
+        }
+
+        .week-past {
+            background-color: var(--poster-accent, #334155);
+            border: 1px solid transparent;
+        }
+        
+        .week-current {
+            background-color: var(--poster-text, #ffffff);
+            box-shadow: 0 0 10px var(--poster-text, #ffffff);
+            z-index: 20;
+            transform: scale(1.4);
+            border-radius: 2px;
+        }
+
+        .week-future {
+            background-color: transparent;
+            border: 1px solid var(--poster-border, #262626);
+            opacity: 0.6;
+        }
+        
+        .week-milestone {
+            background-color: var(--poster-gold, #fbbf24) !important;
+            box-shadow: 0 0 8px var(--poster-gold, #fbbf24);
+            transform: scale(1.1);
+            z-index: 10;
+            border: none;
+        }
+
+        .week-goal {
+            background-color: transparent !important;
+            border: 2px solid var(--poster-goal, #a855f7) !important;
+            box-shadow: 0 0 8px var(--poster-goal, #a855f7);
+            transform: scale(1.2) rotate(45deg); 
+            z-index: 10;
+        }
+
+        /* Reflection Notes Indicators */
+        .week-note {
+            position: relative;
+        }
+        .week-note::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 1px solid;
+            opacity: 0.8;
+            animation: pulse 2s infinite;
+        }
+        .note-memory::after { border-color: #f43f5e; }
+        .note-dream::after { border-color: #0ea5e9; }
+
+
+        /* Global Floating Tooltip */
+        #global-tooltip {
+            position: fixed;
+            pointer-events: none;
+            z-index: 100;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(4px);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.15s ease;
+            opacity: 0;
+            transform: translate(-50%, -120%); /* Center above cursor */
+            white-space: nowrap;
+        }
+
+        /* Form Elements */
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            background-color: #111;
+            border: 1px solid #333;
+            color: white;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+            border-color: #555;
+            outline: none;
+        }
+        
+        /* Range Slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: #fff; cursor: pointer; margin-top: -6px; 
+            transition: background 0.2s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { background: #3b82f6; }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #333; border-radius: 2px;
+        }
+        
+        /* Color Picker */
+        input[type="color"] {
+            -webkit-appearance: none; border: none; width: 28px; height: 28px;
+            border-radius: 6px; overflow: hidden; padding: 0; background: transparent; cursor: pointer;
+        }
+        input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        
+        /* Checkbox Custom */
+        .custom-checkbox {
+            appearance: none; background-color: #111; margin: 0;
+            font: inherit; color: currentColor; width: 1.15em; height: 1.15em;
+            border: 1px solid #333; border-radius: 0.15em; display: grid; place-content: center;
+        }
+        .custom-checkbox::before {
+            content: ""; width: 0.65em; height: 0.65em; transform: scale(0);
+            transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em white;
+            transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+        .custom-checkbox:checked::before { transform: scale(1); }
+        .custom-checkbox:checked { border-color: #fff; }
+
+        /* Tabs */
+        .tab-btn { border-bottom: 2px solid transparent; opacity: 0.6; transition: all 0.2s; }
+        .tab-btn.active { border-bottom-color: #fff; opacity: 1; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Preset Button */
+        .preset-btn {
+            transition: all 0.2s;
+        }
+        .preset-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Modal for Preset Editing */
+        .preset-edit-mode .preset-btn {
+            border-style: dashed;
+            opacity: 0.8;
+        }
+
+        /* Dashed placeholder for empty state */
+        .empty-state-dashed {
+            border: 1px dashed rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.4);
+            font-style: italic;
+        }
+        
+        /* Modal Transitions */
+        .modal-fade-enter { opacity: 0; transform: scale(0.95); }
+        .modal-fade-enter-active { opacity: 1; transform: scale(1); transition: opacity 0.2s, transform 0.2s; }
+        .modal-fade-exit { opacity: 1; transform: scale(1); }
+        .modal-fade-exit-active { opacity: 0; transform: scale(0.95); transition: opacity 0.2s, transform 0.2s; }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <!-- Global Tooltip -->
+    <div id="global-tooltip">
+        <div id="tooltip-date" class="font-bold text-accent mb-0.5"></div>
+        <div class="flex justify-between gap-4 text-xs opacity-80">
+            <span id="tooltip-age"></span>
+            <span id="tooltip-week" class="font-mono"></span>
+        </div>
+        <div id="tooltip-milestone" class="text-gold mt-1 pt-1 border-t border-white/20 hidden"></div>
+        <div id="tooltip-note" class="italic mt-1 pt-1 border-t border-white/20 hidden max-w-[150px] whitespace-normal"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="h-14 border-b border-border bg-panel flex items-center justify-between px-6 z-50 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="w-3 h-3 bg-white rounded-full"></div>
+            <h1 class="text-sm font-bold tracking-wide uppercase">Life Timeline</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="shareState()" class="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                Share
+            </button>
+            <div class="h-4 w-px bg-white/10"></div>
+            <!-- Export Button -->
+            <button onclick="openExportModal()" class="bg-white text-black text-xs font-bold px-4 py-1.5 rounded hover:bg-gray-200 transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Poster
+            </button>
+        </div>
+    </header>
+
+    <!-- App Body -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- SIDEBAR (Controls) -->
+        <aside class="w-[360px] bg-panel border-r border-border flex flex-col shrink-0">
+            
+            <!-- Tab Navigation -->
+            <div class="flex border-b border-border">
+                <button onclick="switchTab('data')" id="btn-data" class="tab-btn active flex-1 py-3 text-xs font-medium uppercase tracking-wider">My Story</button>
+                <button onclick="switchTab('design')" id="btn-design" class="tab-btn flex-1 py-3 text-xs font-medium uppercase tracking-wider">Design</button>
+            </div>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                
+                <!-- DATA TAB CONTENT -->
+                <div id="tab-data" class="tab-content active space-y-6">
+                    
+                    <!-- Stats Summary -->
+                    <div class="space-y-3">
+                        <div class="bg-surface rounded-lg p-4 border border-border">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs text-gray-400 font-mono">PROGRESS</span>
+                                <span id="statPercentage" class="text-xs font-bold text-accent">0%</span>
+                            </div>
+                            <div class="w-full bg-black h-1.5 rounded-full overflow-hidden mb-4">
+                                <div id="progressBar" class="h-full bg-white w-0 transition-all duration-1000"></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <div id="statWeeksLived" class="text-lg font-bold">0</div>
+                                    <div class="text-[10px] text-gray-500 uppercase">Weeks Lived</div>
+                                </div>
+                                <div class="text-right">
+                                    <div id="statWeeksLeft" class="text-lg font-bold text-gray-400">0</div>
+                                    <div class="text-[10px] text-gray-500 uppercase">Remaining</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Human Terms Summary -->
+                        <div class="bg-surface rounded-lg p-3 border border-border grid grid-cols-3 gap-2">
+                            <div class="text-center group cursor-help" title="Approximate months remaining">
+                                <div id="statMonthsLeft" class="text-sm font-bold text-white font-mono group-hover:text-future transition-colors">0</div>
+                                <div class="text-[9px] text-gray-500 uppercase mt-0.5">Months</div>
+                            </div>
+                            <div class="text-center border-l border-white/5 group cursor-help" title="Summers left to enjoy">
+                                <div id="statSummersLeft" class="text-sm font-bold text-white font-mono group-hover:text-gold transition-colors">0</div>
+                                <div class="text-[9px] text-gray-500 uppercase mt-0.5">Summers</div>
+                            </div>
+                            <div class="text-center border-l border-white/5 group cursor-help" title="Fridays left to celebrate">
+                                <div id="statFridaysLeft" class="text-sm font-bold text-white font-mono group-hover:text-accent transition-colors">0</div>
+                                <div class="text-[9px] text-gray-500 uppercase mt-0.5">Fridays</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basics Section -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">The Basics</h3>
+                        
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-gray-500 uppercase">Region / Country</label>
+                            <select id="countrySelect" class="w-full rounded p-2 text-xs" onchange="updateCountry()">
+                                <option value="custom">Custom</option>
+                                <option value="global">Global Avg (~74y)</option>
+                                <optgroup label="Detected" id="detectedOptGroup" style="display:none;"></optgroup>
+                                <optgroup label="Regions">
+                                    <option value="JP">Japan (85y)</option>
+                                    <option value="CH">Switzerland (84y)</option>
+                                    <option value="GB">United Kingdom (82y)</option>
+                                    <option value="US">United States (79y)</option>
+                                    <option value="CN">China (78y)</option>
+                                    <option value="IN">India (70y)</option>
+                                </optgroup>
+                            </select>
+                            <p id="countryHint" class="text-[9px] text-gray-600 pl-1"></p>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-gray-500 uppercase">Date of Birth</label>
+                            <input type="date" id="dobInput" class="w-full rounded p-2 text-xs" onchange="handleDobChange()">
+                            <p id="dobError" class="text-danger text-[9px] hidden pl-1">Invalid date.</p>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex justify-between">
+                                <label class="text-[10px] text-gray-500 uppercase">Expectancy</label>
+                                <span id="expectancyValue" class="text-[10px] text-accent font-mono">90y</span>
+                            </div>
+                            <input type="range" id="expectancyInput" min="50" max="110" value="90" class="w-full" oninput="handleSliderChange()">
+                        </div>
+                    </div>
+
+                    <!-- Chapters Section -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Chapters</h3>
+                            <button onclick="togglePresetEditMode()" id="btn-edit-presets" class="text-[10px] text-accent hover:text-white transition-colors">Edit Presets</button>
+                        </div>
+
+                        <!-- Presets Container -->
+                        <div id="presets-container" class="grid grid-cols-2 gap-2">
+                            <!-- Presets Injected JS -->
+                        </div>
+                        
+                        <!-- Manual Add -->
+                        <div class="bg-surface p-3 rounded border border-border space-y-3">
+                            <input type="text" id="themeTitle" placeholder="Chapter Name (e.g. College)" class="w-full rounded p-2 text-xs bg-black/50">
+                            <div class="flex gap-2">
+                                <input type="number" id="themeStart" placeholder="Start Age" class="w-1/3 rounded p-2 text-xs bg-black/50">
+                                <input type="number" id="themeEnd" placeholder="End Age" class="w-1/3 rounded p-2 text-xs bg-black/50">
+                                <input type="color" id="themeColor" value="#ec4899" class="h-[34px] w-[34px] rounded shrink-0">
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="btnAddTheme" onclick="addTheme()" class="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-medium py-2 rounded transition-colors">Add Chapter</button>
+                                <button id="btnCancelTheme" onclick="cancelThemeEdit()" class="hidden w-[30%] bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium py-2 rounded transition-colors">Cancel</button>
+                            </div>
+                            <div id="themeError" class="text-danger text-[10px] hidden font-mono text-center"></div>
+                        </div>
+
+                        <div id="themeList" class="space-y-1"></div>
+                        
+                        <!-- Theme Stats Panel (Hidden by default) -->
+                        <div id="themeStatsPanel" class="hidden bg-surface border border-border rounded p-3 text-xs space-y-2 animate-pulse">
+                            <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span id="tsTitle" class="font-bold text-white"></span>
+                                <button onclick="closeThemeStats()" class="text-gray-500 hover:text-white">×</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-gray-400">
+                                <div>Duration: <span id="tsDuration" class="text-gray-200"></span></div>
+                                <div>Of Life: <span id="tsPercentage" class="text-gray-200"></span></div>
+                                <div>Weeks: <span id="tsWeeks" class="text-gray-200"></span></div>
+                                <div>Status: <span id="tsStatus" class="font-mono"></span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Milestones Section -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Key Moments</h3>
+                        
+                        <div class="bg-surface p-3 rounded border border-border space-y-3">
+                            <div class="flex gap-2">
+                                <input type="text" id="milestoneTitle" placeholder="Event (e.g. Married)" class="flex-1 rounded p-2 text-xs bg-black/50">
+                                <select id="milestoneCategory" class="w-[40px] rounded p-1 text-center text-lg bg-black/50 cursor-pointer">
+                                    <option value="default">●</option>
+                                    <option value="career">💼</option>
+                                    <option value="love">❤️</option>
+                                    <option value="travel">✈️</option>
+                                    <option value="family">👶</option>
+                                    <option value="health">🏥</option>
+                                    <option value="home">🏠</option>
+                                    <option value="education">🎓</option>
+                                    <option value="pet">🐾</option>
+                                    <option value="music">🎵</option>
+                                    <option value="sport">⚽</option>
+                                    <option value="art">🎨</option>
+                                    <option value="finance">💰</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex gap-2 items-center">
+                                <input type="date" id="milestoneDate" class="flex-1 rounded p-2 text-xs bg-black/50">
+                                <label class="flex items-center gap-1.5 cursor-pointer" title="Repeats every year">
+                                    <input type="checkbox" id="milestoneRecurring" class="custom-checkbox">
+                                    <span class="text-[10px] text-gray-500 uppercase">Yearly</span>
+                                </label>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <button id="btnAddMilestone" onclick="addMilestone()" class="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-medium py-2 rounded transition-colors">Add Moment</button>
+                                <button id="btnCancelMilestone" onclick="cancelMilestoneEdit()" class="hidden w-[30%] bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium py-2 rounded transition-colors">Cancel</button>
+                            </div>
+                        </div>
+
+                        <div id="milestoneList" class="space-y-1"></div>
+                    </div>
+                </div>
+
+                <!-- DESIGN TAB CONTENT -->
+                <div id="tab-design" class="tab-content space-y-8">
+                    
+                    <!-- Templates -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Quick Styles</h3>
+                        <select id="templateSelect" onchange="applyTemplate(this.value)" class="w-full rounded p-2 text-xs">
+                            <option value="cinematic">Cinematic Dark</option>
+                            <option value="print">Clean Print (Ink Saver)</option>
+                            <option value="minimal">Minimalist Gray</option>
+                            <option value="bold">Bold High-Contrast</option>
+                        </select>
+                    </div>
+
+                    <!-- Content Toggles -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Poster Content</h3>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 bg-surface p-2 rounded border border-border">
+                                <input type="checkbox" id="optTitle" checked onchange="togglePosterElement('posterTitle')" class="custom-checkbox">
+                                <input type="text" value="MY LIFE IN WEEKS" class="flex-1 bg-transparent border-none p-0 text-xs focus:ring-0" oninput="updateContent('posterTitle', this.value)">
+                            </div>
+                            <div class="flex items-center gap-3 bg-surface p-2 rounded border border-border">
+                                <input type="checkbox" id="optSubtitle" checked onchange="togglePosterElement('posterSubtitle')" class="custom-checkbox">
+                                <input type="text" value="Each square is one week." class="flex-1 bg-transparent border-none p-0 text-xs focus:ring-0" oninput="updateContent('posterSubtitle', this.value)">
+                            </div>
+                            <div class="flex items-center gap-3 bg-surface p-2 rounded border border-border">
+                                <input type="checkbox" id="optQuote" checked onchange="togglePosterElement('posterQuoteContainer')" class="custom-checkbox">
+                                <input type="text" value='"MEMENTO MORI"' class="flex-1 bg-transparent border-none p-0 text-xs focus:ring-0 italic" oninput="updateContent('posterQuote', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2 mt-2">
+                             <label class="flex items-center gap-2 cursor-pointer hover:text-white text-gray-400 transition-colors">
+                                <input type="checkbox" id="optKey" checked onchange="togglePosterElement('posterKey')" class="custom-checkbox">
+                                <span class="text-xs">Show Legend / Key</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer hover:text-white text-gray-400 transition-colors">
+                                <input type="checkbox" id="optThemes" checked onchange="updateGrid()" class="custom-checkbox">
+                                <span class="text-xs">Show Colored Chapters</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer hover:text-white text-gray-400 transition-colors">
+                                <input type="checkbox" id="optReflections" class="custom-checkbox">
+                                <span class="text-xs">Show Reflections on Export</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Visual Tweaks -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Fine Tune</h3>
+                        
+                        <div class="bg-surface rounded border border-border p-3 space-y-4">
+                            <!-- Colors -->
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">Palette</span>
+                                <div class="flex gap-2">
+                                    <div class="flex flex-col items-center gap-1 group">
+                                        <input type="color" id="colorBg" value="#0a0a0a" oninput="updateVisuals()">
+                                        <span class="text-[8px] text-gray-600 group-hover:text-gray-400">BG</span>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-1 group">
+                                        <input type="color" id="colorText" value="#ffffff" oninput="updateVisuals()">
+                                        <span class="text-[8px] text-gray-600 group-hover:text-gray-400">Text</span>
+                                    </div>
+                                    <div class="flex flex-col items-center gap-1 group">
+                                        <input type="color" id="colorAccent" value="#334155" oninput="updateVisuals()">
+                                        <span class="text-[8px] text-gray-600 group-hover:text-gray-400">Fill</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="h-px bg-white/5"></div>
+
+                            <!-- Mortality Fade -->
+                            <div class="space-y-1">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-500">Life Fade Start</span>
+                                    <span id="fadeValue" class="text-[10px] text-gray-400 font-mono">75y</span>
+                                </div>
+                                <input type="range" id="fadeInput" min="50" max="100" value="75" class="w-full" oninput="updateFadeSettings()">
+                                <p class="text-[9px] text-gray-600 italic">Opacity drops after this age.</p>
+                            </div>
+
+                            <div class="h-px bg-white/5"></div>
+
+                            <!-- Grid -->
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">Shape</span>
+                                <div class="flex bg-black rounded p-0.5 border border-border">
+                                    <button onclick="setGridStyle('0px')" class="px-3 py-1 text-[10px] hover:bg-white/10 rounded">■</button>
+                                    <button onclick="setGridStyle('2px')" class="px-3 py-1 text-[10px] hover:bg-white/10 rounded">▢</button>
+                                    <button onclick="setGridStyle('50%')" class="px-3 py-1 text-[10px] hover:bg-white/10 rounded">●</button>
+                                </div>
+                            </div>
+
+                             <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">Spacing</span>
+                                <select onchange="setGridGap(this.value)" class="bg-black border-none text-[10px] p-1 h-6 w-24 text-right cursor-pointer hover:text-white">
+                                    <option value="2px">Normal</option>
+                                    <option value="1px">Tight</option>
+                                    <option value="4px">Airy</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CANVAS -->
+        <main class="flex-1 bg-void bg-grid-pattern relative overflow-auto flex justify-center p-8">
+            <!-- Fixed Zoom Control -->
+            <div class="fixed bottom-6 left-[380px] z-50 bg-surface border border-border rounded-full flex items-center gap-3 px-4 py-2 shadow-xl opacity-90 hover:opacity-100 transition-opacity">
+                <span class="text-[10px] uppercase font-bold text-gray-500">Zoom</span>
+                <input type="range" min="0.5" max="3" step="0.1" value="1" class="w-24 h-1 accent-white" oninput="setGridZoom(this.value)">
+            </div>
+
+            <!-- Canvas Container -->
+            <div id="canvas-container" class="relative shadow-2xl my-auto transition-transform origin-top">
+                 <!-- The Capture Target -->
+                <div id="capture-target" class="p-12 w-[800px] min-h-[900px] flex flex-col justify-between select-none">
+                    
+                    <div>
+                        <div class="text-center mb-10">
+                            <h1 class="text-4xl font-extrabold tracking-tight mb-2" id="posterTitle">MY LIFE IN WEEKS</h1>
+                            <p class="text-sm font-mono opacity-60 uppercase tracking-[0.2em]" id="posterSubtitle">Each square represents one week of life.</p>
+                        </div>
+
+                        <!-- Actual Grid -->
+                        <div id="lifeGrid" class="grid grid-cols-52 gap-[2px] w-full mx-auto">
+                            <!-- JS Injects Divs Here -->
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <!-- Key/Legend -->
+                        <div id="posterKey" class="grid grid-cols-2 gap-8 border-t border-current pt-6 text-left opacity-70 mb-4" style="border-top-color: rgba(255,255,255,0.1);">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <div class="flex justify-between items-end border-t border-current pt-4 opacity-60" id="posterQuoteContainer" style="border-top-color: rgba(255,255,255,0.1);">
+                            <div class="text-left">
+                                <p class="text-[10px] font-mono tracking-widest">GENERATED BY LIFE TIMELINE</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] font-mono italic" id="posterQuote">"MEMENTO MORI"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Note Edit Modal -->
+    <div id="noteModal" class="fixed inset-0 bg-black/80 z-[70] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-surface border border-border rounded-lg p-6 w-[350px] space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 id="noteModalTitle" class="text-sm font-bold text-white uppercase tracking-widest">Add Reflection</h3>
+                <span id="noteModalDate" class="text-[10px] font-mono text-gray-500"></span>
+            </div>
+            
+            <textarea id="noteText" class="w-full h-24 rounded p-3 text-xs bg-black/50 resize-none" placeholder="Capture a memory or a dream..." maxlength="140"></textarea>
+            <div class="text-right text-[9px] text-gray-600"><span id="charCount">0</span>/140</div>
+            
+            <div class="flex gap-2">
+                <button onclick="saveNote()" class="flex-1 bg-white text-black text-xs font-bold py-2 rounded hover:bg-gray-200">Save</button>
+                <button onclick="closeNoteModal()" class="flex-1 bg-gray-800 text-gray-400 text-xs font-bold py-2 rounded hover:bg-gray-700">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Preset Modal -->
+    <div id="presetEditModal" class="fixed inset-0 bg-black/80 z-[70] hidden flex items-center justify-center">
+        <div class="bg-surface border border-border rounded-lg p-6 w-[300px] space-y-4">
+            <h3 class="text-sm font-bold text-white uppercase tracking-widest">Edit Preset</h3>
+            
+            <div class="space-y-2">
+                <input type="text" id="editPresetTitle" class="w-full rounded p-2 text-xs bg-black/50" placeholder="Title">
+                <div class="flex gap-2">
+                    <input type="number" id="editPresetStart" class="w-1/2 rounded p-2 text-xs bg-black/50" placeholder="Start">
+                    <input type="number" id="editPresetEnd" class="w-1/2 rounded p-2 text-xs bg-black/50" placeholder="End (optional)">
+                </div>
+                <input type="color" id="editPresetColor" class="w-full h-8 rounded cursor-pointer">
+                <p class="text-[9px] text-gray-500 italic">*End age "0" means dynamic (expectancy)</p>
+            </div>
+            
+            <div class="flex gap-2">
+                <button onclick="savePresetEdit()" class="flex-1 bg-accent text-white text-xs font-bold py-2 rounded">Save</button>
+                <button onclick="document.getElementById('presetEditModal').classList.add('hidden')" class="flex-1 bg-gray-800 text-gray-400 text-xs font-bold py-2 rounded">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPORT MODAL -->
+    <div id="exportModal" class="fixed inset-0 bg-black/90 z-[80] flex items-center justify-center hidden backdrop-blur-sm">
+        <div class="bg-surface border border-border p-8 rounded-2xl max-w-sm w-full space-y-6 shadow-2xl relative animate-fade-in mx-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-lg font-bold text-white tracking-widest uppercase">Export Poster</h2>
+                <button onclick="document.getElementById('exportModal').classList.add('hidden')" class="text-gray-500 hover:text-white transition-colors">×</button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <label class="text-xs text-gray-400 font-bold uppercase tracking-wider">Paper Size</label>
+                    <select id="exportSize" class="w-full bg-black/50 border border-border rounded p-3 text-sm text-white focus:border-accent outline-none">
+                        <option value="digital">Digital / Web (Auto Height)</option>
+                        <option value="a4">A4 (210 x 297mm)</option>
+                        <option value="a3">A3 (297 x 420mm)</option>
+                        <option value="letter">US Letter (8.5 x 11")</option>
+                        <option value="tabloid">Tabloid (11 x 17")</option>
+                        <option value="a2">A2 (420 x 594mm)</option>
+                        <option value="a1">A1 (594 x 841mm)</option>
+                        <option value="18x24">Poster Small (18 x 24")</option>
+                        <option value="24x36">Poster Large (24 x 36")</option>
+                    </select>
+                </div>
+                
+                <p class="text-[10px] text-gray-500 leading-relaxed border-l-2 border-accent/50 pl-3">
+                    Prints at <span class="text-white font-mono">300 DPI</span>. Grid will automatically scale to fit selected paper size.
+                </p>
+                
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="generateExport('svg')" class="flex flex-col items-center justify-center gap-2 bg-black border border-border hover:border-white/50 rounded-lg p-4 transition-all hover:bg-white/5 group">
+                        <span class="font-bold text-sm group-hover:text-white">SVG</span>
+                        <span class="text-[10px] text-gray-500 uppercase tracking-wider">Vector</span>
+                    </button>
+                    <button onclick="generateExport('png')" class="flex flex-col items-center justify-center gap-2 bg-black border border-border hover:border-white/50 rounded-lg p-4 transition-all hover:bg-white/5 group">
+                        <span class="font-bold text-sm group-hover:text-white">PNG</span>
+                        <span class="text-[10px] text-gray-500 uppercase tracking-wider">High Res</span>
+                    </button>
+                </div>
+            </div>
+            <div id="exportStatus" class="text-center text-[10px] text-accent h-4 font-mono"></div>
+        </div>
+    </div>
+
+    <!-- Welcome / Onboarding Modal -->
+    <div id="welcomeModal" class="fixed inset-0 bg-black/90 z-[90] flex items-center justify-center hidden backdrop-blur-sm">
+        <div class="bg-surface border border-border p-8 rounded-2xl max-w-md w-full text-center space-y-6 shadow-2xl relative overflow-hidden animate-fade-in mx-4">
+             <!-- decorative background element -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-purple-500"></div>
+            
+            <div class="space-y-2">
+                <h2 class="text-2xl font-bold text-white tracking-tight">Memento Mori</h2>
+                <p class="text-gray-400 text-sm">Your life in weeks.</p>
+            </div>
+
+            <div class="py-4 space-y-4">
+                <p class="text-sm text-gray-300 leading-relaxed">
+                    Each square represents one week of your life. <br/>
+                    It's not about scaring you, but inspiring you to make the remaining weeks count.
+                </p>
+                
+                <div class="bg-black/40 p-4 rounded-lg border border-white/5 space-y-2 text-left">
+                    <label class="block text-xs uppercase tracking-widest text-gray-500 font-bold mb-1 text-center">Enter your birth date to begin</label>
+                    <input type="date" id="welcomeDob" class="w-full bg-surface border border-border rounded p-3 text-white text-center focus:border-accent outline-none transition-colors">
+                    <p id="welcomeError" class="text-danger text-xs hidden text-center font-bold">Please enter a valid date in the past.</p>
+                </div>
+            </div>
+
+            <button onclick="submitWelcome()" class="w-full bg-white text-black font-bold py-3 rounded hover:bg-gray-200 transition-colors uppercase tracking-widest text-sm shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                Start Visualizing
+            </button>
+        </div>
+    </div>
+
+    <!-- Share Toast -->
+    <div id="toast" class="fixed bottom-8 right-8 bg-surface border border-border text-white px-4 py-3 rounded shadow-2xl transform transition-all duration-300 translate-y-20 opacity-0 z-[70] font-medium text-xs flex items-center gap-2">
+        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+        <span id="toastMsg">Notification</span>
+    </div>
+
+    <script>
+        // --- LOGIC ---
+        // State
+        let state = {
+            dob: null,
+            expectancy: 90,
+            country: 'global',
+            milestones: [], 
+            themes: [],
+            notes: [], // [{ weekIndex: 123, text: "abc", type: "memory"|"dream" }]
+            fadeStart: 75,
+            presets: [
+                { id: 'child', title: 'Childhood', start: 0, end: 12, color: '#f472b6' },
+                { id: 'teen', title: 'Teens', start: 13, end: 19, color: '#fbbf24' },
+                { id: '20s', title: 'Roaring 20s', start: 20, end: 29, color: '#60a5fa' },
+                { id: 'retire', title: 'Retirement', start: 65, end: 0, color: '#4ade80' } // 0 = max expectancy
+            ]
+        };
+
+        let editingPresetId = null;
+        let isPresetEditMode = false;
+        let editingThemeIndex = null;
+        let editingMilestoneIndex = null;
+        let currentNoteWeekIndex = null;
+
+        // Static Country Data
+        const countryData = {
+            'JP': 85, 'CH': 84, 'SG': 84, 'ES': 84, 'IT': 84,
+            'AU': 83, 'CA': 83, 'FR': 83, 'GB': 82, 'DE': 82,
+            'US': 79, 'CN': 78, 'BR': 76, 'IN': 70, 'NG': 55
+        };
+        const GLOBAL_AVG = 74;
+
+        // Category Icons
+        const catIcons = {
+            default: '',
+            career: '💼',
+            love: '❤️',
+            travel: '✈️',
+            family: '👶',
+            health: '🏥',
+            home: '🏠',
+            education: '🎓',
+            pet: '🐾',
+            music: '🎵',
+            sport: '⚽',
+            art: '🎨',
+            finance: '💰'
+        };
+
+        // Templates
+        const templates = {
+            cinematic: { bg: '#0a0a0a', text: '#ffffff', accent: '#334155', font: 'Inter' },
+            print: { bg: '#ffffff', text: '#171717', accent: '#e5e7eb', font: 'Inter' },
+            minimal: { bg: '#f4f4f5', text: '#3f3f46', accent: '#d4d4d8', font: 'Inter' },
+            bold: { bg: '#000000', text: '#facc15', accent: '#333333', font: 'JetBrains Mono' }
+        };
+
+        // DOM Elements
+        const grid = document.getElementById('lifeGrid');
+        const dobInput = document.getElementById('dobInput');
+        const expectancyInput = document.getElementById('expectancyInput');
+        const expectancyValue = document.getElementById('expectancyValue');
+        const countrySelect = document.getElementById('countrySelect');
+        const countryHint = document.getElementById('countryHint');
+        const tooltip = document.getElementById('global-tooltip');
+        
+        // Init
+        window.onload = () => {
+            initApp();
+            updateVisuals(); 
+            setupTooltip();
+            
+            // Char count listener
+            document.getElementById('noteText').addEventListener('input', function() {
+                document.getElementById('charCount').innerText = this.value.length;
+            });
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`btn-${tabId}`).classList.add('active');
+        }
+
+        function initApp() {
+            // Sharing Logic
+            const urlParams = new URLSearchParams(window.location.search);
+            const sharedData = urlParams.get('data');
+
+            let hasSavedData = false;
+
+            if (sharedData) {
+                try {
+                    const base64 = sharedData.replace(/-/g, '+').replace(/_/g, '/');
+                    const parsed = JSON.parse(atob(base64));
+                    state = { ...state, ...parsed };
+                    if (!state.notes) state.notes = [];
+                    // Ensure presets
+                    if (!state.presets) state.presets = [
+                         { id: 'child', title: 'Childhood', start: 0, end: 12, color: '#f472b6' },
+                         { id: 'teen', title: 'Teens', start: 13, end: 19, color: '#fbbf24' },
+                         { id: '20s', title: 'Roaring 20s', start: 20, end: 29, color: '#60a5fa' },
+                         { id: 'retire', title: 'Retirement', start: 65, end: 0, color: '#4ade80' }
+                    ];
+                    if (!state.fadeStart) state.fadeStart = 75;
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    hasSavedData = true;
+                } catch (e) {
+                    console.error("Invalid share link", e);
+                    showToast("Error loading shared data", true);
+                }
+            } else {
+                const saved = localStorage.getItem('lifeTimelineState');
+                if (saved) {
+                    try { 
+                        const parsed = JSON.parse(saved);
+                        state = { ...state, ...parsed };
+                        if(!state.notes) state.notes = [];
+                        if (!state.presets) state.presets = [
+                            { id: 'child', title: 'Childhood', start: 0, end: 12, color: '#f472b6' },
+                            { id: 'teen', title: 'Teens', start: 13, end: 19, color: '#fbbf24' },
+                            { id: '20s', title: 'Roaring 20s', start: 20, end: 29, color: '#60a5fa' },
+                            { id: 'retire', title: 'Retirement', start: 65, end: 0, color: '#4ade80' }
+                        ];
+                        hasSavedData = true;
+                    } catch(e) {}
+                } else {
+                    // Fresh start logic
+                    detectCountry(); // Autodetect region/expectancy to help
+                }
+            }
+
+            // Hydrate UI
+            if (state.dob) dobInput.value = state.dob;
+            if (state.country) countrySelect.value = state.country; 
+            
+            expectancyInput.value = state.expectancy;
+            document.getElementById('fadeInput').value = state.fadeStart || 75;
+            document.getElementById('fadeValue').innerText = (state.fadeStart || 75) + 'y';
+            
+            updateHint();
+            renderMilestoneList();
+            renderThemeList();
+            renderPresets();
+
+            // Onboarding Decision
+            if (!hasSavedData || !state.dob) {
+                // If we have a default/detected DOB, prefill the welcome modal
+                const defaultDob = new Date(new Date().getFullYear() - 25, 0, 1).toISOString().split('T')[0];
+                document.getElementById('welcomeDob').value = defaultDob;
+                document.getElementById('welcomeModal').classList.remove('hidden');
+                updateGrid(false); // Render empty state
+            } else {
+                updateGrid(false); 
+            }
+        }
+
+        // --- ONBOARDING LOGIC ---
+        function submitWelcome() {
+            const input = document.getElementById('welcomeDob');
+            const error = document.getElementById('welcomeError');
+            
+            const dateVal = input.value;
+            if (!dateVal) {
+                error.innerText = "Please enter your birth date.";
+                error.classList.remove('hidden');
+                return;
+            }
+
+            const date = new Date(dateVal);
+            if (isNaN(date.getTime()) || date > new Date()) {
+                error.innerText = "Please enter a valid date in the past.";
+                error.classList.remove('hidden');
+                return;
+            }
+
+            // Valid
+            state.dob = dateVal;
+            dobInput.value = dateVal;
+            saveData();
+            updateGrid();
+            
+            document.getElementById('welcomeModal').classList.add('hidden');
+        }
+
+        function handleDobChange() {
+            const val = dobInput.value;
+            const err = document.getElementById('dobError');
+            if(!val) {
+                err.classList.remove('hidden');
+                return;
+            }
+            const d = new Date(val);
+            if(isNaN(d.getTime()) || d > new Date()) {
+                err.classList.remove('hidden');
+            } else {
+                err.classList.add('hidden');
+                updateGrid();
+            }
+        }
+
+        function setupTooltip() {
+            // High-performance event listener on grid container instead of 4000 individual listeners
+            grid.addEventListener('mousemove', (e) => {
+                const target = e.target.closest('.week-box');
+                if (!target) {
+                    tooltip.style.opacity = '0';
+                    return;
+                }
+                
+                // Get data
+                const date = target.dataset.date;
+                const age = target.dataset.age;
+                const weekNum = target.dataset.week;
+                const milestoneTitle = target.dataset.milestoneTitle;
+                const noteType = target.dataset.noteType;
+                
+                if (!date) return;
+
+                // Update content
+                document.getElementById('tooltip-date').innerText = date;
+                document.getElementById('tooltip-age').innerText = `Age ${age}`;
+                document.getElementById('tooltip-week').innerText = `Wk ${weekNum}`;
+                
+                const msEl = document.getElementById('tooltip-milestone');
+                if (milestoneTitle) {
+                    msEl.innerText = milestoneTitle;
+                    msEl.classList.remove('hidden');
+                } else {
+                    msEl.classList.add('hidden');
+                }
+
+                const noteEl = document.getElementById('tooltip-note');
+                if (noteType) {
+                    // Find text
+                    const idx = parseInt(target.dataset.index);
+                    const note = state.notes.find(n => n.weekIndex === idx);
+                    if(note) {
+                        noteEl.innerText = `"${note.text}"`;
+                        noteEl.className = note.type === 'memory' ? "italic mt-1 pt-1 border-t border-white/20 text-rose-400 block max-w-[150px] whitespace-normal" : "italic mt-1 pt-1 border-t border-white/20 text-sky-400 block max-w-[150px] whitespace-normal";
+                    }
+                } else {
+                    noteEl.className = "hidden";
+                }
+
+                // Position
+                const rect = target.getBoundingClientRect();
+                tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                tooltip.style.top = rect.top + 'px';
+                tooltip.style.opacity = '1';
+            });
+
+            grid.addEventListener('mouseleave', () => {
+                tooltip.style.opacity = '0';
+            });
+            
+            // Interaction: Open Note Modal
+            grid.addEventListener('click', (e) => {
+                const target = e.target.closest('.week-box');
+                if (!target) return;
+                
+                const idx = parseInt(target.dataset.index);
+                const date = target.dataset.date;
+                const isPast = target.classList.contains('week-past') || target.classList.contains('week-current');
+                openNoteModal(idx, date, isPast);
+            });
+        }
+        
+        function setGridZoom(val) {
+            const container = document.getElementById('capture-target');
+            container.style.transform = `scale(${val})`;
+        }
+
+        // --- PRESET SYSTEM ---
+
+        function renderPresets() {
+            const container = document.getElementById('presets-container');
+            container.innerHTML = '';
+            
+            state.presets.forEach(p => {
+                const btn = document.createElement('button');
+                btn.className = 'preset-btn bg-surface border border-border rounded p-2 text-left hover:border-white/30 relative overflow-hidden group';
+                
+                // Color strip
+                const strip = document.createElement('div');
+                strip.className = 'absolute left-0 top-0 bottom-0 w-1';
+                strip.style.backgroundColor = p.color;
+                
+                const title = document.createElement('div');
+                title.className = 'text-[10px] font-bold text-gray-200 ml-2 uppercase truncate';
+                title.innerText = p.title;
+                
+                const range = document.createElement('div');
+                range.className = 'text-[9px] text-gray-500 ml-2 font-mono';
+                range.innerText = p.end === 0 ? `${p.start} - End` : `${p.start} - ${p.end}`;
+                
+                btn.appendChild(strip);
+                btn.appendChild(title);
+                btn.appendChild(range);
+
+                btn.onclick = () => handlePresetClick(p);
+                
+                container.appendChild(btn);
+            });
+        }
+
+        function togglePresetEditMode() {
+            isPresetEditMode = !isPresetEditMode;
+            const container = document.getElementById('presets-container');
+            const btn = document.getElementById('btn-edit-presets');
+            
+            if (isPresetEditMode) {
+                container.classList.add('preset-edit-mode');
+                btn.innerText = "Done Editing";
+                btn.classList.add('text-white');
+            } else {
+                container.classList.remove('preset-edit-mode');
+                btn.innerText = "Edit Presets";
+                btn.classList.remove('text-white');
+            }
+        }
+
+        function handlePresetClick(preset) {
+            if (isPresetEditMode) {
+                openPresetEditor(preset);
+            } else {
+                // Apply preset
+                const end = preset.end === 0 ? state.expectancy : preset.end;
+                attemptAddTheme(preset.title, preset.start, end, preset.color);
+            }
+        }
+
+        function openPresetEditor(preset) {
+            editingPresetId = preset.id;
+            document.getElementById('editPresetTitle').value = preset.title;
+            document.getElementById('editPresetStart').value = preset.start;
+            document.getElementById('editPresetEnd').value = preset.end;
+            document.getElementById('editPresetColor').value = preset.color;
+            document.getElementById('presetEditModal').classList.remove('hidden');
+        }
+
+        function savePresetEdit() {
+            const title = document.getElementById('editPresetTitle').value;
+            const start = parseInt(document.getElementById('editPresetStart').value);
+            const end = parseInt(document.getElementById('editPresetEnd').value);
+            const color = document.getElementById('editPresetColor').value;
+
+            if (!title || isNaN(start)) return;
+
+            const idx = state.presets.findIndex(p => p.id === editingPresetId);
+            if (idx !== -1) {
+                state.presets[idx] = { ...state.presets[idx], title, start, end, color };
+                saveData();
+                renderPresets();
+                document.getElementById('presetEditModal').classList.add('hidden');
+            }
+        }
+
+        // --- DESIGN FUNCTIONS ---
+
+        function applyTemplate(type) {
+            const tmpl = templates[type];
+            if (!tmpl) return;
+
+            document.getElementById('colorBg').value = tmpl.bg;
+            document.getElementById('colorText').value = tmpl.text;
+            document.getElementById('colorAccent').value = tmpl.accent;
+            
+            const poster = document.getElementById('capture-target');
+            poster.style.fontFamily = tmpl.font === 'JetBrains Mono' ? '"JetBrains Mono", monospace' : '"Inter", sans-serif';
+
+            updateVisuals();
+        }
+
+        function updateVisuals() {
+            const bg = document.getElementById('colorBg').value;
+            const text = document.getElementById('colorText').value;
+            const accent = document.getElementById('colorAccent').value;
+            
+            const poster = document.getElementById('capture-target');
+            
+            poster.style.setProperty('--poster-bg', bg);
+            poster.style.setProperty('--poster-text', text);
+            poster.style.setProperty('--poster-accent', accent);
+            poster.style.setProperty('--poster-border', text); 
+        }
+
+        function updateContent(elementId, value) {
+            const el = document.getElementById(elementId);
+            if(el) el.innerText = value;
+        }
+
+        function togglePosterElement(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.classList.contains('hidden')) {
+                    el.classList.remove('hidden');
+                    el.style.display = '';
+                } else {
+                    el.classList.add('hidden');
+                    el.style.display = 'none';
+                }
+            }
+        }
+
+        function setGridStyle(radius) {
+            document.getElementById('capture-target').style.setProperty('--grid-radius', radius);
+        }
+
+        function setGridGap(gap) {
+            document.getElementById('lifeGrid').style.gap = gap;
+        }
+
+        function updateFadeSettings() {
+            const val = document.getElementById('fadeInput').value;
+            state.fadeStart = parseInt(val);
+            document.getElementById('fadeValue').innerText = val + 'y';
+            updateGrid(true);
+        }
+
+        // --- CORE LOGIC ---
+
+        function detectCountry() {
+            const userLocale = navigator.language || navigator.userLanguage; 
+            if (!userLocale) return;
+
+            let regionCode = null;
+            if (userLocale.includes('-')) {
+                regionCode = userLocale.split('-')[1].toUpperCase();
+            } else {
+                const map = { 'ja': 'JP', 'zh': 'CN', 'fr': 'FR', 'de': 'DE' };
+                regionCode = map[userLocale] || null;
+            }
+            
+            if (regionCode && countryData[regionCode]) {
+                const detectedExpectancy = countryData[regionCode];
+                state.country = regionCode;
+                state.expectancy = detectedExpectancy;
+                
+                if (!countrySelect.querySelector(`option[value="${regionCode}"]`)) {
+                    const opt = document.createElement('option');
+                    opt.value = regionCode;
+                    opt.innerText = `${regionCode} (Detected: ${detectedExpectancy}y)`;
+                    document.getElementById('detectedOptGroup').appendChild(opt);
+                    document.getElementById('detectedOptGroup').style.display = 'block';
+                }
+                countrySelect.value = regionCode;
+            } else {
+                state.country = 'global';
+                state.expectancy = GLOBAL_AVG;
+                countrySelect.value = 'global';
+            }
+            updateHint();
+        }
+
+        function handleSliderChange() {
+            if (countrySelect.value !== 'custom') {
+                countrySelect.value = 'custom';
+                state.country = 'custom';
+                updateHint();
+            }
+            updateGrid(true);
+        }
+
+        function updateCountry() {
+            const val = countrySelect.value;
+            state.country = val;
+            updateHint();
+
+            if (val === 'custom') return; 
+
+            let newExpectancy = GLOBAL_AVG;
+            if (val !== 'global') {
+                newExpectancy = countryData[val] || GLOBAL_AVG;
+            }
+
+            state.expectancy = newExpectancy;
+            expectancyInput.value = newExpectancy;
+            
+            updateGrid(true);
+        }
+
+        function updateHint() {
+            if(state.country === 'custom') countryHint.innerText = "*Manual override";
+            else if (state.country === 'global') countryHint.innerText = "*Global avg";
+            else countryHint.innerText = `*Region detected: ${state.country}`;
+        }
+
+        function saveData() {
+            localStorage.setItem('lifeTimelineState', JSON.stringify(state));
+        }
+
+        async function shareState() {
+            try {
+                const json = JSON.stringify(state);
+                const encoded = btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                const url = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+                
+                if (url.length > 2000) {
+                     showToast("Data too large for link", true);
+                     return;
+                }
+
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'My Life Timeline',
+                            text: 'Check out my life visualization.',
+                            url: url
+                        });
+                        showToast("Shared successfully!");
+                    } catch (err) {
+                        if (err.name !== 'AbortError') fallbackCopy(url);
+                    }
+                } else {
+                    fallbackCopy(url);
+                }
+            } catch (e) {
+                console.error("Share failed", e);
+                showToast("Error creating link", true);
+            }
+        }
+
+        function fallbackCopy(text) {
+             const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed"; 
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast("Link copied to clipboard!");
+                } catch (err) {
+                    showToast("Error copying link", true);
+                }
+                document.body.removeChild(textArea);
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.querySelector('div').className = isError ? "w-2 h-2 bg-red-500 rounded-full" : "w-2 h-2 bg-green-500 rounded-full";
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function updateGrid(save = true) {
+            state.dob = dobInput.value;
+            state.expectancy = parseInt(expectancyInput.value);
+
+            expectancyValue.innerText = `${state.expectancy}y`;
+
+            if (save) saveData();
+
+            // Validation Guard
+            if (!state.dob) {
+                grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center h-[500px] text-gray-500 opacity-50"><div class="text-4xl mb-4">📅</div><div>Please select a birth date to visualize your timeline</div></div>';
+                return;
+            }
+            const dobDateCheck = new Date(state.dob);
+            if (isNaN(dobDateCheck.getTime()) || dobDateCheck > new Date()) {
+                grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center h-[500px] text-danger opacity-80"><div>Invalid birth date. Please check the sidebar.</div></div>';
+                return;
+            }
+
+            renderGrid();
+            renderKey(); 
+            updateStats();
+        }
+
+        function getWeeksDiff(d1, d2) {
+            const oneWeek = 1000 * 60 * 60 * 24 * 7;
+            const date1 = new Date(d1);
+            const date2 = new Date(d2);
+            return Math.floor((date2 - date1) / oneWeek);
+        }
+
+        function renderGrid() {
+            grid.innerHTML = '';
+            
+            const dobDate = new Date(state.dob);
+            const todayDate = new Date();
+            
+            const weeksLived = getWeeksDiff(dobDate, todayDate);
+            const totalWeeks = state.expectancy * 52;
+            const fadeStartWeeks = (state.fadeStart || 75) * 52;
+            
+            const showThemes = document.getElementById('optThemes').checked;
+            const fragment = document.createDocumentFragment();
+
+            // Optimization: Create Maps/Indices for O(1) lookups inside the loop
+            // 1. Theme Lookup Map: Key = weekIndex, Value = themeColor
+            const themeMap = new Map();
+            if (showThemes) {
+                state.themes.forEach(t => {
+                    const startWeek = Math.floor(t.startAge * 52);
+                    const endWeek = Math.floor((t.endAge + 1) * 52);
+                    for (let w = startWeek; w < endWeek; w++) {
+                        themeMap.set(w, t.color);
+                    }
+                });
+            }
+
+            // 2. Note Lookup Map
+            const noteMap = new Map();
+            if (state.notes) {
+                state.notes.forEach(n => noteMap.set(n.weekIndex, n.type));
+            }
+
+            // 3. Milestone Lookup Map
+            // Recurring milestones are complex, still need some calculation but we can optimize
+            const oneDay = 24 * 60 * 60 * 1000;
+            const milestonesMap = new Map(); // Key: weekIndex, Value: milestoneObj
+
+            // Helper to get week index from date
+            const getWeekIdx = (d) => Math.floor((d - dobDate) / (oneDay * 7));
+
+            // Standard milestones
+            state.milestones.filter(m => !m.recurring).forEach(m => {
+                const d = new Date(m.date);
+                const idx = getWeekIdx(d);
+                if (idx >= 0 && idx < totalWeeks) milestonesMap.set(idx, m);
+            });
+
+            // Recurring milestones - Only calculate once per recurring event per year of life
+            state.milestones.filter(m => m.recurring).forEach(m => {
+                const origDate = new Date(m.date);
+                const mMonth = origDate.getMonth();
+                const mDay = origDate.getDate();
+                
+                // Iterate through years lived + expectancy
+                for(let y = 0; y <= state.expectancy; y++) {
+                    const yearDate = new Date(origDate.getFullYear() + y, mMonth, mDay);
+                    if (yearDate < origDate) continue; // Don't show before start
+                    const idx = getWeekIdx(yearDate);
+                    if (idx >= 0 && idx < totalWeeks) {
+                        // Priority to non-recurring, but if empty, set it
+                        if (!milestonesMap.has(idx)) milestonesMap.set(idx, m);
+                    }
+                }
+            });
+
+            // One loop for everything
+            for (let i = 0; i < totalWeeks; i++) {
+                const square = document.createElement('div');
+                square.classList.add('week-box');
+                
+                // Calc exact date of this week
+                const weekMs = i * 7 * oneDay;
+                const weekDate = new Date(dobDate.getTime() + weekMs);
+                const currentAge = i / 52;
+                
+                // Data attributes for tooltip/interaction
+                square.dataset.date = weekDate.toLocaleDateString('en-GB');
+                square.dataset.age = currentAge.toFixed(1);
+                square.dataset.week = (i + 1);
+                square.dataset.index = i;
+
+                // 1. Check Themes (O(1))
+                if (themeMap.has(i)) {
+                    const color = themeMap.get(i);
+                    square.style.backgroundColor = `${color}33`; 
+                    square.style.borderColor = `${color}44`;
+                }
+
+                // 2. Check Milestones (O(1))
+                if (milestonesMap.has(i)) {
+                    const m = milestonesMap.get(i);
+                    if (m.category === 'goal' || m.isGoal) {
+                         square.classList.add('week-goal');
+                    } else {
+                         square.classList.add('week-milestone');
+                    }
+                    square.dataset.milestoneTitle = m.title;
+                } else if (i < weeksLived) {
+                    square.classList.add('week-past');
+                    if(themeMap.has(i)) {
+                        const color = themeMap.get(i);
+                        square.style.backgroundColor = `${color}66`; 
+                    }
+                } else if (i === weeksLived) {
+                    square.classList.add('week-current');
+                } else {
+                    square.classList.add('week-future');
+                    // Mortality Fade Logic
+                    if (i > fadeStartWeeks) {
+                        const progress = (i - fadeStartWeeks) / (totalWeeks - fadeStartWeeks);
+                        const opacity = Math.max(0.1, 0.6 - (progress * 0.5));
+                        square.style.opacity = opacity;
+                    }
+                }
+
+                // 3. Notes
+                if (noteMap.has(i)) {
+                    square.classList.add('week-note');
+                    square.classList.add(noteMap.get(i) === 'memory' ? 'note-memory' : 'note-dream');
+                    square.dataset.noteType = noteMap.get(i);
+                }
+
+                fragment.appendChild(square);
+            }
+            grid.appendChild(fragment);
+        }
+
+        // --- NOTES SYSTEM ---
+        function openNoteModal(weekIndex, dateStr, isPast) {
+            currentNoteWeekIndex = weekIndex;
+            const modal = document.getElementById('noteModal');
+            const title = document.getElementById('noteModalTitle');
+            const textArea = document.getElementById('noteText');
+            
+            document.getElementById('noteModalDate').innerText = dateStr;
+            
+            // Set type context
+            if (isPast) {
+                title.innerText = "Add Memory";
+                title.className = "text-sm font-bold text-rose-400 uppercase tracking-widest";
+            } else {
+                title.innerText = "Add Dream";
+                title.className = "text-sm font-bold text-sky-400 uppercase tracking-widest";
+            }
+
+            // Find existing
+            const existing = state.notes.find(n => n.weekIndex === weekIndex);
+            textArea.value = existing ? existing.text : "";
+            document.getElementById('charCount').innerText = textArea.value.length;
+            
+            modal.classList.remove('hidden');
+            textArea.focus();
+        }
+
+        function saveNote() {
+            const text = document.getElementById('noteText').value.trim();
+            const modal = document.getElementById('noteModal');
+            
+            if (!text) {
+                // Delete if empty
+                state.notes = state.notes.filter(n => n.weekIndex !== currentNoteWeekIndex);
+            } else {
+                const dob = new Date(state.dob);
+                const targetDate = new Date(dob.getTime() + (currentNoteWeekIndex * 7 * 24 * 60 * 60 * 1000));
+                const isPast = targetDate < new Date();
+                const type = isPast ? 'memory' : 'dream';
+
+                const existingIdx = state.notes.findIndex(n => n.weekIndex === currentNoteWeekIndex);
+                if (existingIdx >= 0) {
+                    state.notes[existingIdx] = { weekIndex: currentNoteWeekIndex, text, type };
+                } else {
+                    state.notes.push({ weekIndex: currentNoteWeekIndex, text, type });
+                }
+            }
+            
+            saveData();
+            updateGrid();
+            closeNoteModal();
+        }
+
+        function closeNoteModal() {
+            document.getElementById('noteModal').classList.add('hidden');
+            currentNoteWeekIndex = null;
+        }
+
+        // --- KEY MOMENTS EDITING ---
+        function editMilestone(index) {
+            const m = state.milestones[index];
+            document.getElementById('milestoneTitle').value = m.title;
+            document.getElementById('milestoneDate').value = m.date;
+            document.getElementById('milestoneCategory').value = m.category || 'default';
+            document.getElementById('milestoneRecurring').checked = m.recurring || false;
+            
+            editingMilestoneIndex = index;
+            document.getElementById('btnAddMilestone').innerText = "Update Moment";
+            document.getElementById('btnCancelMilestone').classList.remove('hidden');
+            document.getElementById('milestoneTitle').focus();
+        }
+
+        function cancelMilestoneEdit() {
+            editingMilestoneIndex = null;
+            document.getElementById('milestoneTitle').value = '';
+            document.getElementById('milestoneDate').value = '';
+            document.getElementById('milestoneRecurring').checked = false;
+            document.getElementById('btnAddMilestone').innerText = "Add Moment";
+            document.getElementById('btnCancelMilestone').classList.add('hidden');
+        }
+
+        function renderKey() {
+            const keyContainer = document.getElementById('posterKey');
+            keyContainer.innerHTML = '';
+
+            // Themes
+            const themesCol = document.createElement('div');
+            themesCol.innerHTML = '<h4 class="text-[10px] uppercase tracking-widest opacity-50 mb-3 font-bold">Chapters</h4>';
+            if (state.themes.length === 0) {
+                themesCol.innerHTML += '<p class="text-[9px] opacity-40 italic">No themes defined</p>';
+            } else {
+                const list = document.createElement('div');
+                list.className = 'flex flex-col gap-2';
+                state.themes.forEach(t => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-start gap-2 text-[10px]';
+                    row.innerHTML = `<span class="w-2.5 h-2.5 rounded-full shadow-[0_0_4px] shrink-0 mt-[2px]" style="background-color: ${t.color}; box-shadow-color: ${t.color}"></span> <span class="opacity-80 leading-snug break-words">${t.title}</span>`;
+                    list.appendChild(row);
+                });
+                themesCol.appendChild(list);
+            }
+
+            // Events
+            const eventsCol = document.createElement('div');
+            eventsCol.innerHTML = '<h4 class="text-[10px] uppercase tracking-widest opacity-50 mb-3 font-bold">Key Events</h4>';
+            if (state.milestones.length === 0) {
+                eventsCol.innerHTML += '<p class="text-[9px] opacity-40 italic">No events defined</p>';
+            } else {
+                const list = document.createElement('div');
+                list.className = 'flex flex-col gap-2';
+                // Limit to non-recurring for key to save space, or just first few
+                state.milestones.slice(0, 8).forEach(m => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-start gap-2 text-[10px]';
+                    const icon = catIcons[m.category || 'default'] || '●';
+                    
+                    // Style logic
+                    let symbol = '';
+                    if (m.category) {
+                         symbol = `<span class="inline-block mt-[1px] text-[10px]">${icon}</span>`;
+                    } else if (m.isGoal) {
+                        symbol = `<span class="w-2 h-2 border border-[var(--poster-goal,#a855f7)] transform rotate-45 inline-block shrink-0 mt-[3px]"></span>`;
+                    } else {
+                        symbol = `<span class="w-2 h-2 bg-[var(--poster-gold,#fbbf24)] rounded-full inline-block shrink-0 mt-[3px]"></span>`;
+                    }
+
+                    const year = new Date(m.date).getFullYear();
+                    const recurStr = m.recurring ? '<span class="opacity-40 ml-1">↺</span>' : '';
+                    row.innerHTML = `${symbol} <span class="opacity-80 leading-snug break-words"><span class="opacity-50 font-mono mr-1">${year}</span> ${m.title}${recurStr}</span>`;
+                    list.appendChild(row);
+                });
+                if (state.milestones.length > 8) {
+                    eventsCol.innerHTML += '<p class="text-[9px] opacity-40 italic mt-1">...and more</p>';
+                }
+                eventsCol.appendChild(list);
+            }
+            keyContainer.appendChild(themesCol);
+            keyContainer.appendChild(eventsCol);
+        }
+
+        function checkTheme(age) {
+            // New logic: End Age is inclusive. So "0-12" means until age 13.
+            return state.themes.find(t => age >= t.startAge && age < (t.endAge + 1));
+        }
+
+        function attemptAddTheme(title, start, end, color) {
+            const errEl = document.getElementById('themeError');
+            errEl.classList.add('hidden');
+            errEl.innerText = "";
+
+            if (!title) { showThemeError("Title required"); return; }
+            if (isNaN(start) || isNaN(end) || start < 0) { showThemeError("Invalid age range"); return; }
+            // Allow start == end now, because it covers 1 year
+            if (start > end) { showThemeError("Start > End"); return; }
+            if (end > state.expectancy) { showThemeError(`Max age ${state.expectancy}`); return; }
+
+            const effectiveEnd = end + 1;
+            // Overlap check
+            const hasOverlap = state.themes.some((t, i) => {
+                if (editingThemeIndex !== null && i === editingThemeIndex) return false; // Ignore self when editing
+                const tEffectiveEnd = t.endAge + 1;
+                return (start < tEffectiveEnd && effectiveEnd > t.startAge);
+            });
+            
+            if (hasOverlap) { showThemeError("Overlap detected"); return; }
+
+            if (editingThemeIndex !== null) {
+                state.themes[editingThemeIndex] = { title, startAge: start, endAge: end, color };
+                cancelThemeEdit(); // Reset UI
+            } else {
+                state.themes.push({ title, startAge: start, endAge: end, color });
+            }
+            
+            // Sort themes by age
+            state.themes.sort((a,b) => a.startAge - b.startAge);
+            
+            saveData();
+            renderThemeList();
+            updateGrid();
+            
+            // Clear manual inputs
+            document.getElementById('themeTitle').value = '';
+        }
+
+        function addTheme() {
+            const title = document.getElementById('themeTitle').value;
+            const start = parseFloat(document.getElementById('themeStart').value);
+            const end = parseFloat(document.getElementById('themeEnd').value);
+            const color = document.getElementById('themeColor').value;
+            attemptAddTheme(title, start, end, color);
+        }
+
+        function showThemeError(msg) {
+            const el = document.getElementById('themeError');
+            el.innerText = msg;
+            el.classList.remove('hidden');
+        }
+
+        function removeTheme(index) {
+            state.themes.splice(index, 1);
+            saveData();
+            renderThemeList();
+            updateGrid();
+            document.getElementById('themeStatsPanel').classList.add('hidden');
+            if (editingThemeIndex === index) cancelThemeEdit();
+        }
+
+        function editTheme(index) {
+            const t = state.themes[index];
+            document.getElementById('themeTitle').value = t.title;
+            document.getElementById('themeStart').value = t.startAge;
+            document.getElementById('themeEnd').value = t.endAge;
+            document.getElementById('themeColor').value = t.color;
+            
+            editingThemeIndex = index;
+            document.getElementById('btnAddTheme').innerText = "Update Chapter";
+            document.getElementById('btnCancelTheme').classList.remove('hidden');
+            
+            // Simple approach: Scroll to form
+            document.getElementById('themeTitle').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('themeTitle').focus();
+        }
+
+        function cancelThemeEdit() {
+            editingThemeIndex = null;
+            document.getElementById('themeTitle').value = '';
+            document.getElementById('themeStart').value = '';
+            document.getElementById('themeEnd').value = '';
+            document.getElementById('btnAddTheme').innerText = "Add Chapter";
+            document.getElementById('btnCancelTheme').classList.add('hidden');
+            document.getElementById('themeError').classList.add('hidden');
+        }
+
+        function showThemeStats(index) {
+            const t = state.themes[index];
+            const panel = document.getElementById('themeStatsPanel');
+            panel.classList.remove('hidden');
+            
+            const dobDate = new Date(state.dob);
+            const today = new Date();
+            const currentAge = (today - dobDate) / (1000 * 60 * 60 * 24 * 365.25);
+
+            // Calculations - End Age is inclusive (so +1 year duration)
+            const durationYears = (t.endAge + 1) - t.startAge;
+            const durationWeeks = Math.floor(durationYears * 52);
+            const totalLifeWeeks = state.expectancy * 52;
+            const percentage = ((durationWeeks / totalLifeWeeks) * 100).toFixed(1);
+            
+            // Status logic
+            let status = "Future";
+            let statusColor = "text-gray-500";
+            
+            // Check end of inclusive year
+            if (currentAge > (t.endAge + 1)) {
+                status = "Completed";
+                statusColor = "text-green-400";
+            } else if (currentAge >= t.startAge) {
+                // In progress
+                const weeksInto = Math.floor((currentAge - t.startAge) * 52);
+                const weeksRemaining = durationWeeks - weeksInto;
+                status = `${weeksRemaining} wks left`;
+                statusColor = "text-accent";
+            }
+
+            document.getElementById('tsTitle').innerText = t.title;
+            document.getElementById('tsTitle').style.color = t.color;
+            document.getElementById('tsDuration').innerText = `${durationYears}y (${durationWeeks} wks)`;
+            document.getElementById('tsPercentage').innerText = `${percentage}%`;
+            document.getElementById('tsWeeks').innerText = durationWeeks;
+            document.getElementById('tsStatus').innerText = status;
+            document.getElementById('tsStatus').className = "font-mono " + statusColor;
+        }
+        
+        function closeThemeStats() {
+            document.getElementById('themeStatsPanel').classList.add('hidden');
+        }
+
+        function renderThemeList() {
+            const list = document.getElementById('themeList');
+            list.innerHTML = '';
+            
+            if (state.themes.length === 0) {
+                list.innerHTML = `<div class="p-3 text-center empty-state-dashed rounded text-[10px]">
+                    No chapters yet.<br>Use presets or add manually.
+                </div>`;
+                return;
+            }
+
+            state.themes.forEach((t, index) => {
+                const item = document.createElement('div');
+                item.className = 'flex justify-between items-center bg-black/30 p-2 rounded text-xs border border-white/5 group hover:border-white/20 cursor-pointer transition-colors';
+                item.onclick = (e) => {
+                     if(e.target.tagName !== 'BUTTON') showThemeStats(index);
+                };
+                
+                // Show inclusive range in UI
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full" style="background-color: ${t.color}"></span>
+                        <span class="text-gray-300 font-medium">${t.title} <span class="text-gray-600 ml-1 font-mono text-[10px]">${t.startAge}-${t.endAge}</span></span>
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button onclick="editTheme(${index})" class="text-gray-400 hover:text-white px-1" title="Edit">✎</button>
+                         <button onclick="removeTheme(${index})" class="text-gray-600 hover:text-red-400 px-1" title="Delete">×</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function addMilestone() {
+            const titleInput = document.getElementById('milestoneTitle');
+            const dateInput = document.getElementById('milestoneDate');
+            const categoryInput = document.getElementById('milestoneCategory');
+            const recurringInput = document.getElementById('milestoneRecurring');
+            
+            if (!titleInput.value || !dateInput.value) return;
+
+            const eventDate = new Date(dateInput.value);
+            const isGoal = eventDate > new Date();
+
+            if (editingMilestoneIndex !== null) {
+                // Update
+                state.milestones[editingMilestoneIndex] = {
+                    title: titleInput.value,
+                    date: dateInput.value,
+                    category: categoryInput.value,
+                    recurring: recurringInput.checked,
+                    isGoal: isGoal
+                };
+                cancelMilestoneEdit();
+            } else {
+                // Add
+                state.milestones.push({
+                    title: titleInput.value,
+                    date: dateInput.value,
+                    category: categoryInput.value,
+                    recurring: recurringInput.checked,
+                    isGoal: isGoal
+                });
+            }
+
+            state.milestones.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveData();
+            renderMilestoneList();
+            updateGrid();
+
+            titleInput.value = '';
+            dateInput.value = '';
+            recurringInput.checked = false;
+        }
+
+        function removeMilestone(index) {
+            state.milestones.splice(index, 1);
+            saveData();
+            renderMilestoneList();
+            updateGrid();
+            if(editingMilestoneIndex === index) cancelMilestoneEdit();
+        }
+
+        function renderMilestoneList() {
+            const list = document.getElementById('milestoneList');
+            list.innerHTML = '';
+
+            if (state.milestones.length === 0) {
+                list.innerHTML = `<div class="p-3 text-center empty-state-dashed rounded text-[10px]">
+                    No moments added.<br>Add major life events.
+                </div>`;
+                return;
+            }
+
+            state.milestones.forEach((m, index) => {
+                const item = document.createElement('div');
+                item.className = 'flex justify-between items-center bg-black/30 p-2 rounded text-xs border border-white/5 group hover:border-white/20 transition-colors';
+                
+                const iconChar = catIcons[m.category || 'default'] || (m.isGoal ? '◆' : '●');
+                const iconColor = m.category ? 'text-white' : (m.isGoal ? 'text-purple-500' : 'text-gold');
+                
+                const dateStr = new Date(m.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
+                const recurIcon = m.recurring ? '<span class="text-[10px] text-gray-500 ml-1">↺</span>' : '';
+                
+                item.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-gray-300 font-medium"><span class="${iconColor} mr-1">${iconChar}</span> ${m.title}${recurIcon}</span>
+                        <span class="text-[9px] text-gray-600 ml-5">${dateStr}</span>
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button onclick="editMilestone(${index})" class="text-gray-400 hover:text-white px-1" title="Edit">✎</button>
+                         <button onclick="removeMilestone(${index})" class="text-gray-600 hover:text-red-400 px-1" title="Delete">×</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function updateStats() {
+            const dobDate = new Date(state.dob);
+            const todayDate = new Date();
+            const weeksLived = getWeeksDiff(dobDate, todayDate);
+            const totalWeeks = state.expectancy * 52;
+            const weeksLeft = totalWeeks - weeksLived;
+            const percentage = Math.min(100, Math.max(0, ((weeksLived / totalWeeks) * 100).toFixed(1)));
+
+            // Helper to get raw number from formatted string
+            const getNum = (id) => parseInt(document.getElementById(id).innerText.replace(/,/g, '')) || 0;
+
+            animateValue(document.getElementById('statWeeksLived'), getNum('statWeeksLived'), weeksLived, 1000);
+            animateValue(document.getElementById('statWeeksLeft'), getNum('statWeeksLeft'), Math.max(0, weeksLeft), 1000);
+            
+            // Human Terms Calculations
+            const safeWeeksLeft = Math.max(0, weeksLeft);
+            const monthsLeft = Math.floor(safeWeeksLeft / 4.345);
+            const summersLeft = Math.floor(safeWeeksLeft / 52); 
+            const fridaysLeft = safeWeeksLeft; // Approx 1 per week
+
+            animateValue(document.getElementById('statMonthsLeft'), getNum('statMonthsLeft'), monthsLeft, 1000);
+            animateValue(document.getElementById('statSummersLeft'), getNum('statSummersLeft'), summersLeft, 1000);
+            animateValue(document.getElementById('statFridaysLeft'), getNum('statFridaysLeft'), fridaysLeft, 1000);
+
+            document.getElementById('statPercentage').innerText = `${percentage}%`;
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+        }
+
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // --- EXPORT FUNCTIONALITY (High Res) ---
+        
+        const paperSizes = {
+            'digital': { label: 'Digital / Web (800px)', width: 800, height: null }, 
+            'a4': { label: 'A4 Poster', width: 2480, height: 3508 }, // 8.27 x 11.69 in @ 300
+            'a3': { label: 'A3 Poster', width: 3508, height: 4960 }, // 11.69 x 16.53 in @ 300
+            'letter': { label: 'US Letter', width: 2550, height: 3300 }, // 8.5 x 11 in @ 300
+            'tabloid': { label: 'Tabloid (11x17)', width: 3300, height: 5100 },
+            'a2': { label: 'A2 Poster', width: 4960, height: 7016 },
+            'a1': { label: 'A1 Poster', width: 7016, height: 9933 },
+            '18x24': { label: '18x24 in', width: 5400, height: 7200 },
+            '24x36': { label: '24x36 in', width: 7200, height: 10800 }
+        };
+
+        function openExportModal() {
+            document.getElementById('exportModal').classList.remove('hidden');
+        }
+
+        async function generateExport(format) {
+            const sizeKey = document.getElementById('exportSize').value;
+            const statusEl = document.getElementById('exportStatus');
+            const sizeConfig = paperSizes[sizeKey];
+            
+            statusEl.innerText = "Generating high-resolution layout...";
+            await new Promise(r => setTimeout(r, 50));
+
+            try {
+                // --- DIMENSIONS & SCALING ---
+                const width = sizeConfig.width;
+                // If digital (height: null), we calculate height. If print, height is fixed.
+                const isFixedSize = sizeConfig.height !== null;
+                const height = isFixedSize ? sizeConfig.height : 0; // 0 placeholder
+                
+                const margin = Math.round(width * 0.05); 
+                const printableW = width - (margin * 2);
+                
+                // Base font scale on width ratio relative to "digital" 800px base
+                const fScale = width / 800; 
+                
+                // Heights of UI elements
+                const headerH = 150 * fScale;
+                const footerH = 60 * fScale;
+                
+                // Key Height Calculation
+                const keyRowH = 18 * fScale; 
+                const keyHeaderH = 50 * fScale;
+                const maxKeyItems = Math.max(state.themes.length, state.milestones.length);
+                const showKey = document.getElementById('optKey').checked;
+                const keyH = (maxKeyItems > 0 && showKey) ? (keyHeaderH + (maxKeyItems * keyRowH) + (20 * fScale)) : 0;
+
+                // Notes Height
+                const showReflections = document.getElementById('optReflections').checked;
+                const notesH = (state.notes.length > 0 && showReflections) ? (state.notes.length * (20*fScale) + (60*fScale)) : 0;
+
+                // Total Fixed Vertical Space (Non-Grid)
+                const fixedContentH = headerH + keyH + notesH + footerH;
+
+                // --- GRID CALCULATION (Constraint Solver) ---
+                const cols = 52;
+                const totalWeeks = state.expectancy * 52;
+                const rows = Math.ceil(totalWeeks / cols);
+                const gap = Math.max(2, Math.round(width * 0.0025));
+
+                // 1. Calculate box size if constrained ONLY by Width
+                let boxSize = (printableW - (51 * gap)) / 52;
+
+                // 2. If Fixed Height, apply Height Constraint
+                if (isFixedSize) {
+                    const availableH = height - (margin * 2) - fixedContentH;
+                    // Check if width-based box size fits vertically
+                    const neededGridH = (rows * boxSize) + ((rows - 1) * gap);
+                    
+                    if (neededGridH > availableH) {
+                        // It doesn't fit! Recalculate boxSize based on available height
+                        // availableH = (rows * box) + (rows-1)*gap
+                        // box = (availableH - (rows-1)*gap) / rows
+                        const heightBasedBoxSize = (availableH - ((rows - 1) * gap)) / rows;
+                        boxSize = Math.max(1, heightBasedBoxSize); // Prevent negative/zero
+                    }
+                }
+
+                const gridH = (rows * boxSize) + ((rows - 1) * gap);
+                const totalContentH = fixedContentH + gridH;
+                
+                // Final Canvas Dimensions
+                const finalW = width;
+                const finalH = isFixedSize ? height : (totalContentH + (margin * 2));
+
+                // Vertical Centering (for fixed sizes)
+                let startY = margin;
+                if (isFixedSize) {
+                    const freeSpace = (height - (margin * 2)) - totalContentH;
+                    if (freeSpace > 0) {
+                        startY += (freeSpace / 2);
+                    }
+                }
+                
+                // --- SVG GENERATION ---
+                const bg = document.getElementById('colorBg').value;
+                const text = document.getElementById('colorText').value;
+                const accent = document.getElementById('colorAccent').value;
+                const font = getComputedStyle(document.getElementById('capture-target')).fontFamily.replace(/"/g, "'");
+
+                let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${finalW}" height="${finalH}" viewBox="0 0 ${finalW} ${finalH}" style="font-family: ${font}; background-color: ${bg};">`;
+                
+                // Draw Title
+                let currentY = startY + (80 * fScale); // Offset relative to header block
+                
+                if (document.getElementById('optTitle').checked) {
+                    const titleText = document.getElementById('posterTitle').innerText;
+                    svg += `<text x="${finalW/2}" y="${currentY}" text-anchor="middle" fill="${text}" font-size="${40 * fScale}" font-weight="bold">${titleText}</text>`;
+                }
+                if (document.getElementById('optSubtitle').checked) {
+                    const subText = document.getElementById('posterSubtitle').innerText;
+                    svg += `<text x="${finalW/2}" y="${currentY + (30*fScale)}" text-anchor="middle" fill="${text}" font-size="${14 * fScale}" opacity="0.6" letter-spacing="${3 * fScale}">${subText}</text>`;
+                }
+
+                // Move cursor past header
+                currentY = startY + headerH;
+
+                // --- DATA PREP ---
+                // Re-calculate maps for rendering
+                const oneDay = 24 * 60 * 60 * 1000;
+                const dobDate = new Date(state.dob);
+                const today = new Date();
+                const weeksLived = getWeeksDiff(dobDate, today);
+                
+                const themeMap = new Map();
+                if (document.getElementById('optThemes').checked) {
+                    state.themes.forEach(t => {
+                        const startWeek = Math.floor(t.startAge * 52);
+                        const endWeek = Math.floor((t.endAge + 1) * 52);
+                        for (let w = startWeek; w < endWeek; w++) themeMap.set(w, t.color);
+                    });
+                }
+
+                const milestonesMap = new Map();
+                const getWeekIdx = (d) => Math.floor((d - dobDate) / (oneDay * 7));
+                
+                state.milestones.forEach(m => {
+                    if(!m.recurring) {
+                        const d = new Date(m.date);
+                        const idx = getWeekIdx(d);
+                        if (idx >= 0 && idx < totalWeeks) milestonesMap.set(idx, m);
+                    } else {
+                        const origDate = new Date(m.date);
+                        const mMonth = origDate.getMonth();
+                        const mDay = origDate.getDate();
+                        for(let y = 0; y <= state.expectancy; y++) {
+                            const yearDate = new Date(origDate.getFullYear() + y, mMonth, mDay);
+                            if (yearDate < origDate) continue;
+                            const idx = getWeekIdx(yearDate);
+                            if (idx >= 0 && idx < totalWeeks && !milestonesMap.has(idx)) {
+                                milestonesMap.set(idx, m);
+                            }
+                        }
+                    }
+                });
+
+                const noteMap = new Map();
+                state.notes.forEach(n => noteMap.set(n.weekIndex, n.type));
+
+                // --- DRAW GRID ---
+                // Center grid horizontally based on actual box sizes
+                const gridPixelWidth = (cols * boxSize) + (51 * gap);
+                const gridStartX = (finalW - gridPixelWidth) / 2;
+                
+                for (let i = 0; i < totalWeeks; i++) {
+                    const r = Math.floor(i / cols);
+                    const c = i % cols;
+                    const x = gridStartX + c * (boxSize + gap);
+                    const y = currentY + r * (boxSize + gap);
+                    
+                    let fill = "transparent";
+                    let stroke = "#262626"; 
+                    let opacity = 1;
+                    
+                    if (themeMap.has(i)) {
+                        fill = themeMap.get(i);
+                        opacity = 0.2; 
+                        stroke = themeMap.get(i);
+                    }
+
+                    if (i < weeksLived) {
+                        fill = accent;
+                        stroke = "none";
+                        opacity = 1;
+                        if (themeMap.has(i)) {
+                            fill = themeMap.get(i);
+                            opacity = 0.4;
+                        }
+                    } else {
+                        stroke = text;
+                        if (themeMap.has(i)) {
+                            fill = themeMap.get(i);
+                            opacity = 0.2;
+                        } else {
+                            fill = "none";
+                            opacity = 0.6;
+                        }
+                    }
+
+                    if (i > (state.fadeStart || 75) * 52) {
+                         const fadeStartWeeks = (state.fadeStart || 75) * 52;
+                         const progress = (i - fadeStartWeeks) / (totalWeeks - fadeStartWeeks);
+                         opacity = Math.max(0.1, opacity - (progress * 0.5));
+                    }
+                    
+                    const strokeW = Math.max(0.5, 1 * fScale);
+                    const radius = boxSize > 5 ? 1 : 0; 
+                    
+                    svg += `<rect x="${x}" y="${y}" width="${boxSize}" height="${boxSize}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeW}" rx="${radius}" fill-opacity="${opacity}" stroke-opacity="${i < weeksLived ? 1 : 0.3}" />`;
+
+                    // Overlays
+                    if (milestonesMap.has(i)) {
+                        const m = milestonesMap.get(i);
+                        const cx = x + boxSize/2;
+                        const cy = y + boxSize/2;
+                        
+                        // Scale icons relative to box size to prevent overflow
+                        const iconSize = boxSize * 0.8;
+                        
+                        if (m.category && catIcons[m.category]) {
+                            svg += `<text x="${cx}" y="${cy + (iconSize*0.35)}" text-anchor="middle" font-size="${iconSize}">${catIcons[m.category]}</text>`;
+                        } else if (m.isGoal) {
+                             const dSize = boxSize * 0.6;
+                             svg += `<rect x="${cx-(dSize/2)}" y="${cy-(dSize/2)}" width="${dSize}" height="${dSize}" fill="transparent" stroke="#a855f7" stroke-width="${2*fScale}" transform="rotate(45, ${cx}, ${cy})" />`;
+                        } else {
+                            svg += `<circle cx="${cx}" cy="${cy}" r="${boxSize*0.4}" fill="#fbbf24" />`;
+                        }
+                    }
+
+                    if (noteMap.has(i)) {
+                        const type = noteMap.get(i);
+                        const color = type === 'memory' ? '#f43f5e' : '#0ea5e9';
+                        svg += `<rect x="${x-1}" y="${y-1}" width="${boxSize+2}" height="${boxSize+2}" fill="none" stroke="${color}" stroke-width="${1.5*fScale}" rx="${radius}" />`;
+                    }
+                }
+
+                currentY += gridH;
+
+                // --- LEGEND ---
+                if (maxKeyItems > 0 && showKey) {
+                    currentY += (40 * fScale); // Spacer
+                    
+                    svg += `<line x1="${margin}" y1="${currentY}" x2="${finalW-margin}" y2="${currentY}" stroke="${text}" stroke-opacity="0.2" stroke-width="${1*fScale}" />`;
+                    currentY += (30 * fScale);
+
+                    svg += `<text x="${margin}" y="${currentY}" fill="${text}" font-size="${12*fScale}" font-weight="bold" opacity="0.5" letter-spacing="${1*fScale}">CHAPTERS</text>`;
+                    svg += `<text x="${finalW/2 + (20*fScale)}" y="${currentY}" fill="${text}" font-size="${12*fScale}" font-weight="bold" opacity="0.5" letter-spacing="${1*fScale}">KEY MOMENTS</text>`;
+                    currentY += (20 * fScale);
+
+                    for(let k=0; k<maxKeyItems; k++) {
+                        const itemY = currentY + (k * (18 * fScale));
+                        
+                        if (k < state.themes.length) {
+                            const t = state.themes[k];
+                            svg += `<circle cx="${margin + (6*fScale)}" cy="${itemY - (4*fScale)}" r="${4*fScale}" fill="${t.color}" />`;
+                            svg += `<text x="${margin + (20*fScale)}" y="${itemY}" fill="${text}" font-size="${10*fScale}" opacity="0.8">${t.title}</text>`;
+                        }
+
+                        if (k < state.milestones.length) {
+                            const m = state.milestones[k];
+                            const iconX = finalW/2 + (26*fScale);
+                            
+                            if (m.category && catIcons[m.category]) {
+                                svg += `<text x="${iconX}" y="${itemY}" text-anchor="middle" font-size="${10*fScale}">${catIcons[m.category]}</text>`;
+                            } else if (m.isGoal) {
+                                svg += `<rect x="${iconX-(3*fScale)}" y="${itemY-(7*fScale)}" width="${6*fScale}" height="${6*fScale}" fill="none" stroke="#a855f7" transform="rotate(45, ${iconX}, ${itemY-(4*fScale)})" />`;
+                            } else {
+                                svg += `<circle cx="${iconX}" cy="${itemY-(4*fScale)}" r="${3*fScale}" fill="#fbbf24" />`;
+                            }
+                            
+                            const year = new Date(m.date).getFullYear();
+                            const recur = m.recurring ? " ↺" : "";
+                            svg += `<text x="${iconX + (15*fScale)}" y="${itemY}" fill="${text}" font-size="${10*fScale}" opacity="0.8">
+                                <tspan opacity="0.5" font-family="monospace">${year}</tspan> ${m.title}${recur}
+                            </text>`;
+                        }
+                    }
+                    currentY += (maxKeyItems * (18 * fScale));
+                }
+
+                // --- REFLECTIONS ---
+                if (state.notes.length > 0 && showReflections) {
+                    currentY += (30 * fScale);
+                    svg += `<line x1="${margin}" y1="${currentY}" x2="${finalW-margin}" y2="${currentY}" stroke="${text}" stroke-opacity="0.2" stroke-width="${1*fScale}" />`;
+                    currentY += (30 * fScale);
+                    svg += `<text x="${finalW/2}" y="${currentY}" text-anchor="middle" fill="${text}" font-size="${14*fScale}" font-weight="bold" letter-spacing="${2*fScale}">REFLECTIONS</text>`;
+                    currentY += (25 * fScale);
+                    
+                    state.notes.forEach(n => {
+                        const typeColor = n.type === 'memory' ? '#f43f5e' : '#0ea5e9';
+                        const age = (n.weekIndex / 52).toFixed(1);
+                        svg += `<text x="${finalW/2}" y="${currentY}" text-anchor="middle" fill="${text}" font-size="${11*fScale}">
+                            <tspan fill="${typeColor}" font-weight="bold">${n.type.toUpperCase()} (Age ${age}):</tspan> ${n.text}
+                        </text>`;
+                        currentY += (18 * fScale);
+                    });
+                    currentY += (10 * fScale);
+                }
+
+                // --- FOOTER ---
+                if (document.getElementById('optQuote').checked) {
+                    // Push to bottom if fixed size, else just append
+                    const footerY = isFixedSize ? (finalH - (30*fScale)) : (currentY + (40*fScale));
+                    
+                    const quoteText = document.getElementById('posterQuote').innerText;
+                    svg += `<text x="${finalW/2}" y="${footerY}" text-anchor="middle" fill="${text}" font-size="${12*fScale}" font-style="italic">${quoteText}</text>`;
+                    svg += `<text x="${margin}" y="${footerY}" text-anchor="start" fill="${text}" font-size="${9*fScale}" opacity="0.3" letter-spacing="${1*fScale}">GENERATED BY LIFE TIMELINE</text>`;
+                }
+
+                svg += `</svg>`;
+
+                // --- OUTPUT ---
+                if (format === 'svg') {
+                    const blob = new Blob([svg], {type: 'image/svg+xml'});
+                    triggerDownload(blob, 'svg');
+                    statusEl.innerText = "Export complete!";
+                } else {
+                    statusEl.innerText = "Rendering High-Res PNG...";
+                    const canvas = document.createElement('canvas');
+                    canvas.width = finalW;
+                    canvas.height = finalH;
+                    const ctx = canvas.getContext('2d');
+                    
+                    const img = new Image();
+                    const svgBlob = new Blob([svg], {type: 'image/svg+xml;charset=utf-8'});
+                    const url = URL.createObjectURL(svgBlob);
+                    
+                    img.onload = function() {
+                        ctx.drawImage(img, 0, 0);
+                        canvas.toBlob((blob) => {
+                            triggerDownload(blob, 'png');
+                            URL.revokeObjectURL(url);
+                            statusEl.innerText = "Export complete!";
+                        }, 'image/png');
+                    };
+                    img.src = url;
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('exportModal').classList.add('hidden');
+                    statusEl.innerText = "";
+                }, 2000);
+
+            } catch (e) {
+                console.error(e);
+                statusEl.innerText = "Error exporting.";
+            }
+        }
+
+        function triggerDownload(blob, ext) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0,10);
+            link.download = `life-timeline-${dateStr}.${ext}`;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
