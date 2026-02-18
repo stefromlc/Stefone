@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -167,7 +169,8 @@
         .recorder-box { background: var(--bg-body); border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius); text-align: center; margin-bottom: 1rem; }
         .rubric-item { margin-bottom: 0.5rem; }
         .rubric-item label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 2px; }
-        .history-item { font-size: 0.85rem; border-bottom: 1px solid var(--border); padding: 0.5rem 0; }
+        .history-item { font-size: 0.85rem; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.75rem; background: var(--bg-card); transition: box-shadow 0.2s; }
+        .history-item:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .star-card { border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem; background: var(--bg-body); cursor: pointer; transition: 0.2s; }
         .star-card:hover { border-color: var(--accent); background: var(--bg-card); }
 
@@ -695,7 +698,7 @@
                     <button class="btn btn-sm btn-outline" style="width:100%; margin-top:0.5rem" onclick="app.saveInterviewSession()">💾 Save Session</button>
                 </div>
 
-                <div class="card" style="flex:1; overflow-y:auto">
+                <div class="card" style="flex:1; overflow-y:auto; min-height: 200px;">
                     <h3>Practice History</h3>
                     <div id="interview-history-list">
                         <p class="empty-state">No sessions saved yet.</p>
@@ -1140,9 +1143,27 @@ const app = {
     audioChunks: [],
     
     questions: {
-        general: ["Tell me about yourself.", "Why do you want to work here?", "Where do you see yourself in 5 years?"],
-        behavioral: ["Tell me about a time you faced a conflict.", "Describe a time you failed.", "Give an example of a goal you reached."],
-        technical: ["Explain a complex technical concept.", "How do you debug a critical issue?", "What is your favorite tech stack?"]
+        general: [
+            "Tell me about yourself.", 
+            "Why do you want to work here?", 
+            "Where do you see yourself in 5 years?",
+            "What are your greatest strengths?",
+            "What is your biggest weakness?"
+        ],
+        behavioral: [
+            "Tell me about a time you faced a conflict.", 
+            "Describe a time you failed.", 
+            "Give an example of a goal you reached.",
+            "Tell me about a time you had to handle pressure.",
+            "Describe a situation where you showed leadership."
+        ],
+        technical: [
+            "Explain a complex technical concept to a non-technical person.", 
+            "How do you debug a critical issue?", 
+            "What is your favorite tech stack and why?",
+            "Describe a challenging bug you fixed.",
+            "How do you stay updated with new technologies?"
+        ]
     },
 
     init: async function() {
@@ -1172,6 +1193,7 @@ const app = {
             if(!this.data.customReminders) this.data.customReminders = [];
             if(!this.data.interactions) this.data.interactions = [];
             if(!this.data.interviews) this.data.interviews = [];
+            if(!this.data.interviewSessions) this.data.interviewSessions = [];
             if(!this.data.settings.theme) this.data.settings.theme = 'light';
         }
     },
@@ -1209,6 +1231,7 @@ const app = {
         if(viewId === 'star') this.renderStarStories();
         if(viewId === 'activity') this.renderActivity();
         if(viewId === 'schedule') this.renderSchedule();
+        if(viewId === 'interview') this.renderInterviewHistory();
     },
 
     // --- ANALYTICS & DASHBOARD ---
@@ -1832,6 +1855,7 @@ const app = {
         this.renderActivity();
         this.renderSchedule();
         this.renderContacts();
+        this.renderInterviewHistory();
     },
 
     // --- JOB CRUD ---
@@ -2350,7 +2374,51 @@ const app = {
         };
         this.data.interviewSessions.unshift(session);
         this.saveData();
+        this.renderInterviewHistory(); // Updates list immediately
+        
+        // Reset Inputs
+        document.getElementById('interview-notes').value = '';
+        document.getElementById('rate-clarity').value = 5;
+        document.getElementById('rate-content').value = 5;
+        document.getElementById('rate-confidence').value = 5;
+        document.getElementById('val-clarity').innerText = 5;
+        document.getElementById('val-content').innerText = 5;
+        document.getElementById('val-confidence').innerText = 5;
+        
         alert("Session saved!");
+    },
+    deleteInterviewSession: function(id) {
+        if(confirm("Delete this session record?")) {
+            this.data.interviewSessions = this.data.interviewSessions.filter(s => s.id !== id);
+            this.saveData();
+            this.renderInterviewHistory();
+        }
+    },
+    renderInterviewHistory: function() {
+        const list = document.getElementById('interview-history-list');
+        list.innerHTML = '';
+        if(!this.data.interviewSessions || this.data.interviewSessions.length === 0) {
+            list.innerHTML = '<p class="empty-state">No practice sessions recorded yet.</p>';
+            return;
+        }
+        this.data.interviewSessions.forEach(s => {
+            const avg = Math.round((parseInt(s.scores.clarity) + parseInt(s.scores.content) + parseInt(s.scores.confidence)) / 3 * 10) / 10;
+            
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem">
+                    <div style="font-weight:bold; font-size:0.9rem; flex:1; margin-right:10px;">${s.question}</div>
+                    <div style="font-size:0.8rem; color:var(--text-secondary); white-space:nowrap">${s.date}</div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; margin-bottom:0.5rem; color:var(--text-secondary)">
+                    <span>⭐ Avg: <strong style="color:var(--text-primary)">${avg}</strong>/10</span>
+                    <button class="icon-btn" style="color:var(--danger)" onclick="app.deleteInterviewSession(${s.id})">🗑</button>
+                </div>
+                ${s.notes ? `<div style="background:var(--bg-body); padding:0.5rem; border-radius:4px; font-size:0.85rem; color:var(--text-primary)">${s.notes}</div>` : ''}
+            `;
+            list.appendChild(div);
+        });
     }
 };
 
