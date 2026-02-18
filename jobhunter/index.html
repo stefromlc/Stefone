@@ -36,6 +36,9 @@
 <!-- Optional -->
 <meta name="theme-color" content="#f97316" />
 
+<!-- PDF Generation Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         :root {
             --bg-body: #f3f4f6;
@@ -521,7 +524,8 @@
             <!-- Report HTML goes here -->
         </div>
         
-        <div style="margin-top: 1rem; text-align: right;" class="no-print" id="print-actions">
+        <div style="margin-top: 1rem; text-align: right; gap: 0.5rem; display: flex; justify-content: flex-end;" class="no-print" id="print-actions">
+            <button class="btn btn-outline" onclick="app.downloadPDF(event)">⬇ Download .PDF</button>
             <button class="btn" onclick="window.print()">🖨 Print / Save PDF</button>
         </div>
     </section>
@@ -1928,6 +1932,32 @@ const app = {
         }
         
         container.innerHTML = html;
+    },
+
+    downloadPDF: function(e) {
+        if (!window.html2pdf) return alert("PDF generator requires internet connection. Please use the Print button.");
+        
+        const element = document.getElementById('report-content');
+        if (!element || element.style.display === 'none') return alert("Please generate a report view first.");
+        
+        const btn = e ? e.target : null;
+        if(btn) btn.innerText = "⏳ Generating...";
+        
+        const opt = {
+            margin:       [0.5, 0.5, 0.5, 0.5],
+            filename:     'JobHunter_Report_' + new Date().toISOString().split('T')[0] + '.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+            if(btn) btn.innerText = "⬇ Download .PDF";
+        }).catch(err => {
+            console.error(err);
+            if(btn) btn.innerText = "⬇ Download .PDF";
+            alert("Error generating PDF. Try the Print button.");
+        });
     },
 
     // --- STANDARD MODAL OPS ---
