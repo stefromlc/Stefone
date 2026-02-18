@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,6 +22,8 @@
 <meta name="twitter:title" content="JobHunter – Your Private Job Search Command Center" />
 <meta name="twitter:description" content="Track applications on a Kanban board, build STAR interview stories, scan resumes for keywords, and generate tailored cover letters—all locally." />
 <meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/jobhunter.png" />
+<!DOCTYPE html>
+<html lang="en">
 
 <!-- Optional -->
 <meta name="theme-color" content="#f97316" />
@@ -71,12 +71,18 @@
         #main-content { flex: 1; overflow-y: auto; padding: 2rem; position: relative; }
         
         /* Sidebar */
-        .brand { font-size: 1.25rem; font-weight: bold; margin-bottom: 2rem; color: white; display: flex; align-items: center; gap: 0.5rem; }
+        .brand { font-size: 1.25rem; font-weight: bold; margin-bottom: 1.5rem; color: white; display: flex; align-items: center; gap: 0.5rem; }
         .nav-item { padding: 0.75rem 1rem; color: var(--text-sidebar); text-decoration: none; border-radius: var(--radius); margin-bottom: 0.5rem; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: 0.2s; }
         .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; }
         .sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
         .data-btn { font-size: 0.8rem; background: none; border: 1px solid var(--text-sidebar); color: var(--text-sidebar); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; margin-right: 0.5rem; display: block; width: 100%; text-align: left; margin-bottom: 0.5rem;}
         
+        /* Global Search */
+        .sidebar-search { margin-bottom: 1.5rem; position: relative; }
+        .sidebar-search input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: white; padding-left: 2rem; font-size: 0.9rem; }
+        .sidebar-search input::placeholder { color: var(--text-sidebar); }
+        .sidebar-search span { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-sidebar); font-size: 0.9rem; }
+
         /* Special Back Button */
         .back-link { display: block; margin-bottom: 1rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border-radius: var(--radius); color: #fff; text-decoration: none; font-size: 0.85rem; text-align: center; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
         .back-link:hover { background: rgba(255,255,255,0.1); }
@@ -112,6 +118,7 @@
         .job-card { background: var(--bg-card); padding: 1rem; border-radius: var(--radius); box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: grab; transition: transform 0.2s, box-shadow 0.2s; border-left: 3px solid transparent; position: relative; border: 1px solid var(--border); }
         .job-card:active { cursor: grabbing; }
         .job-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .job-card.stale-card { opacity: 0.8; border-color: var(--warning); background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(245, 158, 11, 0.05) 10px, rgba(245, 158, 11, 0.05) 20px); }
         .job-card h3 { font-size: 1rem; margin-bottom: 0.25rem; }
         .job-card p { font-size: 0.85rem; color: var(--text-secondary); }
         .job-meta { font-size: 0.75rem; color: var(--text-secondary); display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;}
@@ -170,12 +177,15 @@
         .timeline-group { margin-bottom: 1.5rem; position: relative; }
         .timeline-label { font-size: 0.8rem; font-weight: bold; color: var(--text-secondary); margin-left: 40px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
         .timeline-item { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; position: relative; }
-        .timeline-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0; }
+        .timeline-dot { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0; font-size: 0.9rem; }
         .timeline-content { background: var(--bg-card); border: 1px solid var(--border); padding: 0.75rem; border-radius: var(--radius); flex: 1; }
         .timeline-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem; }
         .timeline-title { font-weight: 600; font-size: 0.95rem; }
         .timeline-time { font-size: 0.8rem; color: var(--text-secondary); }
         .timeline-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
+        
+        .today-highlight { border: 2px solid var(--accent); background: #f0f9ff; }
+        body.dark-mode .today-highlight { background: #0c4a6e; }
 
         /* NETWORKING & SPRINT */
         .table-container { background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); }
@@ -211,11 +221,31 @@
         body.dark-mode .k-match { background: #064e3b; color: #6ee7b7; border-color: #065f46; }
         body.dark-mode .k-missing { background: #7f1d1d; color: #fca5a5; border-color: #991b1b; }
         
+        /* ACTIVITY LOG STYLES */
+        .log-icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--bg-column); font-size: 0.8rem; margin-right: 8px; }
+        .log-inbound { color: var(--success); background: #dcfce7; }
+        .log-outbound { color: var(--accent); background: #dbeafe; }
+        body.dark-mode .log-inbound { background: #14532d; color: #bbf7d0; }
+        body.dark-mode .log-outbound { background: #1e3a8a; color: #bfdbfe; }
+        
+        /* INTERVIEW SCHEDULE STYLES */
+        .int-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; display: flex; gap: 1rem; transition: 0.2s; }
+        .int-card:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+        .int-date-box { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px; padding: 0.5rem; background: var(--bg-column); border-radius: var(--radius); color: var(--text-primary); }
+        .int-day { font-size: 1.2rem; font-weight: bold; }
+        .int-mon { font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); }
+        .int-details { flex: 1; }
+        .int-badge { display: inline-block; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; background: var(--accent); color: white; margin-bottom: 0.25rem; }
+
+        /* CONFETTI */
+        .confetti-piece { position: fixed; width: 10px; height: 10px; background-color: #f2d74e; position: absolute; top: -20px; z-index: 9999; }
+
         @media (max-width: 768px) {
             body { flex-direction: column; overflow: auto; }
             #sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 0.5rem; align-items: center; border-right: none; border-bottom: 1px solid var(--border); }
             .brand { margin-bottom: 0; margin-right: 1rem; font-size: 1rem; }
             .nav-item { margin-bottom: 0; padding: 0.5rem; white-space: nowrap; }
+            .sidebar-search { display: none; } /* Hide search on mobile for space */
             .sidebar-footer { display: none; }
             #main-content { padding: 1rem; overflow: visible; }
             .board { height: auto; flex-direction: column; }
@@ -242,15 +272,21 @@
 <!-- SIDEBAR -->
 <nav id="sidebar">
     <div class="brand">🚀 JobHunter</div>
+    <div class="sidebar-search">
+        <span>🔍</span>
+        <input type="text" id="global-search" placeholder="Search..." onkeyup="app.globalSearch(this.value)">
+    </div>
     <a href="/projects/" class="back-link">← Back to Projects</a>
     
     <div class="nav-item active" onclick="app.router('dashboard')">📊 Analytics & Home</div>
     <div class="nav-item" onclick="app.router('kanban')">📋 Kanban Board</div>
-    <div class="nav-item" onclick="app.router('star')">🧠 STAR Stories</div>
+    <div class="nav-item" onclick="app.router('schedule')">📅 Interviews</div>
+    <div class="nav-item" onclick="app.router('activity')">📞 Activity Log</div>
     <div class="nav-item" onclick="app.router('documents')">📂 Documents</div>
+    <div class="nav-item" onclick="app.router('star')">🧠 STAR Stories</div>
     <div class="nav-item" onclick="app.router('scanner')">🔍 Resume Scanner</div>
     <div class="nav-item" onclick="app.router('coverletter')">✍️ Cover Letter</div>
-    <div class="nav-item" onclick="app.router('interview')">🎤 Interview Prep</div>
+    <div class="nav-item" onclick="app.router('interview')">🎤 Practice / Sim</div>
     <div class="nav-item" onclick="app.router('network')">🤝 Networking</div>
     <div class="nav-item" onclick="app.router('reports')">📄 Reports / Export</div>
     
@@ -319,12 +355,30 @@
         
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>📅 Upcoming Reminders</h3>
-                <button class="btn btn-sm" onclick="app.openReminderModal()">+ Add Reminder</button>
+                <h3>⚡ Action Center</h3>
+                <div>
+                     <button class="btn btn-sm btn-outline" onclick="app.openInterviewModal()">+ Interview</button>
+                     <button class="btn btn-sm" onclick="app.openReminderModal()">+ Reminder</button>
+                </div>
             </div>
             <div class="timeline" id="dashboard-timeline">
                 <p class="empty-state">No upcoming follow-ups or interviews.</p>
             </div>
+        </div>
+    </section>
+
+    <!-- VIEW: SEARCH RESULTS -->
+    <section id="view-search" class="view-section">
+        <h1>Search Results</h1>
+        <div class="card">
+            <h3>Matching Jobs</h3>
+            <div id="search-jobs-list" style="margin-bottom: 1.5rem"></div>
+            
+            <h3>Matching Contacts</h3>
+            <div id="search-contacts-list" style="margin-bottom: 1.5rem"></div>
+
+            <h3>Matching Interactions</h3>
+            <div id="search-interactions-list"></div>
         </div>
     </section>
 
@@ -359,6 +413,45 @@
                 <div class="column-header">Rejected <span id="count-rejected">0</span></div>
                 <div class="column-content" id="col-rejected"></div>
             </div>
+        </div>
+    </section>
+
+    <!-- VIEW: ACTIVITY LOG -->
+    <section id="view-activity" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h1>Activity & Interactions</h1>
+            <button class="btn" onclick="app.openInteractionModal()">+ Log Activity</button>
+        </div>
+        <div class="card">
+            <div style="margin-bottom:1rem; display:flex; gap:1rem;">
+                <input type="text" id="activity-filter" placeholder="Filter activity..." onkeyup="app.renderActivity()">
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="15%">Date/Time</th>
+                            <th width="10%">Type</th>
+                            <th width="20%">Related To</th>
+                            <th>Summary/Notes</th>
+                            <th width="15%">Follow-up</th>
+                            <th width="10%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activity-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- VIEW: INTERVIEW SCHEDULE -->
+    <section id="view-schedule" class="view-section">
+         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h1>Interview Schedule</h1>
+            <button class="btn" onclick="app.openInterviewModal()">+ Schedule Interview</button>
+        </div>
+        <div id="schedule-list">
+            <!-- Injected by JS -->
         </div>
     </section>
 
@@ -527,7 +620,7 @@
         </div>
     </section>
 
-    <!-- VIEW: INTERVIEW -->
+    <!-- VIEW: PRACTICE / SIM -->
     <section id="view-interview" class="view-section">
         <h1>Interview Simulator</h1>
         
@@ -686,7 +779,7 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label>Date</label>
+                    <label>Application Date</label>
                     <input type="date" id="job-date">
                 </div>
             </div>
@@ -775,6 +868,150 @@
             <div style="display: flex; justify-content: flex-end; gap: 1rem;">
                 <button type="button" class="btn btn-outline" onclick="app.closeModals()">Cancel</button>
                 <button type="submit" class="btn">Save Reminder</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: INTERVIEW SCHEDULE -->
+<div class="modal-overlay" id="int-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="int-modal-title">Schedule Interview</h2>
+            <button class="close-modal" onclick="app.closeModals()">×</button>
+        </div>
+        <form id="int-form" onsubmit="app.saveInterview(event)">
+            <input type="hidden" id="int-id">
+            
+            <div class="input-group">
+                <label>Job / Company</label>
+                <select id="int-job" required style="width:100%"></select>
+            </div>
+
+            <div class="two-col">
+                <div class="input-group">
+                    <label>Round / Stage</label>
+                    <select id="int-round">
+                        <option value="Screening">Recruiter Screen</option>
+                        <option value="Technical">Technical Round</option>
+                        <option value="Manager">Hiring Manager</option>
+                        <option value="Panel">Panel / Onsite</option>
+                        <option value="Final">Final Round</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Format</label>
+                    <select id="int-format">
+                        <option value="Video">Video Call</option>
+                        <option value="Phone">Phone Call</option>
+                        <option value="In-Person">In-Person</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="input-group">
+                    <label>Date</label>
+                    <input type="date" id="int-date" required>
+                </div>
+                <div class="input-group">
+                    <label>Time</label>
+                    <input type="time" id="int-time" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Link / Location</label>
+                <input type="text" id="int-location" placeholder="e.g. Zoom link or Office Address">
+            </div>
+
+            <div class="input-group">
+                <label>Interviewer(s) / Details</label>
+                <textarea id="int-notes" rows="2" placeholder="Names, roles, or specific instructions..."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="app.closeModals()">Cancel</button>
+                <button type="submit" class="btn">Save Interview</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: INTERACTION (ACTIVITY) -->
+<div class="modal-overlay" id="act-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="act-modal-title">Log Interaction</h2>
+            <button class="close-modal" onclick="app.closeModals()">×</button>
+        </div>
+        <form id="act-form" onsubmit="app.saveInteraction(event)">
+            <input type="hidden" id="act-id">
+            
+            <div class="two-col">
+                <div class="input-group">
+                    <label>Type</label>
+                    <select id="act-type">
+                        <option value="Email">Email</option>
+                        <option value="Call">Phone Call</option>
+                        <option value="LinkedIn">LinkedIn Message</option>
+                        <option value="Text">SMS / Text</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Direction</label>
+                    <select id="act-dir">
+                        <option value="Outbound">Outbound (I sent)</option>
+                        <option value="Inbound">Inbound (They sent)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="input-group">
+                    <label>Related Job (Optional)</label>
+                    <select id="act-job" style="width:100%">
+                        <option value="">-- None --</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Related Contact (Optional)</label>
+                    <select id="act-contact" style="width:100%">
+                        <option value="">-- None --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="input-group">
+                    <label>Date</label>
+                    <input type="date" id="act-date" required>
+                </div>
+                <div class="input-group">
+                    <label>Time (Optional)</label>
+                    <input type="time" id="act-time">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Summary</label>
+                <input type="text" id="act-summary" placeholder="Short description..." required>
+            </div>
+
+            <div class="input-group">
+                <label>Notes / Outcome</label>
+                <textarea id="act-notes" rows="2"></textarea>
+            </div>
+
+            <div class="input-group" style="background:var(--bg-body); padding:10px; border-radius:var(--radius)">
+                <label>Next Follow-up (Optional)</label>
+                <input type="date" id="act-followup">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
+                <button type="button" class="btn btn-outline" onclick="app.closeModals()">Cancel</button>
+                <button type="submit" class="btn">Save Log</button>
             </div>
         </form>
     </div>
@@ -887,6 +1124,8 @@ const app = {
         interviewSessions: [],
         customReminders: [],
         starStories: [],
+        interactions: [], // New
+        interviews: [],   // New
         appActivity: {},
         settings: {
             sprintGoal: 10,
@@ -931,6 +1170,8 @@ const app = {
             if(!this.data.starStories) this.data.starStories = [];
             if(!this.data.appActivity) this.data.appActivity = {};
             if(!this.data.customReminders) this.data.customReminders = [];
+            if(!this.data.interactions) this.data.interactions = [];
+            if(!this.data.interviews) this.data.interviews = [];
             if(!this.data.settings.theme) this.data.settings.theme = 'light';
         }
     },
@@ -963,8 +1204,11 @@ const app = {
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-' + viewId).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        
         if(viewId === 'dashboard') this.renderDashboard();
         if(viewId === 'star') this.renderStarStories();
+        if(viewId === 'activity') this.renderActivity();
+        if(viewId === 'schedule') this.renderSchedule();
     },
 
     // --- ANALYTICS & DASHBOARD ---
@@ -1029,32 +1273,320 @@ const app = {
     renderTimeline: function() {
         const timeline = document.getElementById('dashboard-timeline');
         timeline.innerHTML = '';
-        let reminders = [];
-        this.data.jobs.filter(j => j.status === 'interview' && j.date).forEach(j => {
-            reminders.push({ type: 'Interview', name: j.company, date: j.date, sort: new Date(j.date), icon: '🎤', id: j.id, category: 'job' });
+        let events = [];
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        // 1. Scheduled Interviews
+        this.data.interviews.forEach(i => {
+            const job = this.data.jobs.find(j => j.id == i.jobId) || { company: 'Unknown' };
+            const dt = new Date(i.date + 'T' + i.time);
+            if(dt >= new Date().setHours(0,0,0,0)) {
+                events.push({ 
+                    type: 'Interview', 
+                    name: `${job.company} (${i.round})`, 
+                    date: i.date, 
+                    time: i.time,
+                    sort: dt, 
+                    icon: '🎤', 
+                    id: i.id, 
+                    category: 'interview' 
+                });
+            }
         });
+
+        // 2. Activity Follow-ups
+        this.data.interactions.filter(a => a.followUpDate).forEach(a => {
+            const dt = new Date(a.followUpDate);
+            if(dt >= new Date().setHours(0,0,0,0)) {
+                events.push({
+                    type: 'Follow-up',
+                    name: a.summary,
+                    date: a.followUpDate,
+                    sort: dt,
+                    icon: '📞',
+                    id: a.id,
+                    category: 'activity'
+                });
+            }
+        });
+
+        // 3. Contact Follow-ups
         this.data.contacts.filter(c => c.nextFollowUp).forEach(c => {
-            reminders.push({ type: 'Follow-up', name: c.name, date: c.nextFollowUp, sort: new Date(c.nextFollowUp), icon: '✉️', id: c.id, category: 'contact' });
+            const dt = new Date(c.nextFollowUp);
+             if(dt >= new Date().setHours(0,0,0,0)) {
+                events.push({ type: 'Network', name: c.name, date: c.nextFollowUp, sort: dt, icon: '✉️', id: c.id, category: 'contact' });
+             }
         });
+
+        // 4. Custom Reminders
         if(this.data.customReminders) {
             this.data.customReminders.forEach(r => {
-                 reminders.push({ type: 'Reminder', name: r.title, date: r.date, sort: new Date(r.date), icon: '🔔', id: r.id, category: 'custom' });
+                const dt = new Date(r.date);
+                if(dt >= new Date().setHours(0,0,0,0)) {
+                    events.push({ type: 'Reminder', name: r.title, date: r.date, sort: dt, icon: '🔔', id: r.id, category: 'custom' });
+                }
             });
         }
-        reminders.sort((a,b) => a.sort - b.sort);
-        if(reminders.length===0) { timeline.innerHTML = '<p class="empty-state">No upcoming events.</p>'; return; }
+
+        events.sort((a,b) => a.sort - b.sort);
+        if(events.length===0) { timeline.innerHTML = '<p class="empty-state">No upcoming events.</p>'; return; }
         
-        reminders.slice(0, 10).forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'timeline-item';
-            div.innerHTML = `
-                <div class="timeline-dot" style="border-color:var(--accent)">${item.icon}</div>
-                <div class="timeline-content">
-                    <div style="font-weight:bold">${item.type}: ${item.name}</div>
-                    <div style="color:var(--text-secondary); font-size:0.85rem">${item.date}</div>
-                </div>`;
-            timeline.appendChild(div);
+        // Group by Today vs Upcoming
+        const todaysEvents = events.filter(e => e.date === todayStr);
+        const upcomingEvents = events.filter(e => e.date !== todayStr);
+
+        if(todaysEvents.length > 0) {
+            const todayHeader = document.createElement('h4');
+            todayHeader.innerText = "🔥 Today's Priorities";
+            todayHeader.style.marginBottom = "0.5rem";
+            todayHeader.style.color = "var(--accent)";
+            timeline.appendChild(todayHeader);
+            
+            todaysEvents.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.innerHTML = `
+                    <div class="timeline-dot" style="border-color:var(--accent)">${item.icon}</div>
+                    <div class="timeline-content today-highlight">
+                        <div style="font-weight:bold">${item.type}: ${item.name}</div>
+                        <div style="color:var(--text-secondary); font-size:0.85rem">Today ${item.time ? '@ '+item.time : ''}</div>
+                    </div>`;
+                timeline.appendChild(div);
+            });
+        }
+
+        if(upcomingEvents.length > 0) {
+             const upHeader = document.createElement('h4');
+            upHeader.innerText = "Upcoming";
+            upHeader.style.marginBottom = "0.5rem";
+            upHeader.style.marginTop = "1rem";
+            timeline.appendChild(upHeader);
+
+            upcomingEvents.slice(0, 10).forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.innerHTML = `
+                    <div class="timeline-dot" style="border-color:var(--text-secondary)">${item.icon}</div>
+                    <div class="timeline-content">
+                        <div style="font-weight:bold">${item.type}: ${item.name}</div>
+                        <div style="color:var(--text-secondary); font-size:0.85rem">${item.date} ${item.time ? '@ '+item.time : ''}</div>
+                    </div>`;
+                timeline.appendChild(div);
+            });
+        }
+    },
+
+    // --- ACTIVITY LOG ---
+    renderActivity: function() {
+        const filter = document.getElementById('activity-filter').value.toLowerCase();
+        const list = document.getElementById('activity-list');
+        list.innerHTML = '';
+
+        let acts = this.data.interactions.sort((a,b) => new Date(b.date + 'T' + (b.time||'00:00')) - new Date(a.date + 'T' + (a.time||'00:00')));
+        
+        if(filter) {
+            acts = acts.filter(a => a.summary.toLowerCase().includes(filter) || a.notes.toLowerCase().includes(filter));
+        }
+
+        if(acts.length === 0) {
+            list.innerHTML = `<tr><td colspan="6" class="empty-state">No activity logged.</td></tr>`;
+            return;
+        }
+
+        acts.forEach(a => {
+            const job = this.data.jobs.find(j => j.id == a.jobId);
+            const contact = this.data.contacts.find(c => c.id == a.contactId);
+            const typeIcon = a.direction === 'Inbound' ? '↙' : '↗';
+            const typeClass = a.direction === 'Inbound' ? 'log-inbound' : 'log-outbound';
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><div style="font-weight:500">${a.date}</div><div style="font-size:0.8rem; color:var(--text-secondary)">${a.time || ''}</div></td>
+                <td><span class="log-icon ${typeClass}">${typeIcon}</span>${a.type}</td>
+                <td>
+                    ${job ? `<div style="font-size:0.85rem">🏢 ${job.company}</div>` : ''}
+                    ${contact ? `<div style="font-size:0.85rem">👤 ${contact.name}</div>` : ''}
+                </td>
+                <td><strong>${a.summary}</strong><div style="font-size:0.85rem; color:var(--text-secondary)">${a.notes}</div></td>
+                <td>${a.followUpDate ? '📅 '+a.followUpDate : '-'}</td>
+                <td>
+                    <button class="icon-btn" onclick="app.editInteraction(${a.id})">✎</button>
+                    <button class="icon-btn" onclick="app.deleteInteraction(${a.id})">🗑</button>
+                </td>
+            `;
+            list.appendChild(tr);
         });
+    },
+    openInteractionModal: function() {
+        document.getElementById('act-modal-title').innerText = 'Log Interaction';
+        document.getElementById('act-form').reset();
+        document.getElementById('act-id').value = '';
+        document.getElementById('act-date').value = new Date().toISOString().split('T')[0];
+        this.populateDropdowns();
+        document.getElementById('act-modal').classList.add('open');
+    },
+    saveInteraction: function(e) {
+        e.preventDefault();
+        const id = document.getElementById('act-id').value;
+        const newAct = {
+            id: id ? parseInt(id) : Date.now(),
+            type: document.getElementById('act-type').value,
+            direction: document.getElementById('act-dir').value,
+            date: document.getElementById('act-date').value,
+            time: document.getElementById('act-time').value,
+            jobId: document.getElementById('act-job').value,
+            contactId: document.getElementById('act-contact').value,
+            summary: document.getElementById('act-summary').value,
+            notes: document.getElementById('act-notes').value,
+            followUpDate: document.getElementById('act-followup').value
+        };
+
+        if(id) {
+            const idx = this.data.interactions.findIndex(x => x.id == id);
+            if(idx !== -1) this.data.interactions[idx] = newAct;
+        } else {
+            this.data.interactions.push(newAct);
+            this.logActivity();
+        }
+        this.saveData();
+        this.closeModals();
+        this.renderActivity();
+    },
+    editInteraction: function(id) {
+        const act = this.data.interactions.find(a => a.id == id);
+        if(!act) return;
+        document.getElementById('act-modal-title').innerText = 'Edit Interaction';
+        this.populateDropdowns(act.jobId, act.contactId);
+        document.getElementById('act-id').value = act.id;
+        document.getElementById('act-type').value = act.type;
+        document.getElementById('act-dir').value = act.direction;
+        document.getElementById('act-date').value = act.date;
+        document.getElementById('act-time').value = act.time;
+        document.getElementById('act-summary').value = act.summary;
+        document.getElementById('act-notes').value = act.notes;
+        document.getElementById('act-followup').value = act.followUpDate;
+        document.getElementById('act-modal').classList.add('open');
+    },
+    deleteInteraction: function(id) {
+        if(confirm("Delete log?")) {
+            this.data.interactions = this.data.interactions.filter(a => a.id != id);
+            this.saveData();
+            this.renderActivity();
+        }
+    },
+
+    // --- INTERVIEW SCHEDULE ---
+    renderSchedule: function() {
+        const container = document.getElementById('schedule-list');
+        container.innerHTML = '';
+        
+        let ints = this.data.interviews.sort((a,b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+        
+        // Split into Upcoming and Past
+        const now = new Date();
+        const upcoming = ints.filter(i => new Date(i.date + 'T' + i.time) >= now);
+        const past = ints.filter(i => new Date(i.date + 'T' + i.time) < now).reverse(); // Most recent past first
+
+        const renderGroup = (title, items) => {
+            if(items.length === 0) return;
+            const h3 = document.createElement('h3');
+            h3.style.marginTop = "1.5rem";
+            h3.innerText = title;
+            container.appendChild(h3);
+            items.forEach(i => {
+                const job = this.data.jobs.find(j => j.id == i.jobId) || { company: 'Unknown', position: 'Unknown' };
+                const d = new Date(i.date);
+                const day = d.getDate();
+                const mon = d.toLocaleString('default', { month: 'short' });
+                
+                const card = document.createElement('div');
+                card.className = 'int-card';
+                card.innerHTML = `
+                    <div class="int-date-box">
+                        <div class="int-day">${day}</div>
+                        <div class="int-mon">${mon}</div>
+                    </div>
+                    <div class="int-details">
+                        <div style="display:flex; justify-content:space-between;">
+                            <h4>${job.company} - ${job.position}</h4>
+                            <div>
+                                <button class="icon-btn" onclick="app.editInterview(${i.id})">✎</button>
+                                <button class="icon-btn" onclick="app.deleteInterview(${i.id})">🗑</button>
+                            </div>
+                        </div>
+                        <span class="int-badge">${i.round}</span>
+                        <div style="font-size:0.9rem; margin-top:0.5rem">
+                            🕒 <strong>${i.time}</strong> • ${i.format} • ${i.location || 'No location'}
+                        </div>
+                        <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.5rem">
+                            ${i.notes ? '📝 ' + i.notes : ''}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        };
+
+        if(upcoming.length === 0 && past.length === 0) {
+            container.innerHTML = `<p class="empty-state">No interviews scheduled. Good luck!</p>`;
+        } else {
+            renderGroup('🚀 Upcoming', upcoming);
+            renderGroup('📜 Past', past);
+        }
+    },
+    openInterviewModal: function() {
+        document.getElementById('int-modal-title').innerText = 'Schedule Interview';
+        document.getElementById('int-form').reset();
+        document.getElementById('int-id').value = '';
+        this.populateDropdowns();
+        document.getElementById('int-modal').classList.add('open');
+    },
+    saveInterview: function(e) {
+        e.preventDefault();
+        const id = document.getElementById('int-id').value;
+        const newInt = {
+            id: id ? parseInt(id) : Date.now(),
+            jobId: document.getElementById('int-job').value,
+            round: document.getElementById('int-round').value,
+            format: document.getElementById('int-format').value,
+            date: document.getElementById('int-date').value,
+            time: document.getElementById('int-time').value,
+            location: document.getElementById('int-location').value,
+            notes: document.getElementById('int-notes').value
+        };
+
+        if(id) {
+            const idx = this.data.interviews.findIndex(x => x.id == id);
+            if(idx !== -1) this.data.interviews[idx] = newInt;
+        } else {
+            this.data.interviews.push(newInt);
+            this.logActivity();
+        }
+        this.saveData();
+        this.closeModals();
+        this.renderSchedule();
+    },
+    editInterview: function(id) {
+        const i = this.data.interviews.find(x => x.id == id);
+        if(!i) return;
+        document.getElementById('int-modal-title').innerText = 'Edit Interview';
+        this.populateDropdowns(i.jobId);
+        document.getElementById('int-id').value = i.id;
+        document.getElementById('int-job').value = i.jobId;
+        document.getElementById('int-round').value = i.round;
+        document.getElementById('int-format').value = i.format;
+        document.getElementById('int-date').value = i.date;
+        document.getElementById('int-time').value = i.time;
+        document.getElementById('int-location').value = i.location;
+        document.getElementById('int-notes').value = i.notes;
+        document.getElementById('int-modal').classList.add('open');
+    },
+    deleteInterview: function(id) {
+         if(confirm("Cancel Interview?")) {
+            this.data.interviews = this.data.interviews.filter(i => i.id != id);
+            this.saveData();
+            this.renderSchedule();
+        }
     },
 
     // --- KANBAN & TAGS ---
@@ -1072,9 +1604,24 @@ const app = {
             displayJobs = displayJobs.filter(j => j.tags && j.tags.toLowerCase().includes(filter));
         }
 
+        // Sort by update/created time desc (newest first)
+        displayJobs.sort((a,b) => (b.updatedAt || b.id) - (a.updatedAt || a.id));
+
+        const now = Date.now();
+        const STALE_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+
         displayJobs.forEach(job => {
+            // Find next event context
+            const nextInt = this.data.interviews
+                .filter(i => i.jobId == job.id && new Date(i.date + 'T' + i.time) >= new Date())
+                .sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+            
+            // Stale check
+            const lastActive = job.updatedAt || job.id;
+            const isStale = (now - lastActive > STALE_MS) && !['rejected', 'offer'].includes(job.status);
+
             const card = document.createElement('div');
-            card.className = 'job-card';
+            card.className = `job-card ${isStale ? 'stale-card' : ''}`;
             card.draggable = true;
             card.ondragstart = (e) => app.drag(e, job.id);
             
@@ -1082,11 +1629,20 @@ const app = {
             if(job.tags) {
                 tagsHtml = `<div style="margin-top:0.5rem">` + job.tags.split(',').map(t => `<span class="tag tag-pill">${t.trim()}</span>`).join('') + `</div>`;
             }
+            
+            let contextHtml = '';
+            if(nextInt) {
+                const d = new Date(nextInt.date);
+                contextHtml = `<div style="font-size:0.75rem; color:var(--accent); margin-top:0.5rem; font-weight:bold;">📅 ${d.toLocaleDateString()} (${nextInt.round})</div>`;
+            } else if (isStale) {
+                contextHtml = `<div style="font-size:0.75rem; color:var(--warning); margin-top:0.5rem;">⚠️ No activity > 14 days</div>`;
+            }
 
             card.innerHTML = `
                 <h3>${job.company}</h3>
                 <p>${job.position}</p>
                 <div class="job-meta"><span class="tag">${job.date || 'No Date'}</span></div>
+                ${contextHtml}
                 ${tagsHtml}
                 <div class="job-actions">
                     <button class="icon-btn" onclick="app.editJob(${job.id})">✎</button>
@@ -1100,6 +1656,51 @@ const app = {
         statuses.forEach(s => {
             const count = displayJobs.filter(j => j.status === s).length;
             document.getElementById('count-'+s).innerText = count;
+        });
+    },
+
+    // --- SEARCH ---
+    globalSearch: function(query) {
+        if(!query) {
+             // If empty, go back to dashboard if we were searching
+             if(document.getElementById('view-search').classList.contains('active')) app.router('dashboard');
+             return;
+        }
+        
+        app.router('search');
+        const q = query.toLowerCase();
+
+        // Jobs
+        const jobs = this.data.jobs.filter(j => j.company.toLowerCase().includes(q) || j.position.toLowerCase().includes(q) || (j.tags && j.tags.toLowerCase().includes(q)));
+        const jobDiv = document.getElementById('search-jobs-list');
+        jobDiv.innerHTML = jobs.length ? '' : '<p class="empty-state">No jobs found.</p>';
+        jobs.forEach(j => {
+             const div = document.createElement('div');
+             div.className = 'doc-item';
+             div.innerHTML = `<div style="font-weight:bold">${j.company} - ${j.position} <span class="tag">${j.status}</span></div> <button class="btn btn-sm" onclick="app.editJob(${j.id})">View</button>`;
+             jobDiv.appendChild(div);
+        });
+
+        // Contacts
+        const contacts = this.data.contacts.filter(c => c.name.toLowerCase().includes(q) || c.company.toLowerCase().includes(q));
+        const contactDiv = document.getElementById('search-contacts-list');
+        contactDiv.innerHTML = contacts.length ? '' : '<p class="empty-state">No contacts found.</p>';
+        contacts.forEach(c => {
+             const div = document.createElement('div');
+             div.className = 'doc-item';
+             div.innerHTML = `<div>${c.name} (${c.company})</div>`;
+             contactDiv.appendChild(div);
+        });
+
+        // Interactions
+        const acts = this.data.interactions.filter(a => a.summary.toLowerCase().includes(q) || a.notes.toLowerCase().includes(q));
+        const actDiv = document.getElementById('search-interactions-list');
+        actDiv.innerHTML = acts.length ? '' : '<p class="empty-state">No logs found.</p>';
+        acts.forEach(a => {
+             const div = document.createElement('div');
+             div.className = 'doc-item';
+             div.innerHTML = `<div>${a.date}: ${a.summary}</div> <button class="btn btn-sm" onclick="app.editInteraction(${a.id})">Edit</button>`;
+             actDiv.appendChild(div);
         });
     },
 
@@ -1181,7 +1782,12 @@ const app = {
             html += `</ul>`;
             container.innerHTML += html;
         } else if (type === 'interview') {
-            let html = `<h3>Practice Log</h3><table style="width:100%; border-collapse:collapse; margin-top:1rem">
+            let html = `<h3>Interview Schedule Log</h3><ul>`;
+             this.data.interviews.forEach(i => {
+                const job = this.data.jobs.find(j=>j.id==i.jobId);
+                html += `<li>${i.date} - ${job?job.company:'Unknown'} (${i.round}) - ${i.format}</li>`;
+            });
+            html += `</ul><h3>Practice Log</h3><table style="width:100%; border-collapse:collapse; margin-top:1rem">
                 <tr style="background:#eee; text-align:left;"><th>Date</th><th>Question</th><th>Rating</th></tr>`;
             this.data.interviewSessions.forEach(s => {
                 html += `<tr><td style="padding:8px; border-bottom:1px solid #ccc">${s.date}</td>
@@ -1210,15 +1816,22 @@ const app = {
         document.getElementById('contact-form').reset();
         document.getElementById('reminder-form').reset();
         document.getElementById('star-form').reset();
+        document.getElementById('act-form').reset();
+        document.getElementById('int-form').reset();
         document.getElementById('job-id').value = '';
         document.getElementById('rem-id').value = '';
         document.getElementById('star-id').value = '';
+        document.getElementById('act-id').value = '';
+        document.getElementById('int-id').value = '';
     },
     
     renderAll: function() {
         this.renderKanban();
         this.renderDashboard();
         this.renderDocuments();
+        this.renderActivity();
+        this.renderSchedule();
+        this.renderContacts();
     },
 
     // --- JOB CRUD ---
@@ -1243,7 +1856,8 @@ const app = {
             email: document.getElementById('job-email').value,
             tags: document.getElementById('job-tags').value,
             resumeId: document.getElementById('job-resume').value,
-            clId: document.getElementById('job-coverletter').value
+            clId: document.getElementById('job-coverletter').value,
+            updatedAt: Date.now()
         };
         if (id) {
             const index = this.data.jobs.findIndex(j => j.id == id);
@@ -1272,8 +1886,9 @@ const app = {
         document.getElementById('job-modal').classList.add('open');
     },
     deleteJob: function(id) {
-        if(confirm('Delete application?')) {
+        if(confirm('Delete application? This will also remove linked interviews and logs.')) {
             this.data.jobs = this.data.jobs.filter(j => j.id != id);
+            // Optional: clean up logs/interviews linked to job
             this.saveData();
         }
     },
@@ -1335,10 +1950,32 @@ const app = {
         ev.preventDefault();
         const id = ev.dataTransfer.getData("text");
         const job = this.data.jobs.find(j => j.id == id);
-        if (job) { job.status = newStatus; this.saveData(); }
+        if (job) { 
+            job.status = newStatus;
+            job.updatedAt = Date.now();
+            this.saveData();
+            if(newStatus === 'offer') app.fireConfetti();
+        }
     },
     
-    // --- FILE/DOCS (FIXED) ---
+    fireConfetti: function() {
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+        for(let i=0; i<60; i++) {
+            const div = document.createElement('div');
+            div.className = 'confetti-piece';
+            div.style.left = Math.random() * 100 + 'vw';
+            div.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            div.style.transition = 'top 1.5s ease-in, transform 1.5s linear';
+            document.body.appendChild(div);
+            
+            setTimeout(() => {
+                div.style.top = '105vh';
+                div.style.transform = `rotate(${Math.random() * 360}deg)`;
+            }, 10);
+            setTimeout(() => div.remove(), 1600);
+        }
+    },
+    
     populateDocDropdowns: function(selectedResume, selectedCL) {
         const resumeSelect = document.getElementById('job-resume');
         const clSelect = document.getElementById('job-coverletter');
@@ -1357,6 +1994,52 @@ const app = {
             }
         });
     },
+
+    populateDropdowns: function(selectedJob, selectedContact) {
+        // Populates both Activity and Interview modal dropdowns
+        const jobs = this.data.jobs;
+        const contacts = this.data.contacts;
+        
+        // Activity Job Select
+        const actJob = document.getElementById('act-job');
+        if(actJob) {
+            actJob.innerHTML = '<option value="">-- None --</option>';
+            jobs.forEach(j => {
+                const opt = document.createElement('option');
+                opt.value = j.id;
+                opt.innerText = `${j.company} - ${j.position}`;
+                if(selectedJob == j.id) opt.selected = true;
+                actJob.appendChild(opt);
+            });
+        }
+        
+        // Activity Contact Select
+        const actContact = document.getElementById('act-contact');
+        if(actContact) {
+            actContact.innerHTML = '<option value="">-- None --</option>';
+            contacts.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.innerText = c.name;
+                if(selectedContact == c.id) opt.selected = true;
+                actContact.appendChild(opt);
+            });
+        }
+
+        // Interview Job Select
+        const intJob = document.getElementById('int-job');
+        if(intJob) {
+            intJob.innerHTML = '';
+            jobs.forEach(j => {
+                const opt = document.createElement('option');
+                opt.value = j.id;
+                opt.innerText = `${j.company} - ${j.position}`;
+                if(selectedJob == j.id) opt.selected = true;
+                intJob.appendChild(opt);
+            });
+        }
+    },
+
     handleFileUpload: async function(input, type) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
@@ -1532,6 +2215,21 @@ const app = {
     },
     openContactModal: function() { document.getElementById('contact-modal').classList.add('open'); },
     deleteContact: function(id) { if(confirm('Delete contact?')) { this.data.contacts = this.data.contacts.filter(c => c.id != id); this.saveData(); } },
+    renderContacts: function() {
+        const list = document.getElementById('contact-list');
+        list.innerHTML = '';
+        this.data.contacts.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${c.name}</td>
+                <td>${c.company}</td>
+                <td>${c.lastContact || '-'}</td>
+                <td>${c.nextFollowUp || '-'}</td>
+                <td><button class="icon-btn" onclick="app.deleteContact(${c.id})">🗑</button></td>
+            `;
+            list.appendChild(tr);
+        });
+    },
     
     // --- OTHERS ---
     exportData: function() {
@@ -1552,6 +2250,9 @@ const app = {
             try {
                 const imported = JSON.parse(e.target.result);
                 app.data = imported;
+                // Init new arrays if import is from old version
+                if(!app.data.interactions) app.data.interactions = [];
+                if(!app.data.interviews) app.data.interviews = [];
                 if(!app.data.documents) app.data.documents = [];
                 if(!app.data.customReminders) app.data.customReminders = [];
                 if(!app.data.starStories) app.data.starStories = [];
