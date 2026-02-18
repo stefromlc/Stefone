@@ -15,7 +15,6 @@
 />
 <link rel="icon" type="image/png" href="/favicon.png" />
 
-
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://www.stefone.com/jobhunter/" />
@@ -76,7 +75,7 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-body); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; transition: background 0.3s, color 0.3s; }
         
         /* Layout */
-        #sidebar { width: 250px; background: var(--bg-sidebar); color: white; display: flex; flex-direction: column; padding: 1rem; flex-shrink: 0; transition: transform 0.3s; border-right: 1px solid rgba(255,255,255,0.05); }
+        #sidebar { width: 250px; background: var(--bg-sidebar); color: white; display: flex; flex-direction: column; padding: 1rem; flex-shrink: 0; transition: transform 0.3s; border-right: 1px solid rgba(255,255,255,0.05); overflow-y: auto; /* ENABLE SCROLLING */ }
         #main-content { flex: 1; overflow-y: auto; padding: 2rem; position: relative; }
         
         /* Sidebar */
@@ -88,7 +87,7 @@
         
         /* Global Search */
         .sidebar-search { margin-bottom: 1.5rem; position: relative; }
-        .sidebar-search input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: white; padding-left: 2rem; font-size: 0.9rem; }
+        .sidebar-search input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: white; padding-left: 2rem; font-size: 0.9rem; width: 100%; }
         .sidebar-search input::placeholder { color: var(--text-sidebar); }
         .sidebar-search span { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-sidebar); font-size: 0.9rem; }
 
@@ -484,11 +483,30 @@
         <p class="no-print" style="margin-bottom: 1rem; color: var(--text-secondary);">Generate a printable report. Use your browser's "Print > Save as PDF" feature.</p>
         
         <div class="card no-print">
+            <h3 style="margin-bottom:1rem">Filter Options</h3>
+            <div class="two-col">
+                <div class="input-group">
+                    <label>Start Date</label>
+                    <input type="date" id="report-start">
+                </div>
+                <div class="input-group">
+                    <label>End Date</label>
+                    <input type="date" id="report-end">
+                </div>
+            </div>
+            <div style="margin-bottom: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-outline" onclick="app.setReportRange('7')">Last 7 Days</button>
+                <button class="btn btn-sm btn-outline" onclick="app.setReportRange('30')">Last 30 Days</button>
+                <button class="btn btn-sm btn-outline" onclick="app.setReportRange('month')">This Month</button>
+                <button class="btn btn-sm btn-outline" onclick="app.setReportRange('year')">This Year</button>
+            </div>
+
             <div class="two-col">
                 <div class="input-group">
                     <label>Report Type</label>
                     <select id="report-type">
-                        <option value="summary">Application Summary</option>
+                        <option value="comprehensive">Comprehensive Activity Report</option>
+                        <option value="summary">Application Summary (Jobs Only)</option>
                         <option value="interview">Interview Log</option>
                         <option value="networking">Networking Report</option>
                     </select>
@@ -1239,6 +1257,7 @@ const app = {
         if(viewId === 'activity') this.renderActivity();
         if(viewId === 'schedule') this.renderSchedule();
         if(viewId === 'interview') this.renderInterviewHistory();
+        if(viewId === 'reports') this.setReportRange('30'); // Default to 30 days
     },
 
     // --- ANALYTICS & DASHBOARD ---
@@ -1795,48 +1814,120 @@ const app = {
     },
 
     // --- REPORTS ---
+    setReportRange: function(type) {
+        const end = new Date();
+        const start = new Date();
+        
+        if (type === '7') start.setDate(end.getDate() - 7);
+        if (type === '30') start.setDate(end.getDate() - 30);
+        if (type === 'month') start.setDate(1); // 1st of current month
+        if (type === 'year') start.setMonth(0, 1); // Jan 1st
+
+        document.getElementById('report-start').value = start.toISOString().split('T')[0];
+        document.getElementById('report-end').value = end.toISOString().split('T')[0];
+    },
+
     generateReport: function() {
         const type = document.getElementById('report-type').value;
         const container = document.getElementById('report-content');
-        container.style.display = 'block';
-        container.innerHTML = `<h2 style="margin-bottom:1rem; border-bottom:2px solid var(--text-primary)">JobHunter Report: ${type.toUpperCase()}</h2>`;
+        const startDateInput = document.getElementById('report-start').value;
+        const endDateInput = document.getElementById('report-end').value;
         
-        if (type === 'summary') {
-            const applied = this.data.jobs.filter(j => j.status === 'applied');
-            const active = this.data.jobs.filter(j => ['interview','offer'].includes(j.status));
+        // Filter Dates
+        const start = startDateInput ? new Date(startDateInput) : new Date('2000-01-01');
+        const end = endDateInput ? new Date(endDateInput) : new Date('2100-01-01');
+        end.setHours(23, 59, 59); // End of day inclusiveness
+
+        const filterDate = (dateStr) => {
+            if(!dateStr) return false;
+            const d = new Date(dateStr);
+            return d >= start && d <= end;
+        };
+
+        const dateRangeStr = startDateInput ? `${startDateInput} to ${endDateInput || 'Now'}` : 'All Time';
+
+        container.style.display = 'block';
+        let html = `
+            <div style="text-align:center; margin-bottom:2rem;">
+                <h2 style="margin-bottom:0.5rem">JobHunter Report</h2>
+                <p style="color:var(--text-secondary)">${type.toUpperCase()} • ${dateRangeStr}</p>
+            </div>
+        `;
+        
+        if (type === 'comprehensive') {
+            // Merge All Events
+            let events = [];
             
-            let html = `<h3>Active Applications</h3><ul>`;
-            active.forEach(j => html += `<li><strong>${j.company}</strong> - ${j.position} (${j.status.toUpperCase()}) - Last Update: ${j.date}</li>`);
-            html += `</ul><h3>Recent Applications</h3><ul>`;
-            applied.slice(0, 10).forEach(j => html += `<li>${j.company} - ${j.position} - ${j.date}</li>`);
-            html += `</ul>`;
-            container.innerHTML += html;
-        } else if (type === 'interview') {
-            let html = `<h3>Interview Schedule Log</h3><ul>`;
-             this.data.interviews.forEach(i => {
-                const job = this.data.jobs.find(j=>j.id==i.jobId);
-                html += `<li>${i.date} - ${job?job.company:'Unknown'} (${i.round}) - ${i.format}</li>`;
+            // Jobs Applied
+            this.data.jobs.filter(j => filterDate(j.date)).forEach(j => {
+                events.push({ date: j.date, type: 'Job Application', details: `${j.company} - ${j.position} (${j.status})` });
             });
-            html += `</ul><h3>Practice Log</h3><table style="width:100%; border-collapse:collapse; margin-top:1rem">
-                <tr style="background:#eee; text-align:left;"><th>Date</th><th>Question</th><th>Rating</th></tr>`;
-            this.data.interviewSessions.forEach(s => {
-                html += `<tr><td style="padding:8px; border-bottom:1px solid #ccc">${s.date}</td>
-                <td style="padding:8px; border-bottom:1px solid #ccc">${s.question}</td>
-                <td style="padding:8px; border-bottom:1px solid #ccc">Conf: ${s.scores.confidence}</td></tr>`;
+            // Interviews
+            this.data.interviews.filter(i => filterDate(i.date)).forEach(i => {
+                const j = this.data.jobs.find(x => x.id == i.jobId);
+                events.push({ date: i.date, type: 'Interview', details: `${j?j.company:'Unknown'} - ${i.round} (${i.format})` });
+            });
+            // Activities
+            this.data.interactions.filter(a => filterDate(a.date)).forEach(a => {
+                events.push({ date: a.date, type: `Activity (${a.type})`, details: a.summary });
+            });
+
+            events.sort((a,b) => new Date(b.date) - new Date(a.date)); // Newest first
+
+            html += `<h3>Activity Timeline</h3>
+            <table style="width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.9rem;">
+                <tr style="background:var(--bg-column); text-align:left;"><th style="padding:10px">Date</th><th style="padding:10px">Type</th><th style="padding:10px">Details</th></tr>`;
+            
+            if(events.length === 0) html += `<tr><td colspan="3" style="padding:1rem; text-align:center; font-style:italic;">No activity in this period.</td></tr>`;
+            
+            events.forEach(e => {
+                html += `<tr style="border-bottom:1px solid var(--border);">
+                    <td style="padding:10px">${e.date}</td>
+                    <td style="padding:10px"><strong>${e.type}</strong></td>
+                    <td style="padding:10px">${e.details}</td>
+                </tr>`;
             });
             html += `</table>`;
-            container.innerHTML += html;
+
+            // Stats Section
+            html += `<div style="margin-top:2rem; padding:1rem; background:var(--bg-body); border-radius:8px; display:flex; gap:2rem;">
+                <div><strong>Applications:</strong> ${this.data.jobs.filter(j => filterDate(j.date)).length}</div>
+                <div><strong>Interviews:</strong> ${this.data.interviews.filter(i => filterDate(i.date)).length}</div>
+                <div><strong>Interactions:</strong> ${this.data.interactions.filter(a => filterDate(a.date)).length}</div>
+            </div>`;
+
+        } else if (type === 'summary') {
+            const filteredJobs = this.data.jobs.filter(j => filterDate(j.date));
+            const active = filteredJobs.filter(j => ['interview','offer'].includes(j.status));
+            
+            html += `<h3>Active Applications (${active.length})</h3><ul>`;
+            active.forEach(j => html += `<li><strong>${j.company}</strong> - ${j.position} (${j.status.toUpperCase()}) - ${j.date}</li>`);
+            html += `</ul><h3>All Applications in Period (${filteredJobs.length})</h3><ul>`;
+            filteredJobs.forEach(j => html += `<li>${j.company} - ${j.position} - ${j.date}</li>`);
+            html += `</ul>`;
+        
+        } else if (type === 'interview') {
+            const filteredInts = this.data.interviews.filter(i => filterDate(i.date));
+            html += `<h3>Interview Schedule (${filteredInts.length})</h3><ul>`;
+             filteredInts.forEach(i => {
+                const job = this.data.jobs.find(j=>j.id==i.jobId);
+                html += `<li><strong>${i.date} @ ${i.time}</strong> - ${job?job.company:'Unknown'} (${i.round}) - ${i.format}<br><span style="font-size:0.85rem; color:#666">${i.notes || ''}</span></li>`;
+            });
+            html += `</ul>`;
         } else {
-            let html = `<h3>Networking Contacts</h3><table style="width:100%; border-collapse:collapse; margin-top:1rem">
-                <tr style="background:#eee; text-align:left;"><th>Name</th><th>Company</th><th>Notes</th></tr>`;
+            // Network
+            html += `<h3>Networking Contacts</h3><table style="width:100%; border-collapse:collapse; margin-top:1rem">
+                <tr style="background:#eee; text-align:left;"><th style="padding:8px">Name</th><th style="padding:8px">Company</th><th style="padding:8px">Last Contact</th></tr>`;
             this.data.contacts.forEach(c => {
                 html += `<tr><td style="padding:8px; border-bottom:1px solid #ccc">${c.name}</td>
                 <td style="padding:8px; border-bottom:1px solid #ccc">${c.company}</td>
-                <td style="padding:8px; border-bottom:1px solid #ccc">${c.notes || '-'}</td></tr>`;
+                <td style="padding:8px; border-bottom:1px solid #ccc">${c.lastContact || '-'}</td></tr>`;
             });
             html += `</table>`;
             container.innerHTML += html;
         }
+        
+        container.innerHTML = html;
     },
 
     // --- STANDARD MODAL OPS ---
@@ -2287,6 +2378,7 @@ const app = {
                 if(!app.data.documents) app.data.documents = [];
                 if(!app.data.customReminders) app.data.customReminders = [];
                 if(!app.data.starStories) app.data.starStories = [];
+                if(!app.data.interviewSessions) app.data.interviewSessions = [];
                 app.saveData();
                 alert("Import successful!");
                 location.reload();
