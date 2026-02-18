@@ -520,7 +520,7 @@
             </div>
         </div>
 
-        <div id="report-content" style="background: var(--bg-card); padding: 2rem; border: 1px solid var(--border); min-height: 500px; display:none;">
+        <div id="report-content" style="background: white; color: black; padding: 2rem; border: 1px solid #e5e7eb; min-height: 500px; display:none;">
             <!-- Report HTML goes here -->
         </div>
         
@@ -1172,27 +1172,9 @@ const app = {
     audioChunks: [],
     
     questions: {
-        general: [
-            "Tell me about yourself.", 
-            "Why do you want to work here?", 
-            "Where do you see yourself in 5 years?",
-            "What are your greatest strengths?",
-            "What is your biggest weakness?"
-        ],
-        behavioral: [
-            "Tell me about a time you faced a conflict.", 
-            "Describe a time you failed.", 
-            "Give an example of a goal you reached.",
-            "Tell me about a time you had to handle pressure.",
-            "Describe a situation where you showed leadership."
-        ],
-        technical: [
-            "Explain a complex technical concept to a non-technical person.", 
-            "How do you debug a critical issue?", 
-            "What is your favorite tech stack and why?",
-            "Describe a challenging bug you fixed.",
-            "How do you stay updated with new technologies?"
-        ]
+        general: ["Tell me about yourself.", "Why do you want to work here?", "Where do you see yourself in 5 years?"],
+        behavioral: ["Tell me about a time you faced a conflict.", "Describe a time you failed.", "Give an example of a goal you reached."],
+        technical: ["Explain a complex technical concept.", "How do you debug a critical issue?", "What is your favorite tech stack?"]
     },
 
     init: async function() {
@@ -1850,11 +1832,15 @@ const app = {
 
         const dateRangeStr = startDateInput ? `${startDateInput} to ${endDateInput || 'Now'}` : 'All Time';
 
+        // Force white background for print friendliness regardless of theme
         container.style.display = 'block';
+        container.style.backgroundColor = 'white';
+        container.style.color = 'black';
+        
         let html = `
             <div style="text-align:center; margin-bottom:2rem;">
-                <h2 style="margin-bottom:0.5rem">JobHunter Report</h2>
-                <p style="color:var(--text-secondary)">${type.toUpperCase()} • ${dateRangeStr}</p>
+                <h2 style="margin-bottom:0.5rem; color:black;">JobHunter Report</h2>
+                <p style="color:#666;">${type.toUpperCase()} • ${dateRangeStr}</p>
             </div>
         `;
         
@@ -1879,13 +1865,13 @@ const app = {
             events.sort((a,b) => new Date(b.date) - new Date(a.date)); // Newest first
 
             html += `<h3>Activity Timeline</h3>
-            <table style="width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.9rem;">
-                <tr style="background:var(--bg-column); text-align:left;"><th style="padding:10px">Date</th><th style="padding:10px">Type</th><th style="padding:10px">Details</th></tr>`;
+            <table style="width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.9rem; color:black;">
+                <tr style="background:#f3f4f6; text-align:left; border-bottom:2px solid #ccc;"><th style="padding:10px">Date</th><th style="padding:10px">Type</th><th style="padding:10px">Details</th></tr>`;
             
             if(events.length === 0) html += `<tr><td colspan="3" style="padding:1rem; text-align:center; font-style:italic;">No activity in this period.</td></tr>`;
             
             events.forEach(e => {
-                html += `<tr style="border-bottom:1px solid var(--border);">
+                html += `<tr style="border-bottom:1px solid #eee;">
                     <td style="padding:10px">${e.date}</td>
                     <td style="padding:10px"><strong>${e.type}</strong></td>
                     <td style="padding:10px">${e.details}</td>
@@ -1893,8 +1879,8 @@ const app = {
             });
             html += `</table>`;
 
-            // Stats Section
-            html += `<div style="margin-top:2rem; padding:1rem; background:var(--bg-body); border-radius:8px; display:flex; gap:2rem;">
+            // Stats Section - Force light theme style
+            html += `<div style="margin-top:2rem; padding:1rem; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; display:flex; gap:2rem; color:black;">
                 <div><strong>Applications:</strong> ${this.data.jobs.filter(j => filterDate(j.date)).length}</div>
                 <div><strong>Interviews:</strong> ${this.data.interviews.filter(i => filterDate(i.date)).length}</div>
                 <div><strong>Interactions:</strong> ${this.data.interactions.filter(a => filterDate(a.date)).length}</div>
@@ -1904,7 +1890,7 @@ const app = {
             const filteredJobs = this.data.jobs.filter(j => filterDate(j.date));
             const active = filteredJobs.filter(j => ['interview','offer'].includes(j.status));
             
-            html += `<h3>Active Applications (${active.length})</h3><ul>`;
+            html += `<h3>Active Applications (${active.length})</h3><ul style="margin-bottom:1rem;">`;
             active.forEach(j => html += `<li><strong>${j.company}</strong> - ${j.position} (${j.status.toUpperCase()}) - ${j.date}</li>`);
             html += `</ul><h3>All Applications in Period (${filteredJobs.length})</h3><ul>`;
             filteredJobs.forEach(j => html += `<li>${j.company} - ${j.position} - ${j.date}</li>`);
@@ -1920,15 +1906,14 @@ const app = {
             html += `</ul>`;
         } else {
             // Network
-            html += `<h3>Networking Contacts</h3><table style="width:100%; border-collapse:collapse; margin-top:1rem">
-                <tr style="background:#eee; text-align:left;"><th style="padding:8px">Name</th><th style="padding:8px">Company</th><th style="padding:8px">Last Contact</th></tr>`;
+            html += `<h3>Networking Contacts</h3><table style="width:100%; border-collapse:collapse; margin-top:1rem; color:black;">
+                <tr style="background:#f3f4f6; text-align:left; border-bottom:2px solid #ccc;"><th style="padding:8px">Name</th><th style="padding:8px">Company</th><th style="padding:8px">Last Contact</th></tr>`;
             this.data.contacts.forEach(c => {
-                html += `<tr><td style="padding:8px; border-bottom:1px solid #ccc">${c.name}</td>
-                <td style="padding:8px; border-bottom:1px solid #ccc">${c.company}</td>
-                <td style="padding:8px; border-bottom:1px solid #ccc">${c.lastContact || '-'}</td></tr>`;
+                html += `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px; border-bottom:1px solid #eee">${c.name}</td>
+                <td style="padding:8px; border-bottom:1px solid #eee">${c.company}</td>
+                <td style="padding:8px; border-bottom:1px solid #eee">${c.lastContact || '-'}</td></tr>`;
             });
             html += `</table>`;
-            container.innerHTML += html;
         }
         
         container.innerHTML = html;
