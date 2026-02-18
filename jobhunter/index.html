@@ -1171,11 +1171,77 @@ const app = {
     mediaRecorder: null,
     audioChunks: [],
     
-    questions: {
-        general: ["Tell me about yourself.", "Why do you want to work here?", "Where do you see yourself in 5 years?"],
-        behavioral: ["Tell me about a time you faced a conflict.", "Describe a time you failed.", "Give an example of a goal you reached."],
-        technical: ["Explain a complex technical concept.", "How do you debug a critical issue?", "What is your favorite tech stack?"]
-    },
+questions: {
+    general: [
+        "Tell me about yourself.",
+        "Walk me through your resume.",
+        "Why do you want to work here?",
+        "What do you know about our company?",
+        "Why are you leaving your current role?",
+        "What motivates you?",
+        "What are your greatest strengths?",
+        "What is your biggest weakness?",
+        "How would your colleagues describe you?",
+        "What type of work environment do you thrive in?",
+        "How do you prioritize your work?",
+        "What sets you apart from other candidates?",
+        "Describe your ideal manager.",
+        "How do you handle feedback?",
+        "What are you passionate about outside of work?",
+        "How do you stay updated in your field?",
+        "Describe a professional accomplishment you're proud of.",
+        "What does success mean to you?",
+        "Are you comfortable working under pressure?",
+        "Where do you see yourself in 5 years?"
+    ],
+
+    behavioral: [
+        "Tell me about a time you faced a conflict.",
+        "Describe a time you had to work with a difficult teammate.",
+        "Tell me about a time you failed.",
+        "Describe a mistake you made and how you handled it.",
+        "Give an example of a goal you reached.",
+        "Tell me about a time you exceeded expectations.",
+        "Describe a time you had to meet a tight deadline.",
+        "Tell me about a time you showed leadership.",
+        "Describe a time you had to adapt to change.",
+        "Tell me about a time you handled ambiguity.",
+        "Describe a situation where you had multiple priorities.",
+        "Tell me about a time you received critical feedback.",
+        "Give an example of a time you improved a process.",
+        "Describe a time you had to learn something quickly.",
+        "Tell me about a time you disagreed with a decision.",
+        "Describe a time you persuaded someone.",
+        "Tell me about a time you worked on a team project.",
+        "Describe a time you solved a challenging problem.",
+        "Tell me about a time you took initiative.",
+        "Give an example of a time you demonstrated resilience."
+    ],
+
+    technical: [
+        "Explain a complex technical concept.",
+        "Explain a recent project you worked on.",
+        "How do you debug a critical issue?",
+        "How do you approach system design problems?",
+        "Describe your development workflow.",
+        "What is your favorite tech stack?",
+        "How do you ensure code quality?",
+        "Explain REST vs GraphQL.",
+        "What is the difference between synchronous and asynchronous programming?",
+        "Explain how version control works.",
+        "How do you optimize application performance?",
+        "Describe your experience with cloud platforms.",
+        "How do you handle database migrations?",
+        "What is CI/CD and why is it important?",
+        "Explain microservices vs monolith architecture.",
+        "How do you secure an application?",
+        "Describe how you would scale a web application.",
+        "What testing strategies do you use?",
+        "Explain caching strategies.",
+        "How do you handle technical debt?"
+    ]
+},
+
 
     init: async function() {
         await db.init(); 
