@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Life Timeline Visualizer | Memento Mori</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Compression Lib for Share Links -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -200,6 +203,17 @@ html, body {
         }
         .note-memory::after { border-color: #f43f5e; }
         .note-dream::after { border-color: #0ea5e9; }
+        
+        /* Jump to week highlight pulse */
+        @keyframes highlightPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 rgba(255,255,255,0); z-index: 50; }
+            50% { transform: scale(3); box-shadow: 0 0 20px rgba(255,255,255,1); z-index: 50; border-color: white; background: white; }
+            100% { transform: scale(1); box-shadow: 0 0 0 rgba(255,255,255,0); z-index: 1; }
+        }
+        
+        .highlight-pulse {
+            animation: highlightPulse 1.5s ease-in-out;
+        }
 
 
         /* Global Floating Tooltip */
@@ -295,6 +309,11 @@ html, body {
             font-style: italic;
         }
         
+        /* Wall Preview Viewport Touch Handling */
+        #wall-viewport {
+            touch-action: none;
+        }
+        
         /* Modal Transitions */
         .modal-fade-enter { opacity: 0; transform: scale(0.95); }
         .modal-fade-enter-active { opacity: 1; transform: scale(1); transition: opacity 0.2s, transform 0.2s; }
@@ -329,7 +348,8 @@ html, body {
             <h1 class="text-sm font-bold tracking-wide uppercase">Life Timeline</h1>
         </div>
         <div class="flex items-center gap-2 sm:gap-4">
-            <button onclick="shareState()" class="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
+            <!-- Share Button (Opens Modal) -->
+            <button onclick="openShareModal()" class="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
                 <span class="hidden sm:inline">Share</span>
             </button>
@@ -528,6 +548,17 @@ html, body {
                         </div>
 
                         <div id="milestoneList" class="space-y-1"></div>
+                    </div>
+
+                    <!-- FEATURE: Reflections Manager -->
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Reflections Manager</h3>
+                        <div class="space-y-2">
+                            <input type="text" id="reflectionsSearch" placeholder="Search notes..." class="w-full rounded p-2 text-xs bg-black/50" oninput="renderReflectionsManager()">
+                            <div id="reflectionsList" class="max-h-[200px] overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
                     </div>
 
                     <!-- FEATURE: Data Management (Backup/Restore) -->
@@ -785,6 +816,34 @@ html, body {
             <div id="exportStatus" class="text-center text-[10px] text-accent h-4 font-mono"></div>
         </div>
     </div>
+    
+    <!-- FEATURE: SHARE MODAL -->
+    <div id="shareModal" class="fixed inset-0 bg-black/90 z-[80] flex items-center justify-center hidden backdrop-blur-sm">
+        <div class="bg-surface border border-border p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl relative animate-fade-in mx-4">
+            <div class="flex justify-between items-center mb-1">
+                <h2 class="text-lg font-bold text-white tracking-widest uppercase">Share Options</h2>
+                <button onclick="document.getElementById('shareModal').classList.add('hidden')" class="text-gray-500 hover:text-white transition-colors">×</button>
+            </div>
+            
+            <p class="text-xs text-gray-400">Choose what to include in your shared link.</p>
+            
+            <div class="space-y-3 bg-black/20 p-3 rounded border border-white/5">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" id="shareIncludeReflections" class="custom-checkbox">
+                    <span class="text-sm text-gray-300">Include Reflections</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" id="shareIncludeThemes" checked class="custom-checkbox">
+                    <span class="text-sm text-gray-300">Include Chapters & Milestones</span>
+                </label>
+            </div>
+            
+            <button onclick="generateShareLink()" class="w-full bg-white text-black font-bold py-3 rounded hover:bg-gray-200 transition-colors uppercase tracking-widest text-xs flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                Create Compressed Link
+            </button>
+        </div>
+    </div>
 
     <!-- FEATURE: Realistic Wall Preview Modal -->
     <div id="wallPreviewModal" class="fixed inset-0 z-[90] hidden bg-black/95 backdrop-blur-md overflow-hidden">
@@ -954,7 +1013,7 @@ html, body {
             initApp();
             updateVisuals(); 
             setupTooltip();
-            initWallInteractions(); // Init wall drag/zoom listeners
+            initWallInteractions(); 
             
             // Char count listener
             document.getElementById('noteText').addEventListener('input', function() {
@@ -1007,25 +1066,31 @@ window.addEventListener('resize', () => closeSidebar(true));
         function initApp() {
             // Sharing Logic
             const urlParams = new URLSearchParams(window.location.search);
-            const sharedData = urlParams.get('data');
+            const sharedDataCompressed = urlParams.get('s');
+            const sharedDataOld = urlParams.get('data');
 
             let hasSavedData = false;
 
-            if (sharedData) {
+            // Attempt to load compressed data first (New Format)
+            if (sharedDataCompressed) {
                 try {
-                    const base64 = sharedData.replace(/-/g, '+').replace(/_/g, '/');
+                    const decompressed = LZString.decompressFromEncodedURIComponent(sharedDataCompressed);
+                    if (decompressed) {
+                        const parsed = JSON.parse(decompressed);
+                        loadState(parsed);
+                        hasSavedData = true;
+                    }
+                } catch (e) {
+                    console.error("Invalid compressed share link", e);
+                    showToast("Error loading shared data", true);
+                }
+            } 
+            // Fallback to old format
+            else if (sharedDataOld) {
+                try {
+                    const base64 = sharedDataOld.replace(/-/g, '+').replace(/_/g, '/');
                     const parsed = JSON.parse(atob(base64));
-                    state = { ...state, ...parsed };
-                    if (!state.notes) state.notes = [];
-                    // Ensure presets
-                    if (!state.presets) state.presets = [
-                         { id: 'child', title: 'Childhood', start: 0, end: 12, color: '#f472b6' },
-                         { id: 'teen', title: 'Teens', start: 13, end: 19, color: '#fbbf24' },
-                         { id: '20s', title: 'Roaring 20s', start: 20, end: 29, color: '#60a5fa' },
-                         { id: 'retire', title: 'Retirement', start: 65, end: 0, color: '#4ade80' }
-                    ];
-                    if (!state.fadeStart) state.fadeStart = 75;
-                    window.history.replaceState({}, document.title, window.location.pathname);
+                    loadState(parsed);
                     hasSavedData = true;
                 } catch (e) {
                     console.error("Invalid share link", e);
@@ -1036,20 +1101,17 @@ window.addEventListener('resize', () => closeSidebar(true));
                 if (saved) {
                     try { 
                         const parsed = JSON.parse(saved);
-                        state = { ...state, ...parsed };
-                        if(!state.notes) state.notes = [];
-                        if (!state.presets) state.presets = [
-                            { id: 'child', title: 'Childhood', start: 0, end: 12, color: '#f472b6' },
-                            { id: 'teen', title: 'Teens', start: 13, end: 19, color: '#fbbf24' },
-                            { id: '20s', title: 'Roaring 20s', start: 20, end: 29, color: '#60a5fa' },
-                            { id: 'retire', title: 'Retirement', start: 65, end: 0, color: '#4ade80' }
-                        ];
+                        loadState(parsed);
                         hasSavedData = true;
                     } catch(e) {}
                 } else {
-                    // Fresh start logic
                     detectCountry(); // Autodetect region/expectancy to help
                 }
+            }
+            
+            // Clean URL if shared data was loaded
+            if (sharedDataCompressed || sharedDataOld) {
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
 
             // Hydrate UI
@@ -1063,18 +1125,35 @@ window.addEventListener('resize', () => closeSidebar(true));
             updateHint();
             renderMilestoneList();
             renderThemeList();
+            renderReflectionsManager(); // Hydrate manager
             renderPresets();
 
             // Onboarding Decision
             if (!hasSavedData || !state.dob) {
-                // If we have a default/detected DOB, prefill the welcome modal
                 const defaultDob = new Date(new Date().getFullYear() - 25, 0, 1).toISOString().split('T')[0];
                 document.getElementById('welcomeDob').value = defaultDob;
                 document.getElementById('welcomeModal').classList.remove('hidden');
-                updateGrid(false); // Render empty state
+                updateGrid(false); 
             } else {
                 updateGrid(false); 
             }
+        }
+        
+        function loadState(parsed) {
+            state = { ...state, ...parsed };
+            if (!state.notes) state.notes = [];
+            if (!state.themes) state.themes = [];
+            if (!state.milestones) state.milestones = [];
+            
+            if (!state.presets || state.presets.length === 0) {
+                 state.presets = [
+                     { id: 'child', title: 'Childhood', start: 0, end: 12, color: '#f472b6' },
+                     { id: 'teen', title: 'Teens', start: 13, end: 19, color: '#fbbf24' },
+                     { id: '20s', title: 'Roaring 20s', start: 20, end: 29, color: '#60a5fa' },
+                     { id: 'retire', title: 'Retirement', start: 65, end: 0, color: '#4ade80' }
+                ];
+            }
+            if (!state.fadeStart) state.fadeStart = 75;
         }
 
         // --- ONBOARDING LOGIC ---
@@ -1412,16 +1491,38 @@ window.addEventListener('resize', () => closeSidebar(true));
             localStorage.setItem('lifeTimelineState', JSON.stringify(state));
         }
 
-        async function shareState() {
+        // --- SHARE LOGIC ---
+        function openShareModal() {
+            document.getElementById('shareModal').classList.remove('hidden');
+        }
+
+        async function generateShareLink() {
+            const includeReflections = document.getElementById('shareIncludeReflections').checked;
+            const includeThemes = document.getElementById('shareIncludeThemes').checked;
+            
+            // Create filtered state
+            let exportState = {
+                dob: state.dob,
+                expectancy: state.expectancy,
+                country: state.country,
+                fadeStart: state.fadeStart
+            };
+            
+            if (includeThemes) {
+                exportState.themes = state.themes;
+                exportState.milestones = state.milestones;
+            }
+            
+            if (includeReflections) {
+                exportState.notes = state.notes;
+            }
+
             try {
-                const json = JSON.stringify(state);
-                const encoded = btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-                const url = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+                const json = JSON.stringify(exportState);
                 
-                if (url.length > 2000) {
-                     showToast("Data too large for link", true);
-                     return;
-                }
+                // Compress using LZ-String
+                const compressed = LZString.compressToEncodedURIComponent(json);
+                const url = `${window.location.origin}${window.location.pathname}?s=${compressed}`;
 
                 if (navigator.share) {
                     try {
@@ -1437,6 +1538,8 @@ window.addEventListener('resize', () => closeSidebar(true));
                 } else {
                     fallbackCopy(url);
                 }
+                
+                document.getElementById('shareModal').classList.add('hidden');
             } catch (e) {
                 console.error("Share failed", e);
                 showToast("Error creating link", true);
@@ -1726,12 +1829,91 @@ window.addEventListener('resize', () => closeSidebar(true));
             
             saveData();
             updateGrid();
+            renderReflectionsManager(); // Update manager
             closeNoteModal();
         }
 
         function closeNoteModal() {
             document.getElementById('noteModal').classList.add('hidden');
             currentNoteWeekIndex = null;
+        }
+        
+        // --- REFLECTIONS MANAGER ---
+        function renderReflectionsManager() {
+            const list = document.getElementById('reflectionsList');
+            const search = document.getElementById('reflectionsSearch').value.toLowerCase();
+            list.innerHTML = '';
+            
+            if (!state.notes || state.notes.length === 0) {
+                list.innerHTML = `<div class="p-3 text-center empty-state-dashed rounded text-[10px]">No reflections yet. Click on grid squares to add memories or dreams.</div>`;
+                return;
+            }
+            
+            // Sort by weekIndex (date order)
+            let notes = [...state.notes].sort((a, b) => b.weekIndex - a.weekIndex);
+            
+            // Filter
+            if (search) {
+                notes = notes.filter(n => n.text.toLowerCase().includes(search));
+            }
+            
+            if (notes.length === 0) {
+                list.innerHTML = `<div class="p-2 text-center text-gray-500 text-[10px]">No matches found.</div>`;
+                return;
+            }
+
+            notes.forEach((note) => {
+                const item = document.createElement('div');
+                item.className = 'bg-black/30 p-2 rounded text-xs border border-white/5 hover:border-white/20 transition-colors flex justify-between gap-2 group';
+                
+                const dob = new Date(state.dob);
+                const date = new Date(dob.getTime() + (note.weekIndex * 7 * 24 * 60 * 60 * 1000));
+                const dateStr = date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                const typeColor = note.type === 'memory' ? 'text-rose-400' : 'text-sky-400';
+                
+                item.innerHTML = `
+                    <div class="flex-1 min-w-0 cursor-pointer" onclick="jumpToWeek(${note.weekIndex})">
+                        <div class="flex justify-between items-baseline mb-0.5">
+                            <span class="${typeColor} font-bold text-[9px] uppercase tracking-wide">${note.type}</span>
+                            <span class="text-gray-500 text-[9px] font-mono">${dateStr}</span>
+                        </div>
+                        <div class="text-gray-300 truncate text-[11px]" title="${note.text}">${note.text}</div>
+                    </div>
+                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-center border-l border-white/10 pl-2">
+                        <button onclick="openNoteModal(${note.weekIndex}, '${dateStr}', ${note.type === 'memory'})" class="text-gray-400 hover:text-white" title="Edit">✎</button>
+                        <button onclick="deleteNote(${note.weekIndex})" class="text-gray-600 hover:text-red-400" title="Delete">×</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+        
+        function deleteNote(weekIndex) {
+            if (confirm("Delete this reflection?")) {
+                state.notes = state.notes.filter(n => n.weekIndex !== weekIndex);
+                saveData();
+                updateGrid();
+                renderReflectionsManager();
+            }
+        }
+        
+        function jumpToWeek(weekIndex) {
+            // Mobile: close sidebar first to see the grid
+            closeSidebar(true);
+            
+            // Wait for sidebar transition
+            setTimeout(() => {
+                const square = document.querySelector(`.week-box[data-index="${weekIndex}"]`);
+                if (square) {
+                    square.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    
+                    // Add Highlight Pulse
+                    square.classList.add('highlight-pulse');
+                    setTimeout(() => {
+                        square.classList.remove('highlight-pulse');
+                    }, 2000);
+                }
+            }, 300);
         }
 
         // --- KEY MOMENTS EDITING ---
@@ -2350,9 +2532,6 @@ window.addEventListener('resize', () => closeSidebar(true));
                     statusEl.innerText = "Rendering High-Res PNG...";
                     const canvas = document.createElement('canvas');
                     
-                    // We need to parse width/height from the generated SVG string or recalculate
-                    // Simpler: Just recalculate the final dimensions using same logic or parse from string
-                    // Parsing from string:
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(svg, "image/svg+xml");
                     const svgEl = doc.documentElement;
@@ -2489,16 +2668,19 @@ window.addEventListener('resize', () => closeSidebar(true));
             input.value = ''; // Reset so can upload same file again
         }
 
-        // 3. Wall Preview Logic & Interactions
+        // 3. Wall Preview Logic & Interactions (UPDATED: Mobile Friendly)
         
         let wallState = {
             scale: 1,
-            panning: false,
             pointX: 0,
             pointY: 0,
             startX: 0,
             startY: 0
         };
+        
+        // Pointer Cache for pinch zoom
+        let evCache = [];
+        let prevDiff = -1;
 
         function openWallPreview() {
             const modal = document.getElementById('wallPreviewModal');
@@ -2517,12 +2699,13 @@ window.addEventListener('resize', () => closeSidebar(true));
 
             // Reset View
             resetWallPreview();
-            
             modal.classList.remove('hidden');
         }
         
         function resetWallPreview() {
-            wallState = { scale: 1, panning: false, pointX: 0, pointY: 0, startX: 0, startY: 0 };
+            wallState = { scale: 1, pointX: 0, pointY: 0, startX: 0, startY: 0 };
+            evCache = [];
+            prevDiff = -1;
             document.getElementById('wallZoomSlider').value = 1;
             updateWallTransform();
         }
@@ -2542,23 +2725,10 @@ window.addEventListener('resize', () => closeSidebar(true));
 
         function focusWallPoster() {
             // "Focus" moves the poster (center coords ~46% X, ~35% Y relative to BG image) to center
-            // and zooms in.
-            // Image is 16:10 aspect ratio.
-            // Poster center is roughly at 46% width, 35% height of the *image*.
-            
             wallState.scale = 2.5;
             document.getElementById('wallZoomSlider').value = 2.5;
-            
-            // Simple rough centering logic for 1200px width image
-            // We want to translate such that the poster is in center.
-            // Center of poster relative to image center (0,0) is roughly (-4%, -15%)
-            // 1200px * -0.04 = -48px
-            // 750px * -0.15 = -112px
-            // We inverse this to bring it to center
-            
             wallState.pointX = 80; // approximate
             wallState.pointY = 250; // approximate vertical shift
-            
             updateWallTransform();
         }
 
@@ -2567,40 +2737,89 @@ window.addEventListener('resize', () => closeSidebar(true));
             scene.style.transform = `translate(${wallState.pointX}px, ${wallState.pointY}px) scale(${wallState.scale})`;
         }
 
+        // Updated for Mobile (Pointer Events + Pinch)
         function initWallInteractions() {
             const viewport = document.getElementById('wall-viewport');
             
-            viewport.onmousedown = (e) => {
+            // Pointer Down
+            viewport.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
-                wallState.startX = e.clientX - wallState.pointX;
-                wallState.startY = e.clientY - wallState.pointY;
-                wallState.panning = true;
+                evCache.push(e);
+                viewport.setPointerCapture(e.pointerId);
                 viewport.style.cursor = 'grabbing';
-            };
+                
+                if (evCache.length === 1) {
+                    // Start Panning
+                    wallState.startX = e.clientX - wallState.pointX;
+                    wallState.startY = e.clientY - wallState.pointY;
+                } 
+                else if (evCache.length === 2) {
+                    // Start Pinching - calc initial distance
+                    prevDiff = Math.hypot(
+                        evCache[0].clientX - evCache[1].clientX,
+                        evCache[0].clientY - evCache[1].clientY
+                    );
+                }
+            });
 
-            viewport.onmouseup = (e) => {
-                wallState.panning = false;
-                viewport.style.cursor = 'grab';
-            };
-            
-            viewport.onmouseleave = (e) => {
-                wallState.panning = false;
-                viewport.style.cursor = 'grab';
-            };
-
-            viewport.onmousemove = (e) => {
-                if (!wallState.panning) return;
+            // Pointer Move
+            viewport.addEventListener('pointermove', (e) => {
                 e.preventDefault();
-                wallState.pointX = e.clientX - wallState.startX;
-                wallState.pointY = e.clientY - wallState.startY;
-                updateWallTransform();
-            };
+                // Update cache
+                const index = evCache.findIndex((cachedEv) => cachedEv.pointerId === e.pointerId);
+                if (index > -1) evCache[index] = e;
 
-            viewport.onwheel = (e) => {
+                if (evCache.length === 1) {
+                    // Panning
+                    wallState.pointX = e.clientX - wallState.startX;
+                    wallState.pointY = e.clientY - wallState.startY;
+                    updateWallTransform();
+                } 
+                else if (evCache.length === 2) {
+                    // Pinch Zooming
+                    const curDiff = Math.hypot(
+                        evCache[0].clientX - evCache[1].clientX,
+                        evCache[0].clientY - evCache[1].clientY
+                    );
+
+                    if (prevDiff > 0) {
+                        // Calculate zoom change
+                        const delta = (curDiff - prevDiff) * 0.01; // sensitivity
+                        zoomWall(delta);
+                    }
+                    prevDiff = curDiff;
+                }
+            });
+
+            // Pointer Up / Cancel / Out
+            function removePointer(e) {
+                const index = evCache.findIndex((cachedEv) => cachedEv.pointerId === e.pointerId);
+                if (index > -1) {
+                    evCache.splice(index, 1);
+                    viewport.releasePointerCapture(e.pointerId);
+                }
+                
+                if (evCache.length < 2) prevDiff = -1;
+                if (evCache.length === 0) viewport.style.cursor = 'grab';
+                
+                // If dropping from 2 fingers to 1, reset pan start to avoid jump
+                if (evCache.length === 1) {
+                    wallState.startX = evCache[0].clientX - wallState.pointX;
+                    wallState.startY = evCache[0].clientY - wallState.pointY;
+                }
+            }
+            
+            viewport.addEventListener('pointerup', removePointer);
+            viewport.addEventListener('pointercancel', removePointer);
+            viewport.addEventListener('pointerout', removePointer);
+            viewport.addEventListener('pointerleave', removePointer);
+
+            // Wheel (Desktop)
+            viewport.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const delta = -Math.sign(e.deltaY) * 0.1;
                 zoomWall(delta);
-            };
+            }, { passive: false });
         }
 
     </script>
