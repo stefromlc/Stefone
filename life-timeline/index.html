@@ -548,6 +548,22 @@ html, body {
                         </div>
 
                         <div id="milestoneList" class="space-y-1"></div>
+                        
+                        <!-- NEW FEATURE: Milestone Stats Panel -->
+                         <div id="milestoneStatsPanel" class="hidden bg-surface border border-border rounded p-3 text-xs space-y-2 animate-pulse mt-2">
+                            <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span id="msTitle" class="font-bold text-white"></span>
+                                <button onclick="closeMilestoneStats()" class="text-gray-500 hover:text-white">×</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-gray-400">
+                                <div>Date: <span id="msDate" class="text-gray-200 font-mono text-[10px]"></span></div>
+                                <div>Your Age: <span id="msAge" class="text-gray-200"></span></div>
+                                <div id="msTimeLabel">Time Since:</div> <div id="msTimeVal" class="text-gray-200 font-bold"></div>
+                                <div id="msWeeksLabel">Total Weeks:</div> <div id="msWeeksVal" class="text-gray-200 font-mono"></div>
+                                <div id="msRatioLabel">Life Ratio:</div> <div id="msRatioVal" class="text-accent font-bold"></div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- FEATURE: Reflections Manager -->
@@ -2175,6 +2191,89 @@ window.addEventListener('resize', () => closeSidebar(true));
             if(editingMilestoneIndex === index) cancelMilestoneEdit();
         }
 
+        // --- NEW STATS HELPER ---
+        function getPrettyDuration(d1, d2) {
+            let months = (d2.getFullYear() - d1.getFullYear()) * 12;
+            months -= d1.getMonth();
+            months += d2.getMonth();
+            if (d2.getDate() < d1.getDate()) months--;
+            
+            if (months < 0) return "0m";
+            
+            const years = Math.floor(months / 12);
+            const m = months % 12;
+            
+            if (years > 0) return `${years}y ${m}m`;
+            return `${m}m`;
+        }
+
+        function showMilestoneStats(index) {
+             const m = state.milestones[index];
+             const panel = document.getElementById('milestoneStatsPanel');
+             
+             // Setup Dates
+             const dobDate = new Date(state.dob);
+             const todayDate = new Date();
+             const eventDate = new Date(m.date);
+             
+             const formattedDate = eventDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+             
+             // Age at event
+             let ageAtEvent = eventDate.getFullYear() - dobDate.getFullYear();
+             const mDiff = eventDate.getMonth() - dobDate.getMonth();
+             if (mDiff < 0 || (mDiff === 0 && eventDate.getDate() < dobDate.getDate())) {
+                 ageAtEvent--;
+             }
+             
+             document.getElementById('msTitle').innerText = m.title;
+             document.getElementById('msDate').innerText = formattedDate;
+             document.getElementById('msAge').innerText = ageAtEvent + " Years old";
+             
+             // Time calculations
+             const isPast = eventDate < todayDate;
+             
+             if (isPast) {
+                 const timeSince = getPrettyDuration(eventDate, todayDate);
+                 const weeksSince = Math.floor((todayDate - eventDate) / (1000 * 60 * 60 * 24 * 7));
+                 
+                 // Ratio of life this has existed for (Time Since / Age Now)
+                 const ageNowWeeks = Math.floor((todayDate - dobDate) / (1000 * 60 * 60 * 24 * 7));
+                 const ratio = ((weeksSince / ageNowWeeks) * 100).toFixed(1);
+                 
+                 document.getElementById('msTimeLabel').innerText = "Time Since:";
+                 document.getElementById('msTimeVal').innerText = timeSince;
+                 document.getElementById('msTimeVal').className = "text-gray-200 font-bold";
+                 
+                 document.getElementById('msWeeksLabel').innerText = "Weeks Since:";
+                 document.getElementById('msWeeksVal').innerText = weeksSince.toLocaleString();
+                 
+                 document.getElementById('msRatioLabel').innerText = "Life Ratio:";
+                 document.getElementById('msRatioVal').innerText = `${ratio}% of life`;
+                 document.getElementById('msRatioVal').className = "text-accent font-bold";
+                 
+             } else {
+                 const timeUntil = getPrettyDuration(todayDate, eventDate);
+                 const weeksUntil = Math.floor((eventDate - todayDate) / (1000 * 60 * 60 * 24 * 7));
+                 
+                 document.getElementById('msTimeLabel').innerText = "Time Until:";
+                 document.getElementById('msTimeVal').innerText = timeUntil;
+                 document.getElementById('msTimeVal').className = "text-future font-bold";
+                 
+                 document.getElementById('msWeeksLabel').innerText = "Weeks Away:";
+                 document.getElementById('msWeeksVal').innerText = weeksUntil.toLocaleString();
+                 
+                 document.getElementById('msRatioLabel').innerText = "Status:";
+                 document.getElementById('msRatioVal').innerText = "Future Event";
+                 document.getElementById('msRatioVal').className = "text-gray-500 italic";
+             }
+             
+             panel.classList.remove('hidden');
+        }
+
+        function closeMilestoneStats() {
+            document.getElementById('milestoneStatsPanel').classList.add('hidden');
+        }
+
         function renderMilestoneList() {
             const list = document.getElementById('milestoneList');
             list.innerHTML = '';
@@ -2195,6 +2294,12 @@ window.addEventListener('resize', () => closeSidebar(true));
                 const highlightColor = m.isGoal ? '#a855f7' : '#fbbf24'; // Purple or Gold
                 item.onmouseenter = () => highlightMilestone(m, highlightColor);
                 item.onmouseleave = () => clearHighlights();
+                
+                // FEATURE: Stats Click Handler
+                item.onclick = (e) => {
+                     // Only open stats if we didn't click the edit/delete buttons
+                     if(e.target.tagName !== 'BUTTON') showMilestoneStats(index);
+                };
                 
                 const iconChar = catIcons[m.category || 'default'] || (m.isGoal ? '◆' : '●');
                 const iconColor = m.category ? 'text-white' : (m.isGoal ? 'text-purple-500' : 'text-gold');
@@ -2264,7 +2369,7 @@ window.addEventListener('resize', () => closeSidebar(true));
             'a4': { label: 'A4 Poster', width: 2480, height: 3508 }, // 8.27 x 11.69 in @ 300
             'a3': { label: 'A3 Poster', width: 3508, height: 4960 }, // 11.69 x 16.53 in @ 300
             'letter': { label: 'US Letter', width: 2550, height: 3300 }, // 8.5 x 11 in @ 300
-            'tabloid': { label: 'Tabloid (11x17)', width: 3300, height: 5100 },
+            'tabloid': { label: 'Tabloid (11 x 17)', width: 3300, height: 5100 },
             'a2': { label: 'A2 Poster', width: 4960, height: 7016 },
             'a1': { label: 'A1 Poster', width: 7016, height: 9933 },
             '18x24': { label: '18x24 in', width: 5400, height: 7200 },
