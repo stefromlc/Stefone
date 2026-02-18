@@ -1201,15 +1201,8 @@ window.addEventListener('resize', () => closeSidebar(true));
         }
 
         function setupTooltip() {
-            // High-performance event listener on grid container instead of 4000 individual listeners
-            grid.addEventListener('mousemove', (e) => {
-                const target = e.target.closest('.week-box');
-                if (!target) {
-                    tooltip.style.opacity = '0';
-                    return;
-                }
-                
-                // Get data
+            // Helper: Update tooltip content (shared between hover and tap)
+            const updateTooltip = (target) => {
                 const date = target.dataset.date;
                 const age = target.dataset.age;
                 const weekNum = target.dataset.week;
@@ -1218,7 +1211,6 @@ window.addEventListener('resize', () => closeSidebar(true));
                 
                 if (!date) return;
 
-                // Update content
                 document.getElementById('tooltip-date').innerText = date;
                 document.getElementById('tooltip-age').innerText = `Age ${age}`;
                 document.getElementById('tooltip-week').innerText = `Wk ${weekNum}`;
@@ -1233,7 +1225,6 @@ window.addEventListener('resize', () => closeSidebar(true));
 
                 const noteEl = document.getElementById('tooltip-note');
                 if (noteType) {
-                    // Find text
                     const idx = parseInt(target.dataset.index);
                     const note = state.notes.find(n => n.weekIndex === idx);
                     if(note) {
@@ -1243,6 +1234,17 @@ window.addEventListener('resize', () => closeSidebar(true));
                 } else {
                     noteEl.className = "hidden";
                 }
+            };
+
+            // Desktop Hover Interaction
+            grid.addEventListener('mousemove', (e) => {
+                const target = e.target.closest('.week-box');
+                if (!target) {
+                    tooltip.style.opacity = '0';
+                    return;
+                }
+                
+                updateTooltip(target);
 
                 // Position
                 const rect = target.getBoundingClientRect();
@@ -1255,15 +1257,50 @@ window.addEventListener('resize', () => closeSidebar(true));
                 tooltip.style.opacity = '0';
             });
             
-            // Interaction: Open Note Modal
+            // Unified Click Interaction (Smart Mobile Handling)
+            let lastTapIndex = null;
+
             grid.addEventListener('click', (e) => {
                 const target = e.target.closest('.week-box');
-                if (!target) return;
+                
+                // If clicked outside a box, clear selection
+                if (!target) {
+                    lastTapIndex = null;
+                    if (window.matchMedia('(pointer: coarse)').matches) {
+                        tooltip.style.opacity = '0';
+                    }
+                    return;
+                }
                 
                 const idx = parseInt(target.dataset.index);
                 const date = target.dataset.date;
                 const isPast = target.classList.contains('week-past') || target.classList.contains('week-current');
-                openNoteModal(idx, date, isPast);
+                
+                // Check if device is primarily touch
+                const isTouch = window.matchMedia('(pointer: coarse)').matches;
+
+                if (isTouch) {
+                    // Mobile: Tap once to view info, Tap again to edit
+                    if (lastTapIndex === idx) {
+                        // Second tap confirmed
+                        openNoteModal(idx, date, isPast);
+                        lastTapIndex = null;
+                        tooltip.style.opacity = '0';
+                    } else {
+                        // First tap - Show Tooltip
+                        updateTooltip(target);
+                        
+                        const rect = target.getBoundingClientRect();
+                        tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                        tooltip.style.top = (rect.top - 5) + 'px'; // Slightly offset for finger visibility
+                        tooltip.style.opacity = '1';
+                        
+                        lastTapIndex = idx;
+                    }
+                } else {
+                    // Desktop: Click always opens modal (hover handles info)
+                    openNoteModal(idx, date, isPast);
+                }
             });
         }
         
