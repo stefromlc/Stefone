@@ -1,5 +1,24 @@
 [
   {
+    "title": "Monster Tracker",
+    "slug": "monster-tracker",
+    "description": "Log every can, track your stash, and see the real impact of your energy habit in one neon-lit dashboard. Monitor spending, stock levels, caffeine, sugar, hydration debt, and long-term forecasts—all stored locally in your browser.",
+    "thumbnail": "assets/thumbs/monster-tracker.png",
+    "tags": [
+      "App",
+      "Drink",
+      "Energy",
+      "Health",
+      "Monster",
+      "Tracker"
+    ],
+    "category": "Apps",
+    "featured": true,
+    "date": "2026-02-20",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "Abstractify",
     "slug": "abstractify",
     "description": "Generate bold abstract art from any photo. Tweak styles and colors in real time, remix instantly, and export high-resolution results—all locally in your browser.",
@@ -34,23 +53,6 @@
     "category": "Experiments",
     "featured": true,
     "date": "2026-02-14"
-  },
-  {
-    "demoUrl": "",
-    "repoUrl": "",
-    "title": "TimeBox",
-    "slug": "timebox",
-    "description": "A cinematic 3D word clock that turns the current time into a floating, glowing scene. Tweak presets, camera motion, and glow settings—or let it run as an ambient screensaver.",
-    "thumbnail": "assets/thumbs/timebox.png",
-    "tags": [
-      "Clock",
-      "Fun",
-      "Screensaver",
-      "Tools"
-    ],
-    "category": "Apps",
-    "featured": true,
-    "date": "2026-02-13"
   },
   {
     "demoUrl": "",
@@ -102,6 +104,23 @@
     "category": "Apps",
     "featured": true,
     "date": "2026-01-25"
+  },
+  {
+    "demoUrl": "",
+    "repoUrl": "",
+    "title": "TimeBox",
+    "slug": "timebox",
+    "description": "A cinematic 3D word clock that turns the current time into a floating, glowing scene. Tweak presets, camera motion, and glow settings—or let it run as an ambient screensaver.",
+    "thumbnail": "assets/thumbs/timebox.png",
+    "tags": [
+      "Clock",
+      "Fun",
+      "Screensaver",
+      "Tools"
+    ],
+    "category": "Apps",
+    "featured": true,
+    "date": "2026-02-13"
   },
   {
     "demoUrl": "",

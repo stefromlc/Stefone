@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Energy Tracker Pro</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            yellow: '#faef55',   // Highlight / Warning
+                            lime: '#ccdc2a',     // Accent 1
+                            olive: '#c2d72d',    // Accent 2
+                            forest: '#30aa49',   // Success / Deep Green
+                            neon: '#6acd0c',     // Primary Brand Green
+                            dark: '#050505',
+                            panel: 'rgba(15, 15, 15, 0.7)',
+                        }
+                    },
+                    fontFamily: {
+                        display: ['Rajdhani', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulse-glow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'liquid': 'liquid 8s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1, filter: 'drop-shadow(0 0 20px rgba(106,205,12,0.6))' },
+                            '50%': { opacity: .6, filter: 'drop-shadow(0 0 8px rgba(106,205,12,0.2))' },
+                        },
+                        'liquid': {
+                            '0%': { backgroundPosition: '0% 50%' },
+                            '100%': { backgroundPosition: '100% 50%' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            /* Using a high-res 3D abstract neon/fluid image for the background */
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(5,5,5,0.98)), url('https://cdn.wallpapersafari.com/11/84/qWHVMw.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+        }
+        
+        .glass-panel {
+            background: linear-gradient(145deg, rgba(20, 20, 20, 0.6) 0%, rgba(5, 5, 5, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(194, 215, 45, 0.15); /* brand-olive */
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .glass-input {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(204, 220, 42, 0.2); /* brand-lime */
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            border-color: #6acd0c; /* brand-neon */
+            box-shadow: 0 0 15px rgba(106, 205, 12, 0.3);
+            outline: none;
+            background: rgba(10, 10, 10, 0.8);
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
+        ::-webkit-scrollbar-thumb { background: #30aa49; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6acd0c; }
+        
+        .wizard-step, .modal-panel {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+        .wizard-step.active, .modal-panel.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .progress-bar {
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex flex-col items-center relative overflow-x-hidden">
+    
+    <!-- Ambient Background Glows -->
+    <div class="fixed top-[-15%] left-[-10%] w-[50%] h-[50%] rounded-full bg-brand-neon/10 blur-[150px] pointer-events-none z-0"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-brand-forest/10 blur-[120px] pointer-events-none z-0"></div>
+
+    <div class="w-full max-w-7xl mx-auto flex flex-col gap-8 relative z-10">
+        
+        <!-- Header & Navigation -->
+        <header class="flex flex-col md:flex-row justify-between items-center gap-4 bg-black/40 p-5 rounded-2xl backdrop-blur-xl border border-brand-olive/20 shadow-2xl">
+            <a href="/projects/" class="group flex items-center gap-2 text-gray-400 hover:text-brand-neon transition-colors duration-300">
+                <div class="bg-white/5 p-2 rounded-lg group-hover:bg-brand-neon/20 transition-colors border border-transparent group-hover:border-brand-neon/30">
+                    <i data-lucide="arrow-left" class="w-5 h-5 group-hover:-translate-x-1 transition-transform"></i>
+                </div>
+                <span class="font-medium text-sm tracking-wide">Back to Projects</span>
+            </a>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <i data-lucide="battery-charging" class="text-brand-neon w-8 h-8 md:w-10 md:h-10 animate-pulse-glow relative z-10"></i>
+                    <div class="absolute inset-0 bg-brand-neon blur-lg opacity-50 rounded-full"></div>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-bold tracking-widest text-white drop-shadow-xl">
+                    MONSTER<span class="text-brand-neon">_TRACKER</span>
+                </h1>
+            </div>
+        </header>
+
+        <!-- Main Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <!-- Drink Action -->
+            <div class="lg:col-span-3 glass-panel rounded-3xl p-8 flex flex-col items-center justify-center text-center group hover:border-brand-neon/50 transition-all duration-500 overflow-hidden relative shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+                <div class="absolute inset-0 bg-gradient-to-br from-brand-neon/10 to-transparent z-0"></div>
+                
+                <h2 class="text-2xl font-display font-bold mb-8 text-white drop-shadow-lg relative z-10 tracking-widest">Quick Log</h2>
+                
+                <button onclick="logDrink()" class="relative z-10 group/btn overflow-hidden bg-black/90 border-2 border-brand-neon text-brand-neon font-display font-bold text-2xl md:text-3xl py-8 px-12 md:px-20 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(106,205,12,0.3)] hover:shadow-[0_0_60px_rgba(106,205,12,0.6)] flex items-center gap-4">
+                    <i data-lucide="zap" class="w-8 h-8 md:w-10 md:h-10 animate-pulse"></i>
+                    <span class="relative z-10 tracking-widest text-shadow">DRINK MONSTER</span>
+                    
+                    <div class="absolute inset-0 bg-gradient-to-r from-brand-forest to-brand-neon w-0 group-hover/btn:w-full transition-all duration-300 ease-out z-0"></div>
+                    <span class="absolute inset-0 flex items-center justify-center gap-4 text-black font-display font-bold text-2xl md:text-3xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 z-10 tracking-widest drop-shadow-md">
+                        <i data-lucide="zap" class="w-10 h-10"></i>
+                        DRINK LOGGED
+                    </span>
+                </button>
+                <p class="mt-8 text-xs text-brand-lime relative z-10 font-bold tracking-widest uppercase bg-black/50 px-4 py-2 rounded-full border border-brand-lime/20">Click to log 1 can (500ml)</p>
+            </div>
+
+            <!-- Buy Action -->
+            <div class="lg:col-span-2 glass-panel rounded-3xl p-8 shadow-2xl relative overflow-hidden flex flex-col justify-center">
+                <div class="absolute top-0 right-0 w-40 h-40 bg-brand-forest/20 rounded-full blur-[60px] -mr-10 -mt-10"></div>
+                <h2 class="text-xl font-display font-bold mb-6 flex items-center gap-3 text-white tracking-widest">
+                    <div class="bg-brand-forest/20 p-2.5 rounded-xl text-brand-forest border border-brand-forest/30">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                    </div>
+                    Log Purchase
+                </h2>
+                
+                <form id="purchaseForm" onsubmit="logPurchase(event)" class="space-y-6 relative z-10">
+                    <div class="grid grid-cols-2 gap-5">
+                        <div>
+                            <label class="block font-display font-bold text-gray-400 mb-2 uppercase tracking-widest text-xs">Units (Cans)</label>
+                            <input type="number" id="buyQty" min="1" required class="w-full glass-input rounded-xl p-4 text-lg font-bold">
+                        </div>
+                        <div>
+                            <label class="block font-display font-bold text-gray-400 mb-2 uppercase tracking-widest text-xs">Total Cost (<span class="currency-symbol">£</span>)</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-4 text-brand-neon font-bold text-lg currency-symbol">£</span>
+                                <input type="number" id="buyCost" step="0.01" min="0.01" required class="w-full glass-input rounded-xl p-4 pl-10 text-lg font-bold">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-brand-forest/10 border border-brand-forest/30 hover:bg-brand-forest hover:text-black text-brand-forest font-display font-bold text-xl py-4 rounded-xl transition-all duration-300 flex justify-center items-center gap-3 shadow-[0_0_20px_rgba(48,170,73,0.1)] hover:shadow-[0_0_30px_rgba(48,170,73,0.4)]">
+                        <i data-lucide="plus-circle" class="w-6 h-6"></i>
+                        ADD TO STOCK
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Settings & Dashboard Controls -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mt-4">
+            <h2 class="text-2xl md:text-3xl font-display font-bold flex items-center gap-3 text-white drop-shadow-md tracking-widest">
+                <i data-lucide="activity" class="text-brand-yellow w-6 h-6 md:w-8 md:h-8"></i>
+                Dashboard
+            </h2>
+            <div class="flex flex-wrap gap-3">
+                <!-- Analytics Range Toggles -->
+                <div class="bg-black/60 p-1.5 rounded-xl border border-brand-olive/20 flex text-xs font-display font-bold tracking-widest shadow-inner">
+                    <button onclick="setRange('7d')" id="btn-range-7d" class="px-5 py-2 rounded-lg transition-all text-black bg-brand-neon shadow-[0_0_10px_rgba(106,205,12,0.4)]">7 DAYS</button>
+                    <button onclick="setRange('30d')" id="btn-range-30d" class="px-5 py-2 rounded-lg transition-all text-gray-400 hover:text-white">30 DAYS</button>
+                    <button onclick="setRange('all')" id="btn-range-all" class="px-5 py-2 rounded-lg transition-all text-gray-400 hover:text-white">ALL TIME</button>
+                </div>
+                <!-- Settings Buttons -->
+                <div class="flex gap-2">
+                    <button onclick="openNutrition()" class="text-xs font-bold text-brand-yellow hover:text-black hover:bg-brand-yellow transition-colors flex items-center gap-2 bg-brand-yellow/10 px-4 py-2 rounded-xl border border-brand-yellow/30 shadow-[0_0_15px_rgba(250,239,85,0.15)] font-display tracking-widest">
+                        <i data-lucide="flask-conical" class="w-4 h-4"></i> NUTRITION FACTS
+                    </button>
+                    <button onclick="openSettings()" class="text-xs font-bold text-brand-lime hover:text-black hover:bg-brand-lime transition-colors flex items-center gap-2 bg-brand-lime/10 px-4 py-2 rounded-xl border border-brand-lime/30 font-display tracking-widest">
+                        <i data-lucide="settings" class="w-4 h-4"></i> SETTINGS
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Core Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <!-- Consumed -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col hover:-translate-y-2 transition-transform duration-300 border-t-2 border-t-brand-neon">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Consumed</span>
+                    <i data-lucide="droplet" class="w-5 h-5 text-brand-neon"></i>
+                </div>
+                <span class="text-5xl font-display font-bold text-white mt-2 drop-shadow-md" id="stat-drank">0</span>
+                <span class="text-xs text-brand-olive mt-auto pt-4 font-bold tracking-widest uppercase" id="stat-drank-desc">In timeframe</span>
+            </div>
+            
+            <!-- Spent -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col relative overflow-hidden hover:-translate-y-2 transition-transform duration-300 border-t-2 border-t-brand-yellow">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-brand-yellow/20 rounded-full blur-[30px]"></div>
+                <div class="flex justify-between items-start mb-2 relative z-10">
+                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Total Spent</span>
+                    <i data-lucide="coins" class="w-5 h-5 text-brand-yellow"></i>
+                </div>
+                <span class="text-4xl md:text-5xl font-display font-bold text-brand-yellow mt-2 drop-shadow-[0_0_10px_rgba(250,239,85,0.4)] relative z-10" id="stat-spent">£0.00</span>
+                <span class="text-xs text-brand-olive mt-auto pt-4 font-bold tracking-widest uppercase relative z-10" id="stat-spent-desc">In timeframe</span>
+            </div>
+
+            <!-- Current Stock -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col hover:-translate-y-2 transition-transform duration-300 relative border-t-2 border-t-brand-forest">
+                <div id="stock-warning" class="hidden absolute top-0 left-0 w-full h-1 bg-red-500 rounded-t-2xl shadow-[0_0_15px_rgba(239,68,68,0.9)] z-20"></div>
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Current Stock</span>
+                    <i data-lucide="package" class="w-5 h-5 text-brand-forest"></i>
+                </div>
+                <span class="text-5xl font-display font-bold text-white mt-2 drop-shadow-md" id="stat-stock">0</span>
+                <span class="text-xs text-brand-olive mt-auto pt-4 font-bold tracking-widest uppercase" id="stat-stock-desc">Available Cans</span>
+            </div>
+
+            <!-- Avg Cost -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col hover:-translate-y-2 transition-transform duration-300 border-t-2 border-t-brand-lime">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Average Cost</span>
+                    <i data-lucide="tag" class="w-5 h-5 text-brand-lime"></i>
+                </div>
+                <span class="text-4xl font-display font-bold text-white mt-2 drop-shadow-md" id="stat-avg">£0.00</span>
+                <span class="text-xs text-brand-olive mt-auto pt-4 font-bold tracking-widest uppercase" id="stat-avg-desc">Lifetime</span>
+            </div>
+        </div>
+
+        <!-- Health & Nutrition Impact -->
+        <div id="health-dashboard" class="mt-4">
+            <h3 class="text-xl font-display font-bold mb-5 text-white flex items-center gap-3 tracking-widest">
+                <i data-lucide="heart-pulse" class="text-brand-yellow w-6 h-6"></i> Today's Health Impact
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                
+                <!-- Hydration Debt (NEW) -->
+                <div id="hydro-card" class="glass-panel rounded-2xl p-5 flex flex-col hover:-translate-y-1 transition-transform duration-300 border border-brand-forest/40 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-brand-forest/5 group-hover:bg-brand-forest/10 transition-colors z-0"></div>
+                    <div class="absolute -right-4 -top-4 w-20 h-20 bg-brand-forest/20 rounded-full blur-[20px] z-0"></div>
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <span class="text-gray-300 text-xs font-bold uppercase tracking-widest">Hydration Debt</span>
+                        <i data-lucide="droplets" class="w-5 h-5 text-brand-forest animate-bounce"></i>
+                    </div>
+                    <span class="text-4xl font-display font-bold text-brand-forest mt-1 drop-shadow-[0_0_8px_rgba(48,170,73,0.5)] relative z-10" id="stat-hydration">0 ml</span>
+                    <span class="text-[11px] text-brand-olive mt-auto pt-4 font-bold uppercase tracking-widest relative z-10" id="stat-hydration-desc">Fully Hydrated</span>
+                </div>
+
+                <!-- Caffeine Daily -->
+                <div id="caffeine-card" class="glass-panel rounded-2xl p-5 flex flex-col hover:-translate-y-1 transition-transform duration-300 border border-brand-yellow/30 relative">
+                    <div id="caffeine-warning" class="hidden absolute top-0 left-0 w-full h-1 bg-red-500 rounded-t-2xl shadow-[0_0_15px_rgba(239,68,68,0.9)] z-20"></div>
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-gray-300 text-xs font-bold uppercase tracking-widest">Caffeine Intake</span>
+                        <i data-lucide="coffee" class="w-5 h-5 text-brand-yellow"></i>
+                    </div>
+                    <span class="text-4xl font-display font-bold text-brand-yellow mt-1 drop-shadow-[0_0_8px_rgba(250,239,85,0.4)]" id="stat-caffeine">0mg</span>
+                    <span class="text-[11px] text-brand-olive mt-auto pt-4 font-bold uppercase tracking-widest" id="stat-caffeine-desc">Safe Limit: 400mg</span>
+                </div>
+
+                <!-- Sugar Daily -->
+                <div id="sugar-card" class="glass-panel rounded-2xl p-5 flex flex-col hover:-translate-y-1 transition-transform duration-300 border border-brand-lime/30 relative">
+                    <div id="sugar-warning" class="hidden absolute top-0 left-0 w-full h-1 bg-red-500 rounded-t-2xl shadow-[0_0_15px_rgba(239,68,68,0.9)] z-20"></div>
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-gray-300 text-xs font-bold uppercase tracking-widest">Sugar Intake</span>
+                        <i data-lucide="cuboid" class="w-5 h-5 text-brand-lime"></i>
+                    </div>
+                    <span class="text-4xl font-display font-bold text-brand-lime mt-1 drop-shadow-[0_0_8px_rgba(204,220,42,0.4)]" id="stat-sugar">0g</span>
+                    <span class="text-[11px] text-brand-olive mt-auto pt-4 font-bold uppercase tracking-widest" id="stat-sugar-desc">1 Can = ~14 tsp</span>
+                </div>
+
+                <!-- Calories Daily -->
+                <div id="cals-card" class="glass-panel rounded-2xl p-5 flex flex-col hover:-translate-y-1 transition-transform duration-300 border border-brand-olive/30 relative">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-gray-300 text-xs font-bold uppercase tracking-widest">Calories</span>
+                        <i data-lucide="flame" class="w-5 h-5 text-brand-olive"></i>
+                    </div>
+                    <span class="text-4xl font-display font-bold text-brand-olive mt-1 drop-shadow-[0_0_8px_rgba(194,215,45,0.4)]" id="stat-cals">0</span>
+                    <span class="text-[11px] text-brand-olive mt-auto pt-4 font-bold uppercase tracking-widest" id="stat-cals-desc">Kcal Today</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forecasting & Objectives -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+            <!-- Goal Progress -->
+            <div class="glass-panel rounded-3xl p-6 md:p-8 shadow-2xl border-t-4 border-t-brand-neon">
+                <h3 class="text-xl font-display font-bold mb-6 text-white flex items-center gap-3 tracking-widest">
+                    <i data-lucide="target" class="text-brand-neon w-6 h-6"></i> Monthly Goals
+                </h3>
+                
+                <div class="space-y-8">
+                    <!-- Intake Goal -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-3">
+                            <span class="font-bold text-gray-300 tracking-widest uppercase text-xs">Drink Limit (<span id="goal-intake-current" class="text-brand-neon">0</span> / <span id="goal-intake-max">30</span>)</span>
+                            <span class="font-bold font-display text-lg text-brand-neon" id="goal-intake-pct">0%</span>
+                        </div>
+                        <div class="w-full bg-black/60 rounded-full h-4 border border-brand-olive/20 overflow-hidden relative shadow-inner">
+                            <div id="bar-intake" class="progress-bar h-full bg-brand-neon rounded-full w-0 relative shadow-[0_0_10px_rgba(106,205,12,0.8)]">
+                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent w-full h-full animate-[liquid_2s_ease-in-out_infinite]"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Spend Goal -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-3">
+                            <span class="font-bold text-gray-300 tracking-widest uppercase text-xs">Budget Limit (<span id="goal-spend-current" class="text-brand-yellow">£0</span> / <span id="goal-spend-max">£50</span>)</span>
+                            <span class="font-bold font-display text-lg text-brand-yellow" id="goal-spend-pct">0%</span>
+                        </div>
+                        <div class="w-full bg-black/60 rounded-full h-4 border border-brand-olive/20 overflow-hidden relative shadow-inner">
+                            <div id="bar-spend" class="progress-bar h-full bg-brand-yellow rounded-full w-0 relative shadow-[0_0_10px_rgba(250,239,85,0.8)]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forecast Engine -->
+            <div class="glass-panel rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden border-t-4 border-t-brand-lime">
+                <div class="absolute right-0 top-0 w-64 h-64 bg-brand-lime/10 rounded-full blur-[50px] -mr-10 -mt-10 z-0"></div>
+                
+                <div class="flex justify-between items-start mb-6 relative z-10">
+                    <h3 class="text-xl font-display font-bold text-white flex items-center gap-3 tracking-widest">
+                        <i data-lucide="trending-up" class="text-brand-lime w-6 h-6"></i> Forecast
+                    </h3>
+                    <div class="bg-black/60 p-1 rounded-lg border border-brand-olive/20 flex text-[10px] font-bold tracking-widest font-display">
+                        <button onclick="toggleProjection('30d')" id="btn-proj-30d" class="px-3 py-1.5 bg-brand-lime text-black rounded transition-all">30d BASE</button>
+                        <button onclick="toggleProjection('all')" id="btn-proj-all" class="px-3 py-1.5 text-gray-400 hover:text-white transition-all">LIFETIME</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 relative z-10">
+                    <div class="bg-black/50 border border-brand-olive/20 rounded-xl p-4 hover:border-brand-lime/50 transition-colors">
+                        <span class="text-xs text-brand-olive font-bold uppercase tracking-widest block mb-2">End of Month Forecast</span>
+                        <div class="font-display text-3xl font-bold text-white drop-shadow-md"><span id="proj-eom-cans">0</span> <span class="text-base text-gray-500">Cans</span></div>
+                        <div class="text-sm font-bold text-brand-lime mt-1" id="proj-eom-spend">£0.00</div>
+                    </div>
+                    <div class="bg-black/50 border border-brand-olive/20 rounded-xl p-4 hover:border-brand-lime/50 transition-colors">
+                        <span class="text-xs text-brand-olive font-bold uppercase tracking-widest block mb-2">Yearly Forecast</span>
+                        <div class="font-display text-3xl font-bold text-white drop-shadow-md"><span id="proj-yr-cans">0</span> <span class="text-base text-gray-500">Cans</span></div>
+                        <div class="text-sm font-bold text-brand-lime mt-1" id="proj-yr-spend">£0.00</div>
+                    </div>
+                    <div class="bg-gradient-to-r from-brand-yellow/10 to-transparent border border-brand-yellow/30 rounded-xl p-4 col-span-2 flex justify-between items-center mt-2">
+                        <div>
+                            <span class="text-xs text-brand-yellow font-bold uppercase tracking-widest block mb-1">Estimated Annual Caffeine</span>
+                            <div class="font-display text-2xl font-bold text-brand-yellow drop-shadow-[0_0_5px_rgba(250,239,85,0.4)]"><span id="proj-yr-caff">0</span> GRAMS</div>
+                        </div>
+                        <i data-lucide="skull" class="text-brand-yellow/40 w-10 h-10"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
+            <div class="glass-panel rounded-3xl p-6 shadow-2xl relative overflow-hidden hidden md:block border-t border-brand-olive/20">
+                <h3 class="text-sm font-display font-bold mb-4 text-gray-300 flex items-center gap-2 tracking-widest uppercase">
+                    <i data-lucide="bar-chart-2" class="text-brand-neon w-4 h-4"></i> Consumption Trend
+                </h3>
+                <div class="h-48 w-full"><canvas id="consumptionChart"></canvas></div>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-6 shadow-2xl relative overflow-hidden hidden md:block border-t border-brand-olive/20">
+                <h3 class="text-sm font-display font-bold mb-4 text-gray-300 flex items-center gap-2 tracking-widest uppercase">
+                    <i data-lucide="clock" class="text-brand-yellow w-4 h-4"></i> Time of Day
+                </h3>
+                <div class="h-48 w-full"><canvas id="hourlyChart"></canvas></div>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-6 shadow-2xl relative overflow-hidden hidden md:block border-t border-brand-olive/20">
+                <h3 class="text-sm font-display font-bold mb-4 text-gray-300 flex items-center gap-2 tracking-widest uppercase">
+                    <i data-lucide="line-chart" class="text-brand-forest w-4 h-4"></i> Monthly Spend
+                </h3>
+                <div class="h-48 w-full"><canvas id="spendChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- History Log -->
+        <div class="glass-panel rounded-3xl p-6 md:p-8 mt-4 shadow-2xl relative overflow-hidden border-t border-brand-olive/20">
+            <div class="flex justify-between items-end mb-6 border-b border-brand-olive/20 pb-4 relative z-10">
+                <h2 class="text-2xl font-display font-bold flex items-center gap-3 text-white tracking-widest">
+                    <i data-lucide="database" class="w-6 h-6 text-brand-neon"></i>
+                    History Log
+                </h2>
+            </div>
+            
+            <div class="overflow-x-auto relative z-10">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-brand-olive text-xs font-bold uppercase tracking-widest border-b border-brand-olive/10">
+                            <th class="pb-4 px-4">Date/Time</th>
+                            <th class="pb-4 px-4">Action</th>
+                            <th class="pb-4 px-4 text-right">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyList" class="text-sm"></tbody>
+                </table>
+                <div id="emptyState" class="hidden py-16 text-center text-gray-500 flex-col items-center justify-center gap-4">
+                    <div class="w-20 h-20 rounded-full bg-black/50 border border-brand-olive/20 flex items-center justify-center mb-2 shadow-inner">
+                        <i data-lucide="inbox" class="w-10 h-10 opacity-50 text-brand-olive"></i>
+                    </div>
+                    <p class="font-display text-xl font-bold tracking-widest uppercase text-brand-olive">No drinks logged yet.</p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Start-up Wizard Modal -->
+    <div id="wizardModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/95 backdrop-blur-xl">
+        <div class="glass-panel border-2 border-brand-neon/50 rounded-3xl p-8 md:p-12 max-w-lg w-full m-4 shadow-[0_0_80px_rgba(106,205,12,0.2)] relative overflow-hidden">
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-brand-neon opacity-20 blur-[80px] rounded-full"></div>
+            
+            <div id="wizard-step-1" class="wizard-step active flex-col items-center text-center relative z-10">
+                <div class="w-28 h-28 bg-black border-2 border-brand-neon rounded-3xl flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(106,205,12,0.4)] animate-float">
+                    <i data-lucide="zap" class="w-14 h-14 text-brand-neon drop-shadow-[0_0_10px_rgba(106,205,12,0.8)]"></i>
+                </div>
+                <h2 class="text-4xl font-display font-bold text-white mb-4 tracking-widest drop-shadow-lg">WELCOME</h2>
+                <p class="text-brand-olive font-bold tracking-widest uppercase text-sm mb-10">Let's set up your tracker.</p>
+                <button onclick="nextStep(2)" class="w-full bg-brand-neon text-black font-display font-bold text-2xl py-5 rounded-xl hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all">START SETUP</button>
+            </div>
+
+            <div id="wizard-step-2" class="wizard-step flex-col relative z-10">
+                <h2 class="text-3xl font-display font-bold text-white mb-8 tracking-widest border-b border-brand-olive/30 pb-4">CURRENT INVENTORY</h2>
+                <div class="space-y-6 mb-10">
+                    <div>
+                        <label class="block text-xs font-bold text-brand-lime mb-2 uppercase tracking-widest">Currency</label>
+                        <select id="wizardCurrency" class="w-full glass-input rounded-xl p-4 text-lg font-bold">
+                            <option value="GBP">British Pound (£)</option>
+                            <option value="USD">US Dollar ($)</option>
+                            <option value="EUR">Euro (€)</option>
+                            <option value="AUD">Australian Dollar (A$)</option>
+                            <option value="CAD">Canadian Dollar (C$)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-lime mb-2 uppercase tracking-widest">Initial Cans in Fridge</label>
+                        <input type="number" id="wizardStock" value="0" min="0" class="w-full glass-input rounded-xl p-4 text-lg font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-lime mb-2 uppercase tracking-widest">Total cost (<span class="currency-symbol">£</span>)</label>
+                        <input type="number" id="wizardCost" value="0.00" step="0.01" min="0" class="w-full glass-input rounded-xl p-4 text-lg font-bold">
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="completeWizard()" class="w-full bg-brand-neon text-black font-display font-bold text-2xl py-5 rounded-xl hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all">COMPLETE SETUP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/95 backdrop-blur-xl">
+        <div class="glass-panel border-2 border-brand-lime/30 rounded-3xl p-6 md:p-10 max-w-2xl w-full m-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-8 border-b border-brand-olive/20 pb-4">
+                <h2 class="text-3xl font-display font-bold text-white flex items-center gap-3 tracking-widest">
+                    <i data-lucide="settings" class="text-brand-lime"></i> SETTINGS
+                </h2>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-white bg-black/50 p-2 rounded-full border border-white/10"><i data-lucide="x"></i></button>
+            </div>
+
+            <div class="space-y-8">
+                <!-- App Settings -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="bg-black/60 p-5 rounded-xl border border-brand-olive/20">
+                        <label class="block text-xs font-bold text-brand-lime mb-2 uppercase tracking-widest">Currency Code</label>
+                        <input type="text" id="set-currency" class="w-full glass-input rounded-lg p-3 font-bold" placeholder="e.g. GBP, USD">
+                    </div>
+                    <div class="bg-black/60 p-5 rounded-xl border border-brand-olive/20 flex items-center justify-between">
+                        <div>
+                            <span class="block text-xs font-bold text-brand-lime uppercase tracking-widest">Health Tracking</span>
+                            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Enable health stats</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="set-caffeine-toggle" class="sr-only peer">
+                            <div class="w-12 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-neon shadow-inner"></div>
+                        </label>
+                    </div>
+                    <div class="bg-black/60 p-5 rounded-xl border border-brand-olive/20">
+                        <label class="block text-xs font-bold text-brand-lime mb-2 uppercase tracking-widest">Caffeine / Can (mg)</label>
+                        <input type="number" id="set-caffeine-mg" class="w-full glass-input rounded-lg p-3 font-bold" value="160">
+                    </div>
+                    <div class="bg-black/60 p-5 rounded-xl border border-brand-olive/20">
+                        <label class="block text-xs font-bold text-brand-lime mb-2 uppercase tracking-widest">Sugar / Can (g)</label>
+                        <input type="number" id="set-sugar-g" class="w-full glass-input rounded-lg p-3 font-bold" value="55">
+                    </div>
+                    <div class="bg-black/60 p-5 rounded-xl border border-brand-olive/20">
+                        <label class="block text-xs font-bold text-brand-lime mb-2 uppercase tracking-widest">Energy / Can (kcal)</label>
+                        <input type="number" id="set-cals" class="w-full glass-input rounded-lg p-3 font-bold" value="237">
+                    </div>
+                </div>
+
+                <!-- Goals -->
+                <h3 class="text-xl font-display font-bold text-white tracking-widest uppercase border-b border-brand-olive/20 pb-2">Monthly Goals</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="bg-black/60 p-5 rounded-xl border border-brand-olive/20">
+                        <label class="block text-xs font-bold text-brand-lime mb-2 uppercase tracking-widest">Max Monthly Drinks</label>
+                        <input type="number" id="set-goal-intake" class="w-full glass-input rounded-lg p-3 font-bold">
+                    </div>
+                    <div class="bg-black/60 p-5 rounded-xl border border-brand-olive/20">
+                        <label class="block text-xs font-bold text-brand-lime mb-2 uppercase tracking-widest">Max Budget (<span class="currency-symbol">£</span>)</label>
+                        <input type="number" id="set-goal-spend" class="w-full glass-input rounded-lg p-3 font-bold">
+                    </div>
+                </div>
+
+                <!-- Data Management -->
+                <h3 class="text-xl font-display font-bold text-white tracking-widest uppercase border-b border-brand-olive/20 pb-2">Data Management</h3>
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="exportJSON()" class="bg-brand-olive/10 hover:bg-brand-olive/30 border border-brand-olive/40 text-brand-lime px-5 py-3 rounded-xl text-xs font-bold tracking-widest uppercase transition flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> Export JSON</button>
+                    <button onclick="exportCSV()" class="bg-brand-olive/10 hover:bg-brand-olive/30 border border-brand-olive/40 text-brand-lime px-5 py-3 rounded-xl text-xs font-bold tracking-widest uppercase transition flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export CSV</button>
+                    <label class="bg-brand-olive/10 hover:bg-brand-olive/30 border border-brand-olive/40 text-brand-lime px-5 py-3 rounded-xl text-xs font-bold tracking-widest uppercase transition flex items-center gap-2 cursor-pointer">
+                        <i data-lucide="upload" class="w-4 h-4"></i> Import JSON
+                        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
+                    </label>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="mt-10 border-t-2 border-red-500/30 pt-6">
+                    <button onclick="clearData()" class="w-full bg-red-950/40 hover:bg-red-900/60 border border-red-500/50 text-red-500 font-display font-bold tracking-widest text-xl py-4 rounded-xl transition flex justify-center items-center gap-3 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                        <i data-lucide="alert-triangle"></i> DELETE ALL DATA
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mt-8 flex justify-end">
+                <button onclick="saveSettings()" class="bg-brand-lime text-black font-display font-bold px-10 py-4 text-xl tracking-widest rounded-xl hover:bg-white transition-all shadow-[0_0_20px_rgba(204,220,42,0.4)]">SAVE SETTINGS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nutrition Facts Modal -->
+    <div id="nutritionModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/95 backdrop-blur-xl">
+        <div class="glass-panel border-2 border-brand-yellow/50 rounded-3xl p-6 md:p-10 max-w-2xl w-full m-4 shadow-[0_0_80px_rgba(250,239,85,0.15)] relative max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-8 border-b border-brand-yellow/20 pb-4 relative z-10">
+                <h2 class="text-3xl font-display font-bold text-brand-yellow flex items-center gap-3 tracking-widest drop-shadow-[0_0_5px_rgba(250,239,85,0.5)]">
+                    <i data-lucide="flask-conical"></i> NUTRITION FACTS
+                </h2>
+                <button onclick="closeNutrition()" class="text-gray-400 hover:text-white bg-black/50 p-2 rounded-full border border-white/10"><i data-lucide="x"></i></button>
+            </div>
+
+            <div class="space-y-8 text-sm text-gray-300 relative z-10">
+                
+                <!-- Summary Row -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-black/60 border border-brand-olive/30 p-4 rounded-xl text-center shadow-inner">
+                        <div class="text-brand-olive font-display font-bold text-3xl">237</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">Calories</div>
+                    </div>
+                    <div class="bg-black/60 border border-brand-lime/30 p-4 rounded-xl text-center shadow-inner">
+                        <div class="text-brand-lime font-display font-bold text-3xl">55g</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">Sugar</div>
+                    </div>
+                    <div class="bg-black/60 border border-brand-yellow/30 p-4 rounded-xl text-center shadow-inner">
+                        <div class="text-brand-yellow font-display font-bold text-3xl">160mg</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">Caffeine</div>
+                    </div>
+                    <div class="bg-black/60 border border-brand-forest/30 p-4 rounded-xl text-center shadow-inner">
+                        <div class="text-brand-forest font-display font-bold text-3xl">0.96g</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">Salt</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Macros -->
+                    <div>
+                        <h3 class="text-white font-display text-xl tracking-widest font-bold mb-4 border-b border-white/10 pb-2 flex items-center gap-2"><i data-lucide="pie-chart" class="w-5 h-5 text-brand-olive"></i> Energy & Macros</h3>
+                        <ul class="space-y-3 font-medium">
+                            <li class="flex justify-between"><span>Energy (100ml)</span> <span class="text-white">47 kcal</span></li>
+                            <li class="flex justify-between font-bold"><span>Energy (500ml)</span> <span class="text-brand-olive">237 kcal (12% RI)</span></li>
+                            <li class="flex justify-between"><span>Carbohydrates</span> <span class="text-white">60g (23% RI)</span></li>
+                            <li class="flex justify-between pl-4 text-gray-400 border-l-2 border-brand-lime/30 ml-1"><span>Of which sugars</span> <span class="text-brand-lime font-bold">55g (61% RI)</span></li>
+                            <li class="text-[11px] text-brand-lime/80 font-bold uppercase tracking-widest mt-2 bg-brand-lime/10 p-3 rounded-lg border border-brand-lime/20">👉 55g sugar ≈ 13–14 tsp</li>
+                            <li class="flex justify-between mt-3"><span>Salt</span> <span class="text-white">0.96g (16% RI)</span></li>
+                            <li class="flex justify-between text-gray-500"><span>Fat / Protein</span> <span>Negligible</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Vitamins -->
+                    <div>
+                        <h3 class="text-white font-display text-xl tracking-widest font-bold mb-4 border-b border-white/10 pb-2 flex items-center gap-2"><i data-lucide="zap" class="w-5 h-5 text-brand-neon"></i> Vitamins</h3>
+                        <ul class="space-y-3 font-medium">
+                            <li class="flex justify-between"><span>Niacin (B3)</span> <span class="text-brand-neon font-bold">43mg (266%)</span></li>
+                            <li class="flex justify-between"><span>Vitamin B6</span> <span class="text-brand-neon font-bold">4.0mg (286%)</span></li>
+                            <li class="flex justify-between"><span>Riboflavin (B2)</span> <span class="text-brand-neon font-bold">3.5mg (250%)</span></li>
+                            <li class="flex justify-between"><span>Vitamin B12</span> <span class="text-brand-neon font-bold">13µg (500%)</span></li>
+                            <li class="text-[11px] text-brand-neon/80 font-bold uppercase tracking-widest mt-2 bg-brand-neon/10 p-3 rounded-lg border border-brand-neon/20">👉 High B-vitamin levels.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Active Ingredients -->
+                <div>
+                    <h3 class="text-white font-display text-xl tracking-widest font-bold mb-4 border-b border-white/10 pb-2 flex items-center gap-2"><i data-lucide="atom" class="w-5 h-5 text-brand-yellow"></i> Active Ingredients</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 font-bold text-xs uppercase tracking-widest">
+                        <div class="bg-black/50 border border-white/10 p-3 rounded-lg">Taurine <span class="float-right text-brand-lime">0.4%</span></div>
+                        <div class="bg-black/50 border border-white/10 p-3 rounded-lg">Panax Ginseng <span class="float-right text-brand-lime">0.08%</span></div>
+                        <div class="bg-black/50 border border-white/10 p-3 rounded-lg">L-Carnitine <span class="float-right text-brand-lime">0.04%</span></div>
+                        <div class="bg-black/50 border border-brand-yellow/30 p-3 rounded-lg text-brand-yellow shadow-[0_0_10px_rgba(250,239,85,0.1)]">Caffeine <span class="float-right text-brand-yellow">0.03%</span></div>
+                        <div class="bg-black/50 border border-white/10 p-3 rounded-lg">Guarana <span class="float-right text-brand-lime">0.002%</span></div>
+                    </div>
+                    <p class="text-[11px] text-brand-yellow font-bold tracking-widest uppercase mt-4 bg-brand-yellow/10 p-4 rounded-xl border border-brand-yellow/30">
+                        👉 160mg total caffeine. Avg coffee (240ml) ≈ 80–100mg. 1 Unit ≈ 1.5 - 2 Cups of Coffee.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-3 z-[200] pointer-events-none"></div>
+
+    <script>
+        lucide.createIcons();
+
+        // System State
+        let transactions = JSON.parse(localStorage.getItem('monster_data')) || [];
+        
+        let storedConfig = JSON.parse(localStorage.getItem('monster_config')) || {};
+        let config = {
+            currency: storedConfig.currency || 'GBP',
+            caffeineEnabled: storedConfig.caffeineEnabled !== false,
+            caffeinePerCan: storedConfig.caffeinePerCan || 160,
+            sugarPerCan: storedConfig.sugarPerCan || 55,
+            calsPerCan: storedConfig.calsPerCan || 237,
+            goalIntake: storedConfig.goalIntake || 30,
+            goalSpend: storedConfig.goalSpend || 50.00
+        };
+        
+        let activeRange = '7d'; // '7d', '30d', 'all'
+        let projWindow = '30d'; // '30d', 'all'
+        let chartLine = null;
+        let chartBar = null;
+        let chartSpend = null;
+
+        // Custom Palette Configuration for JS references
+        const palette = {
+            yellow: '#faef55',
+            lime: '#ccdc2a',
+            olive: '#c2d72d',
+            forest: '#30aa49',
+            neon: '#6acd0c',
+            dark: '#050505'
+        };
+
+        // Configuration & UI Updates
+        function getCurrencySymbol(code) {
+            const symbols = { 'GBP': '£', 'USD': '$', 'EUR': '€', 'AUD': 'A$', 'CAD': 'C$' };
+            return symbols[code] || code;
+        }
+
+        function formatCurrency(amount) {
+            try {
+                return new Intl.NumberFormat('en-GB', { style: 'currency', currency: config.currency }).format(amount);
+            } catch(e) {
+                return `${getCurrencySymbol(config.currency)}${amount.toFixed(2)}`;
+            }
+        }
+
+        function applyConfigUI() {
+            const sym = getCurrencySymbol(config.currency);
+            document.querySelectorAll('.currency-symbol').forEach(el => el.innerText = sym);
+            
+            const healthDash = document.getElementById('health-dashboard');
+            if(config.caffeineEnabled) healthDash.classList.remove('hidden');
+            else healthDash.classList.add('hidden');
+            
+            document.getElementById('goal-intake-max').innerText = config.goalIntake;
+            document.getElementById('goal-spend-max').innerText = formatCurrency(config.goalSpend);
+        }
+
+        function openNutrition() {
+            const modal = document.getElementById('nutritionModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeNutrition() {
+            document.getElementById('nutritionModal').classList.remove('flex');
+            document.getElementById('nutritionModal').classList.add('hidden');
+        }
+
+        function initSetup() {
+            if (!localStorage.getItem('monster_setup_complete')) {
+                const modal = document.getElementById('wizardModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                applyConfigUI();
+                setRange('7d'); 
+            }
+        }
+
+        function openSettings() {
+            document.getElementById('set-currency').value = config.currency;
+            document.getElementById('set-caffeine-toggle').checked = config.caffeineEnabled;
+            document.getElementById('set-caffeine-mg').value = config.caffeinePerCan;
+            document.getElementById('set-sugar-g').value = config.sugarPerCan;
+            document.getElementById('set-cals').value = config.calsPerCan;
+            document.getElementById('set-goal-intake').value = config.goalIntake;
+            document.getElementById('set-goal-spend').value = config.goalSpend;
+            
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('flex');
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            config.currency = document.getElementById('set-currency').value.toUpperCase() || 'GBP';
+            config.caffeineEnabled = document.getElementById('set-caffeine-toggle').checked;
+            config.caffeinePerCan = parseInt(document.getElementById('set-caffeine-mg').value) || 160;
+            config.sugarPerCan = parseInt(document.getElementById('set-sugar-g').value) || 55;
+            config.calsPerCan = parseInt(document.getElementById('set-cals').value) || 237;
+            config.goalIntake = parseInt(document.getElementById('set-goal-intake').value) || 30;
+            config.goalSpend = parseFloat(document.getElementById('set-goal-spend').value) || 50;
+            
+            localStorage.setItem('monster_config', JSON.stringify(config));
+            closeSettings();
+            applyConfigUI();
+            updateDashboard();
+            showToast('Settings saved.');
+        }
+
+        function nextStep(step) {
+            document.querySelectorAll('.wizard-step').forEach(el => el.classList.remove('active'));
+            document.getElementById(`wizard-step-${step}`).classList.add('active');
+        }
+
+        function completeWizard() {
+            const stock = parseInt(document.getElementById('wizardStock').value) || 0;
+            const cost = parseFloat(document.getElementById('wizardCost').value) || 0;
+            config.currency = document.getElementById('wizardCurrency').value;
+            localStorage.setItem('monster_config', JSON.stringify(config));
+
+            if (stock > 0) {
+                transactions.unshift({
+                    id: Date.now(), type: 'buy', date: new Date().toISOString(), qty: stock, cost: cost, note: 'Initial Stash'
+                });
+                saveData();
+            }
+
+            localStorage.setItem('monster_setup_complete', 'true');
+            document.getElementById('wizardModal').classList.remove('flex');
+            document.getElementById('wizardModal').classList.add('hidden');
+            
+            applyConfigUI();
+            showToast('Setup complete.', 'success');
+            setRange('7d');
+        }
+
+        // Core Actions
+        function logDrink() {
+            transactions.unshift({ id: Date.now(), type: 'drink', date: new Date().toISOString(), qty: 1 });
+            saveData();
+            
+            if (config.caffeineEnabled) {
+                const today = new Date().setHours(0,0,0,0);
+                const dailyCans = transactions.filter(t => t.type === 'drink' && new Date(t.date).setHours(0,0,0,0) === today).reduce((sum, t) => sum + t.qty, 0);
+                const mg = dailyCans * config.caffeinePerCan;
+                if(mg > 400) {
+                    showToast(`WARNING: Caffeine limit exceeded (${mg}mg)`, 'error');
+                } else {
+                    showToast('Drink logged.');
+                }
+            } else {
+                showToast('Drink logged.');
+            }
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        }
+
+        function logPurchase(e) {
+            e.preventDefault();
+            const qty = parseInt(document.getElementById('buyQty').value);
+            const cost = parseFloat(document.getElementById('buyCost').value);
+            if (qty > 0 && cost > 0) {
+                transactions.unshift({ id: Date.now(), type: 'buy', date: new Date().toISOString(), qty: qty, cost: cost });
+                saveData();
+                showToast(`Stock updated: ${qty} cans added.`);
+                e.target.reset();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('monster_data', JSON.stringify(transactions));
+            updateDashboard();
+        }
+
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            saveData();
+            showToast('Log entry deleted.');
+        }
+
+        function clearData() {
+            if(confirm("Are you sure you want to delete all data? This cannot be undone.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function setRange(range) {
+            activeRange = range;
+            const activeClass = `px-5 py-2 rounded-lg transition-all text-black bg-brand-neon shadow-[0_0_10px_rgba(106,205,12,0.4)]`;
+            const inactiveClass = `px-5 py-2 rounded-lg transition-all text-gray-400 hover:text-white`;
+            
+            document.getElementById('btn-range-7d').className = range==='7d' ? activeClass : inactiveClass;
+            document.getElementById('btn-range-30d').className = range==='30d' ? activeClass : inactiveClass;
+            document.getElementById('btn-range-all').className = range==='all' ? activeClass : inactiveClass;
+            updateDashboard();
+        }
+
+        function toggleProjection(windowType) {
+            projWindow = windowType;
+            const activeClass = `px-3 py-1.5 bg-brand-lime text-black rounded transition-all`;
+            const inactiveClass = `px-3 py-1.5 text-gray-400 hover:text-white transition-all`;
+            
+            document.getElementById('btn-proj-30d').className = windowType==='30d' ? activeClass : inactiveClass;
+            document.getElementById('btn-proj-all').className = windowType==='all' ? activeClass : inactiveClass;
+            updateDashboard();
+        }
+
+        function getRangeDates() {
+            const now = new Date();
+            if (activeRange === '7d') return new Date(now.setDate(now.getDate() - 7));
+            if (activeRange === '30d') return new Date(now.setDate(now.getDate() - 30));
+            return new Date(0);
+        }
+
+        function updateDashboard() {
+            const cutoffDate = getRangeDates().getTime();
+            const now = new Date();
+            
+            let totalDrankRange = 0, totalSpentRange = 0;
+            let totalDrankAll = 0, totalBoughtAll = 0, totalSpentAll = 0;
+            let bestDeal = Infinity;
+            
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            let monthDrank = 0, monthSpent = 0;
+
+            const startOfToday = new Date(now).setHours(0,0,0,0);
+            let cansToday = 0;
+
+            const thirtyDaysAgo = new Date(now).setDate(now.getDate() - 30);
+            let drank30d = 0;
+            let spent30d = 0;
+
+            const hoursCount = new Array(24).fill(0);
+            const allDrinks = [];
+
+            transactions.forEach(t => {
+                const tDate = new Date(t.date);
+                const tTime = tDate.getTime();
+                const isCurrentMonth = tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+
+                if (t.type === 'drink') {
+                    totalDrankAll += t.qty;
+                    if (tTime >= cutoffDate) totalDrankRange += t.qty;
+                    if (isCurrentMonth) monthDrank += t.qty;
+                    if (tTime >= startOfToday) cansToday += t.qty;
+                    if (tTime >= thirtyDaysAgo) drank30d += t.qty;
+                    
+                    hoursCount[tDate.getHours()] += t.qty;
+                    allDrinks.push(t);
+                } else if (t.type === 'buy') {
+                    totalBoughtAll += t.qty;
+                    totalSpentAll += t.cost;
+                    if (tTime >= cutoffDate) totalSpentRange += t.cost;
+                    if (isCurrentMonth) monthSpent += t.cost;
+                    if (tTime >= thirtyDaysAgo) spent30d += t.cost;
+                    
+                    const costPerCan = t.cost / t.qty;
+                    if(costPerCan < bestDeal) bestDeal = costPerCan;
+                }
+            });
+
+            // Core Stats Update
+            const currentStock = totalBoughtAll - totalDrankAll;
+            const avgCostAll = totalBoughtAll > 0 ? (totalSpentAll / totalBoughtAll) : 0;
+            
+            document.getElementById('stat-drank').innerText = totalDrankRange;
+            document.getElementById('stat-spent').innerText = formatCurrency(totalSpentRange);
+            document.getElementById('stat-avg').innerText = formatCurrency(avgCostAll);
+            
+            const stockEl = document.getElementById('stat-stock');
+            const stockWarn = document.getElementById('stock-warning');
+            stockEl.innerText = currentStock;
+            
+            if (currentStock < 0) {
+                stockEl.className = "text-5xl font-display font-bold text-red-500 mt-2 drop-shadow-md";
+                stockWarn.className = "absolute top-0 left-0 w-full h-1 bg-red-500 rounded-t-2xl shadow-[0_0_15px_rgba(239,68,68,0.9)] z-20";
+            } else if (currentStock < 3) {
+                stockEl.className = "text-5xl font-display font-bold text-brand-yellow mt-2 drop-shadow-md";
+                stockWarn.className = "absolute top-0 left-0 w-full h-1 bg-brand-yellow rounded-t-2xl shadow-[0_0_15px_rgba(250,239,85,0.9)] z-20";
+            } else {
+                stockEl.className = "text-5xl font-display font-bold text-white mt-2 drop-shadow-md";
+                stockWarn.className = "hidden";
+            }
+
+            // Hydration Debt Tracker (750ml offset needed per can to counter diuretic effect)
+            const hydrationDebtMl = cansToday * 750;
+            const hydroEl = document.getElementById('stat-hydration');
+            const hydroDesc = document.getElementById('stat-hydration-desc');
+            const hydroCard = document.getElementById('hydro-card');
+            
+            if(hydrationDebtMl > 0) {
+                hydroEl.innerText = `${hydrationDebtMl} ml`;
+                hydroEl.className = `text-4xl font-display font-bold text-brand-yellow mt-1 drop-shadow-[0_0_8px_rgba(250,239,85,0.5)] relative z-10`;
+                hydroDesc.innerText = `Drink ${hydrationDebtMl/1000}L water to offset`;
+                hydroDesc.className = "text-[11px] text-brand-yellow mt-auto pt-4 font-bold uppercase tracking-widest relative z-10 animate-pulse";
+                hydroCard.className = "glass-panel rounded-2xl p-5 flex flex-col hover:-translate-y-1 transition-transform duration-300 border border-brand-yellow/50 relative overflow-hidden group shadow-[0_0_15px_rgba(250,239,85,0.1)]";
+            } else {
+                hydroEl.innerText = `0 ml`;
+                hydroEl.className = `text-4xl font-display font-bold text-brand-forest mt-1 drop-shadow-[0_0_8px_rgba(48,170,73,0.5)] relative z-10`;
+                hydroDesc.innerText = `Fully Hydrated`;
+                hydroDesc.className = "text-[11px] text-brand-olive mt-auto pt-4 font-bold uppercase tracking-widest relative z-10";
+                hydroCard.className = "glass-panel rounded-2xl p-5 flex flex-col hover:-translate-y-1 transition-transform duration-300 border border-brand-forest/40 relative overflow-hidden group";
+            }
+
+            // Health Stats Update
+            const caffMg = cansToday * config.caffeinePerCan;
+            const sugarG = cansToday * config.sugarPerCan;
+            
+            const caffEl = document.getElementById('stat-caffeine');
+            const caffWarn = document.getElementById('caffeine-warning');
+            caffEl.innerText = `${caffMg}mg`;
+            if(caffMg > 400) { caffEl.className = "text-4xl font-display font-bold text-red-500 mt-1"; caffWarn.classList.remove('hidden'); } 
+            else { caffEl.className = "text-4xl font-display font-bold text-brand-yellow mt-1 drop-shadow-[0_0_8px_rgba(250,239,85,0.4)]"; caffWarn.classList.add('hidden'); }
+
+            const sugarEl = document.getElementById('stat-sugar');
+            const sugarWarn = document.getElementById('sugar-warning');
+            sugarEl.innerText = `${sugarG}g`;
+            if(sugarG > 50) { sugarEl.className = "text-4xl font-display font-bold text-red-500 mt-1"; sugarWarn.classList.remove('hidden'); } 
+            else { sugarEl.className = "text-4xl font-display font-bold text-brand-lime mt-1 drop-shadow-[0_0_8px_rgba(204,220,42,0.4)]"; sugarWarn.classList.add('hidden'); }
+
+            document.getElementById('stat-cals').innerText = cansToday * config.calsPerCan;
+
+            // Projections
+            const daysSinceFirst = allDrinks.length ? Math.max(1, (Date.now() - new Date(allDrinks[allDrinks.length-1].date).getTime()) / 86400000) : 1;
+            const avgDailyLife = totalDrankAll / daysSinceFirst;
+            const avgDailySpendLife = totalSpentAll / daysSinceFirst;
+            const avgDaily30d = drank30d / 30;
+            const avgDailySpend30d = spent30d / 30;
+
+            const projDailyCans = projWindow === '30d' ? avgDaily30d : avgDailyLife;
+            const projDailySpend = projWindow === '30d' ? avgDailySpend30d : avgDailySpendLife;
+
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+            const daysRemainingInMonth = daysInMonth - now.getDate();
+            const projEOMCans = monthDrank + (projDailyCans * daysRemainingInMonth);
+            const projEOMSpend = monthSpent + (projDailySpend * daysRemainingInMonth);
+
+            const projYrCans = projDailyCans * 365;
+            const projYrSpend = projDailySpend * 365;
+            const projYrCaffGrams = (projYrCans * config.caffeinePerCan) / 1000;
+
+            document.getElementById('proj-eom-cans').innerText = Math.round(projEOMCans);
+            document.getElementById('proj-eom-spend').innerText = formatCurrency(projEOMSpend);
+            document.getElementById('proj-yr-cans').innerText = Math.round(projYrCans);
+            document.getElementById('proj-yr-spend').innerText = formatCurrency(projYrSpend);
+            document.getElementById('proj-yr-caff').innerText = projYrCaffGrams.toFixed(1);
+
+            // Goals
+            const pctIntake = Math.min(100, (monthDrank / config.goalIntake) * 100).toFixed(0);
+            const pctSpend = Math.min(100, (monthSpent / config.goalSpend) * 100).toFixed(0);
+            
+            document.getElementById('goal-intake-current').innerText = monthDrank;
+            document.getElementById('goal-intake-pct').innerText = `${pctIntake}%`;
+            document.getElementById('bar-intake').style.width = `${pctIntake}%`;
+            document.getElementById('bar-intake').className = `progress-bar h-full rounded-full w-0 relative ${pctIntake >= 100 ? 'bg-red-500 shadow-[0_0_15px_red]' : pctIntake > 80 ? 'bg-orange-500' : 'bg-brand-neon shadow-[0_0_10px_rgba(106,205,12,0.8)]'}`;
+
+            document.getElementById('goal-spend-current').innerText = formatCurrency(monthSpent);
+            document.getElementById('goal-spend-pct').innerText = `${pctSpend}%`;
+            document.getElementById('bar-spend').style.width = `${pctSpend}%`;
+            document.getElementById('bar-spend').className = `progress-bar h-full rounded-full w-0 relative ${pctSpend >= 100 ? 'bg-red-500 shadow-[0_0_15px_red]' : pctSpend > 80 ? 'bg-orange-500' : 'bg-brand-yellow shadow-[0_0_10px_rgba(250,239,85,0.8)]'}`;
+
+            renderHistory();
+            renderCharts(cutoffDate, hoursCount);
+        }
+
+        // Charts System mapped to custom palette
+        function renderCharts(cutoffDate, hoursCount) {
+            Chart.defaults.color = 'rgba(255, 255, 255, 0.5)';
+            Chart.defaults.font.family = 'Inter';
+
+            // 1. Consumption Line Chart
+            const labelsLine = [];
+            const dataLine = [];
+            let numDays = activeRange === '7d' ? 7 : activeRange === '30d' ? 30 : 90; 
+            
+            for (let i = numDays-1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                labelsLine.push(d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+                
+                const startOfDay = new Date(d.setHours(0,0,0,0)).getTime();
+                const endOfDay = new Date(d.setHours(23,59,59,999)).getTime();
+                const drinksToday = transactions.filter(t => t.type === 'drink' && new Date(t.date).getTime() >= startOfDay && new Date(t.date).getTime() <= endOfDay).reduce((sum, t) => sum + t.qty, 0);
+                dataLine.push(drinksToday);
+            }
+
+            if (chartLine) chartLine.destroy();
+            const ctxLine = document.getElementById('consumptionChart').getContext('2d');
+            chartLine = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: labelsLine,
+                    datasets: [{
+                        label: 'Cans Consumed',
+                        data: dataLine,
+                        backgroundColor: 'rgba(106, 205, 12, 0.1)',
+                        borderColor: palette.neon,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#000',
+                        pointBorderColor: palette.neon,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 2. Time of Day Bar Chart
+            if (chartBar) chartBar.destroy();
+            const ctxBar = document.getElementById('hourlyChart').getContext('2d');
+            const hourLabels = Array.from({length: 24}, (_, i) => `${i}:00`);
+            const barColors = hourLabels.map((_, i) => (i >= 20 || i <= 3) ? palette.yellow : palette.lime);
+
+            chartBar = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: hourLabels,
+                    datasets: [{ label: 'Total Cans', data: hoursCount, backgroundColor: barColors, borderRadius: 4 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 3. Financial Metric Chart
+            if (chartSpend) chartSpend.destroy();
+            const ctxSpend = document.getElementById('spendChart').getContext('2d');
+            const spendLabels = [];
+            const spendData = [];
+            
+            for(let i=5; i>=0; i--) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
+                spendLabels.push(d.toLocaleDateString('en-GB', { month: 'short' }));
+                const monthTotal = transactions.filter(t => t.type === 'buy' && new Date(t.date).getMonth() === d.getMonth() && new Date(t.date).getFullYear() === d.getFullYear()).reduce((sum, t) => sum + t.cost, 0);
+                spendData.push(monthTotal);
+            }
+
+            chartSpend = new Chart(ctxSpend, {
+                type: 'bar',
+                data: {
+                    labels: spendLabels,
+                    datasets: [{
+                        label: 'Capital Depleted', 
+                        data: spendData, 
+                        backgroundColor: 'rgba(48, 170, 73, 0.6)', 
+                        borderColor: palette.forest,
+                        borderWidth: 1,
+                        borderRadius: 4 
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderHistory() {
+            const tbody = document.getElementById('historyList');
+            const emptyState = document.getElementById('emptyState');
+            tbody.innerHTML = '';
+
+            if (transactions.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+                
+                const recentLogs = transactions.slice(0, 15);
+                recentLogs.forEach(t => {
+                    const dateObj = new Date(t.date);
+                    const isDrink = t.type === 'drink';
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b border-brand-olive/10 hover:bg-white/5 transition-colors group";
+                    tr.innerHTML = `
+                        <td class="py-4 px-4 text-gray-400">
+                            <div class="flex flex-col">
+                                <span class="text-white font-bold tracking-widest">${dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+                                <span class="text-[10px] uppercase font-bold text-gray-500">${dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold font-display tracking-widest uppercase ${
+                                isDrink ? 'bg-brand-neon/10 text-brand-neon border border-brand-neon/30 shadow-[0_0_10px_rgba(106,205,12,0.1)]' : 'bg-brand-forest/10 text-brand-forest border border-brand-forest/30 shadow-[0_0_10px_rgba(48,170,73,0.1)]'
+                            }">
+                                <i data-lucide="${isDrink ? 'zap' : 'package-plus'}" class="w-4 h-4"></i>
+                                ${isDrink ? 'CONSUMED' : (t.note ? 'INIT STOCK' : 'RESTOCK')}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4 text-right relative">
+                            <div class="font-display font-bold text-white text-2xl group-hover:-translate-x-8 transition-transform duration-300">
+                                ${isDrink ? '-1' : `+${t.qty}`}
+                            </div>
+                            <div class="text-[10px] text-gray-500 font-bold group-hover:-translate-x-8 transition-transform duration-300 uppercase tracking-widest">
+                                ${isDrink ? 'Can' : formatCurrency(t.cost)}
+                            </div>
+                            <button onclick="deleteTransaction(${t.id})" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-300 p-2 bg-red-950/40 border border-red-500/20 rounded-lg shadow-inner" title="Delete Entry">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                lucide.createIcons({ root: tbody });
+            }
+        }
+
+        function exportJSON() {
+            const dataStr = JSON.stringify({ config, transactions });
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = `monster_tracker_backup_${new Date().toISOString().slice(0,10)}.json`;
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            showToast('JSON Backup exported.');
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if(imported.transactions && Array.isArray(imported.transactions)) {
+                        transactions = imported.transactions;
+                        if(imported.config) config = imported.config;
+                        saveSettings(); 
+                        saveData();     
+                        closeSettings();
+                        showToast('Data imported successfully!', 'success');
+                    } else { throw new Error('Invalid format'); }
+                } catch (error) {
+                    showToast('Error importing file. Invalid format.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,ID,Type,Date,Quantity,Cost,Note\n";
+            transactions.forEach(t => {
+                const row = [t.id, t.type, t.date, t.qty, t.cost || 0, t.note || ''].join(",");
+                csvContent += row + "\n";
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `monster_history_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('CSV Exported.');
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const isSuccess = type === 'success';
+            
+            toast.className = `bg-black/90 backdrop-blur-xl border border-l-4 ${isSuccess ? 'border-brand-neon/30 border-l-brand-neon' : 'border-red-500/30 border-l-red-500'} text-white px-5 py-4 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] transform transition-all duration-400 translate-y-10 opacity-0 flex items-center gap-4 min-w-[300px] pointer-events-auto`;
+            toast.innerHTML = `
+                <div class="${isSuccess ? 'bg-brand-neon/10' : 'bg-red-500/10'} p-2 rounded-xl border ${isSuccess ? 'border-brand-neon/20' : 'border-red-500/20'}">
+                    <i data-lucide="${isSuccess ? 'check-circle' : 'alert-triangle'}" class="w-5 h-5 ${isSuccess ? 'text-brand-neon' : 'text-red-500'}"></i>
+                </div>
+                <span class="font-bold tracking-widest uppercase text-xs">${message}</span>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons({ root: toast });
+            
+            requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSetup();
+        });
+
+    </script>
+</body>
+</html>
