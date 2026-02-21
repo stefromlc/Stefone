@@ -82,16 +82,23 @@
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* Smooth fade in */
-        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(10px); }
+        /* Smooth animations */
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(10px); }
+        .slide-down { animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; transform: translateY(-100%); opacity: 0; }
+        
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { to { transform: translateY(0); opacity: 1; } }
 
         /* Drag and drop cue */
-        .drag-over { border-top: 2px solid #6366f1; }
+        .drag-over-feed { border-top: 2px solid #6366f1; }
+        .drag-over-folder { background-color: rgba(99, 102, 241, 0.1); border-radius: 0.5rem; }
         
         /* Glass effect */
         .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
         .dark .glass { background: rgba(30, 41, 59, 0.85); border-color: rgba(255,255,255,0.05); }
+
+        /* Reader Mode specific transitions */
+        .reader-mode-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
     <!-- Prevent dark mode flash -->
     <script>
@@ -102,10 +109,18 @@
         }
     </script>
 </head>
-<body class="bg-[#f8fafc] dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 h-screen flex overflow-hidden transition-colors duration-300 antialiased">
+<body class="bg-[#f8fafc] dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 h-screen flex overflow-hidden transition-colors duration-300 antialiased relative">
 
     <!-- Mobile Menu Overlay -->
     <div id="mobileOverlay" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-30 hidden md:hidden transition-opacity" onclick="toggleMobileMenu()"></div>
+
+    <!-- Notification Banner -->
+    <div id="notificationBanner" class="absolute top-0 inset-x-0 z-50 bg-brand-600 dark:bg-brand-500 text-white shadow-lg hidden slide-down cursor-pointer hover:bg-brand-700 dark:hover:bg-brand-600 transition-colors" onclick="reloadWithNewStories()">
+        <div class="max-w-screen-xl mx-auto px-6 py-3 flex items-center justify-center gap-3">
+            <i data-lucide="bell-ring" class="w-4 h-4 animate-pulse"></i>
+            <span id="notificationText" class="text-sm font-semibold tracking-wide">New stories available. Click to refresh.</span>
+        </div>
+    </div>
 
     <!-- Sidebar -->
     <aside id="sidebar" class="bg-white dark:bg-slate-900 w-72 h-full border-r border-slate-200/60 dark:border-slate-800 flex flex-col fixed md:relative z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none">
@@ -129,8 +144,12 @@
             </button>
         </div>
 
-        <!-- Saved Articles Section -->
-        <div class="px-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+        <!-- Static Views Section -->
+        <div class="px-4 pb-4 border-b border-slate-100 dark:border-slate-800 space-y-1">
+            <button onclick="selectAllFeeds()" id="allFeedsBtn" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium group">
+                <i data-lucide="layers" class="w-4 h-4 text-brand-500 group-hover:scale-110 transition-transform"></i>
+                <span class="text-sm">All Feeds Digest</span>
+            </button>
             <button onclick="selectSavedArticles()" id="savedArticlesBtn" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium group">
                 <i data-lucide="bookmark" class="w-4 h-4 text-brand-500 group-hover:scale-110 transition-transform"></i>
                 <span class="text-sm">Saved for Later</span>
@@ -138,11 +157,20 @@
             </button>
         </div>
 
-        <!-- Feeds List -->
-        <div class="flex-1 overflow-y-auto p-4 pt-6">
-            <h2 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-4">My Sources</h2>
+        <!-- Feeds & Folders List -->
+        <div class="flex-1 overflow-y-auto p-4 pt-4">
+            <div class="flex items-center justify-between mb-3 px-2 py-1.5 -mx-2 rounded-lg border border-transparent transition-colors"
+                 ondragover="handleDragOver(event, this, 'unassigned')"
+                 ondragleave="handleDragLeave(event, this, 'unassigned')"
+                 ondrop="handleDrop(event, null, 'unassigned', this)"
+                 title="Drop feeds here to remove them from folders">
+                <h2 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pointer-events-none">My Sources</h2>
+                <button onclick="openAddFolderModal()" class="text-slate-400 hover:text-brand-500 dark:hover:text-brand-400 transition-colors pointer-events-auto" title="Create Folder">
+                    <i data-lucide="folder-plus" class="w-3.5 h-3.5 pointer-events-none"></i>
+                </button>
+            </div>
             <ul id="feedList" class="space-y-0.5">
-                <!-- Feeds will be injected here -->
+                <!-- Folders and Feeds injected here -->
             </ul>
         </div>
 
@@ -161,13 +189,13 @@
     <!-- Main Content -->
     <main class="flex-1 h-full flex flex-col relative w-full overflow-hidden bg-slate-50 dark:bg-slate-950">
         <!-- Top Navigation -->
-        <header class="glass border-b border-slate-200/50 dark:border-slate-800/50 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between sticky top-0 z-20 gap-4 sm:gap-0">
-            <div class="flex items-center gap-4 w-full sm:w-auto">
+        <header class="glass border-b border-slate-200/50 dark:border-slate-800/50 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between sticky top-0 z-20 gap-4 sm:gap-0 mt-0">
+            <div class="flex items-center gap-4 w-full sm:w-auto mt-2 sm:mt-0">
                 <button class="md:hidden text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 p-2 -ml-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" onclick="toggleMobileMenu()">
                     <i data-lucide="menu"></i>
                 </button>
                 <div class="truncate">
-                    <h2 id="currentFeedTitle" class="text-2xl font-extrabold text-slate-800 dark:text-white truncate tracking-tight">Select a feed</h2>
+                    <h2 id="currentFeedTitle" class="text-2xl font-extrabold text-slate-800 dark:text-white truncate tracking-tight">Select a view</h2>
                     <p id="currentFeedMeta" class="text-sm text-slate-500 dark:text-slate-400 truncate font-medium mt-0.5">Waiting for selection...</p>
                 </div>
             </div>
@@ -176,7 +204,7 @@
                 <!-- Search Bar -->
                 <div class="relative flex-1 sm:w-64 group">
                     <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"></i>
-                    <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Search articles..." class="w-full pl-10 pr-4 py-2.5 bg-slate-100/80 dark:bg-slate-800/80 border border-transparent focus:bg-white dark:focus:bg-slate-800 rounded-2xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 transition-all shadow-sm">
+                    <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Search stories..." class="w-full pl-10 pr-4 py-2.5 bg-slate-100/80 dark:bg-slate-800/80 border border-transparent focus:bg-white dark:focus:bg-slate-800 rounded-2xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 transition-all shadow-sm">
                 </div>
 
                 <!-- Dark Mode Toggle -->
@@ -185,7 +213,7 @@
                 </button>
 
                 <!-- Refresh -->
-                <button onclick="refreshCurrentFeed()" class="p-2.5 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-brand-50 dark:hover:bg-brand-900/30 shrink-0 shadow-sm group" title="Refresh Feed">
+                <button onclick="refreshCurrentFeed()" class="p-2.5 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-brand-50 dark:hover:bg-brand-900/30 shrink-0 shadow-sm group" title="Force Refresh">
                     <i data-lucide="refresh-cw" id="refreshIcon" class="w-5 h-5 group-active:rotate-180 transition-transform duration-500"></i>
                 </button>
             </div>
@@ -235,7 +263,7 @@
                     <i data-lucide="layout-grid" class="w-12 h-12 text-slate-400 dark:text-slate-500"></i>
                 </div>
                 <h3 id="emptyStateTitle" class="text-2xl font-bold text-slate-800 dark:text-white mb-3 tracking-tight">Welcome to Currently</h3>
-                <p id="emptyStateMsg" class="text-slate-500 dark:text-slate-400 leading-relaxed">Select a news source from the sidebar to dive into the latest stories, or add your own custom feeds.</p>
+                <p id="emptyStateMsg" class="text-slate-500 dark:text-slate-400 leading-relaxed">Select a news source from the sidebar to dive into the latest stories, or view your All Feeds digest.</p>
             </div>
 
             <!-- Grid -->
@@ -245,11 +273,23 @@
         </div>
     </main>
 
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-sm p-8 transform scale-95 transition-transform duration-300 border border-slate-100 dark:border-slate-800" id="confirmModalContent">
+            <h3 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight mb-3" id="confirmModalTitle">Confirm Action</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-8 leading-relaxed" id="confirmModalText">Are you sure you want to proceed?</p>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeConfirmModal()" class="flex-1 px-4 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-semibold transition-colors">Cancel</button>
+                <button type="button" id="confirmModalBtn" class="flex-1 px-4 py-3.5 bg-red-600 text-white hover:bg-red-700 rounded-2xl font-semibold shadow-lg shadow-red-500/30 transition-all active:scale-95">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Feed Modal -->
     <div id="addFeedModal" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
         <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 transform scale-95 transition-transform duration-300 border border-slate-100 dark:border-slate-800" id="addFeedModalContent">
             <div class="flex items-center justify-between mb-8">
-                <h3 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Add Feed</h3>
+                <h3 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Add Source</h3>
                 <button onclick="closeAddFeedModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
@@ -263,12 +303,43 @@
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">RSS Endpoint URL</label>
-                        <input type="url" id="feedUrlInput" required placeholder="https://example.com/rss.xml" class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium">
+                        <input type="text" id="feedUrlInput" required placeholder="example.com/rss.xml" class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium">
+                    </div>
+                    <div id="folderSelectContainer" class="hidden">
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Folder</label>
+                        <select id="feedFolderInput" class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium appearance-none">
+                            <option value="">None</option>
+                            <!-- Folders injected here -->
+                        </select>
                     </div>
                 </div>
                 <div class="mt-10 flex gap-3">
                     <button type="button" onclick="closeAddFeedModal()" class="flex-1 px-4 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-semibold transition-colors">Cancel</button>
                     <button type="submit" class="flex-1 px-4 py-3.5 bg-brand-600 text-white hover:bg-brand-700 rounded-2xl font-semibold shadow-lg shadow-brand-500/30 transition-all active:scale-95">Add Source</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Folder Modal -->
+    <div id="addFolderModal" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-sm p-8 transform scale-95 transition-transform duration-300 border border-slate-100 dark:border-slate-800" id="addFolderModalContent">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">New Folder</h3>
+                <button onclick="closeAddFolderModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="addFolderForm" onsubmit="handleAddFolder(event)">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Folder Name</label>
+                        <input type="text" id="folderNameInput" required placeholder="e.g., Technology" class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium">
+                    </div>
+                </div>
+                <div class="mt-10 flex gap-3">
+                    <button type="button" onclick="closeAddFolderModal()" class="flex-1 px-4 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-semibold transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 px-4 py-3.5 bg-brand-600 text-white hover:bg-brand-700 rounded-2xl font-semibold shadow-lg shadow-brand-500/30 transition-all active:scale-95">Create</button>
                 </div>
             </form>
         </div>
@@ -313,38 +384,45 @@
 
     <!-- Article Preview Modal -->
     <div id="articleModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4 md:p-6">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col transform scale-95 transition-transform duration-300 border border-slate-200/50 dark:border-slate-700/50 overflow-hidden" id="articleModalContent">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col transform scale-95 transition-transform duration-300 border border-slate-200/50 dark:border-slate-700/50 overflow-hidden reader-mode-transition" id="articleModalContent">
             
             <!-- Header with Close Button -->
-            <div class="flex items-center justify-between p-4 md:px-8 md:py-5 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10">
-                <span id="articleModalDate" class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400"></span>
+            <div class="flex items-center justify-between p-4 md:px-8 md:py-5 border-b border-slate-100 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 reader-mode-transition" id="articleModalHeader">
+                <div class="flex items-center gap-3">
+                    <span id="articleModalDate" class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400"></span>
+                </div>
                 <div class="flex items-center gap-2">
+                    <button onclick="toggleReaderMode()" id="readerModeBtn" class="text-slate-400 hover:text-brand-500 dark:text-slate-500 dark:hover:text-brand-400 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50" title="Toggle Distraction-Free Reader Mode">
+                        <i data-lucide="book-open" class="w-5 h-5"></i>
+                    </button>
                     <button id="articleModalSaveBtn" onclick="toggleSaveCurrentArticle()" class="text-slate-400 hover:text-brand-500 dark:text-slate-500 dark:hover:text-brand-400 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50" title="Save for later">
                         <i data-lucide="bookmark" id="articleModalSaveIcon" class="w-5 h-5"></i>
                     </button>
-                    <button onclick="closeArticleModal()" class="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50">
+                    <button onclick="closeArticleModal()" class="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50" title="Close">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
             </div>
             
             <!-- Scrollable Content -->
-            <div class="overflow-y-auto p-6 md:p-10 flex-1 bg-slate-50/30 dark:bg-slate-900">
-                <h2 id="articleModalTitle" class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-8 leading-[1.15] tracking-tight"></h2>
-                
-                <div id="articleModalImageContainer" class="mb-10 rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg hidden">
-                    <img id="articleModalImage" src="" alt="Article Image" class="w-full h-auto max-h-[500px] object-cover">
-                </div>
-                
-                <div id="articleModalDescription" class="text-lg md:text-xl text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">
-                    <!-- Full description goes here -->
+            <div id="articleScrollArea" class="overflow-y-auto p-6 md:p-10 flex-1 bg-slate-50/30 dark:bg-slate-900 reader-mode-transition">
+                <div id="articleInnerContainer" class="reader-mode-transition">
+                    <h2 id="articleModalTitle" class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-8 leading-[1.15] tracking-tight reader-mode-transition"></h2>
+                    
+                    <div id="articleModalImageContainer" class="mb-10 rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg hidden reader-mode-transition">
+                        <img id="articleModalImage" src="" alt="Article Image" class="w-full h-auto max-h-[500px] object-cover">
+                    </div>
+                    
+                    <div id="articleModalDescription" class="text-lg md:text-xl text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium reader-mode-transition">
+                        <!-- Full description goes here -->
+                    </div>
                 </div>
             </div>
             
             <!-- Footer Action -->
-            <div class="p-6 md:p-8 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 flex justify-end">
+            <div class="p-6 md:p-8 border-t border-slate-100 dark:border-slate-800/60 shrink-0 bg-white dark:bg-slate-900 flex justify-end reader-mode-transition" id="articleModalFooter">
                 <a id="articleModalLink" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-8 py-4 bg-brand-600 text-white hover:bg-brand-700 rounded-2xl font-bold shadow-xl shadow-brand-500/20 transition-all group active:scale-95">
-                    Read Full Story
+                    Read Full Story on Source
                     <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
                 </a>
             </div>
@@ -366,6 +444,9 @@
         ];
 
         let feeds = [];
+        let folders = []; // { id, name, expanded }
+        let feedUnreadBadge = {}; // { feedId: count }
+        
         let activeFeedId = null;
         let feedCache = {}; 
         let appSettings = { refreshInterval: 15 }; 
@@ -375,6 +456,9 @@
         
         let savedArticles = []; 
         let readArticles = new Set(); 
+        
+        let pendingNewStoriesCount = 0;
+        let isReaderMode = false;
         
         // Active Filters
         let searchQuery = '';
@@ -392,15 +476,12 @@
         const emptyStateEl = document.getElementById('emptyState');
         const errorMessageEl = document.getElementById('errorMessage');
         const controlsBar = document.getElementById('controlsBar');
+        const notificationBanner = document.getElementById('notificationBanner');
         
         const addFeedModal = document.getElementById('addFeedModal');
-        const addFeedModalContent = document.getElementById('addFeedModalContent');
+        const addFolderModal = document.getElementById('addFolderModal');
         const settingsModal = document.getElementById('settingsModal');
-        const settingsModalContent = document.getElementById('settingsModalContent');
-        const refreshIntervalInput = document.getElementById('refreshIntervalInput');
-        
         const articleModal = document.getElementById('articleModal');
-        const articleModalContent = document.getElementById('articleModalContent');
 
         const sidebar = document.getElementById('sidebar');
         const mobileOverlay = document.getElementById('mobileOverlay');
@@ -412,7 +493,7 @@
             lucide.createIcons();
             updateThemeIcon();
 
-            // Load settings and cache
+            // Load local storage
             const storedSettings = localStorage.getItem('currently_settings');
             if (storedSettings) appSettings = { ...appSettings, ...JSON.parse(storedSettings) };
             
@@ -431,7 +512,16 @@
                 try { readArticles = new Set(JSON.parse(storedRead)); } catch(e) { readArticles = new Set(); }
             }
 
-            // Load feeds from local storage or use defaults
+            const storedFolders = localStorage.getItem('currently_folders');
+            if(storedFolders) {
+                try { folders = JSON.parse(storedFolders); } catch(e) {}
+            }
+
+            const storedBadges = localStorage.getItem('currently_badges');
+            if(storedBadges) {
+                try { feedUnreadBadge = JSON.parse(storedBadges); } catch(e) { feedUnreadBadge = {};}
+            }
+
             const storedFeeds = localStorage.getItem('currently_feeds');
             if (storedFeeds) {
                 try { feeds = JSON.parse(storedFeeds); } catch(e) { feeds = [...DEFAULT_FEEDS]; }
@@ -439,13 +529,22 @@
                 feeds = [...DEFAULT_FEEDS];
                 saveFeeds();
             }
+            
+            // Enrich old cache with feed IDs if missing for All Feeds compatibility
+            let cacheUpdated = false;
+            for(let fid in feedCache) {
+                feedCache[fid].articles.forEach(a => {
+                    if(!a.feedId) { a.feedId = fid; cacheUpdated = true; }
+                });
+            }
+            if(cacheUpdated) localStorage.setItem('currently_cache', JSON.stringify(feedCache));
 
             updateSavedBadge();
             renderFeedList();
             
-            // Auto-load first feed if exists
+            // Auto-load All Feeds digest
             if (feeds.length > 0) {
-                selectFeed(feeds[0].id);
+                selectAllFeeds();
             } else {
                 showState('empty');
             }
@@ -468,85 +567,257 @@
             }
         }
 
-        // --- Feed Logic ---
-        function saveFeeds() {
-            localStorage.setItem('currently_feeds', JSON.stringify(feeds));
+        // --- Data Persistance ---
+        function saveFeeds() { localStorage.setItem('currently_feeds', JSON.stringify(feeds)); }
+        function saveFolders() { localStorage.setItem('currently_folders', JSON.stringify(folders)); }
+        function saveBadges() { localStorage.setItem('currently_badges', JSON.stringify(feedUnreadBadge)); }
+
+        // --- Modal & Utility Logic ---
+        function openConfirmModal(title, text, actionText, actionCallback) {
+            document.getElementById('confirmModalTitle').textContent = title;
+            document.getElementById('confirmModalText').textContent = text;
+            
+            const btn = document.getElementById('confirmModalBtn');
+            btn.textContent = actionText;
+            btn.onclick = () => {
+                closeConfirmModal();
+                actionCallback();
+            };
+
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('confirmModalContent').classList.remove('scale-95');
+            }, 10);
         }
 
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('opacity-0');
+            document.getElementById('confirmModalContent').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+
+        // --- Folders & Sidebar Logic ---
         function renderFeedList() {
             feedListEl.innerHTML = '';
-            feeds.forEach(feed => {
+            
+            // Group feeds
+            const grouped = { unassigned: [] };
+            folders.forEach(f => grouped[f.id] = { ...f, feeds: [] });
+            feeds.forEach(f => {
+                if(f.folderId && grouped[f.folderId]) grouped[f.folderId].feeds.push(f);
+                else grouped.unassigned.push(f);
+            });
+
+            // Helper to render feed item
+            const createFeedItem = (feed) => {
                 const isActive = feed.id === activeFeedId;
+                const unreadCount = feedUnreadBadge[feed.id] || 0;
                 const li = document.createElement('li');
-                li.className = `group flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer transition-all duration-200 ${isActive ? 'bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 font-medium'}`;
+                li.className = `group flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 ${isActive ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200 font-medium'}`;
                 li.draggable = true;
-                li.ondragstart = (e) => handleDragStart(e, feed.id);
-                li.ondragover = (e) => handleDragOver(e, li);
-                li.ondragleave = (e) => handleDragLeave(e, li);
-                li.ondrop = (e) => handleDrop(e, feed.id, li);
+                li.ondragstart = (e) => handleDragStart(e, feed.id, 'feed');
+                li.ondragover = (e) => handleDragOver(e, li, 'feed');
+                li.ondragleave = (e) => handleDragLeave(e, li, 'feed');
+                li.ondrop = (e) => handleDrop(e, feed.id, 'feed', li);
                 
                 li.innerHTML = `
-                    <div class="flex items-center gap-3 overflow-hidden flex-1" onclick="selectFeed('${feed.id}')">
-                        <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 dark:text-slate-600 cursor-grab hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
+                    <div class="flex items-center gap-2.5 overflow-hidden flex-1" onclick="selectFeed('${feed.id}')">
+                        <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 cursor-grab hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
                         <i data-lucide="${feed.icon || 'rss'}" class="w-4 h-4 flex-shrink-0 ${isActive ? 'text-brand-500' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'}"></i>
-                        <span class="truncate text-sm select-none">${feed.name}</span>
+                        <span class="truncate text-[13px] select-none">${feed.name}</span>
+                        ${unreadCount > 0 ? `<span class="ml-auto bg-brand-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">${unreadCount}</span>` : ''}
                     </div>
-                    <button onclick="removeFeed(event, '${feed.id}')" class="text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/30" title="Remove Feed">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
                 `;
-                feedListEl.appendChild(li);
+
+                // Creating the button using DOM element to avoid event binding conflicts
+                const btn = document.createElement('button');
+                btn.className = "text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 ml-1";
+                btn.title = "Remove Source";
+                btn.onclick = (e) => removeFeed(e, feed.id);
+                btn.innerHTML = `<i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>`;
+
+                li.appendChild(btn);
+                return li;
+            };
+
+            // Render Unassigned Feeds
+            grouped.unassigned.forEach(feed => feedListEl.appendChild(createFeedItem(feed)));
+
+            // Render Folders
+            folders.forEach(folder => {
+                const g = grouped[folder.id];
+                const folderWrapper = document.createElement('div');
+                folderWrapper.className = "mt-2";
+                
+                // Folder Header
+                const fHead = document.createElement('div');
+                fHead.className = "flex items-center justify-between px-3 py-1.5 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors group rounded-md";
+                fHead.onclick = () => toggleFolder(folder.id);
+                fHead.ondragover = (e) => handleDragOver(e, fHead, 'folder');
+                fHead.ondragleave = (e) => handleDragLeave(e, fHead, 'folder');
+                fHead.ondrop = (e) => { handleDrop(e, folder.id, 'folder', fHead); e.stopPropagation(); };
+                
+                const fTitle = document.createElement('div');
+                fTitle.className = "flex items-center gap-1.5 select-none pointer-events-none";
+                fTitle.innerHTML = `
+                    <i data-lucide="chevron-${folder.expanded ? 'down' : 'right'}" class="w-3.5 h-3.5 transition-transform duration-200"></i>
+                    <span class="text-[11px] font-bold uppercase tracking-wider">${folder.name}</span>
+                `;
+                fHead.appendChild(fTitle);
+
+                const fDelBtn = document.createElement('button');
+                fDelBtn.className = "opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 transition-opacity p-1";
+                fDelBtn.title = "Delete Folder";
+                fDelBtn.onclick = (e) => removeFolder(e, folder.id);
+                fDelBtn.innerHTML = `<i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i>`;
+                fHead.appendChild(fDelBtn);
+
+                folderWrapper.appendChild(fHead);
+
+                // Folder Content
+                if (folder.expanded) {
+                    const fList = document.createElement('ul');
+                    fList.className = "space-y-0.5 ml-2 border-l border-slate-100 dark:border-slate-800/60 pl-2";
+                    g.feeds.forEach(feed => fList.appendChild(createFeedItem(feed)));
+                    
+                    // Allow dropping into empty folders using a placeholder
+                    if(g.feeds.length === 0) {
+                        const empty = document.createElement('div');
+                        empty.className = "text-[11px] text-slate-400 dark:text-slate-500 italic px-4 py-3 mt-1 select-none rounded-xl transition-colors border-2 border-dashed border-transparent hover:border-slate-200 dark:hover:border-slate-700";
+                        empty.textContent = "Drop feeds here";
+                        empty.ondragover = (e) => handleDragOver(e, empty, 'folder');
+                        empty.ondragleave = (e) => handleDragLeave(e, empty, 'folder');
+                        empty.ondrop = (e) => { handleDrop(e, folder.id, 'folder', empty); e.stopPropagation(); };
+                        fList.appendChild(empty);
+                    }
+                    folderWrapper.appendChild(fList);
+                }
+                feedListEl.appendChild(folderWrapper);
             });
+
             lucide.createIcons();
             
-            // Update Saved Btn styling
+            // Styling Top Static Buttons
+            const activeClasses = ['bg-brand-50', 'dark:bg-brand-900/30', 'text-brand-700', 'dark:text-brand-400', 'font-semibold'];
+            const inactiveClasses = ['text-slate-600', 'dark:text-slate-300', 'font-medium'];
+            
             const savedBtn = document.getElementById('savedArticlesBtn');
+            const allBtn = document.getElementById('allFeedsBtn');
+            
+            savedBtn.classList.remove(...activeClasses, ...inactiveClasses);
+            allBtn.classList.remove(...activeClasses, ...inactiveClasses);
+
             if(activeFeedId === '__saved__') {
-                savedBtn.classList.add('bg-brand-50', 'dark:bg-brand-900/30', 'text-brand-700', 'dark:text-brand-400', 'font-semibold');
-                savedBtn.classList.remove('text-slate-600', 'dark:text-slate-300', 'font-medium');
+                savedBtn.classList.add(...activeClasses);
+                allBtn.classList.add(...inactiveClasses);
+            } else if (activeFeedId === '__all__') {
+                allBtn.classList.add(...activeClasses);
+                savedBtn.classList.add(...inactiveClasses);
             } else {
-                savedBtn.classList.remove('bg-brand-50', 'dark:bg-brand-900/30', 'text-brand-700', 'dark:text-brand-400', 'font-semibold');
-                savedBtn.classList.add('text-slate-600', 'dark:text-slate-300', 'font-medium');
+                savedBtn.classList.add(...inactiveClasses);
+                allBtn.classList.add(...inactiveClasses);
+            }
+        }
+
+        function toggleFolder(id) {
+            const f = folders.find(f => f.id === id);
+            if(f) {
+                f.expanded = !f.expanded;
+                saveFolders();
+                renderFeedList();
             }
         }
 
         // --- Drag and Drop Logic ---
         let draggedFeedId = null;
-        function handleDragStart(e, id) {
+        let draggedType = null;
+
+        function handleDragStart(e, id, type) {
             draggedFeedId = id;
+            draggedType = type;
             e.dataTransfer.effectAllowed = 'move';
             setTimeout(() => e.target.classList.add('opacity-50'), 0);
         }
-        function handleDragOver(e, el) {
+
+        function handleDragOver(e, el, type) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
-            el.classList.add('drag-over');
+            if(type === 'feed') el.classList.add('drag-over-feed');
+            else if(type === 'folder' || type === 'unassigned') el.classList.add('drag-over-folder');
         }
-        function handleDragLeave(e, el) {
-            el.classList.remove('drag-over');
+
+        function handleDragLeave(e, el, type) {
+            if(type === 'feed') el.classList.remove('drag-over-feed');
+            else if(type === 'folder' || type === 'unassigned') el.classList.remove('drag-over-folder');
         }
-        function handleDrop(e, targetId, el) {
+
+        function handleDrop(e, targetId, type, el) {
             e.preventDefault();
-            el.classList.remove('drag-over');
-            if(draggedFeedId && draggedFeedId !== targetId) {
+            if(type === 'feed') el.classList.remove('drag-over-feed');
+            else if(type === 'folder' || type === 'unassigned') el.classList.remove('drag-over-folder');
+
+            if(draggedFeedId && draggedType === 'feed') {
                 const draggedIndex = feeds.findIndex(f => f.id === draggedFeedId);
-                const targetIndex = feeds.findIndex(f => f.id === targetId);
-                const [draggedFeed] = feeds.splice(draggedIndex, 1);
-                feeds.splice(targetIndex, 0, draggedFeed);
+                if (draggedIndex === -1) return;
+                
+                const feed = feeds[draggedIndex];
+
+                if (type === 'unassigned') {
+                    // Remove from folder, place at root
+                    delete feed.folderId;
+                    feeds.splice(draggedIndex, 1);
+                    feeds.unshift(feed); 
+                } else if (type === 'folder') {
+                    // Move into a specific folder (bottom)
+                    feed.folderId = targetId;
+                    const folder = folders.find(f => f.id === targetId);
+                    if(folder) folder.expanded = true;
+                    
+                    feeds.splice(draggedIndex, 1);
+                    feeds.push(feed); 
+                } else if (type === 'feed' && draggedFeedId !== targetId) {
+                    // Reorder relative to another feed
+                    const targetFeed = feeds.find(f => f.id === targetId);
+                    if (targetFeed) {
+                        if (targetFeed.folderId) {
+                            feed.folderId = targetFeed.folderId;
+                        } else {
+                            delete feed.folderId;
+                        }
+                        
+                        feeds.splice(draggedIndex, 1);
+                        // Recalculate target index because it might have shifted from the splice
+                        const toIndex = feeds.findIndex(f => f.id === targetId);
+                        feeds.splice(toIndex, 0, feed);
+                    }
+                }
+                
                 saveFeeds();
+                saveFolders();
                 renderFeedList();
             }
             draggedFeedId = null;
+            draggedType = null;
         }
 
+        // --- View Handlers ---
         async function selectFeed(id) {
             activeFeedId = id;
             resetFilters();
+            hideNotificationBanner();
             
-            if(id === '__saved__') {
-                return renderSavedArticles();
+            // Clear badge
+            if(feedUnreadBadge[id]) {
+                feedUnreadBadge[id] = 0;
+                saveBadges();
             }
-            
+
             const feed = feeds.find(f => f.id === id);
             if (!feed) return;
 
@@ -577,8 +848,84 @@
             }
         }
 
+        async function selectAllFeeds() {
+            activeFeedId = '__all__';
+            resetFilters();
+            hideNotificationBanner();
+            renderFeedList();
+            if(window.innerWidth < 768) toggleMobileMenu(false);
+
+            currentFeedTitleEl.textContent = 'All Feeds Digest';
+            currentFeedMetaEl.textContent = 'Compiling your world...';
+            
+            let allArticles = [];
+            let needsRefresh = [];
+
+            // Gather from cache
+            for (let feed of feeds) {
+                if(feedCache[feed.id]) {
+                    allArticles = allArticles.concat(feedCache[feed.id].articles);
+                    if((Date.now() - feedCache[feed.id].timestamp) > appSettings.refreshInterval * 60000) {
+                        needsRefresh.push(feed);
+                    }
+                } else {
+                    needsRefresh.push(feed);
+                }
+            }
+
+            // Deduplicate by link
+            const unique = [];
+            const links = new Set();
+            for (let a of allArticles) {
+                if (!links.has(a.link)) {
+                    links.add(a.link);
+                    unique.push(a);
+                }
+            }
+
+            currentRawArticles = unique;
+            
+            if(currentRawArticles.length > 0) {
+                updateView();
+                showState('content');
+                currentFeedMetaEl.textContent = `Showing ${unique.length} aggregated stories`;
+            } else if (needsRefresh.length > 0) {
+                showState('loading');
+            } else {
+                showState('empty');
+                currentFeedMetaEl.textContent = '';
+            }
+
+            // Silent background fetch for expired ones
+            if(needsRefresh.length > 0) {
+                if(currentRawArticles.length > 0) {
+                    currentFeedMetaEl.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline animate-spin mr-1.5 text-brand-500"></i> Syncing sources...';
+                    lucide.createIcons();
+                }
+                
+                let anyNew = false;
+                for (let feed of needsRefresh) {
+                    await fetchAndRenderArticles(feed, true); // true = bg
+                }
+                
+                // When done, if we are still on ALL, let's just wait for user to click reload banner,
+                // or if it was initially empty, we force reload.
+                if(currentRawArticles.length === 0) {
+                    selectAllFeeds(); // Re-run to show results
+                } else {
+                    currentFeedMetaEl.textContent = `Monitoring ${feeds.length} sources`;
+                }
+            }
+        }
+
+        // --- Fetch & Notifications ---
         function refreshCurrentFeed() {
             if(activeFeedId === '__saved__') return; 
+            if(activeFeedId === '__all__') {
+                // Force refresh all
+                selectAllFeeds();
+                return;
+            }
             if(activeFeedId) {
                 const feed = feeds.find(f => f.id === activeFeedId);
                 if (feed) {
@@ -625,26 +972,44 @@
                 }
 
                 const items = xmlDoc.querySelectorAll('item, entry');
-                const articles = Array.from(items).map(parseXMLItem);
+                const articles = Array.from(items).map(item => parseXMLItem(item, feed));
 
                 if (articles.length === 0) {
                     throw new Error('No articles found in this feed.');
                 }
 
-                // Append timestamp to objects to help with sorting
                 articles.forEach((a, i) => a.sortValue = Date.parse(a.rawDate) || (Date.now() - i));
 
-                currentRawArticles = articles; 
+                // Notification Logic
+                if (isBackground && feedCache[feed.id]) {
+                    const oldLinks = new Set(feedCache[feed.id].articles.map(a => a.link));
+                    const newStories = articles.filter(a => !oldLinks.has(a.link) && !readArticles.has(a.link));
+                    
+                    if (newStories.length > 0) {
+                        feedUnreadBadge[feed.id] = (feedUnreadBadge[feed.id] || 0) + newStories.length;
+                        saveBadges();
+                        renderFeedList(); // update badge visual
+                        
+                        if (activeFeedId === feed.id || activeFeedId === '__all__') {
+                            pendingNewStoriesCount += newStories.length;
+                            showNotificationBanner();
+                        }
+                    }
+                }
+
+                // If not background, immediately replace currentRawArticles
+                if(!isBackground) currentRawArticles = articles;
 
                 // Update Cache
                 feedCache[feed.id] = { timestamp: Date.now(), articles: articles };
                 localStorage.setItem('currently_cache', JSON.stringify(feedCache));
 
-                const minsAgo = Math.floor((Date.now() - feedCache[feed.id].timestamp) / 60000);
-                currentFeedMetaEl.textContent = minsAgo === 0 ? 'Freshly updated' : `Updated ${minsAgo} min${minsAgo === 1 ? '' : 's'} ago`;
-                
-                updateView();
-                showState('content');
+                if (!isBackground) {
+                    const minsAgo = Math.floor((Date.now() - feedCache[feed.id].timestamp) / 60000);
+                    currentFeedMetaEl.textContent = minsAgo === 0 ? 'Freshly updated' : `Updated ${minsAgo} min${minsAgo === 1 ? '' : 's'} ago`;
+                    updateView();
+                    showState('content');
+                }
 
             } catch (error) {
                 console.error('Feed fetch error:', error);
@@ -652,16 +1017,31 @@
                     errorMessageEl.textContent = `Could not load ${feed.name}. Make sure the URL is correct or try again later.`;
                     currentFeedMetaEl.textContent = 'Update failed';
                     showState('error');
-                } else {
-                    currentFeedMetaEl.textContent = 'Background update failed';
                 }
             } finally {
                 refreshIcon.classList.remove('animate-spin');
             }
         }
 
+        // --- Banner Logic ---
+        function showNotificationBanner() {
+            if(pendingNewStoriesCount > 0) {
+                document.getElementById('notificationText').textContent = `${pendingNewStoriesCount} new stor${pendingNewStoriesCount>1?'ies':'y'} available. Click to refresh.`;
+                notificationBanner.classList.remove('hidden');
+            }
+        }
+        function hideNotificationBanner() {
+            notificationBanner.classList.add('hidden');
+            pendingNewStoriesCount = 0;
+        }
+        function reloadWithNewStories() {
+            hideNotificationBanner();
+            if(activeFeedId === '__all__') selectAllFeeds();
+            else if(activeFeedId) selectFeed(activeFeedId);
+        }
+
         // --- RSS Parsing Logic ---
-        function parseXMLItem(item) {
+        function parseXMLItem(item, feedContext) {
             const getText = (selector) => {
                 const el = item.querySelector(selector);
                 return el ? el.textContent.trim() : '';
@@ -712,7 +1092,16 @@
                 if (imgMatch && imgMatch[1]) imageUrl = imgMatch[1];
             }
 
-            return { title, link, description: descriptionText, date: formattedDate, rawDate: pubDateStr, imageUrl };
+            return { 
+                title, 
+                link, 
+                description: descriptionText, 
+                date: formattedDate, 
+                rawDate: pubDateStr, 
+                imageUrl, 
+                feedId: feedContext.id, 
+                feedName: feedContext.name
+            };
         }
 
         // --- View & Filter Logic ---
@@ -777,7 +1166,7 @@
             articlesGridEl.innerHTML = '';
             controlsBar.classList.remove('hidden');
             
-            // Group articles by date
+            // In All Feeds view, grouping by date is highly effective
             const orderedDates = [...new Set(articles.map(a => a.date))];
             const groupedArticles = {};
             orderedDates.forEach(d => groupedArticles[d] = []);
@@ -815,7 +1204,6 @@
                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
                                <img src="${article.imageUrl}" alt="Article Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" onerror="this.style.display='none'">
                                
-                               <!-- Save Button inside Image (Date Pill Removed) -->
                                <button onclick="toggleSaveArticle(event, ${index})" class="absolute top-4 right-4 z-20 glass p-2 rounded-full text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:scale-110 transition-all shadow-sm group/btn" title="${isSaved ? 'Remove Bookmark' : 'Save for Later'}">
                                    <i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-brand-500 text-brand-500 group-hover/btn:fill-brand-600 group-hover/btn:text-brand-600' : ''}"></i>
                                </button>
@@ -830,14 +1218,15 @@
                     card.innerHTML = `
                         ${imageHtml}
                         <div class="p-6 md:p-7 flex flex-col flex-1 relative bg-white dark:bg-slate-900">
+                            ${(activeFeedId === '__all__' || activeFeedId === '__saved__') && article.feedName ? `<span class="inline-block self-start px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider rounded-md mb-3">${article.feedName}</span>` : ''}
+                            
                             <h3 class="text-[1.15rem] font-bold leading-tight mb-3 ${isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-800 dark:text-white'} group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2" title="${article.title}">
                                 ${article.title}
                             </h3>
                             <p class="text-sm ${isRead ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400'} mb-5 line-clamp-3 flex-1 leading-relaxed">
                                 ${article.description}
                             </p>
-                            <div class="mt-auto pt-5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                                <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors">Read Story</span>
+                            <div class="mt-auto pt-5 border-t border-slate-100 dark:border-slate-800 flex justify-end items-center">
                                 <a href="${article.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-brand-900/50 hover:text-brand-600 dark:hover:text-brand-400 transition-all" title="Open directly to source">
                                     <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
                                 </a>
@@ -849,6 +1238,68 @@
                 });
             });
             lucide.createIcons();
+        }
+
+        // --- Reader Mode Logic ---
+        function toggleReaderMode() {
+            isReaderMode = !isReaderMode;
+            applyReaderMode();
+        }
+
+        function applyReaderMode() {
+            const btn = document.getElementById('readerModeBtn');
+            const desc = document.getElementById('articleModalDescription');
+            const title = document.getElementById('articleModalTitle');
+            const imgContainer = document.getElementById('articleModalImageContainer');
+            const modalContent = document.getElementById('articleModalContent');
+            const innerContainer = document.getElementById('articleInnerContainer');
+            const scrollArea = document.getElementById('articleScrollArea');
+            const footer = document.getElementById('articleModalFooter');
+            const header = document.getElementById('articleModalHeader');
+
+            const article = displayedArticles[openedArticleIndex];
+
+            if(isReaderMode) {
+                btn.classList.add('text-brand-500', 'dark:text-brand-400', 'bg-brand-50', 'dark:bg-brand-900/30');
+                btn.classList.remove('text-slate-400', 'dark:text-slate-500', 'bg-slate-50', 'dark:bg-slate-800/50');
+                
+                // Hide Image
+                imgContainer.classList.add('!hidden');
+                
+                // Typography & Width
+                innerContainer.classList.add('max-w-[700px]', 'mx-auto');
+                title.classList.add('!text-4xl', 'md:!text-5xl', 'text-center');
+                desc.classList.add('!text-xl', 'md:!text-2xl', 'leading-loose');
+                
+                // Background Softer Colors
+                scrollArea.classList.remove('bg-slate-50/30', 'dark:bg-slate-900');
+                scrollArea.classList.add('bg-[#fdfbf7]', 'dark:bg-[#111827]');
+                modalContent.classList.remove('bg-white', 'dark:bg-slate-900');
+                modalContent.classList.add('bg-[#fdfbf7]', 'dark:bg-[#111827]');
+                footer.classList.remove('bg-white', 'dark:bg-slate-900');
+                footer.classList.add('bg-[#fdfbf7]', 'dark:bg-[#111827]');
+                header.classList.remove('bg-white/80', 'dark:bg-slate-900/80');
+                header.classList.add('bg-[#fdfbf7]/90', 'dark:bg-[#111827]/90');
+                
+            } else {
+                btn.classList.remove('text-brand-500', 'dark:text-brand-400', 'bg-brand-50', 'dark:bg-brand-900/30');
+                btn.classList.add('text-slate-400', 'dark:text-slate-500', 'bg-slate-50', 'dark:bg-slate-800/50');
+                
+                if (article && article.imageUrl) imgContainer.classList.remove('!hidden');
+                
+                innerContainer.classList.remove('max-w-[700px]', 'mx-auto');
+                title.classList.remove('!text-4xl', 'md:!text-5xl', 'text-center');
+                desc.classList.remove('!text-xl', 'md:!text-2xl', 'leading-loose');
+                
+                scrollArea.classList.add('bg-slate-50/30', 'dark:bg-slate-900');
+                scrollArea.classList.remove('bg-[#fdfbf7]', 'dark:bg-[#111827]');
+                modalContent.classList.add('bg-white', 'dark:bg-slate-900');
+                modalContent.classList.remove('bg-[#fdfbf7]', 'dark:bg-[#111827]');
+                footer.classList.add('bg-white', 'dark:bg-slate-900');
+                footer.classList.remove('bg-[#fdfbf7]', 'dark:bg-[#111827]');
+                header.classList.add('bg-white/80', 'dark:bg-slate-900/80');
+                header.classList.remove('bg-[#fdfbf7]/90', 'dark:bg-[#111827]/90');
+            }
         }
 
         // --- Save & Read Logic ---
@@ -918,6 +1369,7 @@
             activeFeedId = '__saved__';
             renderFeedList();
             if(window.innerWidth < 768) toggleMobileMenu(false);
+            hideNotificationBanner();
             
             resetFilters();
             currentFeedTitleEl.textContent = 'Saved For Later';
@@ -942,7 +1394,7 @@
             emptyStateEl.classList.add('hidden');
             articlesGridEl.classList.add('hidden');
             
-            if(state !== 'content' && activeFeedId !== '__saved__') controlsBar.classList.add('hidden');
+            if(state !== 'content' && activeFeedId !== '__saved__' && activeFeedId !== '__all__') controlsBar.classList.add('hidden');
 
             switch(state) {
                 case 'loading': loadingStateEl.classList.remove('hidden'); break;
@@ -952,8 +1404,62 @@
             }
         }
 
-        // --- User Actions (Add/Remove Feeds) ---
+        // --- User Actions (Add Feeds & Folders) ---
+        function openAddFolderModal() {
+            addFolderModal.classList.remove('hidden');
+            setTimeout(() => {
+                addFolderModal.classList.remove('opacity-0');
+                document.getElementById('addFolderModalContent').classList.remove('scale-95');
+            }, 10);
+            document.getElementById('folderNameInput').focus();
+            if(window.innerWidth < 768) toggleMobileMenu(false);
+        }
+
+        function closeAddFolderModal() {
+            addFolderModal.classList.add('opacity-0');
+            document.getElementById('addFolderModalContent').classList.add('scale-95');
+            setTimeout(() => {
+                addFolderModal.classList.add('hidden');
+                document.getElementById('addFolderForm').reset();
+            }, 300);
+        }
+
+        function handleAddFolder(e) {
+            e.preventDefault();
+            const name = document.getElementById('folderNameInput').value.trim();
+            if(name) {
+                folders.push({ id: 'folder_' + Date.now(), name: name, expanded: true });
+                saveFolders();
+                renderFeedList();
+                closeAddFolderModal();
+            }
+        }
+
+        function removeFolder(e, id) {
+            e.stopPropagation();
+            openConfirmModal(
+                'Delete Folder',
+                'Delete this folder? Sources inside will become unassigned.',
+                'Delete',
+                () => {
+                    folders = folders.filter(f => f.id !== id);
+                    feeds.forEach(f => { if(f.folderId === id) delete f.folderId; });
+                    saveFolders();
+                    saveFeeds();
+                    renderFeedList();
+                }
+            );
+        }
+
         function openAddFeedModal() {
+            // Populate folder dropdown
+            const select = document.getElementById('feedFolderInput');
+            select.innerHTML = '<option value="">None (Unassigned)</option>';
+            folders.forEach(f => {
+                select.innerHTML += `<option value="${f.id}">${f.name}</option>`;
+            });
+            document.getElementById('folderSelectContainer').classList.remove('hidden');
+
             addFeedModal.classList.remove('hidden');
             setTimeout(() => {
                 addFeedModal.classList.remove('opacity-0');
@@ -975,9 +1481,12 @@
         function handleAddFeed(e) {
             e.preventDefault();
             const nameInput = document.getElementById('feedNameInput').value.trim();
-            const urlInput = document.getElementById('feedUrlInput').value.trim();
+            let urlInput = document.getElementById('feedUrlInput').value.trim();
+            const folderId = document.getElementById('feedFolderInput').value;
 
             if (!nameInput || !urlInput) return;
+
+            if (!/^https?:\/\//i.test(urlInput)) urlInput = 'https://' + urlInput;
 
             const newFeed = {
                 id: Date.now().toString(),
@@ -985,6 +1494,7 @@
                 url: urlInput,
                 icon: 'rss'
             };
+            if(folderId) newFeed.folderId = folderId;
 
             feeds.push(newFeed);
             saveFeeds();
@@ -995,30 +1505,35 @@
 
         function removeFeed(e, id) {
             e.stopPropagation(); 
-            
-            if(!confirm('Are you sure you want to remove this source?')) return;
+            openConfirmModal(
+                'Remove Source',
+                'Are you sure you want to remove this source?',
+                'Remove',
+                () => {
+                    feeds = feeds.filter(f => f.id !== id);
+                    delete feedUnreadBadge[id];
+                    
+                    saveFeeds();
+                    saveBadges();
+                    renderFeedList();
 
-            feeds = feeds.filter(f => f.id !== id);
-            saveFeeds();
-            renderFeedList();
-
-            if (activeFeedId === id) {
-                if (feeds.length > 0) {
-                    selectFeed(feeds[0].id);
-                } else {
-                    activeFeedId = null;
-                    currentFeedTitleEl.textContent = 'Welcome to Currently';
-                    currentFeedMetaEl.textContent = '';
-                    document.getElementById('emptyStateTitle').textContent = 'No Sources Selected';
-                    document.getElementById('emptyStateMsg').textContent = 'Choose a feed from the sidebar or add your own to start reading.';
-                    showState('empty');
+                    if (activeFeedId === id) {
+                        if(feeds.length > 0) selectAllFeeds();
+                        else {
+                            activeFeedId = null;
+                            currentFeedTitleEl.textContent = 'Welcome to Currently';
+                            currentFeedMetaEl.textContent = '';
+                            document.getElementById('emptyStateTitle').textContent = 'No Sources Selected';
+                            document.getElementById('emptyStateMsg').textContent = 'Choose a feed from the sidebar or add your own to start reading.';
+                            showState('empty');
+                        }
+                    }
                 }
-            }
+            );
         }
 
         function toggleMobileMenu(forceState) {
             const isClosing = forceState === false || !sidebar.classList.contains('-translate-x-full');
-            
             if (isClosing) {
                 sidebar.classList.add('-translate-x-full');
                 mobileOverlay.classList.add('hidden');
@@ -1055,25 +1570,38 @@
                 localStorage.setItem('currently_settings', JSON.stringify(appSettings));
             }
             closeSettingsModal();
-            if(activeFeedId && activeFeedId !== '__saved__') selectFeed(activeFeedId);
+            if(activeFeedId && activeFeedId !== '__saved__') {
+                if(activeFeedId === '__all__') selectAllFeeds();
+                else selectFeed(activeFeedId);
+            }
         }
 
         function clearCache() {
-            if(confirm('Clear all cached articles? This will require re-fetching data.')) {
-                feedCache = {};
-                localStorage.removeItem('currently_cache');
-                alert('Cache cleared.');
-                if(activeFeedId && activeFeedId !== '__saved__') refreshCurrentFeed();
-            }
+            openConfirmModal(
+                'Clear Cache',
+                'Clear all cached articles? This will require re-fetching data.',
+                'Clear Data',
+                () => {
+                    feedCache = {};
+                    feedUnreadBadge = {};
+                    localStorage.removeItem('currently_cache');
+                    localStorage.removeItem('currently_badges');
+                    if(activeFeedId && activeFeedId !== '__saved__') refreshCurrentFeed();
+                }
+            );
         }
         
         function clearReadHistory() {
-             if(confirm('Clear your read history? All articles will appear as unread.')) {
-                readArticles.clear();
-                localStorage.removeItem('currently_read');
-                updateView();
-                alert('Read history cleared.');
-            }
+            openConfirmModal(
+                'Reset History',
+                'Clear your read history? All articles will appear as unread.',
+                'Reset History',
+                () => {
+                    readArticles.clear();
+                    localStorage.removeItem('currently_read');
+                    updateView();
+                }
+            );
         }
 
         // --- Article Modal Logic ---
@@ -1090,11 +1618,11 @@
             const imgContainer = document.getElementById('articleModalImageContainer');
             const imgEl = document.getElementById('articleModalImage');
             
-            if (article.imageUrl) {
+            if (article.imageUrl && !isReaderMode) {
                 imgEl.src = article.imageUrl;
-                imgContainer.classList.remove('hidden');
+                imgContainer.classList.remove('!hidden', 'hidden');
             } else {
-                imgContainer.classList.add('hidden');
+                imgContainer.classList.add('!hidden');
                 imgEl.src = '';
             }
             
@@ -1106,10 +1634,12 @@
             if(isSaved) icon.classList.add('fill-brand-500', 'text-brand-500');
             else icon.classList.remove('fill-brand-500', 'text-brand-500');
             
+            applyReaderMode(); // Enforce state
+            
             articleModal.classList.remove('hidden');
             setTimeout(() => {
                 articleModal.classList.remove('opacity-0');
-                articleModalContent.classList.remove('scale-95');
+                document.getElementById('articleModalContent').classList.remove('scale-95');
             }, 10);
             
             document.body.style.overflow = 'hidden'; 
@@ -1118,7 +1648,7 @@
 
         function closeArticleModal() {
             articleModal.classList.add('opacity-0');
-            articleModalContent.classList.add('scale-95');
+            document.getElementById('articleModalContent').classList.add('scale-95');
             setTimeout(() => {
                 articleModal.classList.add('hidden');
                 document.body.style.overflow = ''; 
