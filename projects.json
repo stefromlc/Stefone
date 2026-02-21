@@ -1,5 +1,22 @@
 [
   {
+    "title": "Favicon Lab",
+    "slug": "favicon-lab",
+    "description": "Generate, preview, and export favicon code instantly with SEO & Meta Tags.",
+    "thumbnail": "assets/thumbs/favicon-lab.png",
+    "tags": [
+      "Favicon",
+      "Meta",
+      "SEO",
+      "Tags"
+    ],
+    "category": "Apps",
+    "featured": true,
+    "date": "2026-02-21",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "Monster Tracker",
     "slug": "monster-tracker",
     "description": "Log every can, track your stash, and see the real impact of your energy habit in one neon-lit dashboard. Monitor spending, stock levels, caffeine, sugar, hydration debt, and long-term forecasts—all stored locally in your browser.",

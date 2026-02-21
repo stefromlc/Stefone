@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Primary Meta Tags -->
+<title>Favicon Lab – Generator</title>
+<meta name="title" content="Favicon Lab – Generator" />
+<meta name="description" content="Generate, preview, and export favicon code instantly with SEO & Meta Tags." />
+
+<!-- Favicon configuration -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22grad%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%234f46e5%22%20%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23818cf8%22%20%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2225%22%20fill%3D%22url(%23grad)%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2252%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2265%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22%23ffffff%22%3E%F0%9F%9A%80%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://stefone.com/favicon-lab/" />
+<meta property="og:title" content="Favicon Lab – Generator" />
+<meta property="og:description" content="Generate, preview, and export favicon code instantly with SEO & Meta Tags." />
+<meta property="og:image" content="https://stefone.com/assets/thumbs/favicon-lab.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Favicon Lab – Generator preview" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Favicon Lab – Generator" />
+<meta name="twitter:description" content="Generate, preview, and export favicon code instantly with SEO & Meta Tags." />
+<meta name="twitter:image" content="https://stefone.com/assets/thumbs/favicon-lab.png" />
+
+<!-- Optional -->
+<meta name="theme-color" content="#4f46e5">
+
+    <style>
+        :root {
+            --bg: #f4f4f5;
+            --surface: #ffffff;
+            --surface-hover: #fcfcfd;
+            --text: #18181b;
+            --text-muted: #71717a;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --border: #e4e4e7;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --radius: 12px;
+            --transition: 0.2s ease;
+            --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --tab-bg: #e4e4e7;
+            --tab-active: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg: #09090b;
+            --surface: #18181b;
+            --surface-hover: #27272a;
+            --text: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --primary: #6366f1;
+            --primary-hover: #818cf8;
+            --border: #27272a;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            --tab-bg: #09090b;
+            --tab-active: #27272a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color var(--transition), border-color var(--transition);
+        }
+
+        body {
+            font-family: var(--font);
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            transition: background-color var(--transition), color var(--transition);
+        }
+
+        .btn-back:hover {
+            background-color: var(--surface-hover);
+            color: var(--text);
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--surface-hover);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background-color: var(--tab-bg);
+            border-radius: 8px;
+            padding: 0.25rem;
+            gap: 0.25rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.5rem;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            border: none;
+            background: transparent;
+        }
+
+        .tab.active {
+            background-color: var(--tab-active);
+            color: var(--text);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .preset-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: var(--surface);
+            user-select: none;
+        }
+
+        .preset-item:hover, .preset-item.active {
+            border-color: var(--primary);
+            background-color: var(--surface-hover);
+        }
+
+        .preset-item.active {
+            box-shadow: 0 0 0 2px var(--primary) inset;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--surface);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 100%;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: none;
+        }
+        
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        
+        input[type="color"]::-webkit-color-swatch {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary);
+            background-color: var(--surface-hover);
+        }
+
+        .upload-area input {
+            display: none;
+        }
+
+        /* Previews */
+        .mockup-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background-color: var(--bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        /* Browser Tab */
+        .browser-tab-bar {
+            background-color: var(--surface-hover);
+            border-radius: 8px 8px 0 0;
+            padding: 0.5rem 0.5rem 0;
+            display: flex;
+            gap: 0.5rem;
+            border: 1px solid var(--border);
+            border-bottom: none;
+        }
+
+        .browser-tab {
+            background-color: var(--surface);
+            border-radius: 8px 8px 0 0;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text);
+            min-width: 150px;
+            max-width: 200px;
+            position: relative;
+            box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .browser-tab::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: var(--surface);
+            z-index: 2;
+        }
+
+        .browser-tab img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+        }
+
+        .browser-content {
+            background-color: var(--surface);
+            height: 60px;
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* Mobile Icon */
+        .mobile-mockup {
+            background-image: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        [data-theme="dark"] .mobile-mockup {
+            background-image: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+        }
+
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .app-name {
+            font-size: 0.75rem;
+            color: #111;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+        }
+        
+        [data-theme="dark"] .app-name {
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        /* Code Generation */
+        .code-block-wrapper {
+            position: relative;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .code-block {
+            padding: 1.5rem;
+            overflow-x: auto;
+            color: #d4d4d4;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .copy-btn:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .download-btn {
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .download-btn:hover {
+            background-color: var(--surface-hover);
+            border-color: var(--primary);
+        }
+
+        .hidden { display: none !important; }
+        
+        /* Message Box */
+        #msg-box {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text);
+            color: var(--bg);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        #msg-box.show {
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <a href="/projects/" class="btn-back">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Back to Projects
+        </a>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            Favicon Lab
+        </div>
+    </div>
+    <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode">
+        <svg id="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg id="sun-icon" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </button>
+</header>
+
+<main class="container">
+    <!-- Left Column: Source & Customization -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+        <div class="panel">
+            <div class="tabs">
+                    <button class="tab active type-tab" data-type="emoji">Emoji</button>
+                    <button class="tab type-tab" data-type="shape">Shape</button>
+                    <button class="tab type-tab" data-type="text">Text</button>
+                </div>
+            </div>
+
+            <!-- Options Containers -->
+            <div id="emoji-options" class="form-group preset-options">
+                <label>Select Emoji</label>
+                <div class="preset-grid" id="emoji-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <div id="shape-options" class="form-group preset-options hidden">
+                <label>Select Shape</label>
+                <div class="preset-grid" id="shape-grid">
+                    <div class="preset-item active" data-val="circle">⬤</div>
+                    <div class="preset-item" data-val="square">■</div>
+                    <div class="preset-item" data-val="triangle">▲</div>
+                    <div class="preset-item" data-val="diamond">◆</div>
+                    <div class="preset-item" data-val="star">★</div>
+                    <div class="preset-item" data-val="pentagon" style="font-size: 0.9rem">⬟</div>
+                    <div class="preset-item" data-val="hexagon" style="font-size: 0.9rem">⬢</div>
+                    <div class="preset-item" data-val="octagon" style="font-size: 0.9rem">⯃</div>
+                    <div class="preset-item" data-val="cross">✚</div>
+                </div>
+            </div>
+
+            <div id="text-options" class="form-group preset-options hidden">
+                <label>Enter Text (1-2 chars)</label>
+                <input type="text" id="text-input" maxlength="2" value="Aa" placeholder="E.g. FL">
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border); margin: 1.5rem 0;">
+
+            <!-- Shared Customization -->
+            <div class="form-group">
+                <h3 class="panel-title" style="font-size: 1rem; margin-bottom: 1rem;">Customize</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Background Color</label>
+                        <input type="color" id="bg-color" value="#4f46e5">
+                    </div>
+                    <div class="form-group">
+                        <label>Icon/Text Color</label>
+                        <input type="color" id="fg-color" value="#ffffff">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 0.5rem;">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="use-gradient">
+                        Use Gradient Background
+                    </label>
+                </div>
+                
+                <div class="form-group hidden" id="grad-color-group">
+                    <label>Gradient Secondary Color</label>
+                    <input type="color" id="grad-color" value="#818cf8">
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label><span>Size</span> <span id="size-val">65%</span></label>
+                    <input type="range" id="size-slider" min="20" max="90" value="65">
+                </div>
+
+                <div class="form-group" style="margin-top: 0.5rem;">
+                    <label><span>Border Radius</span> <span id="radius-val">25%</span></label>
+                    <input type="range" id="radius-slider" min="0" max="50" value="25">
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="upload-section" class="hidden">
+            <div class="upload-area" id="drop-zone">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <div>
+                    <strong style="color: var(--text)">Click to upload</strong> or drag and drop<br>
+                    <span style="font-size: 0.85rem">PNG, JPG, SVG (Max. 5MB)</span>
+                </div>
+                <input type="file" id="file-input" accept="image/png, image/jpeg, image/svg+xml">
+            </div>
+            <div id="upload-preview-container" class="hidden" style="margin-top: 1rem; text-align: center;">
+                <p style="margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">Current Image:</p>
+                <img id="upload-thumb" src="" alt="Uploaded thumbnail" style="max-width: 100px; max-height: 100px; border-radius: 8px; border: 1px solid var(--border);">
+            </div>
+        </div>
+
+        <!-- SEO Panel -->
+        <div class="panel">
+            <h2 class="panel-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                SEO & Meta Tags
+            </h2>
+            <div class="form-group">
+                <label>Page Title</label>
+                <input type="text" id="seo-title" value="Favicon Lab – Generator" placeholder="e.g. JobHunter – Your Private Job Search">
+            </div>
+            <div class="form-group" style="margin-top: 0.5rem">
+                <label>Description</label>
+                <textarea id="seo-desc" rows="3" style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--surface); color: var(--text); font-family: inherit; font-size: 0.875rem; resize: vertical;" placeholder="A brief description of your site...">Generate, preview, and export favicon code instantly.</textarea>
+            </div>
+            <div class="form-group" style="margin-top: 0.5rem">
+                <label>Base URL</label>
+                <input type="text" id="seo-url" value="https://stefone.com/favicon-lab/" placeholder="https://www.yourdomain.com/">
+            </div>
+            <div class="form-group" style="margin-top: 0.5rem">
+                <label>Open Graph Image URL</label>
+                <input type="text" id="seo-image" value="https://stefone.com/assets/thumbs/favicon-lab.png" placeholder="https://example.com/assets/og.png">
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Preview & Output -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Live Preview -->
+        <div class="panel">
+            <h2 class="panel-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Live Preview
+            </h2>
+            
+            <div class="mockup-container">
+                <!-- Browser Tab Mockup -->
+                <div>
+                    <label style="margin-bottom: 0.5rem; display: block; color: var(--text-muted)">Browser Tab</label>
+                    <div class="browser-tab-bar">
+                        <div class="browser-tab">
+                            <img id="tab-icon-preview" src="" alt="favicon">
+                            <span id="browser-title-preview">Favicon Lab – Generator</span>
+                        </div>
+                    </div>
+                    <div class="browser-content"></div>
+                </div>
+
+                <!-- Mobile App Mockup -->
+                <div>
+                    <label style="margin-bottom: 0.5rem; display: block; color: var(--text-muted)">Mobile Home Screen</label>
+                    <div class="mobile-mockup">
+                        <div class="app-icon" id="app-icon-preview"></div>
+                        <span class="app-name" id="app-name-preview">Favicon Lab</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Generator -->
+        <div class="panel">
+            <h2 class="panel-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                Generated Code
+            </h2>
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Add this snippet to the <code>&lt;head&gt;</code> of your HTML document.</p>
+            
+            <div class="code-block-wrapper">
+                <button class="copy-btn" id="copy-btn">Copy Code</button>
+                <div class="code-block" id="code-output"></div>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Generated Assets</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Click to download the generated files to include in your project root.</p>
+                <div class="download-grid" id="downloads-container">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="msg-box">Copied to clipboard!</div>
+
+<script>
+    // --- State Management ---
+    const state = {
+        sourceMode: 'preset', // 'preset' or 'upload'
+        presetType: 'emoji',  // 'emoji', 'shape', 'text'
+        presetValue: '🚀',
+        bgColor: '#4f46e5',
+        fgColor: '#ffffff',
+        useGradient: false,
+        gradColor: '#818cf8',
+        size: 65,
+        borderRadius: 25,
+        uploadedImageObj: null, // HTMLImageElement
+        currentDataUri: '',     // Holds the current generated SVG or uploaded Base64
+        seoTitle: 'Favicon Lab – Generator',
+        seoDesc: 'Generate, preview, and export favicon code instantly.',
+        seoUrl: 'https://stefone.com/favicon-lab/',
+        seoImage: 'https://stefone.com/assets/thumbs/favicon-lab.png'
+    };
+
+    const EMOJIS = [
+'🚀','🔥','💎','⚡','🌙','⭐','🎯','💡','🎨','💻','☕','🎧','📦','🌍','❤️','🧠','🛠️','✨','🎵','🕹️',
+'📱','🤖','🧪','🌱','🍔','🎉','⚽','🚗','🌈','☀️','👽','👾','👻','🦄','🐉','🌊','🏆','🥇','🎬','📸',
+'🎮','🧩','📊','📈','🔒','🔑','💰','🪙','💳','🏦','🛰️','🚁','✈️','🛸','🚢','🏝️','🏔️','🌋','⛄','❄️',
+'🌸','🌼','🍀','🍕','🍣','🍩','🍺','🥂','🍷','🥑','🌮','🍜','🍿','🍪','🍫','🍓','🍉','🥕','🌽','🥨',
+'🐶','🐱','🐼','🦊','🐸','🐵','🐝','🦋','🐢','🐙','🦖','🦕','🐬','🦈','🦩','🦚','🦜','🐓','🐿️','🦔',
+'🏀','🏈','⚾','🎾','🏐','🏓','🥊','🥋','⛳','🎣','🏹','🥌','🛹','⛸️','🥇','🥈','🥉','🎖️','🏅','🎗️',
+'🎤','🎼','🎹','🥁','🎻','🎺','📀','📼','📺','📻','🖥️','⌨️','🖱️','🖨️','💿','📡','🔋','🔌','💾','🗂️',
+'📁','📎','✏️','🖊️','🖌️','📝','📚','📖','🔍','🔎','🕶️','👓','🎩','🧢','👑','💍','💄','👟','🧥','👜',
+'⌚','📅','📆','🗓️','📍','🧭','🗺️','🛎️','🛍️','🎁','📢','📣','🔔','🚨','⚙️','🧱','🪄','🧲','🧰','🪛',
+'🪚','⛏️','🔨','🪓','🧯','🛡️','⚔️','🗡️','🔫','💣','🧨','🧧','🎈','🎀','🪩','🕯️','🪔','🛋️','🛏️','🚿'
+];
+
+    // --- DOM Elements ---
+    const themeToggle = document.getElementById('theme-toggle');
+    const root = document.documentElement;
+    const tabIconPreview = document.getElementById('tab-icon-preview');
+    const appIconPreview = document.getElementById('app-icon-preview');
+    const codeOutput = document.getElementById('code-output');
+    const downloadsContainer = document.getElementById('downloads-container');
+    const msgBox = document.getElementById('msg-box');
+
+    // Setup initial DOM
+    document.getElementById('emoji-grid').innerHTML = EMOJIS.map(e => `<div class="preset-item emoji-item ${e===state.presetValue?'active':''}" data-val="${e}">${e}</div>`).join('');
+
+    // --- Event Listeners ---
+    // Theme
+    themeToggle.addEventListener('click', () => {
+        const isDark = root.getAttribute('data-theme') === 'dark';
+        root.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        document.getElementById('sun-icon').classList.toggle('hidden');
+        document.getElementById('moon-icon').classList.toggle('hidden');
+    });
+
+    // Main Tabs
+    document.querySelectorAll('.tabs .tab[data-target]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.tabs .tab[data-target]').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            const targetId = e.target.getAttribute('data-target');
+            document.getElementById('preset-section').classList.toggle('hidden', targetId !== 'preset-section');
+            document.getElementById('upload-section').classList.toggle('hidden', targetId !== 'upload-section');
+            state.sourceMode = targetId === 'preset-section' ? 'preset' : 'upload';
+            updateAll();
+        });
+    });
+
+    // Preset Type Tabs
+    document.querySelectorAll('.type-tab').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.type-tab').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            const type = e.target.getAttribute('data-type');
+            state.presetType = type;
+            
+            document.querySelectorAll('.preset-options').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`${type}-options`).classList.remove('hidden');
+
+            if(type === 'emoji') state.presetValue = document.querySelector('.emoji-item.active').getAttribute('data-val');
+            else if(type === 'shape') state.presetValue = document.querySelector('#shape-grid .preset-item.active').getAttribute('data-val');
+            else if(type === 'text') state.presetValue = document.getElementById('text-input').value;
+            
+            updateAll();
+        });
+    });
+
+    // Preset Selection (Emoji & Shape)
+    document.addEventListener('click', (e) => {
+        if(e.target.classList.contains('preset-item') && !e.target.id) {
+            const parent = e.target.parentElement;
+            parent.querySelectorAll('.preset-item').forEach(el => el.classList.remove('active'));
+            e.target.classList.add('active');
+            state.presetValue = e.target.getAttribute('data-val');
+            updateAll();
+        }
+    });
+
+    // Inputs
+    document.getElementById('text-input').addEventListener('input', (e) => { state.presetValue = e.target.value || ' '; updateAll(); });
+    document.getElementById('bg-color').addEventListener('input', (e) => { state.bgColor = e.target.value; updateAll(); });
+    document.getElementById('fg-color').addEventListener('input', (e) => { state.fgColor = e.target.value; updateAll(); });
+    document.getElementById('grad-color').addEventListener('input', (e) => { state.gradColor = e.target.value; updateAll(); });
+    
+    document.getElementById('use-gradient').addEventListener('change', (e) => { 
+        state.useGradient = e.target.checked; 
+        document.getElementById('grad-color-group').classList.toggle('hidden', !state.useGradient);
+        updateAll(); 
+    });
+
+    document.getElementById('size-slider').addEventListener('input', (e) => { 
+        state.size = e.target.value; 
+        document.getElementById('size-val').innerText = `${state.size}%`;
+        updateAll(); 
+    });
+
+    document.getElementById('radius-slider').addEventListener('input', (e) => { 
+        state.borderRadius = e.target.value; 
+        document.getElementById('radius-val').innerText = `${state.borderRadius}%`;
+        updateAll(); 
+    });
+
+    // SEO Handlers
+    document.getElementById('seo-title').addEventListener('input', (e) => { state.seoTitle = e.target.value; updateAll(); });
+    document.getElementById('seo-desc').addEventListener('input', (e) => { state.seoDesc = e.target.value; updateAll(); });
+    document.getElementById('seo-url').addEventListener('input', (e) => { state.seoUrl = e.target.value; updateAll(); });
+    document.getElementById('seo-image').addEventListener('input', (e) => { state.seoImage = e.target.value; updateAll(); });
+
+    // Upload Handlers
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => {
+        if(e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+        if(!file.type.startsWith('image/')) {
+            showMsg('Please upload an image file.');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                state.uploadedImageObj = img;
+                document.getElementById('upload-thumb').src = e.target.result;
+                document.getElementById('upload-preview-container').classList.remove('hidden');
+                updateAll();
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Copy Code
+    document.getElementById('copy-btn').addEventListener('click', () => {
+        const text = codeOutput.innerText;
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showMsg('Code copied to clipboard!');
+        } catch (err) {
+            showMsg('Failed to copy.');
+        }
+        document.body.removeChild(textArea);
+    });
+
+    function showMsg(text) {
+        msgBox.innerText = text;
+        msgBox.classList.add('show');
+        setTimeout(() => msgBox.classList.remove('show'), 2500);
+    }
+
+    // --- Core Generation Logic ---
+
+    function generateSVGString() {
+        const s = state.size;
+        const rx = state.borderRadius;
+        const bg = state.useGradient ? 'url(#grad)' : state.bgColor;
+        
+        let defs = state.useGradient ? 
+            `<defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${state.bgColor}" /><stop offset="100%" stop-color="${state.gradColor}" /></linearGradient></defs>` 
+            : '';
+
+        let content = '';
+        if (state.presetType === 'emoji' || state.presetType === 'text') {
+            // Adjust y slightly for better visual centering depending on OS fonts
+            content = `<text x="50" y="52" font-family="system-ui, -apple-system, sans-serif" font-size="${s}" text-anchor="middle" dominant-baseline="middle" fill="${state.fgColor}">${escapeHtml(state.presetValue)}</text>`;
+        } else if (state.presetType === 'shape') {
+            if (state.presetValue === 'circle') {
+                content = `<circle cx="50" cy="50" r="${s/2}" fill="${state.fgColor}"/>`;
+            } else if (state.presetValue === 'square') {
+                const w = s * 0.8;
+                content = `<rect x="${50-w/2}" y="${50-w/2}" width="${w}" height="${w}" rx="${w*0.1}" fill="${state.fgColor}"/>`;
+            } else if (state.presetValue === 'triangle') {
+                const h = s * 0.8;
+                content = `<polygon points="50,${50-h/2} ${50+h/2},${50+h/2} ${50-h/2},${50+h/2}" fill="${state.fgColor}"/>`;
+            } else if (state.presetValue === 'diamond') {
+                const r = s * 0.5;
+                content = `<polygon points="50,${50-r} ${50+r},50 50,${50+r} ${50-r},50" fill="${state.fgColor}"/>`;
+            } else if (state.presetValue === 'star') {
+                // simple 5 point star calculation
+                const rOuter = s * 0.5;
+                const rInner = rOuter * 0.4;
+                let points = '';
+                for(let i=0; i<10; i++) {
+                    const r = i % 2 === 0 ? rOuter : rInner;
+                    const angle = (i * Math.PI / 5) - (Math.PI / 2);
+                    points += `${50 + r * Math.cos(angle)},${50 + r * Math.sin(angle)} `;
+                }
+                content = `<polygon points="${points.trim()}" fill="${state.fgColor}"/>`;
+            } else if (state.presetValue === 'pentagon') {
+                const r = s * 0.5;
+                let points = '';
+                for(let i=0; i<5; i++) {
+                    const angle = (i * 2 * Math.PI / 5) - (Math.PI / 2);
+                    points += `${50 + r * Math.cos(angle)},${50 + r * Math.sin(angle)} `;
+                }
+                content = `<polygon points="${points.trim()}" fill="${state.fgColor}"/>`;
+            } else if (state.presetValue === 'hexagon') {
+                const r = s * 0.5;
+                let points = '';
+                for(let i=0; i<6; i++) {
+                    const angle = (i * 2 * Math.PI / 6) - (Math.PI / 2);
+                    points += `${50 + r * Math.cos(angle)},${50 + r * Math.sin(angle)} `;
+                }
+                content = `<polygon points="${points.trim()}" fill="${state.fgColor}"/>`;
+            } else if (state.presetValue === 'octagon') {
+                const r = s * 0.5;
+                let points = '';
+                for(let i=0; i<8; i++) {
+                    const angle = (i * 2 * Math.PI / 8) - (Math.PI / 2 + Math.PI/8);
+                    points += `${50 + r * Math.cos(angle)},${50 + r * Math.sin(angle)} `;
+                }
+                content = `<polygon points="${points.trim()}" fill="${state.fgColor}"/>`;
+            } else if (state.presetValue === 'cross') {
+                const w = s * 0.2;
+                const l = s * 0.8;
+                content = `<path d="M ${50-w/2} ${50-l/2} h ${w} v ${l/2 - w/2} h ${l/2 - w/2} v ${w} h ${-(l/2 - w/2)} v ${l/2 - w/2} h ${-w} v ${-(l/2 - w/2)} h ${-(l/2 - w/2)} v ${-w} h ${l/2 - w/2} Z" fill="${state.fgColor}"/>`;
+            }
+        }
+
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${defs}<rect width="100" height="100" rx="${rx}" fill="${bg}"/>${content}</svg>`;
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // Render an image source to a specific canvas size and return base64
+    function renderToSize(imgSrc, size) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                if(state.sourceMode === 'upload' && state.uploadedImageObj) {
+                    // Draw uploaded image covering the canvas (center crop)
+                    const aspectSrc = img.width / img.height;
+                    let drawW = size;
+                    let drawH = size;
+                    let offsetX = 0;
+                    let offsetY = 0;
+
+                    if (aspectSrc > 1) {
+                        drawW = size * aspectSrc;
+                        offsetX = (size - drawW) / 2;
+                    } else {
+                        drawH = size / aspectSrc;
+                        offsetY = (size - drawH) / 2;
+                    }
+                    ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+                } else {
+                    // Draw SVG
+                    ctx.drawImage(img, 0, 0, size, size);
+                }
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.src = imgSrc;
+        });
+    }
+
+    async function updateAll() {
+        let uri = '';
+        let isSvg = false;
+
+        if (state.sourceMode === 'preset') {
+            const svgStr = generateSVGString();
+            // Encode SVG properly for data URI
+            const encoded = encodeURIComponent(svgStr)
+                .replace(/'/g, '%27')
+                .replace(/"/g, '%22');
+            uri = `data:image/svg+xml,${encoded}`;
+            isSvg = true;
+        } else {
+            if (!state.uploadedImageObj) return; // Wait for upload
+            uri = state.uploadedImageObj.src;
+        }
+
+        state.currentDataUri = uri;
+
+        // Update Previews
+        tabIconPreview.src = uri;
+        appIconPreview.style.backgroundImage = `url("${uri}")`;
+        document.getElementById('browser-title-preview').innerText = state.seoTitle || 'Browser Tab';
+        document.getElementById('app-name-preview').innerText = state.seoTitle || 'App Name';
+
+        // Update Code Snippet
+        const themeColor = state.sourceMode === 'preset' ? state.bgColor : '#ffffff';
+        let code = `<!-- Primary Meta Tags -->
+<title>${state.seoTitle}</title>
+<meta name="title" content="${state.seoTitle}" />
+<meta name="description" content="${state.seoDesc}" />
+
+<!-- Favicon configuration -->\n`;
+        
+        if (isSvg) {
+            code += `<link rel="icon" type="image/svg+xml" href="${uri}">\n`;
+        }
+        
+        code += `<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="${state.seoUrl}" />
+<meta property="og:title" content="${state.seoTitle}" />
+<meta property="og:description" content="${state.seoDesc}" />
+<meta property="og:image" content="${state.seoImage}" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="${state.seoTitle} preview" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${state.seoTitle}" />
+<meta name="twitter:description" content="${state.seoDesc}" />
+<meta name="twitter:image" content="${state.seoImage}" />
+
+<!-- Optional -->
+<meta name="theme-color" content="${themeColor}">`;
+
+        codeOutput.textContent = code;
+
+        // Generate Download Links
+        downloadsContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); font-size: 0.8rem;">Generating assets...</div>';
+        
+        const sizes = [
+            { name: 'favicon-16x16.png', size: 16 },
+            { name: 'favicon-32x32.png', size: 32 },
+            { name: 'apple-touch-icon.png', size: 180 },
+            { name: 'android-chrome-192x192.png', size: 192 },
+            { name: 'android-chrome-512x512.png', size: 512 }
+        ];
+
+        try {
+            const renders = await Promise.all(sizes.map(async (s) => {
+                const dataUrl = await renderToSize(uri, s.size);
+                return { ...s, dataUrl };
+            }));
+
+            // Create manifest blob
+            const manifestObj = {
+                name: state.seoTitle,
+                short_name: "App",
+                icons: [
+                    { src: "/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
+                    { src: "/android-chrome-512x512.png", sizes: "512x512", type: "image/png" }
+                ],
+                theme_color: themeColor,
+                background_color: "#ffffff",
+                display: "standalone"
+            };
+            const manifestBlob = new Blob([JSON.stringify(manifestObj, null, 2)], {type: 'application/json'});
+            const manifestUrl = URL.createObjectURL(manifestBlob);
+
+            let html = '';
+            
+            // Add SVG direct download if applicable
+            if (isSvg) {
+                html += `<a href="${uri}" download="favicon.svg" class="download-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    favicon.svg
+                </a>`;
+            }
+
+            // Add PNG renders
+            renders.forEach(r => {
+                html += `<a href="${r.dataUrl}" download="${r.name}" class="download-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    ${r.name}
+                </a>`;
+            });
+
+            // Add Webmanifest
+            html += `<a href="${manifestUrl}" download="site.webmanifest" class="download-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                site.webmanifest
+            </a>`;
+
+            downloadsContainer.innerHTML = html;
+
+        } catch (e) {
+            console.error("Render error:", e);
+            downloadsContainer.innerHTML = '<div style="grid-column: 1/-1; color: #ef4444; font-size: 0.8rem;">Error generating images. Ensure uploaded image is valid.</div>';
+        }
+    }
+
+    // Init
+    updateAll();
+
+</script>
+</body>
+</html>

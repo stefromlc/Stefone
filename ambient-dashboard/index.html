@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambient Dashboard</title>
+    <style>
+        :root {
+            /* Midnight (Default) */
+            --bg-color: #0b1120;
+            --bg-gradient: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0b1120 100%);
+            --panel-bg: rgba(30, 41, 59, 0.4);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --glow-color: rgba(56, 189, 248, 0.5);
+            
+            /* User Settings defaults */
+            --blur: 12px;
+            --glow-int: 10px;
+            --brightness: 1;
+            --bg-dim: 0.2;
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            
+            /* Dynamic Fullscreen Offset */
+            --fs-offset-x: 0px;
+            --fs-offset-y: 0px;
+
+            /* System */
+            --trans: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Theme Presets --- */
+        [data-theme="warm-dawn"] {
+            --bg-color: #2d1b19; --bg-gradient: linear-gradient(135deg, #432024 0%, #2d1b19 100%);
+            --panel-bg: rgba(67, 32, 36, 0.4); --panel-border: rgba(255, 200, 200, 0.15);
+            --text-main: #fff1f2; --text-muted: #fda4af; --accent: #fb7185; --accent-hover: #e11d48; --glow-color: rgba(251, 113, 133, 0.5);
+        }
+        [data-theme="minimal-light"] {
+            --bg-color: #f1f5f9; --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            --panel-bg: rgba(255, 255, 255, 0.6); --panel-border: rgba(0, 0, 0, 0.05);
+            --text-main: #334155; --text-muted: #64748b; --accent: #6366f1; --accent-hover: #4f46e5; --glow-color: rgba(99, 102, 241, 0.3);
+        }
+        [data-theme="forest-retreat"] {
+            --bg-color: #0f172a; --bg-gradient: linear-gradient(135deg, #064e3b 0%, #0f172a 100%);
+            --panel-bg: rgba(6, 78, 59, 0.4); --panel-border: rgba(167, 243, 208, 0.15);
+            --text-main: #ecfdf5; --text-muted: #6ee7b7; --accent: #10b981; --accent-hover: #059669; --glow-color: rgba(16, 185, 129, 0.4);
+        }
+        [data-theme="cyber-neon"] {
+            --bg-color: #09090b; --bg-gradient: radial-gradient(circle at top right, #3b0764 0%, #09090b 100%);
+            --panel-bg: rgba(24, 24, 27, 0.6); --panel-border: rgba(217, 70, 239, 0.3);
+            --text-main: #fdf4ff; --text-muted: #f0abfc; --accent: #d946ef; --accent-hover: #c026d3; --glow-color: rgba(217, 70, 239, 0.6);
+        }
+        [data-theme="sunset-glow"] {
+            --bg-color: #2a0a0a; --bg-gradient: radial-gradient(circle at bottom, #ea580c 0%, #450a0a 100%);
+            --panel-bg: rgba(69, 10, 10, 0.4); --panel-border: rgba(253, 186, 116, 0.2);
+            --text-main: #fff7ed; --text-muted: #fdba74; --accent: #f97316; --accent-hover: #ea580c; --glow-color: rgba(249, 115, 22, 0.5);
+        }
+        [data-theme="deep-ocean"] {
+            --bg-color: #020617; --bg-gradient: linear-gradient(135deg, #083344 0%, #020617 100%);
+            --panel-bg: rgba(8, 51, 68, 0.5); --panel-border: rgba(103, 232, 249, 0.15);
+            --text-main: #ecfeff; --text-muted: #67e8f9; --accent: #06b6d4; --accent-hover: #0891b2; --glow-color: rgba(6, 182, 212, 0.5);
+        }
+        [data-theme="amethyst"] {
+            --bg-color: #170f2e; --bg-gradient: linear-gradient(135deg, #4c1d95 0%, #0f172a 100%);
+            --panel-bg: rgba(76, 29, 149, 0.3); --panel-border: rgba(216, 180, 254, 0.15);
+            --text-main: #faf5ff; --text-muted: #d8b4fe; --accent: #a855f7; --accent-hover: #9333ea; --glow-color: rgba(168, 85, 247, 0.5);
+        }
+        [data-theme="synthwave"] {
+            --bg-color: #000000; --bg-gradient: linear-gradient(180deg, #2e1065 0%, #000000 50%, #831843 100%);
+            --panel-bg: rgba(0, 0, 0, 0.6); --panel-border: rgba(244, 114, 182, 0.4);
+            --text-main: #fdf2f8; --text-muted: #fbcfe8; --accent: #f472b6; --accent-hover: #db2777; --glow-color: rgba(244, 114, 182, 0.7);
+        }
+        /* New OLED & Extra Themes */
+        [data-theme="oled-pure"] {
+            --bg-color: #000000; --bg-gradient: none;
+            --panel-bg: rgba(10, 10, 10, 0.8); --panel-border: rgba(255, 255, 255, 0.15);
+            --text-main: #ffffff; --text-muted: #888888; --accent: #ffffff; --accent-hover: #dddddd; --glow-color: rgba(255, 255, 255, 0.3);
+        }
+        [data-theme="oled-neon"] {
+            --bg-color: #000000; --bg-gradient: none;
+            --panel-bg: rgba(0, 0, 0, 0.8); --panel-border: rgba(57, 255, 20, 0.25);
+            --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #39ff14; --accent-hover: #32e011; --glow-color: rgba(57, 255, 20, 0.5);
+        }
+        [data-theme="oled-crimson"] {
+            --bg-color: #000000; --bg-gradient: none;
+            --panel-bg: rgba(0, 0, 0, 0.8); --panel-border: rgba(220, 20, 60, 0.25);
+            --text-main: #ffffff; --text-muted: #aaaaaa; --accent: #dc143c; --accent-hover: #b01030; --glow-color: rgba(220, 20, 60, 0.5);
+        }
+        [data-theme="nord"] {
+            --bg-color: #2e3440; --bg-gradient: linear-gradient(135deg, #3b4252 0%, #2e3440 100%);
+            --panel-bg: rgba(46, 52, 64, 0.6); --panel-border: rgba(136, 192, 208, 0.2);
+            --text-main: #eceff4; --text-muted: #d8dee9; --accent: #88c0d0; --accent-hover: #81a1c1; --glow-color: rgba(136, 192, 208, 0.4);
+        }
+        [data-theme="dracula"] {
+            --bg-color: #282a36; --bg-gradient: linear-gradient(135deg, #44475a 0%, #282a36 100%);
+            --panel-bg: rgba(40, 42, 54, 0.6); --panel-border: rgba(189, 147, 249, 0.2);
+            --text-main: #f8f8f2; --text-muted: #6272a4; --accent: #bd93f9; --accent-hover: #ff79c6; --glow-color: rgba(189, 147, 249, 0.4);
+        }
+        [data-theme="pastel-dream"] {
+            --bg-color: #fdfbfb; --bg-gradient: linear-gradient(135deg, #ebedee 0%, #fdfbfb 100%);
+            --panel-bg: rgba(255, 255, 255, 0.7); --panel-border: rgba(255, 182, 193, 0.4);
+            --text-main: #555555; --text-muted: #999999; --accent: #ffb6c1; --accent-hover: #ff9eaa; --glow-color: rgba(255, 182, 193, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-gradient);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            filter: brightness(var(--brightness));
+            transition: background 0.5s ease;
+        }
+
+        /* --- Background Layers --- */
+        #bg-layer {
+            position: absolute; inset: 0; z-index: 0;
+            background-size: cover; background-position: center;
+            opacity: 0; transition: opacity 0.5s ease;
+        }
+        #bg-layer::after {
+            content: ''; position: absolute; inset: 0;
+            background: rgba(0,0,0, var(--bg-dim));
+        }
+        
+        /* Animated Backgrounds */
+        .bg-anim-aurora {
+            background: linear-gradient(45deg, var(--bg-color), var(--accent), var(--bg-color));
+            background-size: 400% 400% !important;
+            animation: AuroraBg 15s ease infinite;
+        }
+        @keyframes AuroraBg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .bg-anim-mesh {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 40% 20%, var(--accent) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, var(--glow-color) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, var(--accent-hover) 0px, transparent 50%);
+            background-size: 200% 200% !important;
+            animation: MeshBg 20s ease infinite;
+        }
+        @keyframes MeshBg { 0% { background-position: 0% 0%; } 50% { background-position: 100% 100%; } 100% { background-position: 0% 0%; } }
+        
+        .bg-anim-stars {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(var(--text-muted) 1px, transparent 1px), radial-gradient(var(--text-muted) 1px, transparent 1px);
+            background-size: 50px 50px !important;
+            background-position: 0 0, 25px 25px !important;
+            animation: StarsBg 100s linear infinite;
+        }
+        @keyframes StarsBg { 0% { background-position: 0 0, 25px 25px; } 100% { background-position: 500px 500px, 525px 525px; } }
+
+
+        /* --- Top Bar --- */
+        .top-bar {
+            height: 60px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--panel-border); z-index: 100;
+        }
+
+        .controls-group { display: flex; align-items: center; gap: 12px; }
+
+        select, button, input[type="range"], input[type="text"], input[type="number"], input[type="file"] {
+            background: var(--panel-bg); color: var(--text-main);
+            border: 1px solid var(--panel-border); border-radius: 8px;
+            padding: 6px 12px; font-family: inherit; font-size: 14px;
+            outline: none; cursor: pointer; transition: var(--trans);
+        }
+        option { background-color: #0b1120; color: #fff; }
+        select:hover, button:hover { border-color: var(--accent); background: rgba(255,255,255,0.1); }
+        button.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 var(--glow-int) var(--glow-color); }
+        input[type="text"], input[type="number"] { cursor: text; }
+        input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent); background: rgba(0,0,0,0.5); }
+
+        /* --- Dashboard Area --- */
+        .dashboard {
+            position: relative; flex: 1; width: 100%; height: calc(100vh - 60px);
+            overflow: hidden; z-index: 10;
+        }
+        .dashboard.editing {
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .dashboard-inner {
+            position: absolute;
+            inset: 0;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Panels --- */
+        .panel {
+            position: absolute; background: var(--panel-bg);
+            backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+            border: 1px solid var(--panel-border); border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 var(--glow-int) var(--glow-color);
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        .panel-header {
+            padding: 12px 16px; font-size: 14px; font-weight: 600; color: var(--text-muted);
+            border-bottom: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; user-select: none;
+        }
+        .dashboard.editing .panel { border-color: rgba(255,255,255,0.4); }
+        .dashboard.editing .panel-header { cursor: move; border-bottom-color: var(--panel-border); background: rgba(0,0,0,0.2); }
+        .panel-content { padding: 16px; flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; }
+        
+        .resize-handle { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; cursor: se-resize; display: none; }
+        .dashboard.editing .resize-handle { display: block; background: linear-gradient(135deg, transparent 50%, var(--accent) 50%); opacity: 0.5; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        /* Panel Specifics */
+        .clock-panel .panel-content { display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+        .time-display { font-size: 48px; font-weight: 200; letter-spacing: 2px; }
+        .date-display { font-size: 14px; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .analog-clock { position: relative; width: 120px; height: 120px; border: 2px solid var(--text-muted); border-radius: 50%; display: none; }
+        .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom; background: var(--text-main); border-radius: 4px; }
+        .hand.hour { width: 4px; height: 35px; margin-left: -2px; }
+        .hand.minute { width: 2px; height: 50px; margin-left: -1px; background: var(--text-muted); }
+        .hand.second { width: 1px; height: 55px; background: var(--accent); transition: transform 0.1s linear; }
+        .center-dot { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; transform: translate(-50%, -50%); }
+
+        .quote-panel .panel-content { display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic; font-size: 16px; line-height: 1.6; transition: opacity 1s ease; }
+        .quote-author { display: block; font-size: 12px; color: var(--text-muted); margin-top: 12px; font-style: normal; }
+
+        .goal-item { margin-bottom: 16px; }
+        .goal-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+        .goal-bar-bg { width: 100%; height: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; overflow: hidden; }
+        .goal-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 1s ease; }
+        .goal-note { font-size: 12px; color: var(--text-muted); margin-top: 6px; padding: 6px; background: rgba(0,0,0,0.1); border-radius: 4px; border: none; width: 100%; resize: none; color: inherit; font-family: inherit;}
+        
+        .timer-panel .panel-content { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .timer-display { font-size: 56px; font-weight: 300; font-variant-numeric: tabular-nums; margin-bottom: 16px; }
+        .timer-controls { display: flex; gap: 8px; margin-bottom: 16px; }
+        .timer-controls button { padding: 4px 12px; font-size: 12px; }
+        .timer-pulse { animation: timerPulse 2s infinite ease-in-out; }
+        @keyframes timerPulse { 0% { box-shadow: 0 0 5px var(--glow-color); } 50% { box-shadow: 0 0 20px var(--glow-color); } 100% { box-shadow: 0 0 5px var(--glow-color); } }
+
+        .weather-panel .panel-content { display: flex; flex-direction: column; justify-content: center; }
+        .weather-main { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+        .weather-icon { font-size: 40px; }
+        .weather-temp { font-size: 36px; font-weight: 300; }
+        .weather-loc { font-size: 16px; font-weight: 500; }
+        .weather-update { font-size: 11px; color: var(--text-muted); }
+        
+        .cal-day { padding: 4px; border-radius: 4px; }
+        .cal-day.today { background: var(--accent); color: #fff; font-weight: bold; }
+        .cal-day.header { color: var(--text-muted); font-size: 10px; text-transform: uppercase; }
+
+        .bookmark-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 8px; text-decoration: none; color: inherit; transition: var(--trans); border: 1px solid transparent; }
+        .bookmark-item:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); transform: translateY(-1px); }
+        .bookmark-link { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bookmark-del { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 4px; display: none; }
+        .dashboard.editing .bookmark-del { display: block; pointer-events: auto;}
+        .dashboard.editing .bookmark-item { pointer-events: none; }
+
+        .habit-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; cursor: pointer; padding: 4px; border-radius: 4px; }
+        .habit-item:hover { background: rgba(255,255,255,0.05); }
+        .habit-checkbox { width: 18px; height: 18px; border: 2px solid var(--accent); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: var(--trans); flex-shrink: 0; }
+        .habit-checkbox.done { background: var(--accent); }
+        .habit-checkbox.done::after { content: "✓"; font-size: 12px; color: #fff; font-weight: bold; }
+        .habit-text { flex: 1; transition: var(--trans); }
+        .habit-text.done { text-decoration: line-through; color: var(--text-muted); }
+        .habit-del { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; display: none; }
+        .dashboard.editing .habit-del { display: block; }
+
+        .status-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; align-items: center; }
+        .battery-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.3); border-radius: 3px; overflow: hidden; }
+        .battery-fill { height: 100%; background: var(--accent); transition: width 0.5s ease; }
+        .battery-fill.charging { background: #10b981; }
+        .battery-fill.low { background: #ef4444; }
+
+        /* Slideshow */
+        .slideshow-display { width: 100%; height: 100%; background-size: cover; background-position: center; transition: opacity 1s ease; opacity: 1; border-radius: 8px; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .dashboard { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; height: auto; min-height: calc(100vh - 60px); }
+            .dashboard-inner { position: relative; }
+            .panel { position: relative !important; top: auto !important; left: auto !important; width: 100% !important; height: auto !important; min-height: 150px; }
+            .top-bar { flex-wrap: wrap; height: auto; padding: 12px; gap: 12px; justify-content: center; }
+            .controls-group { flex-wrap: wrap; justify-content: center; }
+            .dashboard.editing .resize-handle { display: none; }
+        }
+
+        /* Utils & Inner UI */
+        .hidden { display: none !important; }
+        .flex-row { display: flex; gap: 8px; align-items: center; }
+        
+        .close-panel-btn, .settings-btn, .goal-del { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 0 4px; line-height: 1; }
+        .close-panel-btn { font-size: 18px; display: none; }
+        .dashboard.editing .close-panel-btn { display: block; }
+        .close-panel-btn:hover, .goal-del:hover { color: #ef4444; }
+        .settings-btn { font-size: 14px; }
+        .settings-btn:hover { color: var(--accent); }
+        
+        .panel-settings { display: none; position: absolute; inset: 45px 0 0 0; background: var(--panel-bg); backdrop-filter: blur(20px); z-index: 10; padding: 16px; flex-direction: column; gap: 12px; overflow-y: auto;}
+        .panel-settings.active { display: flex; }
+        .panel-settings label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.2s; }
+        .modal-overlay.hidden { opacity: 0; pointer-events: none; }
+        .modal-box { background: var(--bg-color); border: 1px solid var(--panel-border); padding: 24px; border-radius: 16px; min-width: 320px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-box h3 { margin-bottom: 16px; font-size: 18px; font-weight: 500; border-bottom: 1px solid var(--panel-border); padding-bottom: 12px;}
+        .modal-inputs { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+        .modal-field { display: flex; flex-direction: column; gap: 6px; }
+        .modal-field label { font-size: 12px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;}
+        .modal-field input[type="text"], .modal-field input[type="number"], .modal-field select { width: 100%; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--panel-border); padding-top: 16px;}
+
+        /* Fullscreen Mode Overrides */
+        :fullscreen .top-bar, :-webkit-full-screen .top-bar { display: none !important; }
+        :fullscreen .dashboard, :-webkit-full-screen .dashboard { height: 100vh !important; }
+        :fullscreen .panel-header, :-webkit-full-screen .panel-header { display: none !important; }
+        :fullscreen .resize-handle, :-webkit-full-screen .resize-handle { display: none !important; }
+        
+        @media (min-width: 769px) {
+            :fullscreen .dashboard-inner, :-webkit-full-screen .dashboard-inner {
+                transform: translate(var(--fs-offset-x), var(--fs-offset-y));
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bg-layer"></div>
+
+    <div class="top-bar">
+        <div class="controls-group">
+            <button id="btn-appearance" aria-label="Appearance Settings">Appearance 🎨</button>
+            <select id="add-widget-select" aria-label="Add Widget">
+                <option value="">+ Add Widget</option>
+                <option value="clock">Time</option>
+                <option value="quotes">Inspiration</option>
+                <option value="timer">Focus Timer</option>
+                <option value="goals">Goals</option>
+                <option value="weather">Environment</option>
+                <option value="calendar">Calendar</option>
+                <option value="notes">Notes</option>
+                <option value="bookmarks">Bookmarks</option>
+                <option value="habits">Habits</option>
+                <option value="status">System Status</option>
+                <option value="slideshow">Image Slideshow</option>
+            </select>
+            <button id="toggle-edit" aria-label="Toggle Edit Layout">Edit Layout</button>
+            <button id="toggle-glow" aria-label="Toggle Audio Glow">Audio Glow: Off</button>
+        </div>
+        <div class="controls-group">
+            <button id="fullscreen-btn" aria-label="Toggle Fullscreen" title="Fullscreen">⛶</button>
+            <button id="reset-btn" aria-label="Reset Dashboard">Reset</button>
+        </div>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+        <div class="dashboard-inner" id="dashboard-inner">
+            
+            <!-- Clock Panel -->
+            <div class="panel clock-panel" id="panel-clock" data-id="clock">
+                <div class="panel-header">
+                    <span class="panel-title">Time</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="settings-btn" onclick="toggleSettings('clock')" aria-label="Settings">⚙</button>
+                        <button class="close-panel-btn" aria-label="Close">×</button>
+                    </div>
+                </div>
+                <div class="panel-content" id="clock-content">
+                    <div class="time-display" id="time-digital">12:00:00</div>
+                    <div class="date-display" id="date-digital">MON, JAN 1</div>
+                    <div class="analog-clock" id="time-analog">
+                        <div class="hand hour" id="hand-hour"></div>
+                        <div class="hand minute" id="hand-minute"></div>
+                        <div class="hand second" id="hand-second"></div>
+                        <div class="center-dot"></div>
+                    </div>
+                </div>
+                <div class="panel-settings" id="settings-clock">
+                    <h4>Clock Settings</h4>
+                    <label><input type="checkbox" id="clock-24h-toggle"> Use 24-Hour Time</label>
+                    <label><input type="checkbox" id="clock-sec-toggle"> Show Seconds</label>
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+            <!-- Quotes Panel -->
+            <div class="panel quote-panel" id="panel-quotes" data-id="quotes">
+                <div class="panel-header">
+                    <span class="panel-title">Inspiration</span>
+                    <div style="display:flex; gap:8px;">
+                        <button id="load-quotes-btn" style="padding: 2px 8px; font-size: 11px;">Load File</button>
+                        <button class="settings-btn" onclick="toggleSettings('quotes')" aria-label="Settings">⚙</button>
+                        <button class="close-panel-btn" aria-label="Close">×</button>
+                    </div>
+                    <input type="file" id="quote-file-input" accept=".txt,.json" class="hidden">
+                </div>
+                <div class="panel-content">
+                    <div id="quote-text-container">
+                        <span id="quote-text">Loading...</span>
+                        <span class="quote-author" id="quote-author"></span>
+                    </div>
+                </div>
+                <div class="panel-settings" id="settings-quotes">
+                    <h4>Quotes Settings</h4>
+                    <label style="flex-direction: column; align-items: flex-start;">
+                        Rotation Speed: <span id="quote-speed-label">10s</span>
+                        <input type="range" id="quote-speed-slider" min="5" max="60" value="10" style="width: 100%;">
+                    </label>
+                    <button id="quote-restore-btn" style="margin-top: auto;">Restore Default Quotes</button>
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+            <!-- Timer Panel -->
+            <div class="panel timer-panel" id="panel-timer" data-id="timer">
+                <div class="panel-header">
+                    <span class="panel-title">Focus</span>
+                    <button class="close-panel-btn" aria-label="Close">×</button>
+                </div>
+                <div class="panel-content">
+                    <div class="timer-display" id="timer-display">25:00</div>
+                    <div class="timer-controls">
+                        <button data-time="25">25m</button>
+                        <button data-time="50">50m</button>
+                        <button id="timer-custom">Custom</button>
+                    </div>
+                    <div class="timer-controls">
+                        <button id="timer-start" class="active">Start</button>
+                        <button id="timer-reset">Reset</button>
+                    </div>
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+            <!-- Goals Panel -->
+            <div class="panel goals-panel" id="panel-goals" data-id="goals">
+                <div class="panel-header">
+                    <span class="panel-title">Goals</span>
+                    <div style="display:flex; gap:8px;">
+                        <button id="add-goal-btn" style="padding: 2px 8px; font-size: 11px;">+ Add</button>
+                        <button class="close-panel-btn" aria-label="Close">×</button>
+                    </div>
+                </div>
+                <div class="panel-content" id="goals-container">
+                    <!-- Goals injected here -->
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+            <!-- Weather Panel -->
+            <div class="panel weather-panel" id="panel-weather" data-id="weather">
+                <div class="panel-header">
+                    <span class="panel-title">Environment</span>
+                    <div style="display:flex; gap:8px;">
+                        <button id="edit-weather-btn" style="padding: 2px 8px; font-size: 11px;">Edit</button>
+                        <button id="refresh-weather-btn" style="padding: 2px 8px; font-size: 11px;">↻</button>
+                        <button class="close-panel-btn" aria-label="Close">×</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div id="weather-display-area">
+                        <div class="weather-loc" id="w-loc">Cyber City</div>
+                        <div class="weather-main">
+                            <div class="weather-icon" id="w-icon">⛅</div>
+                            <div class="weather-temp" id="w-temp">72°</div>
+                        </div>
+                        <div class="weather-update" id="w-upd">Last updated: Just now</div>
+                    </div>
+                    <div class="panel-settings" id="weather-edit-area">
+                        <button id="w-auto-btn" style="margin-bottom: 8px;">📍 Auto-Detect Location</button>
+                        <input type="text" id="w-edit-loc" placeholder="City Name">
+                        <div class="flex-row">
+                            <input type="number" id="w-edit-temp" placeholder="Temp" style="width: 60px;">
+                            <select id="w-edit-unit" style="padding: 6px; width: 50px;">
+                                <option value="F">°F</option>
+                                <option value="C">°C</option>
+                            </select>
+                            <select id="w-edit-icon" style="flex: 1;">
+                                <option value="☀️">☀️ Clear</option>
+                                <option value="⛅">⛅ Partly Cloudy</option>
+                                <option value="☁️">☁️ Cloudy</option>
+                                <option value="🌧️">🌧️ Rain</option>
+                                <option value="⛈️">⛈️ Storm</option>
+                                <option value="❄️">❄️ Snow</option>
+                                <option value="🌙">🌙 Night</option>
+                            </select>
+                        </div>
+                        <button id="w-save-btn" class="active" style="margin-top: 8px;">Save</button>
+                    </div>
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+            <!-- Calendar Panel -->
+            <div class="panel calendar-panel" id="panel-calendar" data-id="calendar">
+                <div class="panel-header">
+                    <span class="panel-title">Calendar</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="settings-btn" onclick="toggleSettings('calendar')" aria-label="Settings">⚙</button>
+                        <button class="close-panel-btn" aria-label="Close">×</button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div id="calendar-header" style="text-align: center; font-weight: bold; margin-bottom: 10px;"></div>
+                    <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 12px;"></div>
+                </div>
+                <div class="panel-settings" id="settings-calendar">
+                    <h4>Calendar Settings</h4>
+                    <label><input type="checkbox" id="cal-mon-toggle"> Start week on Monday</label>
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+            <!-- Notes Panel -->
+            <div class="panel notes-panel" id="panel-notes" data-id="notes">
+                <div class="panel-header">
+                    <span class="panel-title">Notes</span>
+                    <button class="close-panel-btn" aria-label="Close">×</button>
+                </div>
+                <div class="panel-content" style="display: flex; padding: 0;">
+                    <textarea id="notes-textarea" placeholder="Jot something down..." style="flex: 1; background: transparent; border: none; color: inherit; padding: 16px; resize: none; font-family: inherit; outline: none;"></textarea>
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+            <!-- Bookmarks Panel -->
+            <div class="panel bookmarks-panel" id="panel-bookmarks" data-id="bookmarks">
+                <div class="panel-header">
+                    <span class="panel-title">Quick Links</span>
+                    <div style="display:flex; gap:8px;">
+                        <button id="add-bookmark-btn" style="padding: 2px 8px; font-size: 11px;">+ Add</button>
+                        <button class="close-panel-btn" aria-label="Close">×</button>
+                    </div>
+                </div>
+                <div class="panel-content" id="bookmarks-container">
+                    <!-- Bookmarks injected here -->
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+            <!-- Habits Panel -->
+            <div class="panel habits-panel" id="panel-habits" data-id="habits">
+                <div class="panel-header">
+                    <span class="panel-title">Daily Habits</span>
+                    <div style="display:flex; gap:8px;">
+                        <button id="add-habit-btn" style="padding: 2px 8px; font-size: 11px;">+ Add</button>
+                        <button class="close-panel-btn" aria-label="Close">×</button>
+                    </div>
+                </div>
+                <div class="panel-content" id="habits-container">
+                    <!-- Habits injected here -->
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+            <!-- System Status Panel -->
+            <div class="panel status-panel" id="panel-status" data-id="status">
+                <div class="panel-header">
+                    <span class="panel-title">System Status</span>
+                    <button class="close-panel-btn" aria-label="Close">×</button>
+                </div>
+                <div class="panel-content">
+                    <div class="status-row">
+                        <span>Platform</span>
+                        <span id="sys-platform" style="color: var(--text-muted);">Detecting...</span>
+                    </div>
+                    <div class="status-row">
+                        <span>Browser</span>
+                        <span id="sys-browser" style="color: var(--text-muted);">Detecting...</span>
+                    </div>
+                    <div class="status-row">
+                        <span>Connection</span>
+                        <span id="sys-network" style="color: var(--accent);">Online</span>
+                    </div>
+                    <div class="status-row" style="margin-top: 20px;">
+                        <span>Battery</span>
+                        <span id="sys-battery-txt">--%</span>
+                    </div>
+                    <div class="battery-bar">
+                        <div class="battery-fill" id="sys-battery-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+            <!-- Slideshow Panel -->
+            <div class="panel slideshow-panel" id="panel-slideshow" data-id="slideshow">
+                <div class="panel-header">
+                    <span class="panel-title">Image Slideshow</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="settings-btn" onclick="toggleSettings('slideshow')" aria-label="Settings">⚙</button>
+                        <button class="close-panel-btn" aria-label="Close">×</button>
+                    </div>
+                </div>
+                <div class="panel-content" style="padding: 0; background: #000;">
+                    <div id="slideshow-display" class="slideshow-display">
+                        <div id="slideshow-placeholder" style="color: var(--text-muted); display: flex; height: 100%; align-items: center; justify-content: center; font-size: 12px; text-align: center; padding: 16px;">
+                            Click ⚙ to select a folder
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-settings" id="settings-slideshow">
+                    <h4>Slideshow Settings</h4>
+                    <p style="font-size: 11px; color: var(--text-muted);">Browser security requires you to re-select the folder on each reload.</p>
+                    <button id="slideshow-folder-btn" style="margin-top: 8px;">Select Image Folder</button>
+                    <input type="file" id="slideshow-folder-input" webkitdirectory directory multiple accept="image/*" class="hidden">
+                    <label style="flex-direction: column; align-items: flex-start; margin-top: 12px;">
+                        Rotation Speed: <span id="slideshow-speed-label">10s</span>
+                        <input type="range" id="slideshow-speed-slider" min="3" max="120" value="10" style="width: 100%;">
+                    </label>
+                </div>
+                <div class="resize-handle"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Appearance / Global Settings Modal -->
+    <div id="appearance-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h3>Appearance & Customization 🎨</h3>
+            
+            <div class="modal-inputs">
+                <div class="modal-field">
+                    <label>Color Theme</label>
+                    <select id="app-theme">
+                        <option value="midnight">Midnight (Default)</option>
+                        <option value="warm-dawn">Warm Dawn</option>
+                        <option value="minimal-light">Minimal Light</option>
+                        <option value="forest-retreat">Forest Retreat</option>
+                        <option value="cyber-neon">Cyber Neon</option>
+                        <option value="sunset-glow">Sunset Glow</option>
+                        <option value="deep-ocean">Deep Ocean</option>
+                        <option value="amethyst">Amethyst</option>
+                        <option value="synthwave">Synthwave Retro</option>
+                        <optgroup label="OLED & Extra Themes">
+                            <option value="oled-pure">OLED Pure (Black/White)</option>
+                            <option value="oled-neon">OLED Neon (Black/Lime)</option>
+                            <option value="oled-crimson">OLED Crimson (Black/Red)</option>
+                            <option value="nord">Nord (Arctic Grey)</option>
+                            <option value="dracula">Dracula (Dark Purple)</option>
+                            <option value="pastel-dream">Pastel Dream (Light/Pink)</option>
+                        </optgroup>
+                    </select>
+                </div>
+                
+                <div class="modal-field">
+                    <label>Background Mode</label>
+                    <select id="app-bg-mode">
+                        <option value="theme">Theme Default (Clean Colors)</option>
+                        <option value="image">Custom Image Wallpaper</option>
+                        <option value="animated">Live Animated Background</option>
+                    </select>
+                </div>
+
+                <!-- Custom Image Section -->
+                <div id="app-bg-image-opts" class="hidden" style="border-left: 2px solid var(--accent); padding-left: 12px;">
+                    <div class="modal-field">
+                        <label>Image URL</label>
+                        <input type="text" id="app-bg-url" placeholder="https://example.com/image.jpg">
+                    </div>
+                    <div class="modal-field" style="margin-top: 8px;">
+                        <label>Or Upload Local Image</label>
+                        <input type="file" id="app-bg-file" accept="image/*" style="font-size: 12px; padding: 4px;">
+                    </div>
+                    <div class="modal-field" style="margin-top: 8px;">
+                        <label>Background Dimming Overlay</label>
+                        <input type="range" id="app-bg-dim" min="0" max="90" value="20">
+                    </div>
+                </div>
+
+                <!-- Live Animation Section -->
+                <div id="app-bg-anim-opts" class="hidden" style="border-left: 2px solid var(--accent); padding-left: 12px;">
+                    <div class="modal-field">
+                        <label>Animation Style</label>
+                        <select id="app-bg-anim">
+                            <option value="aurora">Aurora Borealis</option>
+                            <option value="mesh">Fluid Color Mesh</option>
+                            <option value="stars">Drifting Stars</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-field" style="margin-top: 12px;">
+                    <label>Font Style</label>
+                    <select id="app-font">
+                        <option value="'Segoe UI', system-ui, -apple-system, sans-serif">System Default (Sans)</option>
+                        <option value="'Georgia', 'Times New Roman', serif">Elegant Serif</option>
+                        <option value="'Courier New', Courier, monospace">Technical Mono</option>
+                        <option value="system-ui, -apple-system, BlinkMacSystemFont, 'Nunito', 'Varela Round', sans-serif">Modern Rounded</option>
+                    </select>
+                </div>
+
+                <div class="modal-field" style="margin-top: 12px;">
+                    <label>Panel Glass Blur</label>
+                    <input type="range" id="app-blur" min="0" max="30" value="12">
+                </div>
+
+                <div class="modal-field">
+                    <label>Panel Glow Intensity</label>
+                    <input type="range" id="app-glow" min="0" max="50" value="10">
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button id="app-close-btn" class="active">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Input Modal -->
+    <div id="sys-modal" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 400px; min-width: auto;">
+            <h3 id="sys-modal-title">Title</h3>
+            <div id="sys-modal-inputs" class="modal-inputs"></div>
+            <div class="modal-actions">
+                <button id="sys-modal-cancel">Cancel</button>
+                <button id="sys-modal-confirm" class="active">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- Modal System Replacement for Alert/Prompt/Confirm --- */
+        function showModal(title, fields = []) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('sys-modal');
+                const titleEl = document.getElementById('sys-modal-title');
+                const inputsDiv = document.getElementById('sys-modal-inputs');
+                const btnCancel = document.getElementById('sys-modal-cancel');
+                const btnConfirm = document.getElementById('sys-modal-confirm');
+
+                titleEl.textContent = title;
+                inputsDiv.innerHTML = '';
+                
+                if (fields.length > 0) {
+                    fields.forEach(f => {
+                        const wrap = document.createElement('div');
+                        wrap.className = 'modal-field';
+                        wrap.innerHTML = `<label>${f.label}</label><input type="${f.type||'text'}" id="mod-${f.id}" value="${f.value||''}">`;
+                        inputsDiv.appendChild(wrap);
+                    });
+                }
+
+                overlay.classList.remove('hidden');
+
+                const cleanup = () => {
+                    overlay.classList.add('hidden');
+                    btnCancel.onclick = null;
+                    btnConfirm.onclick = null;
+                };
+
+                btnCancel.onclick = () => { cleanup(); resolve(null); };
+                btnConfirm.onclick = () => {
+                    if (fields.length > 0) {
+                        let result = {};
+                        fields.forEach(f => {
+                            result[f.id] = document.getElementById(`mod-${f.id}`).value;
+                        });
+                        cleanup();
+                        resolve(result);
+                    } else {
+                        cleanup();
+                        resolve(true);
+                    }
+                };
+            });
+        }
+
+        /* --- Default State & Storage --- */
+        const DEFAULT_STATE = {
+            theme: 'midnight',
+            bgMode: 'theme', // 'theme', 'image', 'animated'
+            bgImage: '',
+            bgDim: 20,
+            bgAnim: 'aurora',
+            blur: 12,
+            glow: 10,
+            font: "'Segoe UI', system-ui, -apple-system, sans-serif",
+            layout: {
+                clock: { x: 20, y: 20, w: 320, h: 220, visible: true },
+                quotes: { x: 360, y: 20, w: 400, h: 220, visible: true },
+                timer: { x: 780, y: 20, w: 320, h: 220, visible: true },
+                goals: { x: 20, y: 260, w: 320, h: 300, visible: true },
+                weather: { x: 360, y: 260, w: 250, h: 200, visible: true },
+                calendar: { x: 630, y: 260, w: 250, h: 250, visible: false },
+                notes: { x: 900, y: 260, w: 250, h: 250, visible: false },
+                bookmarks: { x: 20, y: 580, w: 320, h: 200, visible: false },
+                habits: { x: 360, y: 480, w: 250, h: 250, visible: false },
+                status: { x: 630, y: 530, w: 250, h: 200, visible: false },
+                slideshow: { x: 900, y: 530, w: 320, h: 200, visible: false }
+            },
+            prefs: {
+                clockMode: 0, clock24h: false, clockSeconds: true,
+                quoteInterval: 10, calStartMon: false,
+                slideshowInterval: 10,
+quotes: [
+{ t: "Fear is more of a problem than the physical obstacle itself.", a: "50 Cent" },
+{ t: "Your opinion of me doesn't have to become my reality.", a: "50 Cent" },
+{ t: "You can do anything you set your mind to, man.", a: "Eminem" },
+{ t: "The truth is you don't know what is going to happen tomorrow. Life is a crazy ride, and nothing is guaranteed.", a: "Eminem" },
+{ t: "I knew that if I failed I wouldn't regret that, but I knew the one thing I might regret is not trying.", a: "Jeff Bezos" },
+{ t: "Life's too short to hang out with people who aren't resourceful.", a: "Jeff Bezos" },
+{ t: "When something is important enough, you do it even if the odds are not in your favor.", a: "Elon Musk" },
+{ t: "I think it is possible for ordinary people to choose to be extraordinary.", a: "Elon Musk" },
+{ t: "Be the hero of your own movie.", a: "Joe Rogan" },
+{ t: "Discipline is your best friend. It will take care of you like nothing else can.", a: "Joe Rogan" },
+{ t: "Compare yourself to who you were yesterday, not to who someone else is today.", a: "Jordan Peterson" },
+{ t: "If you don't say what you think then you kill your unborn self.", a: "Jordan Peterson" },
+{ t: "The degree to which you're willing to be proven wrong is the degree to which you can claim to be interested in the truth.", a: "Alex O'Connor" },
+{ t: "The person who is certain is the person who has stopped thinking.", a: "Alex O'Connor" },
+{ t: "Without a struggle, there can be no progress.", a: "Frederick Douglass" },
+{ t: "The impediment to action advances action. What stands in the way becomes the way.", a: "Marcus Aurelius" },
+{ t: "If liberty means anything at all, it means the right to tell people what they do not want to hear.", a: "George Orwell" },
+{ t: "I prefer dangerous freedom over peaceful slavery.", a: "Thomas Jefferson" },
+{ t: "Those who would give up essential Liberty, to purchase a little temporary Safety, deserve neither Liberty nor Safety.", a: "Benjamin Franklin" },
+{ t: "Over himself, over his own body and mind, the individual is sovereign.", a: "John Stuart Mill" },
+{ t: "No man is free who is not master of himself.", a: "Epictetus" },
+{ t: "Discipline equals freedom.", a: "Jocko Willink" },
+{ t: "Don't stop when you're tired. Stop when you're done.", a: "David Goggins" },
+{ t: "Success is not final, failure is not fatal: it is the courage to continue that counts.", a: "Winston Churchill" },
+{ t: "The question isn't who is going to let me; it's who is going to stop me.", a: "Ayn Rand" },
+{ t: "Free education is abundant, all over the internet. It's the desire to learn that's scarce.", a: "Naval Ravikant" },
+{ t: "He who has a why to live can bear almost any how.", a: "Friedrich Nietzsche" },
+{ t: "The people who are crazy enough to think they can change the world are the ones who do.", a: "Steve Jobs" },
+{ t: "Between stimulus and response there is a space. In that space is our power to choose our response.", a: "Viktor Frankl" },
+{ t: "He who is not courageous enough to take risks will accomplish nothing in life.", a: "Muhammad Ali" },
+{ t: "I’m not in this world to live up to your expectations and you’re not in this world to live up to mine.", a: "Bruce Lee" },
+{ t: "Whether you think you can, or you think you can't—you're right.", a: "Henry Ford" },
+{ t: "Luck is what happens when preparation meets opportunity.", a: "Seneca" },
+{ t: "The one who follows the crowd will usually go no further than the crowd.", a: "Albert Einstein" },
+{ t: "I am a slow walker, but I never walk back.", a: "Abraham Lincoln" },
+{ t: "The essence of the independent mind lies not in what it thinks, but in how it thinks.", a: "Christopher Hitchens" },
+{ t: "The problem isn't that people are ignorant. The problem is that people are educated just enough to believe what they've been taught, and not educated enough to question anything.", a: "Thomas Sowell" },
+{ t: "Two roads diverged in a wood, and I—I took the one less traveled by.", a: "Robert Frost" },
+{ t: "No one can make you feel inferior without your consent.", a: "Eleanor Roosevelt" },
+{ t: "You do not rise to the level of your goals. You fall to the level of your systems.", a: "James Clear" },
+{ t: "Rest at the end, not in the middle.", a: "Kobe Bryant" },
+{ t: "I've failed over and over and over again in my life. And that is why I succeed.", a: "Michael Jordan" },
+{ t: "The mind is the limit. As long as the mind can envision the fact that you can do something, you can do it.", a: "Arnold Schwarzenegger" },
+{ t: "Whenever you find yourself on the side of the majority, it is time to pause and reflect.", a: "Mark Twain" },
+{ t: "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.", a: "Ralph Waldo Emerson" },
+{ t: "A person's success in life can usually be measured by the number of uncomfortable conversations he or she is willing to have.", a: "Tim Ferriss" },
+{ t: "Difficulty is what wakes up the genius.", a: "Nassim Taleb" },
+{ t: "It is dangerous to be right in matters on which the established authorities are wrong.", a: "Voltaire" },
+{ t: "Freedom is the open window through which pours the sunlight of the human spirit and human dignity.", a: "Herbert Hoover" },
+{ t: "The man who moves a mountain begins by carrying away small stones.", a: "Confucius" },
+{ t: "Responsibility to yourself means refusing to let others do your thinking, talking, and naming for you.", a: "Adrienne Rich" },
+{ t: "The best way to predict the future is to create it.", a: "Peter Drucker" },
+{ t: "Freedom is never more than one generation away from extinction.", a: "Ronald Reagan" },
+{ t: "Man is not the creature of circumstances. Circumstances are the creatures of men.", a: "Benjamin Disraeli" },
+{ t: "A goal is a dream with a deadline.", a: "Napoleon Hill" },
+{ t: "In the absence of clearly defined goals, we become strangely loyal to performing daily acts of trivia.", a: "Unknown" },
+{ t: "You miss 100% of the shots you don't take.", a: "Wayne Gretzky" },
+{ t: "I don't care about your feelings, I care about the truth.", a: "Ben Shapiro" },
+{ t: "Liberty means responsibility. That is why most men dread it.", a: "George Bernard Shaw" },
+{ t: "Great things are done by a series of small things brought together.", a: "Vincent van Gogh" }
+],
+                goals: [
+                    { id: 1, name: "Read", current: 15, target: 30, unit: "pages", color: "var(--accent)", note: "" }
+                ],
+                weather: { loc: "Earth", temp: "72", unit: "F", icon: "⛅", updated: "System Start", auto: false, lat: null, lon: null },
+                notesText: "",
+                bookmarks: [{ name: "Search", url: "https://google.com" }, { name: "GitHub", url: "https://github.com" }],
+                habits: [{ id: 1, name: "Drink Water", done: false }],
+                lastHabitDate: new Date().toDateString()
+            }
+        };
+
+        let state = JSON.parse(localStorage.getItem('ambientDashboardState')) || JSON.parse(JSON.stringify(DEFAULT_STATE));
+        
+        // Setup missing parameters for returning users upgrading to this version
+        if(!state.bgMode) {
+            state.bgMode = 'theme'; state.bgImage = ''; state.bgDim = 20; 
+            state.bgAnim = 'aurora'; state.font = DEFAULT_STATE.font;
+        }
+        if(!state.layout.slideshow) state.layout.slideshow = { x: 900, y: 530, w: 320, h: 200, visible: false };
+        if(!state.prefs.slideshowInterval) state.prefs.slideshowInterval = 10;
+
+        // Reset habits daily
+        const todayStr = new Date().toDateString();
+        if (state.prefs.lastHabitDate !== todayStr) {
+            state.prefs.habits.forEach(h => h.done = false);
+            state.prefs.lastHabitDate = todayStr;
+            localStorage.setItem('ambientDashboardState', JSON.stringify(state));
+        }
+
+        let isEditing = false;
+        let saveTimeout = null;
+        const GRID_SIZE = 20;
+
+        function saveState() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                try {
+                    localStorage.setItem('ambientDashboardState', JSON.stringify(state));
+                } catch (e) {
+                    console.error("Save failed. LocalStorage quota exceeded?", e);
+                    alert("Warning: Could not save settings. Your chosen background image might be too large. Try a smaller image or an Image URL.");
+                }
+            }, 500);
+        }
+
+        /* --- Dynamic Center Offset Logic for Fullscreen --- */
+        function updateCenterOffset() {
+            requestAnimationFrame(() => {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    root.style.setProperty('--fs-offset-x', '0px');
+                    root.style.setProperty('--fs-offset-y', '0px');
+                    return;
+                }
+                
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                let hasVisible = false;
+                
+                Object.keys(state.layout).forEach(id => {
+                    const l = state.layout[id];
+                    if (l.visible) {
+                        minX = Math.min(minX, l.x);
+                        minY = Math.min(minY, l.y);
+                        maxX = Math.max(maxX, l.x + l.w);
+                        maxY = Math.max(maxY, l.y + l.h);
+                        hasVisible = true;
+                    }
+                });
+                
+                if (!hasVisible) {
+                    root.style.setProperty('--fs-offset-x', '0px');
+                    root.style.setProperty('--fs-offset-y', '0px');
+                    return;
+                }
+
+                const clusterW = maxX - minX;
+                const clusterH = maxY - minY;
+                
+                const screenW = window.innerWidth;
+                const screenH = window.innerHeight;
+                
+                const offsetX = (screenW - clusterW) / 2 - minX;
+                const offsetY = (screenH - clusterH) / 2 - minY;
+                
+                root.style.setProperty('--fs-offset-x', `${offsetX}px`);
+                root.style.setProperty('--fs-offset-y', `${offsetY}px`);
+            });
+        }
+
+        document.addEventListener('fullscreenchange', updateCenterOffset);
+        document.addEventListener('webkitfullscreenchange', updateCenterOffset);
+
+        /* --- UI Controls & Appearance Settings --- */
+        const root = document.documentElement;
+        const bgLayer = document.getElementById('bg-layer');
+        
+        function applySettings() {
+            // Core CSS Variables
+            root.setAttribute('data-theme', state.theme);
+            root.style.setProperty('--blur', `${state.blur}px`);
+            root.style.setProperty('--glow-int', `${state.glow}px`);
+            root.style.setProperty('--bg-dim', state.bgDim / 100);
+            root.style.setProperty('--font', state.font);
+            
+            // Handle Background Layer Overlay
+            bgLayer.className = '';
+            bgLayer.style.backgroundImage = '';
+            bgLayer.style.opacity = 0;
+
+            if (state.bgMode === 'image' && state.bgImage) {
+                bgLayer.style.backgroundImage = `url(${state.bgImage})`;
+                bgLayer.style.opacity = 1;
+            } else if (state.bgMode === 'animated') {
+                bgLayer.classList.add(`bg-anim-${state.bgAnim}`);
+                bgLayer.style.opacity = 1;
+            }
+
+            // Sync Inputs in Appearance Modal
+            document.getElementById('app-theme').value = state.theme;
+            document.getElementById('app-bg-mode').value = state.bgMode;
+            document.getElementById('app-bg-url').value = state.bgMode === 'image' && state.bgImage.startsWith('http') ? state.bgImage : '';
+            document.getElementById('app-bg-dim').value = state.bgDim;
+            document.getElementById('app-bg-anim').value = state.bgAnim;
+            document.getElementById('app-blur').value = state.blur;
+            document.getElementById('app-glow').value = state.glow;
+            document.getElementById('app-font').value = state.font;
+
+            // Show/Hide sections
+            document.getElementById('app-bg-image-opts').classList.toggle('hidden', state.bgMode !== 'image');
+            document.getElementById('app-bg-anim-opts').classList.toggle('hidden', state.bgMode !== 'animated');
+        }
+
+        // Appearance Modal Toggles
+        const appModal = document.getElementById('appearance-modal');
+        document.getElementById('btn-appearance').addEventListener('click', () => appModal.classList.remove('hidden'));
+        document.getElementById('app-close-btn').addEventListener('click', () => appModal.classList.add('hidden'));
+
+        // Appearance Listeners
+        document.getElementById('app-theme').addEventListener('change', (e) => { state.theme = e.target.value; applySettings(); saveState(); });
+        document.getElementById('app-bg-mode').addEventListener('change', (e) => { state.bgMode = e.target.value; applySettings(); saveState(); });
+        document.getElementById('app-bg-anim').addEventListener('change', (e) => { state.bgAnim = e.target.value; applySettings(); saveState(); });
+        document.getElementById('app-blur').addEventListener('input', (e) => { state.blur = e.target.value; applySettings(); saveState(); });
+        document.getElementById('app-glow').addEventListener('input', (e) => { state.glow = e.target.value; applySettings(); saveState(); });
+        document.getElementById('app-bg-dim').addEventListener('input', (e) => { state.bgDim = e.target.value; applySettings(); saveState(); });
+        document.getElementById('app-font').addEventListener('change', (e) => { state.font = e.target.value; applySettings(); saveState(); });
+        
+        document.getElementById('app-bg-url').addEventListener('change', (e) => { 
+            if(e.target.value.trim()) { state.bgImage = e.target.value; applySettings(); saveState(); } 
+        });
+
+        document.getElementById('app-bg-file').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const dataUrl = evt.target.result;
+                if (dataUrl.length > 3 * 1024 * 1024) { // Roughly 3MB limit string length check
+                    showModal("Image is too large for local browser storage. Please choose a smaller file or paste an Image URL.", []);
+                    return;
+                }
+                state.bgImage = dataUrl;
+                document.getElementById('app-bg-url').value = ''; 
+                applySettings();
+                saveState();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', async () => {
+            const confirmed = await showModal("Reset all dashboard settings and layout to default?", []);
+            if(confirmed) {
+                localStorage.removeItem('ambientDashboardState');
+                location.reload();
+            }
+        });
+
+        /* --- Fullscreen Mode --- */
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.error(err));
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        /* --- Panel Visibility --- */
+        function updatePanelVisibility() {
+            Object.keys(state.layout).forEach(id => {
+                const el = document.getElementById(`panel-${id}`);
+                if (el) { el.style.display = state.layout[id].visible ? 'flex' : 'none'; }
+            });
+            updateCenterOffset();
+        }
+
+        document.getElementById('add-widget-select').addEventListener('change', (e) => {
+            const id = e.target.value;
+            if (id && state.layout[id]) {
+                state.layout[id].visible = true;
+                updatePanelVisibility();
+                saveState();
+                e.target.value = ""; // Reset dropdown
+            }
+        });
+
+        document.querySelectorAll('.close-panel-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const panel = e.target.closest('.panel');
+                const id = panel.getAttribute('data-id');
+                if (id && state.layout[id]) {
+                    state.layout[id].visible = false;
+                    updatePanelVisibility();
+                    saveState();
+                }
+            });
+        });
+
+        /* --- Drag & Resize System --- */
+        const dashboard = document.getElementById('dashboard');
+        
+        function applyLayout() {
+            if (window.innerWidth <= 768) return; 
+            
+            Object.keys(state.layout).forEach(id => {
+                const el = document.getElementById(`panel-${id}`);
+                if (el) {
+                    const l = state.layout[id];
+                    el.style.left = `${l.x}px`;
+                    el.style.top = `${l.y}px`;
+                    el.style.width = `${l.w}px`;
+                    el.style.height = `${l.h}px`;
+                }
+            });
+            updateCenterOffset();
+        }
+
+        document.getElementById('toggle-edit').addEventListener('click', (e) => {
+            isEditing = !isEditing;
+            dashboard.classList.toggle('editing', isEditing);
+            e.target.classList.toggle('active', isEditing);
+            e.target.textContent = isEditing ? 'Lock Layout' : 'Edit Layout';
+            document.querySelectorAll('.panel-settings.active').forEach(el => el.classList.remove('active'));
+        });
+
+        window.toggleSettings = (id) => {
+            const settingsPanel = document.getElementById(id === 'weather' ? 'weather-edit-area' : `settings-${id}`);
+            if (settingsPanel) { settingsPanel.classList.toggle('active'); }
+        };
+
+        let activeDrag = null; let activeResize = null;
+        let startX, startY, startLeft, startTop, startW, startH;
+
+        dashboard.addEventListener('mousedown', (e) => {
+            if (!isEditing || window.innerWidth <= 768) return;
+            const panel = e.target.closest('.panel');
+            if (!panel) return;
+
+            if (e.target.closest('.panel-header') && !e.target.closest('button')) {
+                activeDrag = panel;
+                startX = e.clientX; startY = e.clientY;
+                startLeft = parseInt(panel.style.left || 0); startTop = parseInt(panel.style.top || 0);
+                panel.style.zIndex = 100;
+            } else if (e.target.classList.contains('resize-handle')) {
+                activeResize = panel;
+                startX = e.clientX; startY = e.clientY;
+                startW = parseInt(panel.style.width || panel.offsetWidth); startH = parseInt(panel.style.height || panel.offsetHeight);
+                panel.style.zIndex = 100;
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (activeDrag) {
+                let dx = e.clientX - startX; let dy = e.clientY - startY;
+                let newX = Math.round((startLeft + dx) / GRID_SIZE) * GRID_SIZE;
+                let newY = Math.round((startTop + dy) / GRID_SIZE) * GRID_SIZE;
+                
+                newX = Math.max(0, Math.min(newX, dashboard.offsetWidth - activeDrag.offsetWidth));
+                newY = Math.max(0, Math.min(newY, dashboard.offsetHeight - activeDrag.offsetHeight));
+                activeDrag.style.left = `${newX}px`; activeDrag.style.top = `${newY}px`;
+            } else if (activeResize) {
+                let dx = e.clientX - startX; let dy = e.clientY - startY;
+                let newW = Math.round((startW + dx) / GRID_SIZE) * GRID_SIZE;
+                let newH = Math.round((startH + dy) / GRID_SIZE) * GRID_SIZE;
+
+                newW = Math.max(200, newW); newH = Math.max(150, newH);
+                activeResize.style.width = `${newW}px`; activeResize.style.height = `${newH}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (activeDrag || activeResize) {
+                const el = activeDrag || activeResize;
+                el.style.zIndex = '';
+                const id = el.getAttribute('data-id');
+                state.layout[id] = {
+                    x: parseInt(el.style.left), y: parseInt(el.style.top),
+                    w: parseInt(el.style.width), h: parseInt(el.style.height),
+                    visible: state.layout[id].visible
+                };
+                saveState();
+                activeDrag = null; activeResize = null;
+            }
+        });
+
+        window.addEventListener('resize', () => { 
+            if (window.innerWidth > 768) applyLayout(); 
+            updateCenterOffset();
+        });
+
+
+        /* --- Panel: Clock --- */
+        function updateClock() {
+            const now = new Date();
+            let hNum = now.getHours();
+            if (!state.prefs.clock24h && hNum > 12) hNum -= 12;
+            if (!state.prefs.clock24h && hNum === 0) hNum = 12;
+            
+            const h = String(hNum).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            
+            let timeStr = `${h}:${m}`;
+            if (state.prefs.clockMode !== 2 && state.prefs.clockSeconds) { timeStr += `:${s}`; }
+            document.getElementById('time-digital').textContent = timeStr;
+            
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            document.getElementById('date-digital').textContent = now.toLocaleDateString('en-US', options);
+
+            const sDeg = now.getSeconds() * 6;
+            const mDeg = now.getMinutes() * 6 + sDeg/60;
+            const hDeg = (now.getHours() % 12) * 30 + mDeg/12;
+            
+            const handSec = document.getElementById('hand-second');
+            handSec.style.transform = `rotate(${sDeg}deg)`;
+            handSec.style.display = state.prefs.clockSeconds ? 'block' : 'none';
+            document.getElementById('hand-minute').style.transform = `rotate(${mDeg}deg)`;
+            document.getElementById('hand-hour').style.transform = `rotate(${hDeg}deg)`;
+
+            requestAnimationFrame(updateClock);
+        }
+
+        function renderClockMode() {
+            const dig = document.getElementById('time-digital'), dat = document.getElementById('date-digital'), ana = document.getElementById('time-analog');
+            if (state.prefs.clockMode === 0) { dig.style.display = 'block'; dig.style.fontSize = '48px'; dat.style.display = 'block'; ana.style.display = 'none'; }
+            else if (state.prefs.clockMode === 1) { dig.style.display = 'none'; dat.style.display = 'none'; ana.style.display = 'block'; }
+            else { dig.style.display = 'block'; dig.style.fontSize = '64px'; dat.style.display = 'block'; ana.style.display = 'none'; }
+        }
+
+        document.getElementById('clock-content').addEventListener('click', () => {
+            if (isEditing) return;
+            state.prefs.clockMode = (state.prefs.clockMode + 1) % 3; renderClockMode(); saveState();
+        });
+
+        const clock24Toggle = document.getElementById('clock-24h-toggle');
+        clock24Toggle.checked = state.prefs.clock24h;
+        clock24Toggle.addEventListener('change', (e) => { state.prefs.clock24h = e.target.checked; updateClock(); saveState(); });
+
+        const clockSecToggle = document.getElementById('clock-sec-toggle');
+        clockSecToggle.checked = state.prefs.clockSeconds;
+        clockSecToggle.addEventListener('change', (e) => { state.prefs.clockSeconds = e.target.checked; updateClock(); saveState(); });
+
+
+        /* --- Panel: Quotes --- */
+        let quoteIndex = 0; let quoteTimerId = null;
+        const quoteTextContainer = document.getElementById('quote-text-container'), quoteTextEl = document.getElementById('quote-text'), quoteAuthorEl = document.getElementById('quote-author');
+        
+        function showNextQuote() {
+            if (!state.prefs.quotes || state.prefs.quotes.length === 0) {
+                quoteTextEl.textContent = "No quotes loaded."; quoteAuthorEl.textContent = ""; return;
+            }
+            quoteTextContainer.style.opacity = 0;
+            setTimeout(() => {
+                if (quoteIndex >= state.prefs.quotes.length) quoteIndex = 0;
+                const q = state.prefs.quotes[quoteIndex];
+                quoteTextEl.textContent = `"${q.t}"`; quoteAuthorEl.textContent = q.a ? `— ${q.a}` : '';
+                quoteTextContainer.style.opacity = 1;
+                quoteIndex = (quoteIndex + 1) % state.prefs.quotes.length;
+            }, 1000);
+        }
+
+        function startQuoteTimer() {
+            clearInterval(quoteTimerId); quoteTimerId = setInterval(showNextQuote, state.prefs.quoteInterval * 1000);
+        }
+
+        const quoteSlider = document.getElementById('quote-speed-slider'), quoteLabel = document.getElementById('quote-speed-label');
+        quoteSlider.value = state.prefs.quoteInterval; quoteLabel.textContent = `${state.prefs.quoteInterval}s`;
+        quoteSlider.addEventListener('input', (e) => { quoteLabel.textContent = `${e.target.value}s`; });
+        quoteSlider.addEventListener('change', (e) => { state.prefs.quoteInterval = parseInt(e.target.value); startQuoteTimer(); saveState(); });
+
+        document.getElementById('quote-restore-btn').addEventListener('click', async () => {
+            const confirmed = await showModal("Restore default quotes?", []);
+            if(confirmed) { state.prefs.quotes = JSON.parse(JSON.stringify(DEFAULT_STATE.prefs.quotes)); quoteIndex = 0; showNextQuote(); saveState(); }
+        });
+
+        document.getElementById('load-quotes-btn').addEventListener('click', () => { document.getElementById('quote-file-input').click(); });
+        document.getElementById('quote-file-input').addEventListener('change', (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (evt) => {
+                try {
+                    const content = evt.target.result; let newQuotes = [];
+                    if (file.name.endsWith('.json')) {
+                        const parsed = JSON.parse(content);
+                        newQuotes = parsed.map(item => typeof item === 'string' ? {t: item, a: ''} : {t: item.text || item.t, a: item.author || item.a || ''});
+                    } else {
+                        const lines = content.split('\n').filter(l => l.trim().length > 0);
+                        newQuotes = lines.map(l => { const parts = l.split('—'); return { t: parts[0].trim(), a: parts[1] ? parts[1].trim() : '' }; });
+                    }
+                    if (newQuotes.length > 0) { state.prefs.quotes = newQuotes; quoteIndex = 0; showNextQuote(); saveState(); }
+                } catch (err) { await showModal("Failed to parse quotes file. Check formatting.", []); }
+            };
+            reader.readAsText(file);
+        });
+
+
+        /* --- Panel: Timer --- */
+        let timerState = { mode: 'idle', timeLeft: 25 * 60, interval: null, total: 25*60 };
+        const timerDisplay = document.getElementById('timer-display'), timerPanel = document.getElementById('panel-timer'), timerStartBtn = document.getElementById('timer-start');
+
+        function formatTime(secs) {
+            const m = Math.floor(secs / 60).toString().padStart(2, '0'), s = (secs % 60).toString().padStart(2, '0'); return `${m}:${s}`;
+        }
+        function updateTimerUI() {
+            timerDisplay.textContent = formatTime(timerState.timeLeft);
+            if (timerState.mode === 'running') { timerStartBtn.textContent = 'Pause'; timerPanel.classList.add('timer-pulse'); } 
+            else { timerStartBtn.textContent = 'Start'; timerPanel.classList.remove('timer-pulse'); }
+        }
+        function setTimer(mins) {
+            clearInterval(timerState.interval); timerState.mode = 'idle'; timerState.total = mins * 60; timerState.timeLeft = timerState.total; updateTimerUI();
+        }
+
+        document.querySelectorAll('.timer-controls button[data-time]').forEach(btn => {
+            btn.addEventListener('click', () => setTimer(parseInt(btn.getAttribute('data-time'))));
+        });
+
+        document.getElementById('timer-custom').addEventListener('click', async () => {
+            const res = await showModal("Custom Timer", [{id: 'mins', label: 'Minutes', type: 'number', value: '15'}]);
+            if (res && res.mins && !isNaN(res.mins)) setTimer(parseInt(res.mins));
+        });
+
+        timerStartBtn.addEventListener('click', () => {
+            if (timerState.mode === 'idle' || timerState.mode === 'paused') {
+                timerState.mode = 'running';
+                timerState.interval = setInterval(() => {
+                    if (timerState.timeLeft > 0) { timerState.timeLeft--; updateTimerUI(); } 
+                    else { clearInterval(timerState.interval); timerState.mode = 'idle'; updateTimerUI(); timerDisplay.style.color = 'var(--accent)'; setTimeout(() => timerDisplay.style.color = '', 3000); }
+                }, 1000);
+            } else { clearInterval(timerState.interval); timerState.mode = 'paused'; }
+            updateTimerUI();
+        });
+        document.getElementById('timer-reset').addEventListener('click', () => setTimer(timerState.total / 60));
+
+
+        /* --- Panel: Goals --- */
+        const goalsContainer = document.getElementById('goals-container');
+        function renderGoals() {
+            goalsContainer.innerHTML = '';
+            state.prefs.goals.forEach((g, index) => {
+                const pct = Math.min(100, (g.current / g.target) * 100);
+                const el = document.createElement('div'); el.className = 'goal-item';
+                el.innerHTML = `
+                    <div class="goal-header">
+                        <span style="cursor:pointer" onclick="editGoalName(${index})">${g.name}</span>
+                        <div><span style="cursor:pointer" onclick="updateGoalProgress(${index})">${g.current} / ${g.target} ${g.unit}</span><button class="goal-del" onclick="deleteGoal(${index})" title="Delete Goal">×</button></div>
+                    </div>
+                    <div class="goal-bar-bg"><div class="goal-bar-fill" style="width: ${pct}%; background: ${g.color}"></div></div>
+                    <textarea class="goal-note" placeholder="Daily note..." onchange="updateGoalNote(${index}, this.value)">${g.note || ''}</textarea>
+                `;
+                goalsContainer.appendChild(el);
+            });
+        }
+
+        window.deleteGoal = async (idx) => {
+            const confirmed = await showModal(`Delete goal: "${state.prefs.goals[idx].name}"?`, []);
+            if(confirmed) { state.prefs.goals.splice(idx, 1); renderGoals(); saveState(); }
+        };
+        window.editGoalName = async (idx) => {
+            if(isEditing) return;
+            const res = await showModal("Edit Goal Name", [{id: 'name', label: 'Name', value: state.prefs.goals[idx].name}]);
+            if (res && res.name) { state.prefs.goals[idx].name = res.name; renderGoals(); saveState(); }
+        };
+        window.updateGoalProgress = async (idx) => {
+            if(isEditing) return; const g = state.prefs.goals[idx];
+            const res = await showModal(`Update progress for ${g.name}`, [{id: 'val', label: `Current (${g.unit}) [Target: ${g.target}]`, type: 'number', value: g.current}]);
+            if (res && res.val !== null && !isNaN(res.val)) { state.prefs.goals[idx].current = parseFloat(res.val); renderGoals(); saveState(); }
+        };
+        window.updateGoalNote = (idx, val) => { state.prefs.goals[idx].note = val; saveState(); };
+
+        document.getElementById('add-goal-btn').addEventListener('click', async () => {
+            const res = await showModal("Add New Goal", [{id: 'name', label: 'Goal Name', value: 'New Goal'}, {id: 'target', label: 'Target Value', type: 'number', value: '100'}, {id: 'unit', label: 'Unit (e.g., pages)', value: 'units'}]);
+            if (!res || !res.name) return;
+            state.prefs.goals.push({ id: Date.now(), name: res.name, current: 0, target: parseFloat(res.target)||100, unit: res.unit||'', color: ['#38bdf8', '#fb7185', '#a78bfa', '#34d399'][state.prefs.goals.length % 4], note: "" });
+            renderGoals(); saveState();
+        });
+
+
+        /* --- Panel: Weather (Real APIs) --- */
+        function renderWeather() {
+            document.getElementById('w-loc').textContent = state.prefs.weather.loc;
+            document.getElementById('w-temp').textContent = `${state.prefs.weather.temp}°${state.prefs.weather.unit}`;
+            document.getElementById('w-icon').textContent = state.prefs.weather.icon;
+            document.getElementById('w-upd').textContent = `Last updated: ${state.prefs.weather.updated}`;
+        }
+
+        const WMO_CODES = {
+            0:"☀️", 1:"🌤️", 2:"⛅", 3:"☁️", 45:"🌫️", 48:"🌫️", 51:"🌧️", 53:"🌧️", 55:"🌧️", 56:"🌧️", 57:"🌧️",
+            61:"🌧️", 63:"🌧️", 65:"🌧️", 66:"🌧️", 67:"🌧️", 71:"❄️", 73:"❄️", 75:"❄️", 77:"❄️",
+            80:"🌧️", 81:"🌧️", 82:"🌧️", 85:"❄️", 86:"❄️", 95:"⛈️", 96:"⛈️", 99:"⛈️"
+        };
+
+        async function fetchRealWeather(lat, lon, locationName) {
+            try {
+                document.getElementById('w-upd').textContent = "Updating...";
+                const isF = state.prefs.weather.unit === 'F';
+                const tempUnit = isF ? 'fahrenheit' : 'celsius';
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=${tempUnit}`);
+                const data = await res.json();
+                if (data.current_weather) {
+                    state.prefs.weather.temp = Math.round(data.current_weather.temperature);
+                    state.prefs.weather.icon = WMO_CODES[data.current_weather.weathercode] || "⛅";
+                    state.prefs.weather.loc = locationName;
+                    state.prefs.weather.updated = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    state.prefs.weather.lat = lat; state.prefs.weather.lon = lon;
+                    renderWeather(); saveState();
+                }
+            } catch (err) { console.error(err); document.getElementById('w-upd').textContent = "Update failed."; }
+        }
+
+        async function geocodeAndFetch(city) {
+            try {
+                document.getElementById('w-upd').textContent = "Searching...";
+                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+                const data = await res.json();
+                if (data.results && data.results.length > 0) {
+                    const loc = data.results[0]; state.prefs.weather.auto = false;
+                    await fetchRealWeather(loc.latitude, loc.longitude, loc.name);
+                } else { await showModal("City not found.", []); document.getElementById('w-upd').textContent = "City not found."; }
+            } catch (err) { console.error(err); document.getElementById('w-upd').textContent = "Search failed."; }
+        }
+
+        document.getElementById('refresh-weather-btn').addEventListener('click', () => {
+            if (state.prefs.weather.auto && state.prefs.weather.lat) fetchRealWeather(state.prefs.weather.lat, state.prefs.weather.lon, state.prefs.weather.loc);
+            else if (state.prefs.weather.loc && state.prefs.weather.loc !== "Earth" && state.prefs.weather.loc !== "Unknown") geocodeAndFetch(state.prefs.weather.loc);
+        });
+
+        document.getElementById('w-auto-btn').addEventListener('click', () => {
+            if ("geolocation" in navigator) {
+                document.getElementById('w-upd').textContent = "Locating...";
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    state.prefs.weather.auto = true;
+                    await fetchRealWeather(pos.coords.latitude, pos.coords.longitude, "Local Weather");
+                    document.getElementById('weather-edit-area').classList.remove('active');
+                }, async () => { await showModal("Location access denied or failed.", []); document.getElementById('w-upd').textContent = "Location denied."; });
+            } else { showModal("Geolocation not supported by this browser.", []); }
+        });
+
+        document.getElementById('edit-weather-btn').addEventListener('click', () => {
+            const form = document.getElementById('weather-edit-area');
+            if (form.classList.contains('active')) { form.classList.remove('active'); } 
+            else {
+                document.getElementById('w-edit-loc').value = state.prefs.weather.loc !== "Local Weather" ? state.prefs.weather.loc : "";
+                document.getElementById('w-edit-temp').value = state.prefs.weather.temp;
+                document.getElementById('w-edit-unit').value = state.prefs.weather.unit;
+                document.getElementById('w-edit-icon').value = state.prefs.weather.icon;
+                form.classList.add('active');
+            }
+        });
+
+        document.getElementById('w-edit-unit').addEventListener('change', (e) => {
+            const tempInput = document.getElementById('w-edit-temp'); let val = parseFloat(tempInput.value);
+            if (!isNaN(val)) { tempInput.value = e.target.value === 'C' ? Math.round((val - 32) * 5 / 9) : Math.round((val * 9 / 5) + 32); }
+        });
+
+        document.getElementById('w-save-btn').addEventListener('click', () => {
+            const cityInput = document.getElementById('w-edit-loc').value.trim(), newUnit = document.getElementById('w-edit-unit').value, unitChanged = state.prefs.weather.unit !== newUnit;
+            state.prefs.weather.unit = newUnit;
+            if (cityInput && cityInput !== state.prefs.weather.loc) { geocodeAndFetch(cityInput); } 
+            else if (unitChanged && state.prefs.weather.lat) { fetchRealWeather(state.prefs.weather.lat, state.prefs.weather.lon, state.prefs.weather.loc); } 
+            else {
+                state.prefs.weather.loc = cityInput || 'Unknown'; state.prefs.weather.temp = document.getElementById('w-edit-temp').value || '0';
+                state.prefs.weather.icon = document.getElementById('w-edit-icon').value; state.prefs.weather.updated = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                state.prefs.weather.auto = false; renderWeather();
+            }
+            document.getElementById('weather-edit-area').classList.remove('active'); saveState();
+        });
+
+
+        /* --- Panel: Calendar --- */
+        function renderCalendar() {
+            const now = new Date(), year = now.getFullYear(), month = now.getMonth(), today = now.getDate();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calendar-header').textContent = `${monthNames[month]} ${year}`;
+            
+            const grid = document.getElementById('calendar-grid'); grid.innerHTML = '';
+            const days = state.prefs.calStartMon ? ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+            days.forEach(d => { const el = document.createElement('div'); el.className = 'cal-day header'; el.textContent = d; grid.appendChild(el); });
+            
+            let firstDay = new Date(year, month, 1).getDay();
+            if (state.prefs.calStartMon) firstDay = firstDay === 0 ? 6 : firstDay - 1;
+            
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let i = 0; i < firstDay; i++) { grid.appendChild(document.createElement('div')); }
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayEl = document.createElement('div'); dayEl.className = `cal-day ${i === today ? 'today' : ''}`; dayEl.textContent = i; grid.appendChild(dayEl);
+            }
+        }
+        const calMonToggle = document.getElementById('cal-mon-toggle');
+        calMonToggle.checked = state.prefs.calStartMon;
+        calMonToggle.addEventListener('change', (e) => { state.prefs.calStartMon = e.target.checked; renderCalendar(); saveState(); });
+
+
+        /* --- Panel: Notes --- */
+        const notesTextarea = document.getElementById('notes-textarea');
+        notesTextarea.value = state.prefs.notesText;
+        notesTextarea.addEventListener('input', (e) => { state.prefs.notesText = e.target.value; saveState(); });
+
+
+        /* --- Panel: Bookmarks --- */
+        const bookmarksContainer = document.getElementById('bookmarks-container');
+        function renderBookmarks() {
+            bookmarksContainer.innerHTML = '';
+            state.prefs.bookmarks.forEach((bm, idx) => {
+                const a = document.createElement('a'); a.className = 'bookmark-item'; a.href = bm.url; a.target = '_blank';
+                a.innerHTML = `<span class="bookmark-link">${bm.name}</span><button class="bookmark-del" onclick="event.preventDefault(); deleteBookmark(${idx});">×</button>`;
+                bookmarksContainer.appendChild(a);
+            });
+        }
+        document.getElementById('add-bookmark-btn').addEventListener('click', async () => {
+            const res = await showModal("Add Bookmark", [{id: 'name', label: 'Bookmark Name', value: ''}, {id: 'url', label: 'URL (e.g., google.com)', value: ''}]);
+            if (!res || !res.name || !res.url) return;
+            let url = res.url; if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+            state.prefs.bookmarks.push({ name: res.name, url }); renderBookmarks(); saveState();
+        });
+        window.deleteBookmark = async (idx) => {
+            const confirmed = await showModal("Remove this bookmark?", []);
+            if(confirmed) { state.prefs.bookmarks.splice(idx, 1); renderBookmarks(); saveState(); }
+        };
+
+
+        /* --- Panel: Habits --- */
+        const habitsContainer = document.getElementById('habits-container');
+        function renderHabits() {
+            habitsContainer.innerHTML = '';
+            state.prefs.habits.forEach((habit, idx) => {
+                const div = document.createElement('div'); div.className = 'habit-item';
+                div.innerHTML = `<div class="habit-checkbox ${habit.done ? 'done' : ''}" onclick="toggleHabit(${idx})"></div><span class="habit-text ${habit.done ? 'done' : ''}" onclick="toggleHabit(${idx})">${habit.name}</span><button class="habit-del" onclick="deleteHabit(${idx})">×</button>`;
+                habitsContainer.appendChild(div);
+            });
+        }
+        window.toggleHabit = (idx) => { if (isEditing) return; state.prefs.habits[idx].done = !state.prefs.habits[idx].done; renderHabits(); saveState(); };
+        window.deleteHabit = async (idx) => {
+            const confirmed = await showModal("Remove this habit?", []);
+            if(confirmed) { state.prefs.habits.splice(idx, 1); renderHabits(); saveState(); }
+        };
+        document.getElementById('add-habit-btn').addEventListener('click', async () => {
+            const res = await showModal("Add Habit", [{id: 'name', label: 'Habit Name', value: ''}]);
+            if (!res || !res.name) return; state.prefs.habits.push({ id: Date.now(), name: res.name, done: false }); renderHabits(); saveState();
+        });
+
+
+        /* --- Panel: System Status --- */
+        function initSystemStatus() {
+            document.getElementById('sys-platform').textContent = navigator.platform || "Unknown";
+            let browser = "Unknown"; const ua = navigator.userAgent;
+            if(ua.includes("Firefox")) browser = "Firefox"; else if(ua.includes("Edg")) browser = "Edge"; else if(ua.includes("Chrome")) browser = "Chrome"; else if(ua.includes("Safari")) browser = "Safari";
+            document.getElementById('sys-browser').textContent = browser;
+
+            const updateNet = () => {
+                const el = document.getElementById('sys-network');
+                if (navigator.onLine) { el.textContent = "Online"; el.style.color = "var(--accent)"; } else { el.textContent = "Offline"; el.style.color = "#ef4444"; }
+            };
+            window.addEventListener('online', updateNet); window.addEventListener('offline', updateNet); updateNet();
+
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(function(battery) {
+                    function updateBattery() {
+                        const level = Math.round(battery.level * 100);
+                        document.getElementById('sys-battery-txt').textContent = level + '%' + (battery.charging ? ' (⚡)' : '');
+                        const fill = document.getElementById('sys-battery-fill'); fill.style.width = level + '%';
+                        fill.classList.remove('charging', 'low'); if (battery.charging) fill.classList.add('charging'); else if (level <= 20) fill.classList.add('low');
+                    }
+                    updateBattery(); battery.addEventListener('levelchange', updateBattery); battery.addEventListener('chargingchange', updateBattery);
+                }).catch(() => { document.getElementById('sys-battery-txt').textContent = "Unavailable"; });
+            } else { document.getElementById('sys-battery-txt').textContent = "Not Supported"; }
+        }
+
+
+        /* --- Panel: Image Slideshow --- */
+        let slideshowImages = [];
+        let slideshowIdx = 0;
+        let slideshowTimerId = null;
+
+        const ssDisplay = document.getElementById('slideshow-display');
+        const ssPlaceholder = document.getElementById('slideshow-placeholder');
+
+        function advanceSlideshow() {
+            if (slideshowImages.length === 0) return;
+            ssDisplay.style.opacity = 0;
+            setTimeout(() => {
+                slideshowIdx = (slideshowIdx + 1) % slideshowImages.length;
+                ssDisplay.style.backgroundImage = `url(${slideshowImages[slideshowIdx]})`;
+                ssDisplay.style.opacity = 1;
+            }, 1000);
+        }
+
+        function startSlideshow() {
+            clearInterval(slideshowTimerId);
+            if (slideshowImages.length > 0) {
+                ssDisplay.style.backgroundImage = `url(${slideshowImages[slideshowIdx]})`;
+                ssPlaceholder.style.display = 'none';
+                slideshowTimerId = setInterval(advanceSlideshow, state.prefs.slideshowInterval * 1000);
+            } else {
+                ssDisplay.style.backgroundImage = 'none';
+                ssPlaceholder.style.display = 'flex';
+            }
+        }
+
+        document.getElementById('slideshow-folder-btn').addEventListener('click', () => {
+            document.getElementById('slideshow-folder-input').click();
+        });
+
+        document.getElementById('slideshow-folder-input').addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+            
+            // Clean up old Object URLs to prevent memory leaks
+            slideshowImages.forEach(url => URL.revokeObjectURL(url));
+            slideshowImages = [];
+            slideshowIdx = 0;
+
+            for (let i = 0; i < files.length; i++) {
+                if (files[i].type.startsWith('image/')) {
+                    slideshowImages.push(URL.createObjectURL(files[i]));
+                }
+            }
+
+            if(slideshowImages.length > 0) {
+                startSlideshow();
+                toggleSettings('slideshow'); // close settings 
+            }
+        });
+
+        const ssSlider = document.getElementById('slideshow-speed-slider');
+        const ssLabel = document.getElementById('slideshow-speed-label');
+        ssSlider.value = state.prefs.slideshowInterval; 
+        ssLabel.textContent = `${state.prefs.slideshowInterval}s`;
+        
+        ssSlider.addEventListener('input', (e) => { ssLabel.textContent = `${e.target.value}s`; });
+        ssSlider.addEventListener('change', (e) => { 
+            state.prefs.slideshowInterval = parseInt(e.target.value); 
+            startSlideshow(); 
+            saveState(); 
+        });
+
+
+        /* --- Music-Reactive Glow System --- */
+        let audioCtx, analyser, dataArray, audioMode = 'off', audioAnimFrame;
+        const toggleGlowBtn = document.getElementById('toggle-glow');
+
+        async function initAudio() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioCtx.createMediaStreamSource(stream);
+                analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
+                source.connect(analyser); dataArray = new Uint8Array(analyser.frequencyBinCount);
+                audioMode = 'mic'; toggleGlowBtn.textContent = 'Audio Glow: Mic Active'; toggleGlowBtn.classList.add('active');
+                animateGlow();
+            } catch (err) {
+                console.warn("Mic access denied. Falling back to simulated mode.", err);
+                audioMode = 'sim'; toggleGlowBtn.textContent = 'Audio Glow: Simulated'; toggleGlowBtn.classList.add('active');
+                animateGlow();
+            }
+        }
+
+        function animateGlow() {
+            if (audioMode === 'off') return;
+            let glowVal = state.glow; 
+            if (audioMode === 'mic') {
+                analyser.getByteFrequencyData(dataArray);
+                let sum = 0; for(let i = 0; i < 20; i++) sum += dataArray[i];
+                let multi = 1 + ((sum / 20) / 255) * 3; glowVal = state.glow * multi;
+            } else if (audioMode === 'sim') {
+                glowVal = state.glow * (1.5 + Math.sin(Date.now() / 500) * 0.8);
+            }
+            root.style.setProperty('--glow-int', `${glowVal}px`);
+            audioAnimFrame = requestAnimationFrame(animateGlow);
+        }
+
+        function stopAudio() {
+            audioMode = 'off'; toggleGlowBtn.textContent = 'Audio Glow: Off'; toggleGlowBtn.classList.remove('active');
+            cancelAnimationFrame(audioAnimFrame); root.style.setProperty('--glow-int', `${state.glow}px`);
+            if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+        }
+
+        toggleGlowBtn.addEventListener('click', () => { if (audioMode !== 'off') stopAudio(); else initAudio(); });
+
+        /* --- Initialization --- */
+        function init() {
+            applySettings(); updatePanelVisibility(); applyLayout();
+            renderClockMode(); showNextQuote(); startQuoteTimer();
+            renderGoals(); renderWeather(); renderCalendar(); renderBookmarks(); renderHabits();
+            initSystemStatus(); startSlideshow(); updateClock();
+        }
+
+        init();
+    </script>
+</body>
+</html>
