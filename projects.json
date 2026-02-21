@@ -1,8 +1,10 @@
 [
   {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "Favicon Lab",
     "slug": "favicon-lab",
-    "description": "Generate, preview, and export favicon code instantly with SEO & Meta Tags.",
+    "description": "Generate, preview, and export complete favicon and meta tag setups in one streamlined workspace. Design with emoji, shapes, text, or your own upload, fine-tune colors, gradients, size, and radius, then see everything live in browser tab and mobile mockups. Instantly export optimized PNGs, SVG, a web manifest, and a ready-to-paste SEO snippet—all generated locally in your browser.",
     "thumbnail": "assets/thumbs/favicon-lab.png",
     "tags": [
       "Favicon",
@@ -12,9 +14,7 @@
     ],
     "category": "Apps",
     "featured": true,
-    "date": "2026-02-21",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-02-21"
   },
   {
     "title": "Monster Tracker",
