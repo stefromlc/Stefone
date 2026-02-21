@@ -78,6 +78,7 @@
         /* Line clamping */
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-6 { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
 
         /* Smooth animations */
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(10px); }
@@ -220,6 +221,10 @@
                     <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"></i>
                     <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Search stories..." class="w-full pl-10 pr-4 py-2.5 bg-slate-100/80 dark:bg-slate-800/80 border border-transparent focus:bg-white dark:focus:bg-slate-800 rounded-2xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 transition-all shadow-sm">
                 </div>
+                <!-- TV Mode -->
+                <button onclick="startDisplayMode()" class="p-2.5 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-brand-50 dark:hover:bg-brand-900/30 shrink-0 shadow-sm" title="Presentation TV Mode">
+                    <i data-lucide="tv" class="w-5 h-5"></i>
+                </button>
                 <button onclick="toggleDarkMode()" class="p-2.5 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-brand-50 dark:hover:bg-brand-900/30 shrink-0 shadow-sm" title="Toggle Theme">
                     <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
                 </button>
@@ -365,9 +370,16 @@
                             </select>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Background Sync (mins)</label>
-                        <input type="number" id="refreshIntervalInput" min="1" max="1440" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Sync (mins)</label>
+                            <input type="number" id="refreshIntervalInput" min="1" max="1440" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium" title="Background Refresh Interval">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">TV Speed (s)</label>
+                            <input type="number" id="cycleSpeedInput" min="3" max="300" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium" title="Time per slide in TV mode">
+                        </div>
                     </div>
                     
                     <div class="pt-6 border-t border-slate-100 dark:border-slate-800/50 space-y-3">
@@ -404,6 +416,16 @@
                     <span id="articleModalDate" class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400"></span>
                 </div>
                 <div class="flex items-center gap-2">
+                    <!-- Nav Controls -->
+                    <div class="flex items-center gap-1 mr-2 border-r border-slate-200 dark:border-slate-700 pr-3">
+                        <button id="articleModalPrevBtn" onclick="navigateArticle(-1)" class="text-slate-400 hover:text-brand-500 dark:hover:text-brand-400 disabled:opacity-30 disabled:cursor-not-allowed p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Previous Story">
+                            <i data-lucide="chevron-left" class="w-5 h-5 pointer-events-none"></i>
+                        </button>
+                        <button id="articleModalNextBtn" onclick="navigateArticle(1)" class="text-slate-400 hover:text-brand-500 dark:hover:text-brand-400 disabled:opacity-30 disabled:cursor-not-allowed p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Next Story">
+                            <i data-lucide="chevron-right" class="w-5 h-5 pointer-events-none"></i>
+                        </button>
+                    </div>
+                    <!-- Settings & Close Controls -->
                     <button onclick="toggleReaderMode()" id="readerModeBtn" class="text-slate-400 hover:text-brand-500 dark:text-slate-500 dark:hover:text-brand-400 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50"><i data-lucide="book-open" class="w-5 h-5"></i></button>
                     <button id="articleModalSaveBtn" onclick="toggleSaveCurrentArticle()" class="text-slate-400 hover:text-brand-500 dark:text-slate-500 dark:hover:text-brand-400 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50"><i data-lucide="bookmark" id="articleModalSaveIcon" class="w-5 h-5"></i></button>
                     <button onclick="closeArticleModal()" class="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -423,6 +445,44 @@
                     Read Full Story on Source <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
                 </a>
             </div>
+        </div>
+    </div>
+    
+    <!-- TV Presentation Mode Overlay -->
+    <div id="displayModeOverlay" class="fixed inset-0 bg-black z-[200] flex flex-col hidden opacity-0 transition-opacity duration-500 text-white">
+        <!-- Overlay Header -->
+        <div class="p-6 md:p-8 flex justify-between items-center absolute top-0 w-full z-20 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-brand-500 to-purple-600 text-white p-2.5 rounded-2xl shadow-lg shadow-brand-500/20">
+                    <i data-lucide="zap" class="w-5 h-5"></i>
+                </div>
+                <span class="font-bold tracking-wide text-2xl" id="displayModeFeedName">Currently</span>
+            </div>
+            <button onclick="stopDisplayMode()" class="bg-white/10 hover:bg-white/20 p-3 rounded-full backdrop-blur-md transition-colors" title="Exit Presentation">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        
+        <!-- Presentation Content -->
+        <div class="flex-1 flex items-center justify-center relative overflow-hidden" id="displayModeContent">
+            <!-- Blurred Background Artwork -->
+            <div id="displayModeBg" class="absolute inset-0 bg-cover bg-center blur-3xl opacity-30 scale-110"></div>
+            <!-- Main Content Grid -->
+            <div class="relative z-10 max-w-7xl mx-auto px-8 w-full flex flex-col md:flex-row gap-12 lg:gap-20 items-center">
+                <div id="displayModeImgWrapper" class="w-full md:w-1/2 rounded-[2rem] overflow-hidden shadow-2xl hidden transform transition-all duration-700">
+                    <img id="displayModeImg" src="" class="w-full h-auto max-h-[70vh] object-cover">
+                </div>
+                <div id="displayModeTextContainer" class="w-full flex flex-col justify-center">
+                    <span id="displayModeDate" class="text-brand-400 font-bold uppercase tracking-widest text-sm mb-4"></span>
+                    <h2 id="displayModeTitle" class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6 line-clamp-4"></h2>
+                    <p id="displayModeDesc" class="text-xl md:text-2xl text-slate-300 leading-relaxed line-clamp-6 opacity-90"></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Timeline / Progress Indicator -->
+        <div class="h-1.5 w-full bg-white/10 z-20 relative">
+            <div id="displayModeProgress" class="h-full bg-gradient-to-r from-brand-500 to-purple-500 w-0 transition-all ease-linear shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
         </div>
     </div>
 
@@ -682,7 +742,7 @@
         
         let activeFeedId = null;
         let feedCache = {}; 
-        let appSettings = { refreshInterval: 15, theme: 'auto', density: 'comfortable' }; 
+        let appSettings = { refreshInterval: 15, cycleSpeed: 10, theme: 'auto', density: 'comfortable' }; 
         
         let currentRawArticles = []; 
         let displayedArticles = []; 
@@ -767,6 +827,13 @@
                 if (feeds.length > 0) selectAllFeeds();
                 else showState('empty');
             }
+            
+            // Add global escape key listener to close presentation mode
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !document.getElementById('displayModeOverlay').classList.contains('hidden')) {
+                    stopDisplayMode();
+                }
+            });
         }
 
         // --- Wizard Logic ---
@@ -1529,28 +1596,45 @@
         function toggleMobileMenu(forceState) { const isClosing = forceState === false || !sidebar.classList.contains('-translate-x-full'); if (isClosing) { sidebar.classList.add('-translate-x-full'); mobileOverlay.classList.add('hidden'); } else { sidebar.classList.remove('-translate-x-full'); mobileOverlay.classList.remove('hidden'); } }
         
         function openSettingsModal() {
-            document.getElementById('refreshIntervalInput').value = appSettings.refreshInterval;
+            document.getElementById('refreshIntervalInput').value = appSettings.refreshInterval || 15;
+            document.getElementById('cycleSpeedInput').value = appSettings.cycleSpeed || 10;
             document.getElementById('themeInput').value = appSettings.theme || 'auto';
             document.getElementById('densityInput').value = appSettings.density || 'comfortable';
             settingsModal.classList.remove('hidden'); setTimeout(() => { settingsModal.classList.remove('opacity-0'); document.getElementById('settingsModalContent').classList.remove('scale-95'); }, 10); if(window.innerWidth < 768) toggleMobileMenu(false);
         }
         function closeSettingsModal() { settingsModal.classList.add('opacity-0'); document.getElementById('settingsModalContent').classList.add('scale-95'); setTimeout(() => { settingsModal.classList.add('hidden'); }, 300); }
         function handleSaveSettings(e) {
-            e.preventDefault(); const val = parseInt(document.getElementById('refreshIntervalInput').value, 10);
-            if(val > 0) {
-                appSettings.refreshInterval = val;
-                appSettings.theme = document.getElementById('themeInput').value;
-                appSettings.density = document.getElementById('densityInput').value;
-                localStorage.setItem('currently_settings', JSON.stringify(appSettings));
-                applyTheme(); updateView();
-            }
+            e.preventDefault(); 
+            const val = parseInt(document.getElementById('refreshIntervalInput').value, 10);
+            const speedVal = parseInt(document.getElementById('cycleSpeedInput').value, 10);
+            if(val > 0) appSettings.refreshInterval = val;
+            if(speedVal > 0) appSettings.cycleSpeed = speedVal;
+            
+            appSettings.theme = document.getElementById('themeInput').value;
+            appSettings.density = document.getElementById('densityInput').value;
+            localStorage.setItem('currently_settings', JSON.stringify(appSettings));
+            applyTheme(); updateView();
+            
             closeSettingsModal(); if(activeFeedId && activeFeedId !== '__saved__') { if(activeFeedId === '__all__') selectAllFeeds(); else selectFeed(activeFeedId); }
         }
         function clearCache() { openConfirmModal('Clear Cache', 'Clear all cached articles? This will require re-fetching data.', 'Clear Data', () => { feedCache = {}; feedUnreadBadge = {}; localStorage.removeItem('currently_cache'); localStorage.removeItem('currently_badges'); if(activeFeedId && activeFeedId !== '__saved__') refreshCurrentFeed(); }); }
         function clearReadHistory() { openConfirmModal('Reset History', 'Clear your read history? All articles will appear as unread.', 'Reset History', () => { readArticles.clear(); localStorage.removeItem('currently_read'); updateView(); }); }
 
-        function openArticleModal(index) {
-            openedArticleIndex = index; const article = displayedArticles[index]; if (!article) return;
+        // --- Article Modal Logic ---
+        function navigateArticle(direction) {
+            if (openedArticleIndex === null) return;
+            const newIndex = openedArticleIndex + direction;
+            if (newIndex >= 0 && newIndex < displayedArticles.length) {
+                populateArticleModal(newIndex);
+                document.getElementById('articleScrollArea').scrollTop = 0;
+            }
+        }
+
+        function populateArticleModal(index) {
+            openedArticleIndex = index; 
+            const article = displayedArticles[index]; 
+            if (!article) return;
+            
             markAsRead(article.link);
             document.getElementById('articleModalDate').textContent = article.date; 
             document.getElementById('articleModalTitle').textContent = article.title;
@@ -1563,10 +1647,111 @@
             document.getElementById('articleModalLink').href = article.link;
             
             const isSaved = savedArticles.some(sa => sa.link === article.link); const icon = document.getElementById('articleModalSaveIcon'); if(isSaved) icon.classList.add('fill-brand-500', 'text-brand-500'); else icon.classList.remove('fill-brand-500', 'text-brand-500');
+            
+            // Toggle Navigation Buttons
+            document.getElementById('articleModalPrevBtn').disabled = (index === 0);
+            document.getElementById('articleModalNextBtn').disabled = (index === displayedArticles.length - 1);
+
             applyReaderMode();
-            articleModal.classList.remove('hidden'); setTimeout(() => { articleModal.classList.remove('opacity-0'); document.getElementById('articleModalContent').classList.remove('scale-95'); }, 10); document.body.style.overflow = 'hidden'; lucide.createIcons();
+            lucide.createIcons();
         }
-        function closeArticleModal() { articleModal.classList.add('opacity-0'); document.getElementById('articleModalContent').classList.add('scale-95'); setTimeout(() => { articleModal.classList.add('hidden'); document.body.style.overflow = ''; openedArticleIndex = null; }, 300); }
+
+        function openArticleModal(index) {
+            populateArticleModal(index);
+            articleModal.classList.remove('hidden'); 
+            setTimeout(() => { articleModal.classList.remove('opacity-0'); document.getElementById('articleModalContent').classList.remove('scale-95'); }, 10); 
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeArticleModal() { 
+            articleModal.classList.add('opacity-0'); document.getElementById('articleModalContent').classList.add('scale-95'); 
+            setTimeout(() => { articleModal.classList.add('hidden'); document.body.style.overflow = ''; openedArticleIndex = null; }, 300); 
+        }
+        
+        // --- Display (TV) Mode ---
+        let displayModeTimer = null;
+        let displayModeIndex = 0;
+
+        function startDisplayMode() {
+            if (!displayedArticles || displayedArticles.length === 0) return alert('No articles available to display.');
+            
+            const overlay = document.getElementById('displayModeOverlay');
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(e => console.warn("Fullscreen request denied", e));
+            }
+
+            displayModeIndex = 0;
+            renderDisplaySlide();
+        }
+
+        function stopDisplayMode() {
+            const overlay = document.getElementById('displayModeOverlay');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 500);
+            
+            clearTimeout(displayModeTimer);
+            
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(e => console.warn(e));
+            }
+        }
+
+        function renderDisplaySlide() {
+            clearTimeout(displayModeTimer);
+            
+            if (displayModeIndex >= displayedArticles.length) displayModeIndex = 0; 
+            
+            const article = displayedArticles[displayModeIndex];
+            
+            document.getElementById('displayModeFeedName').textContent = currentFeedTitleEl.textContent;
+            document.getElementById('displayModeDate').textContent = article.date + (article.feedName ? ` • ${article.feedName}` : '');
+            document.getElementById('displayModeTitle').textContent = article.title;
+            
+            // Clean rich text description for pure text summary in TV mode
+            const tmp = document.createElement('div');
+            tmp.innerHTML = article.description;
+            document.getElementById('displayModeDesc').textContent = tmp.textContent || tmp.innerText;
+            
+            const imgWrap = document.getElementById('displayModeImgWrapper');
+            const imgEl = document.getElementById('displayModeImg');
+            const bgEl = document.getElementById('displayModeBg');
+            const textContainer = document.getElementById('displayModeTextContainer');
+            
+            if (article.imageUrl) {
+                imgEl.src = article.imageUrl;
+                bgEl.style.backgroundImage = `url(${article.imageUrl})`;
+                imgWrap.classList.remove('hidden');
+                textContainer.className = "w-full md:w-1/2 flex flex-col justify-center";
+            } else {
+                bgEl.style.backgroundImage = 'none';
+                imgWrap.classList.add('hidden');
+                textContainer.className = "w-full flex flex-col justify-center";
+            }
+            
+            lucide.createIcons();
+
+            const speedMs = (appSettings.cycleSpeed || 10) * 1000;
+            const progressBar = document.getElementById('displayModeProgress');
+            
+            // Reset Progress Bar
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '0%';
+            
+            // Trigger animation
+            setTimeout(() => {
+                progressBar.style.transition = `width ${speedMs}ms linear`;
+                progressBar.style.width = '100%';
+            }, 50);
+
+            // Queue Next Slide
+            displayModeTimer = setTimeout(() => {
+                displayModeIndex++;
+                renderDisplaySlide();
+            }, speedMs);
+        }
 
         document.addEventListener('DOMContentLoaded', init);
 
