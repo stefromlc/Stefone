@@ -35,27 +35,6 @@
 <!-- Optional -->
 <meta name="theme-color" content="#3b82f6" />
 
-
-
-<!-- Open Graph -->
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://www.stefone.com/currently/" />
-<meta property="og:title" content="Currently – Fast, Local-First RSS Reader" />
-<meta property="og:description" content="Save articles for later, filter unread stories, and search headlines instantly. Feeds cache locally for speed and refresh quietly on your schedule." />
-<meta property="og:image" content="https://www.stefone.com/assets/thumbs/currently.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="Currently RSS reader dashboard preview" />
-
-<!-- Twitter / X -->
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Currently – Fast, Local-First RSS Reader" />
-<meta name="twitter:description" content="Save articles for later, filter unread stories, and search headlines instantly. Feeds cache locally for speed and refresh quietly on your schedule." />
-<meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/currently.png" />
-
-<!-- Optional -->
-<meta name="theme-color" content="#3b82f6" />
-
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1226,33 +1205,43 @@
                 const folderWrapper = document.createElement('div');
                 folderWrapper.className = "mt-2";
                 
+                // Allow selecting the folder itself vs. expanding/collapsing
+                const isFolderActive = activeFeedId === folder.id;
                 const fHead = document.createElement('div');
-                fHead.className = "flex items-center justify-between px-3 py-1.5 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors group rounded-md";
-                fHead.onclick = () => toggleFolder(folder.id);
+                fHead.className = `flex items-center justify-between px-2 py-1.5 cursor-pointer transition-colors group rounded-xl ${isFolderActive ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-400 font-semibold shadow-sm border border-brand-100 dark:border-brand-800/50' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200 border border-transparent'}`;
                 fHead.ondragover = (e) => handleDragOver(e, fHead, 'folder');
                 fHead.ondragleave = (e) => handleDragLeave(e, fHead, 'folder');
                 fHead.ondrop = (e) => { handleDrop(e, folder.id, 'folder', fHead); e.stopPropagation(); };
-                
-                const fTitle = document.createElement('div');
-                fTitle.className = "flex items-center gap-1.5 select-none pointer-events-none";
-                fTitle.innerHTML = `
-                    <i data-lucide="chevron-${folder.expanded ? 'down' : 'right'}" class="w-3.5 h-3.5 transition-transform duration-200"></i>
-                    <span class="text-[11px] font-bold uppercase tracking-wider">${folder.name}</span>
-                `;
-                fHead.appendChild(fTitle);
+                fHead.onclick = () => selectFolder(folder.id); // Clicking the header area selects the folder aggregate view
+
+                const fLeft = document.createElement('div');
+                fLeft.className = "flex items-center gap-1 flex-1 select-none overflow-hidden";
+
+                const chevronBtn = document.createElement('button');
+                chevronBtn.className = "p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-400 dark:text-slate-500 flex-shrink-0";
+                chevronBtn.onclick = (e) => { e.stopPropagation(); toggleFolder(folder.id); }; // Explicitly target chevron for collapse/expand
+                chevronBtn.innerHTML = `<i data-lucide="chevron-${folder.expanded ? 'down' : 'right'}" class="w-3.5 h-3.5 transition-transform duration-200"></i>`;
+                fLeft.appendChild(chevronBtn);
+
+                const fTitleText = document.createElement('span');
+                fTitleText.className = `text-[11px] font-bold uppercase tracking-wider truncate pr-2 ${isFolderActive ? 'text-brand-700 dark:text-brand-400' : ''}`;
+                fTitleText.textContent = folder.name;
+                fLeft.appendChild(fTitleText);
+
+                fHead.appendChild(fLeft);
 
                 const fDelBtn = document.createElement('button');
-                fDelBtn.className = "opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 transition-opacity p-1";
+                fDelBtn.className = "opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 transition-opacity p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 flex-shrink-0";
                 fDelBtn.title = "Delete Folder";
-                fDelBtn.onclick = (e) => removeFolder(e, folder.id);
-                fDelBtn.innerHTML = `<i data-lucide="x" class="w-3.5 h-3.5 pointer-events-none"></i>`;
+                fDelBtn.onclick = (e) => { e.stopPropagation(); removeFolder(e, folder.id); };
+                fDelBtn.innerHTML = `<i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>`;
                 fHead.appendChild(fDelBtn);
 
                 folderWrapper.appendChild(fHead);
 
                 if (folder.expanded) {
                     const fList = document.createElement('ul');
-                    fList.className = "space-y-0.5 ml-2 border-l border-slate-100 dark:border-slate-800/60 pl-2";
+                    fList.className = "space-y-0.5 ml-2 border-l border-slate-100 dark:border-slate-800/60 pl-2 mt-1";
                     g.feeds.forEach(feed => fList.appendChild(createFeedItem(feed)));
                     
                     if(g.feeds.length === 0) {
@@ -1383,9 +1372,66 @@
             }
         }
 
+        // Fetch and combine articles for all sources grouped within a specific folder
+        async function selectFolder(folderId) {
+            activeFeedId = folderId; resetFilters(); hideNotificationBanner(); renderFeedList();
+            if(window.innerWidth < 768) toggleMobileMenu(false);
+
+            const folder = folders.find(f => f.id === folderId);
+            if(!folder) return;
+
+            currentFeedTitleEl.textContent = folder.name;
+            const folderFeeds = feeds.filter(f => f.folderId === folderId);
+
+            if(folderFeeds.length === 0) {
+                currentFeedMetaEl.textContent = 'Empty folder';
+                document.getElementById('emptyStateTitle').textContent = 'Folder is Empty';
+                document.getElementById('emptyStateMsg').textContent = 'Drag and drop sources from the sidebar into this folder.';
+                showState('empty');
+                return;
+            }
+
+            currentFeedMetaEl.textContent = 'Aggregating folder...';
+
+            let allArticles = []; let needsRefresh = [];
+            for (let feed of folderFeeds) {
+                if(feedCache[feed.id]) {
+                    allArticles = allArticles.concat(feedCache[feed.id].articles);
+                    if((Date.now() - feedCache[feed.id].timestamp) > appSettings.refreshInterval * 60000) needsRefresh.push(feed);
+                } else needsRefresh.push(feed);
+            }
+
+            const unique = []; const links = new Set();
+            for (let a of allArticles) { if (!links.has(a.link)) { links.add(a.link); unique.push(a); } }
+
+            currentRawArticles = unique;
+            if(currentRawArticles.length > 0) {
+                updateView(); showState('content');
+                currentFeedMetaEl.textContent = `Showing ${unique.length} stories from ${folderFeeds.length} source${folderFeeds.length===1?'':'s'}`;
+            } else if (needsRefresh.length > 0) { showState('loading'); } 
+            else { showState('empty'); currentFeedMetaEl.textContent = ''; }
+
+            if(needsRefresh.length > 0) {
+                if(currentRawArticles.length > 0) {
+                    currentFeedMetaEl.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline animate-spin mr-1.5 text-brand-500"></i> Syncing sources...';
+                    lucide.createIcons();
+                }
+                for (let feed of needsRefresh) await fetchAndRenderArticles(feed, true); 
+                if(currentRawArticles.length === 0) selectFolder(folderId);
+                else currentFeedMetaEl.textContent = `Monitoring ${folderFeeds.length} source${folderFeeds.length===1?'':'s'}`;
+            }
+        }
+
         function refreshCurrentFeed() {
             if(activeFeedId === '__saved__') return; 
-            if(activeFeedId === '__all__') { selectAllFeeds(); return; }
+            if(activeFeedId === '__all__') { 
+                feeds.forEach(f => { if(feedCache[f.id]) feedCache[f.id].timestamp = 0; });
+                selectAllFeeds(); return; 
+            }
+            if(activeFeedId && activeFeedId.startsWith('folder_')) {
+                feeds.forEach(f => { if(f.folderId === activeFeedId && feedCache[f.id]) feedCache[f.id].timestamp = 0; });
+                selectFolder(activeFeedId); return;
+            }
             if(activeFeedId) {
                 const feed = feeds.find(f => f.id === activeFeedId);
                 if (feed) { currentFeedMetaEl.textContent = 'Refreshing...'; fetchAndRenderArticles(feed, false); }
@@ -1423,6 +1469,9 @@
 
                 // Clean text before parsing (remove BOM, leading spaces, or garbage before XML start)
                 rawText = rawText.trim();
+                // Strip invalid XML control characters that often break DOMParser
+                rawText = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+                
                 const indices = [rawText.indexOf('<rss'), rawText.indexOf('<feed'), rawText.indexOf('<?xml')].filter(i => i >= 0);
                 if (indices.length > 0) {
                     const startIdx = Math.min(...indices);
@@ -1431,7 +1480,16 @@
 
                 let xmlDoc = new DOMParser().parseFromString(rawText, 'text/xml');
                 if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
-                    throw new Error('Error parsing XML data');
+                    // Check if items parsed successfully despite the error
+                    if (xmlDoc.querySelectorAll('item, entry').length === 0) {
+                        // Fallback to more lenient HTML parser for heavily malformed feeds
+                        let htmlDoc = new DOMParser().parseFromString(rawText, 'text/html');
+                        if (htmlDoc.querySelectorAll('item, entry').length > 0) {
+                            xmlDoc = htmlDoc;
+                        } else {
+                            throw new Error(`Error parsing XML data for feed: ${feed.name}`);
+                        }
+                    }
                 }
 
                 const items = xmlDoc.querySelectorAll('item, entry');
@@ -1445,7 +1503,8 @@
                     if (newStories.length > 0) {
                         feedUnreadBadge[feed.id] = (feedUnreadBadge[feed.id] || 0) + newStories.length;
                         saveBadges(); renderFeedList();
-                        if (activeFeedId === feed.id || activeFeedId === '__all__') {
+                        // Support notifications if we are looking at this feed, all feeds, or the parent folder
+                        if (activeFeedId === feed.id || activeFeedId === '__all__' || activeFeedId === feed.folderId) {
                             pendingNewStoriesCount += newStories.length;
                             showNotificationBanner();
                         }
@@ -1482,7 +1541,10 @@
             
             // Extract Full Content 
             let fullContentRaw = '';
-            const encodedContent = item.getElementsByTagNameNS('*', 'encoded');
+            // Safe query for namespaces whether parsed as XML or HTML fallback
+            let encodedContent = item.getElementsByTagNameNS ? item.getElementsByTagNameNS('*', 'encoded') : [];
+            if (!encodedContent || encodedContent.length === 0) encodedContent = item.querySelectorAll('encoded, content\\:encoded');
+            
             const contentTag = item.querySelector('content');
             
             if (encodedContent && encodedContent.length > 0) {
@@ -1500,8 +1562,11 @@
             const descriptionText = tmp.textContent || tmp.innerText || 'No description available.';
             let formattedDate = 'Recent';
             if (pubDateStr) { try { const date = new Date(pubDateStr); if (!isNaN(date.getTime())) formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) {} }
+            
             let imageUrl = null;
-            const mediaContent = item.getElementsByTagNameNS('*', 'content');
+            let mediaContent = item.getElementsByTagNameNS ? item.getElementsByTagNameNS('*', 'content') : [];
+            if (!mediaContent || mediaContent.length === 0) mediaContent = item.querySelectorAll('media\\:content');
+            
             if (mediaContent.length > 0) { for(let i=0; i<mediaContent.length; i++) { if (mediaContent[i].getAttribute('url')) { imageUrl = mediaContent[i].getAttribute('url'); break; } } }
             if (!imageUrl) { const enclosure = item.querySelector('enclosure[type^="image"]'); if (enclosure) imageUrl = enclosure.getAttribute('url'); }
             if (!imageUrl) { const imgMatch = fullContentRaw.match(/<img[^>]+src="([^">]+)"/); if (imgMatch && imgMatch[1]) imageUrl = imgMatch[1]; }
@@ -1517,7 +1582,12 @@
             }
         }
         function hideNotificationBanner() { notificationBanner.classList.add('hidden'); pendingNewStoriesCount = 0; }
-        function reloadWithNewStories() { hideNotificationBanner(); if(activeFeedId === '__all__') selectAllFeeds(); else if(activeFeedId) selectFeed(activeFeedId); }
+        function reloadWithNewStories() { 
+            hideNotificationBanner(); 
+            if(activeFeedId === '__all__') selectAllFeeds(); 
+            else if(activeFeedId && activeFeedId.startsWith('folder_')) selectFolder(activeFeedId);
+            else if(activeFeedId) selectFeed(activeFeedId); 
+        }
 
         // --- Filters & View ---
         function resetFilters() { document.getElementById('searchInput').value = ''; document.getElementById('sortSelect').value = 'newest'; document.getElementById('filterSelect').value = 'all'; searchQuery = ''; currentSort = 'newest'; currentFilter = 'all'; }
@@ -1553,6 +1623,9 @@
             const groupedArticles = {}; orderedDates.forEach(d => groupedArticles[d] = []);
             articles.forEach((article, index) => groupedArticles[article.date].push({ article, index }));
 
+            // Ensure source badges are shown for All Feeds, Saved, and Folders
+            const shouldShowSourceBadge = activeFeedId === '__all__' || activeFeedId === '__saved__' || (activeFeedId && activeFeedId.startsWith('folder_'));
+
             let delayCounter = 0;
             orderedDates.forEach(dateStr => {
                 const header = document.createElement('div');
@@ -1576,7 +1649,7 @@
                         ? `<div class="${imgHeight} overflow-hidden bg-slate-100 dark:bg-slate-800 relative"><div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div><img src="${article.imageUrl}" alt="Article Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" onerror="this.style.display='none'"><button onclick="toggleSaveArticle(event, ${index})" class="absolute top-4 right-4 z-20 glass p-2 rounded-full text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:scale-110 transition-all shadow-sm group/btn" title="${isSaved ? 'Remove Bookmark' : 'Save for Later'}"><i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-brand-500 text-brand-500 group-hover/btn:fill-brand-600 group-hover/btn:text-brand-600' : ''}"></i></button></div>`
                         : `<div class="h-4 bg-gradient-to-r from-brand-400 to-purple-500"></div><div class="p-5 pb-0 flex justify-end items-center"><button onclick="toggleSaveArticle(event, ${index})" class="text-slate-400 hover:text-brand-500 transition-colors p-1" title="${isSaved ? 'Remove Bookmark' : 'Save for Later'}"><i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-brand-500 text-brand-500' : ''}"></i></button></div>`; 
 
-                    card.innerHTML = `${imageHtml}<div class="${pClass} flex flex-col flex-1 relative bg-white dark:bg-slate-900">${(activeFeedId === '__all__' || activeFeedId === '__saved__') && article.feedName ? `<span class="inline-block self-start px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider rounded-md mb-3">${article.feedName}</span>` : ''}<h3 class="font-bold ${titleClass} ${isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-800 dark:text-white'} group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" title="${article.title}">${article.title}</h3><p class="${descClass} ${isRead ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400'} flex-1 leading-relaxed">${article.description}</p><div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end items-center"><a href="${article.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-brand-900/50 hover:text-brand-600 dark:hover:text-brand-400 transition-all" title="Open directly to source"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a></div></div>`;
+                    card.innerHTML = `${imageHtml}<div class="${pClass} flex flex-col flex-1 relative bg-white dark:bg-slate-900">${shouldShowSourceBadge && article.feedName ? `<span class="inline-block self-start px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider rounded-md mb-3">${article.feedName}</span>` : ''}<h3 class="font-bold ${titleClass} ${isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-800 dark:text-white'} group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" title="${article.title}">${article.title}</h3><p class="${descClass} ${isRead ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400'} flex-1 leading-relaxed">${article.description}</p><div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end items-center"><a href="${article.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-brand-900/50 hover:text-brand-600 dark:hover:text-brand-400 transition-all" title="Open directly to source"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a></div></div>`;
                     articlesGridEl.appendChild(card); delayCounter++;
                 });
             });
@@ -1620,8 +1693,8 @@
 
         function showState(state) {
             loadingStateEl.classList.add('hidden'); errorStateEl.classList.add('hidden'); emptyStateEl.classList.add('hidden'); articlesGridEl.classList.add('hidden');
-            if(state !== 'content' && activeFeedId !== '__saved__' && activeFeedId !== '__all__') controlsBar.classList.add('hidden');
-            switch(state) { case 'loading': loadingStateEl.classList.remove('hidden'); break; case 'error': errorStateEl.classList.remove('hidden'); break; case 'empty': emptyStateEl.classList.remove('hidden'); break; case 'content': articlesGridEl.classList.remove('hidden'); break; }
+            if(state !== 'content' && activeFeedId !== '__saved__' && activeFeedId !== '__all__' && (!activeFeedId || !activeFeedId.startsWith('folder_'))) controlsBar.classList.add('hidden');
+            switch(state) { case 'loading': loadingStateEl.classList.remove('hidden'); break; case 'error': errorStateEl.classList.remove('hidden'); break; case 'empty': emptyStateEl.classList.remove('hidden'); break; case 'content': articlesGridEl.classList.remove('hidden'); controlsBar.classList.remove('hidden'); break; }
         }
 
         // --- Settings & UI Management ---
@@ -1665,7 +1738,7 @@
             localStorage.setItem('currently_settings', JSON.stringify(appSettings));
             applyTheme(); updateView();
             
-            closeSettingsModal(); if(activeFeedId && activeFeedId !== '__saved__') { if(activeFeedId === '__all__') selectAllFeeds(); else selectFeed(activeFeedId); }
+            closeSettingsModal(); if(activeFeedId && activeFeedId !== '__saved__') { if(activeFeedId === '__all__') selectAllFeeds(); else if(activeFeedId.startsWith('folder_')) selectFolder(activeFeedId); else selectFeed(activeFeedId); }
         }
         function clearCache() { openConfirmModal('Clear Cache', 'Clear all cached articles? This will require re-fetching data.', 'Clear Data', () => { feedCache = {}; feedUnreadBadge = {}; localStorage.removeItem('currently_cache'); localStorage.removeItem('currently_badges'); if(activeFeedId && activeFeedId !== '__saved__') refreshCurrentFeed(); }); }
         function clearReadHistory() { openConfirmModal('Reset History', 'Clear your read history? All articles will appear as unread.', 'Reset History', () => { readArticles.clear(); localStorage.removeItem('currently_read'); updateView(); }); }
