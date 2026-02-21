@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Primary Meta Tags -->
+<title>Currently – Fast, Local-First RSS Reader</title>
+<meta name="title" content="Currently – Fast, Local-First RSS Reader" />
+<meta name="description" content="Save articles for later, filter unread stories, and search headlines instantly. Feeds cache locally for speed and refresh quietly on your schedule." />
+
+<!-- Favicon configuration -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22grad%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23000000%22%20%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2302c2f2%22%20%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2225%22%20fill%3D%22url(%23grad)%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2252%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2265%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22%23ffffff%22%3E%F0%9F%93%96%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.stefone.com/currently/" />
+<meta property="og:title" content="Currently – Fast, Local-First RSS Reader" />
+<meta property="og:description" content="Save articles for later, filter unread stories, and search headlines instantly. Feeds cache locally for speed and refresh quietly on your schedule." />
+<meta property="og:image" content="https://www.stefone.com/assets/thumbs/currently.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Currently RSS reader dashboard preview" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Currently – Fast, Local-First RSS Reader" />
+<meta name="twitter:description" content="Save articles for later, filter unread stories, and search headlines instantly. Feeds cache locally for speed and refresh quietly on your schedule." />
+<meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/currently.png" />
+
+<!-- Optional -->
+<meta name="theme-color" content="#3b82f6" />
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        /* Line clamping */
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* Smooth fade in */
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* Drag and drop cue */
+        .drag-over { border-top: 2px solid #6366f1; }
+        
+        /* Glass effect */
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .dark .glass { background: rgba(30, 41, 59, 0.85); border-color: rgba(255,255,255,0.05); }
+    </style>
+    <!-- Prevent dark mode flash -->
+    <script>
+        if (localStorage.getItem('currently_theme') === 'dark' || (!('currently_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-[#f8fafc] dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 h-screen flex overflow-hidden transition-colors duration-300 antialiased">
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-30 hidden md:hidden transition-opacity" onclick="toggleMobileMenu()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-white dark:bg-slate-900 w-72 h-full border-r border-slate-200/60 dark:border-slate-800 flex flex-col fixed md:relative z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none">
+        
+        <!-- Back to Projects (Top Bar) -->
+        <a href="/projects/" class="flex items-center gap-2 px-6 py-3 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            Back to Projects
+        </a>
+
+        <!-- Header / Branding -->
+        <div class="p-6 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-brand-500 to-purple-600 text-white p-2.5 rounded-2xl shadow-lg shadow-brand-500/20">
+                    <i data-lucide="zap" class="w-5 h-5"></i>
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-400">Currently</h1>
+            </div>
+            <button class="md:hidden absolute top-6 right-6 text-slate-400 hover:text-slate-800 dark:hover:text-white bg-slate-100 dark:bg-slate-800 p-2 rounded-full" onclick="toggleMobileMenu()">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Saved Articles Section -->
+        <div class="px-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <button onclick="selectSavedArticles()" id="savedArticlesBtn" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium group">
+                <i data-lucide="bookmark" class="w-4 h-4 text-brand-500 group-hover:scale-110 transition-transform"></i>
+                <span class="text-sm">Saved for Later</span>
+                <span id="savedBadge" class="ml-auto bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-300 text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+            </button>
+        </div>
+
+        <!-- Feeds List -->
+        <div class="flex-1 overflow-y-auto p-4 pt-6">
+            <h2 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-4">My Sources</h2>
+            <ul id="feedList" class="space-y-0.5">
+                <!-- Feeds will be injected here -->
+            </ul>
+        </div>
+
+        <!-- Add Feed Button & Settings -->
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex gap-2">
+            <button onclick="openAddFeedModal()" class="flex-1 flex justify-center items-center gap-2 bg-slate-800 dark:bg-brand-600 text-white hover:bg-slate-700 dark:hover:bg-brand-500 py-3 rounded-2xl font-semibold text-sm transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                Add Feed
+            </button>
+            <button onclick="openSettingsModal()" class="px-4 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-white rounded-2xl transition-colors shadow-sm active:scale-95" title="Settings">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-full flex flex-col relative w-full overflow-hidden bg-slate-50 dark:bg-slate-950">
+        <!-- Top Navigation -->
+        <header class="glass border-b border-slate-200/50 dark:border-slate-800/50 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between sticky top-0 z-20 gap-4 sm:gap-0">
+            <div class="flex items-center gap-4 w-full sm:w-auto">
+                <button class="md:hidden text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 p-2 -ml-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" onclick="toggleMobileMenu()">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="truncate">
+                    <h2 id="currentFeedTitle" class="text-2xl font-extrabold text-slate-800 dark:text-white truncate tracking-tight">Select a feed</h2>
+                    <p id="currentFeedMeta" class="text-sm text-slate-500 dark:text-slate-400 truncate font-medium mt-0.5">Waiting for selection...</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 w-full sm:w-auto ml-auto">
+                <!-- Search Bar -->
+                <div class="relative flex-1 sm:w-64 group">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors"></i>
+                    <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Search articles..." class="w-full pl-10 pr-4 py-2.5 bg-slate-100/80 dark:bg-slate-800/80 border border-transparent focus:bg-white dark:focus:bg-slate-800 rounded-2xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 transition-all shadow-sm">
+                </div>
+
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" class="p-2.5 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-brand-50 dark:hover:bg-brand-900/30 shrink-0 shadow-sm" title="Toggle Theme">
+                    <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Refresh -->
+                <button onclick="refreshCurrentFeed()" class="p-2.5 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-brand-50 dark:hover:bg-brand-900/30 shrink-0 shadow-sm group" title="Refresh Feed">
+                    <i data-lucide="refresh-cw" id="refreshIcon" class="w-5 h-5 group-active:rotate-180 transition-transform duration-500"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Sub Controls Bar -->
+        <div id="controlsBar" class="bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-800/50 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 z-10 hidden">
+            <div class="flex items-center gap-2">
+                <select id="sortSelect" onchange="handleSortFilter()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl focus:ring-brand-500 focus:border-brand-500 block px-3 py-1.5 outline-none shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <option value="newest">Latest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+                <select id="filterSelect" onchange="handleSortFilter()" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl focus:ring-brand-500 focus:border-brand-500 block px-3 py-1.5 outline-none shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <option value="all">All Stories</option>
+                    <option value="unread">Unread</option>
+                    <option value="images">With Media</option>
+                </select>
+            </div>
+            <button onclick="markAllAsRead()" class="text-xs font-semibold text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 flex items-center gap-1.5 transition-colors px-2 py-1 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-900/20">
+                <i data-lucide="check-check" class="w-4 h-4"></i>
+                Mark all read
+            </button>
+        </div>
+
+        <!-- Articles Area -->
+        <div id="articlesContainer" class="flex-1 overflow-y-auto p-6 md:p-8 scroll-smooth relative">
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden absolute inset-0 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-sm z-10">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-xl flex flex-col items-center border border-slate-100 dark:border-slate-700">
+                    <i data-lucide="loader-2" class="w-10 h-10 animate-spin text-brand-500 mb-4"></i>
+                    <p class="font-semibold text-slate-700 dark:text-slate-300">Curating stories...</p>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden h-full flex flex-col items-center justify-center text-center max-w-md mx-auto">
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-500 p-6 rounded-full mb-6 shadow-sm">
+                    <i data-lucide="wifi-off" class="w-12 h-12"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-3 tracking-tight">Feed Unavailable</h3>
+                <p id="errorMessage" class="text-slate-600 dark:text-slate-400 leading-relaxed">We couldn't reach this RSS feed. The URL might be offline or blocking external access.</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden h-full flex flex-col items-center justify-center text-center max-w-md mx-auto">
+                <div class="bg-slate-100 dark:bg-slate-800/50 p-6 rounded-full mb-6 shadow-inner">
+                    <i data-lucide="layout-grid" class="w-12 h-12 text-slate-400 dark:text-slate-500"></i>
+                </div>
+                <h3 id="emptyStateTitle" class="text-2xl font-bold text-slate-800 dark:text-white mb-3 tracking-tight">Welcome to Currently</h3>
+                <p id="emptyStateMsg" class="text-slate-500 dark:text-slate-400 leading-relaxed">Select a news source from the sidebar to dive into the latest stories, or add your own custom feeds.</p>
+            </div>
+
+            <!-- Grid -->
+            <div id="articlesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8 pb-12 max-w-[1600px] mx-auto">
+                <!-- Article Cards injected here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Feed Modal -->
+    <div id="addFeedModal" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 transform scale-95 transition-transform duration-300 border border-slate-100 dark:border-slate-800" id="addFeedModalContent">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Add Feed</h3>
+                <button onclick="closeAddFeedModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form id="addFeedForm" onsubmit="handleAddFeed(event)">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Display Name</label>
+                        <input type="text" id="feedNameInput" required placeholder="e.g., The Verge" class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">RSS Endpoint URL</label>
+                        <input type="url" id="feedUrlInput" required placeholder="https://example.com/rss.xml" class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium">
+                    </div>
+                </div>
+                <div class="mt-10 flex gap-3">
+                    <button type="button" onclick="closeAddFeedModal()" class="flex-1 px-4 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-semibold transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 px-4 py-3.5 bg-brand-600 text-white hover:bg-brand-700 rounded-2xl font-semibold shadow-lg shadow-brand-500/30 transition-all active:scale-95">Add Source</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 transform scale-95 transition-transform duration-300 border border-slate-100 dark:border-slate-800" id="settingsModalContent">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Preferences</h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form id="settingsForm" onsubmit="handleSaveSettings(event)">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Background Refresh (minutes)</label>
+                        <input type="number" id="refreshIntervalInput" min="1" max="1440" required class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium">
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-2.5 leading-relaxed">Feeds load instantly from memory and update silently in the background if they exceed this age.</p>
+                    </div>
+                    
+                    <div class="pt-6 border-t border-slate-100 dark:border-slate-800/50 space-y-4">
+                        <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Cached Data</span>
+                            <button type="button" onclick="clearCache()" class="px-4 py-2 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-xs font-bold transition-colors shadow-sm">Clear Cache</button>
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Reading History</span>
+                            <button type="button" onclick="clearReadHistory()" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-xs font-bold transition-colors shadow-sm">Reset History</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-10 flex gap-3">
+                    <button type="button" onclick="closeSettingsModal()" class="flex-1 px-4 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-semibold transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 px-4 py-3.5 bg-brand-600 text-white hover:bg-brand-700 rounded-2xl font-semibold shadow-lg shadow-brand-500/30 transition-all active:scale-95">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Article Preview Modal -->
+    <div id="articleModal" class="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4 md:p-6">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col transform scale-95 transition-transform duration-300 border border-slate-200/50 dark:border-slate-700/50 overflow-hidden" id="articleModalContent">
+            
+            <!-- Header with Close Button -->
+            <div class="flex items-center justify-between p-4 md:px-8 md:py-5 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10">
+                <span id="articleModalDate" class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400"></span>
+                <div class="flex items-center gap-2">
+                    <button id="articleModalSaveBtn" onclick="toggleSaveCurrentArticle()" class="text-slate-400 hover:text-brand-500 dark:text-slate-500 dark:hover:text-brand-400 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50" title="Save for later">
+                        <i data-lucide="bookmark" id="articleModalSaveIcon" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="closeArticleModal()" class="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto p-6 md:p-10 flex-1 bg-slate-50/30 dark:bg-slate-900">
+                <h2 id="articleModalTitle" class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-8 leading-[1.15] tracking-tight"></h2>
+                
+                <div id="articleModalImageContainer" class="mb-10 rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg hidden">
+                    <img id="articleModalImage" src="" alt="Article Image" class="w-full h-auto max-h-[500px] object-cover">
+                </div>
+                
+                <div id="articleModalDescription" class="text-lg md:text-xl text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">
+                    <!-- Full description goes here -->
+                </div>
+            </div>
+            
+            <!-- Footer Action -->
+            <div class="p-6 md:p-8 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 flex justify-end">
+                <a id="articleModalLink" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-8 py-4 bg-brand-600 text-white hover:bg-brand-700 rounded-2xl font-bold shadow-xl shadow-brand-500/20 transition-all group active:scale-95">
+                    Read Full Story
+                    <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Initialization Script -->
+    <script>
+        // --- State Management ---
+        const DEFAULT_FEEDS = [
+            { id: '1', name: 'Sky News', url: 'https://feeds.skynews.com/feeds/rss/home.xml', icon: 'globe' },
+            { id: '2', name: 'BBC World', url: 'http://feeds.bbci.co.uk/news/world/rss.xml', icon: 'globe-2' },
+            { id: '3', name: 'CNN Top Stories', url: 'http://rss.cnn.com/rss/edition.rss', icon: 'radio' },
+            { id: '4', name: 'NPR News', url: 'https://feeds.npr.org/1001/rss.xml', icon: 'mic' },
+            { id: '5', name: 'TechCrunch', url: 'https://techcrunch.com/feed/', icon: 'cpu' },
+            { id: '6', name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml', icon: 'smartphone' },
+            { id: '7', name: 'Wired', url: 'https://www.wired.com/feed/rss', icon: 'zap' },
+            { id: '8', name: 'Polygon', url: 'https://www.polygon.com/rss/index.xml', icon: 'gamepad-2' }
+        ];
+
+        let feeds = [];
+        let activeFeedId = null;
+        let feedCache = {}; 
+        let appSettings = { refreshInterval: 15 }; 
+        
+        let currentRawArticles = []; 
+        let displayedArticles = []; 
+        
+        let savedArticles = []; 
+        let readArticles = new Set(); 
+        
+        // Active Filters
+        let searchQuery = '';
+        let currentSort = 'newest';
+        let currentFilter = 'all';
+
+        // --- DOM Elements ---
+        const feedListEl = document.getElementById('feedList');
+        const articlesGridEl = document.getElementById('articlesGrid');
+        const currentFeedTitleEl = document.getElementById('currentFeedTitle');
+        const currentFeedMetaEl = document.getElementById('currentFeedMeta');
+        
+        const loadingStateEl = document.getElementById('loadingState');
+        const errorStateEl = document.getElementById('errorState');
+        const emptyStateEl = document.getElementById('emptyState');
+        const errorMessageEl = document.getElementById('errorMessage');
+        const controlsBar = document.getElementById('controlsBar');
+        
+        const addFeedModal = document.getElementById('addFeedModal');
+        const addFeedModalContent = document.getElementById('addFeedModalContent');
+        const settingsModal = document.getElementById('settingsModal');
+        const settingsModalContent = document.getElementById('settingsModalContent');
+        const refreshIntervalInput = document.getElementById('refreshIntervalInput');
+        
+        const articleModal = document.getElementById('articleModal');
+        const articleModalContent = document.getElementById('articleModalContent');
+
+        const sidebar = document.getElementById('sidebar');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        
+        let openedArticleIndex = null; 
+
+        // --- Initialization ---
+        function init() {
+            lucide.createIcons();
+            updateThemeIcon();
+
+            // Load settings and cache
+            const storedSettings = localStorage.getItem('currently_settings');
+            if (storedSettings) appSettings = { ...appSettings, ...JSON.parse(storedSettings) };
+            
+            const storedCache = localStorage.getItem('currently_cache');
+            if (storedCache) {
+                try { feedCache = JSON.parse(storedCache); } catch(e) { feedCache = {}; }
+            }
+            
+            const storedSaved = localStorage.getItem('currently_saved');
+            if (storedSaved) {
+                try { savedArticles = JSON.parse(storedSaved); } catch(e) { savedArticles = []; }
+            }
+            
+            const storedRead = localStorage.getItem('currently_read');
+            if (storedRead) {
+                try { readArticles = new Set(JSON.parse(storedRead)); } catch(e) { readArticles = new Set(); }
+            }
+
+            // Load feeds from local storage or use defaults
+            const storedFeeds = localStorage.getItem('currently_feeds');
+            if (storedFeeds) {
+                try { feeds = JSON.parse(storedFeeds); } catch(e) { feeds = [...DEFAULT_FEEDS]; }
+            } else {
+                feeds = [...DEFAULT_FEEDS];
+                saveFeeds();
+            }
+
+            updateSavedBadge();
+            renderFeedList();
+            
+            // Auto-load first feed if exists
+            if (feeds.length > 0) {
+                selectFeed(feeds[0].id);
+            } else {
+                showState('empty');
+            }
+        }
+
+        // --- Theme Logic ---
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('currently_theme', isDark ? 'dark' : 'light');
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const iconEl = document.getElementById('themeIcon');
+            if(iconEl) {
+                iconEl.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons({ root: iconEl.parentNode });
+            }
+        }
+
+        // --- Feed Logic ---
+        function saveFeeds() {
+            localStorage.setItem('currently_feeds', JSON.stringify(feeds));
+        }
+
+        function renderFeedList() {
+            feedListEl.innerHTML = '';
+            feeds.forEach(feed => {
+                const isActive = feed.id === activeFeedId;
+                const li = document.createElement('li');
+                li.className = `group flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer transition-all duration-200 ${isActive ? 'bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 font-medium'}`;
+                li.draggable = true;
+                li.ondragstart = (e) => handleDragStart(e, feed.id);
+                li.ondragover = (e) => handleDragOver(e, li);
+                li.ondragleave = (e) => handleDragLeave(e, li);
+                li.ondrop = (e) => handleDrop(e, feed.id, li);
+                
+                li.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden flex-1" onclick="selectFeed('${feed.id}')">
+                        <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 dark:text-slate-600 cursor-grab hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
+                        <i data-lucide="${feed.icon || 'rss'}" class="w-4 h-4 flex-shrink-0 ${isActive ? 'text-brand-500' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'}"></i>
+                        <span class="truncate text-sm select-none">${feed.name}</span>
+                    </div>
+                    <button onclick="removeFeed(event, '${feed.id}')" class="text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/30" title="Remove Feed">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                `;
+                feedListEl.appendChild(li);
+            });
+            lucide.createIcons();
+            
+            // Update Saved Btn styling
+            const savedBtn = document.getElementById('savedArticlesBtn');
+            if(activeFeedId === '__saved__') {
+                savedBtn.classList.add('bg-brand-50', 'dark:bg-brand-900/30', 'text-brand-700', 'dark:text-brand-400', 'font-semibold');
+                savedBtn.classList.remove('text-slate-600', 'dark:text-slate-300', 'font-medium');
+            } else {
+                savedBtn.classList.remove('bg-brand-50', 'dark:bg-brand-900/30', 'text-brand-700', 'dark:text-brand-400', 'font-semibold');
+                savedBtn.classList.add('text-slate-600', 'dark:text-slate-300', 'font-medium');
+            }
+        }
+
+        // --- Drag and Drop Logic ---
+        let draggedFeedId = null;
+        function handleDragStart(e, id) {
+            draggedFeedId = id;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => e.target.classList.add('opacity-50'), 0);
+        }
+        function handleDragOver(e, el) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            el.classList.add('drag-over');
+        }
+        function handleDragLeave(e, el) {
+            el.classList.remove('drag-over');
+        }
+        function handleDrop(e, targetId, el) {
+            e.preventDefault();
+            el.classList.remove('drag-over');
+            if(draggedFeedId && draggedFeedId !== targetId) {
+                const draggedIndex = feeds.findIndex(f => f.id === draggedFeedId);
+                const targetIndex = feeds.findIndex(f => f.id === targetId);
+                const [draggedFeed] = feeds.splice(draggedIndex, 1);
+                feeds.splice(targetIndex, 0, draggedFeed);
+                saveFeeds();
+                renderFeedList();
+            }
+            draggedFeedId = null;
+        }
+
+        async function selectFeed(id) {
+            activeFeedId = id;
+            resetFilters();
+            
+            if(id === '__saved__') {
+                return renderSavedArticles();
+            }
+            
+            const feed = feeds.find(f => f.id === id);
+            if (!feed) return;
+
+            renderFeedList(); 
+            if(window.innerWidth < 768) toggleMobileMenu(false);
+
+            currentFeedTitleEl.textContent = feed.name;
+            
+            const cachedData = feedCache[id];
+            const isExpired = !cachedData || (Date.now() - cachedData.timestamp > appSettings.refreshInterval * 60000);
+
+            if (cachedData) {
+                currentRawArticles = cachedData.articles;
+                updateView(); 
+                showState('content');
+                
+                if (isExpired) {
+                    currentFeedMetaEl.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline animate-spin mr-1.5 text-brand-500"></i> Updating silently...';
+                    lucide.createIcons();
+                    await fetchAndRenderArticles(feed, true);
+                } else {
+                    const minsAgo = Math.floor((Date.now() - cachedData.timestamp) / 60000);
+                    currentFeedMetaEl.textContent = minsAgo === 0 ? 'Freshly updated' : `Updated ${minsAgo} min${minsAgo === 1 ? '' : 's'} ago`;
+                }
+            } else {
+                currentFeedMetaEl.textContent = 'Pulling latest stories...';
+                await fetchAndRenderArticles(feed, false);
+            }
+        }
+
+        function refreshCurrentFeed() {
+            if(activeFeedId === '__saved__') return; 
+            if(activeFeedId) {
+                const feed = feeds.find(f => f.id === activeFeedId);
+                if (feed) {
+                    currentFeedMetaEl.textContent = 'Refreshing...';
+                    fetchAndRenderArticles(feed, false);
+                }
+            }
+        }
+
+        async function fetchAndRenderArticles(feed, isBackground = false) {
+            if (!isBackground) {
+                showState('loading');
+                articlesGridEl.innerHTML = '';
+            }
+            
+            const refreshIcon = document.getElementById('refreshIcon');
+            refreshIcon.classList.add('animate-spin');
+
+            try {
+                let xmlDoc;
+                try {
+                    const primaryProxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`;
+                    const response = await fetch(primaryProxyUrl);
+                    if (!response.ok) throw new Error('Primary proxy failed');
+                    const data = await response.json();
+                    if (!data.contents) throw new Error('Empty contents from primary proxy');
+                    
+                    const parser = new DOMParser();
+                    xmlDoc = parser.parseFromString(data.contents.trim(), 'text/xml');
+                    if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+                        throw new Error('Primary proxy returned invalid XML');
+                    }
+                } catch (primaryErr) {
+                    console.warn('Primary proxy failed, trying fallback...', primaryErr);
+                    const fallbackProxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feed.url)}`;
+                    const fallbackResponse = await fetch(fallbackProxyUrl);
+                    if (!fallbackResponse.ok) throw new Error('Fallback proxy failed');
+                    const text = await fallbackResponse.text();
+                    
+                    const parser = new DOMParser();
+                    xmlDoc = parser.parseFromString(text.trim(), 'text/xml');
+                    
+                    if (xmlDoc.getElementsByTagName("parsererror").length > 0) throw new Error('Error parsing RSS XML');
+                }
+
+                const items = xmlDoc.querySelectorAll('item, entry');
+                const articles = Array.from(items).map(parseXMLItem);
+
+                if (articles.length === 0) {
+                    throw new Error('No articles found in this feed.');
+                }
+
+                // Append timestamp to objects to help with sorting
+                articles.forEach((a, i) => a.sortValue = Date.parse(a.rawDate) || (Date.now() - i));
+
+                currentRawArticles = articles; 
+
+                // Update Cache
+                feedCache[feed.id] = { timestamp: Date.now(), articles: articles };
+                localStorage.setItem('currently_cache', JSON.stringify(feedCache));
+
+                const minsAgo = Math.floor((Date.now() - feedCache[feed.id].timestamp) / 60000);
+                currentFeedMetaEl.textContent = minsAgo === 0 ? 'Freshly updated' : `Updated ${minsAgo} min${minsAgo === 1 ? '' : 's'} ago`;
+                
+                updateView();
+                showState('content');
+
+            } catch (error) {
+                console.error('Feed fetch error:', error);
+                if (!isBackground) {
+                    errorMessageEl.textContent = `Could not load ${feed.name}. Make sure the URL is correct or try again later.`;
+                    currentFeedMetaEl.textContent = 'Update failed';
+                    showState('error');
+                } else {
+                    currentFeedMetaEl.textContent = 'Background update failed';
+                }
+            } finally {
+                refreshIcon.classList.remove('animate-spin');
+            }
+        }
+
+        // --- RSS Parsing Logic ---
+        function parseXMLItem(item) {
+            const getText = (selector) => {
+                const el = item.querySelector(selector);
+                return el ? el.textContent.trim() : '';
+            };
+
+            const title = getText('title') || 'Untitled Article';
+            
+            let link = getText('link');
+            if (!link) {
+                const linkEl = item.querySelector('link');
+                if (linkEl && linkEl.getAttribute('href')) link = linkEl.getAttribute('href');
+                else link = '#';
+            }
+
+            const pubDateStr = getText('pubDate') || getText('dc\\:date') || getText('published') || getText('updated') || '';
+            const descriptionRaw = getText('description') || getText('summary') || getText('content') || '';
+            
+            const tmp = document.createElement('div');
+            tmp.innerHTML = descriptionRaw;
+            const descriptionText = tmp.textContent || tmp.innerText || 'No description available.';
+
+            let formattedDate = 'Recent';
+            if (pubDateStr) {
+                try {
+                    const date = new Date(pubDateStr);
+                    if (!isNaN(date.getTime())) {
+                        formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    }
+                } catch (e) {}
+            }
+
+            let imageUrl = null;
+            const mediaContent = item.getElementsByTagNameNS('*', 'content');
+            if (mediaContent.length > 0) {
+                for(let i=0; i<mediaContent.length; i++) {
+                     if (mediaContent[i].getAttribute('url')) {
+                        imageUrl = mediaContent[i].getAttribute('url');
+                        break;
+                     }
+                }
+            }
+            if (!imageUrl) {
+                const enclosure = item.querySelector('enclosure[type^="image"]');
+                if (enclosure) imageUrl = enclosure.getAttribute('url');
+            }
+            if (!imageUrl) {
+                const imgMatch = descriptionRaw.match(/<img[^>]+src="([^">]+)"/);
+                if (imgMatch && imgMatch[1]) imageUrl = imgMatch[1];
+            }
+
+            return { title, link, description: descriptionText, date: formattedDate, rawDate: pubDateStr, imageUrl };
+        }
+
+        // --- View & Filter Logic ---
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('sortSelect').value = 'newest';
+            document.getElementById('filterSelect').value = 'all';
+            searchQuery = '';
+            currentSort = 'newest';
+            currentFilter = 'all';
+        }
+
+        function handleSearch(val) {
+            searchQuery = val.toLowerCase();
+            updateView();
+        }
+
+        function handleSortFilter() {
+            currentSort = document.getElementById('sortSelect').value;
+            currentFilter = document.getElementById('filterSelect').value;
+            updateView();
+        }
+
+        function updateView() {
+            if(!currentRawArticles || currentRawArticles.length === 0) return;
+            
+            let filtered = currentRawArticles.filter(article => {
+                // Text Search
+                if(searchQuery && !article.title.toLowerCase().includes(searchQuery) && !article.description.toLowerCase().includes(searchQuery)) {
+                    return false;
+                }
+                // Filter Dropdown
+                if(currentFilter === 'unread' && readArticles.has(article.link)) return false;
+                if(currentFilter === 'images' && !article.imageUrl) return false;
+                
+                return true;
+            });
+
+            // Sort Dropdown
+            filtered.sort((a, b) => {
+                const valA = a.sortValue || 0;
+                const valB = b.sortValue || 0;
+                return currentSort === 'newest' ? valB - valA : valA - valB;
+            });
+
+            displayedArticles = filtered;
+            renderArticles(displayedArticles);
+            
+            if(displayedArticles.length === 0 && currentRawArticles.length > 0) {
+                 articlesGridEl.innerHTML = `
+                    <div class="col-span-full py-20 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/50 rounded-3xl border border-slate-200/50 dark:border-slate-800 shadow-sm">
+                        <i data-lucide="filter-x" class="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600"></i>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-2">No matching stories</h3>
+                        <p>Adjust your search or filters to see more results.</p>
+                    </div>
+                 `;
+                 lucide.createIcons();
+            }
+        }
+
+        function renderArticles(articles) {
+            articlesGridEl.innerHTML = '';
+            controlsBar.classList.remove('hidden');
+            
+            // Group articles by date
+            const orderedDates = [...new Set(articles.map(a => a.date))];
+            const groupedArticles = {};
+            orderedDates.forEach(d => groupedArticles[d] = []);
+            
+            articles.forEach((article, index) => {
+                groupedArticles[article.date].push({ article, index });
+            });
+
+            let delayCounter = 0;
+
+            orderedDates.forEach(dateStr => {
+                // Insert Date Header
+                const header = document.createElement('div');
+                header.className = 'col-span-full mt-8 mb-2 first:mt-2 border-b border-slate-200/60 dark:border-slate-800/60 pb-3 fade-in flex items-center gap-3';
+                header.style.animationDelay = `${(delayCounter % 20) * 0.04}s`;
+                header.innerHTML = `
+                    <i data-lucide="calendar" class="w-5 h-5 text-brand-500"></i>
+                    <h3 class="text-xl font-extrabold text-slate-800 dark:text-white tracking-tight">${dateStr}</h3>
+                `;
+                articlesGridEl.appendChild(header);
+                delayCounter++;
+
+                // Render Articles for this date
+                groupedArticles[dateStr].forEach(({ article, index }) => {
+                    const isRead = readArticles.has(article.link);
+                    const isSaved = savedArticles.some(sa => sa.link === article.link);
+                    
+                    const card = document.createElement('article');
+                    card.className = `bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-brand-500/5 dark:hover:shadow-black/50 hover:-translate-y-1 transition-all duration-300 flex flex-col fade-in cursor-pointer group ${isRead ? 'opacity-70' : ''}`;
+                    card.style.animationDelay = `${(delayCounter % 20) * 0.04}s`; 
+                    card.onclick = () => openArticleModal(index);
+
+                    const imageHtml = article.imageUrl 
+                        ? `<div class="h-56 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+                               <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
+                               <img src="${article.imageUrl}" alt="Article Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" onerror="this.style.display='none'">
+                               
+                               <!-- Save Button inside Image (Date Pill Removed) -->
+                               <button onclick="toggleSaveArticle(event, ${index})" class="absolute top-4 right-4 z-20 glass p-2 rounded-full text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:scale-110 transition-all shadow-sm group/btn" title="${isSaved ? 'Remove Bookmark' : 'Save for Later'}">
+                                   <i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-brand-500 text-brand-500 group-hover/btn:fill-brand-600 group-hover/btn:text-brand-600' : ''}"></i>
+                               </button>
+                           </div>`
+                        : `<div class="h-4 bg-gradient-to-r from-brand-400 to-purple-500"></div>
+                           <div class="p-5 pb-0 flex justify-end items-center">
+                               <button onclick="toggleSaveArticle(event, ${index})" class="text-slate-400 hover:text-brand-500 transition-colors p-1" title="${isSaved ? 'Remove Bookmark' : 'Save for Later'}">
+                                   <i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-brand-500 text-brand-500' : ''}"></i>
+                               </button>
+                           </div>`; 
+
+                    card.innerHTML = `
+                        ${imageHtml}
+                        <div class="p-6 md:p-7 flex flex-col flex-1 relative bg-white dark:bg-slate-900">
+                            <h3 class="text-[1.15rem] font-bold leading-tight mb-3 ${isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-800 dark:text-white'} group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2" title="${article.title}">
+                                ${article.title}
+                            </h3>
+                            <p class="text-sm ${isRead ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400'} mb-5 line-clamp-3 flex-1 leading-relaxed">
+                                ${article.description}
+                            </p>
+                            <div class="mt-auto pt-5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors">Read Story</span>
+                                <a href="${article.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-brand-900/50 hover:text-brand-600 dark:hover:text-brand-400 transition-all" title="Open directly to source">
+                                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    articlesGridEl.appendChild(card);
+                    delayCounter++;
+                });
+            });
+            lucide.createIcons();
+        }
+
+        // --- Save & Read Logic ---
+        function markAllAsRead() {
+            if(!displayedArticles.length) return;
+            displayedArticles.forEach(a => readArticles.add(a.link));
+            localStorage.setItem('currently_read', JSON.stringify([...readArticles]));
+            updateView();
+        }
+        
+        function markAsRead(link) {
+            if(!readArticles.has(link)) {
+                readArticles.add(link);
+                localStorage.setItem('currently_read', JSON.stringify([...readArticles]));
+                updateView();
+            }
+        }
+
+        function toggleSaveArticle(event, index) {
+            event.stopPropagation();
+            const article = displayedArticles[index];
+            if(!article) return;
+            
+            const savedIndex = savedArticles.findIndex(sa => sa.link === article.link);
+            if(savedIndex >= 0) {
+                savedArticles.splice(savedIndex, 1);
+            } else {
+                savedArticles.push(article);
+            }
+            
+            localStorage.setItem('currently_saved', JSON.stringify(savedArticles));
+            updateSavedBadge();
+            
+            if(activeFeedId === '__saved__') {
+                currentRawArticles = savedArticles;
+                updateView();
+            } else {
+                updateView();
+            }
+        }
+        
+        function toggleSaveCurrentArticle() {
+            if (openedArticleIndex !== null) {
+                toggleSaveArticle({stopPropagation: ()=>{}}, openedArticleIndex);
+                const article = displayedArticles[openedArticleIndex];
+                const isSaved = savedArticles.some(sa => sa.link === article.link);
+                const icon = document.getElementById('articleModalSaveIcon');
+                if(isSaved) {
+                    icon.classList.add('fill-brand-500', 'text-brand-500');
+                } else {
+                    icon.classList.remove('fill-brand-500', 'text-brand-500');
+                }
+            }
+        }
+
+        function updateSavedBadge() {
+            const badge = document.getElementById('savedBadge');
+            if(savedArticles.length > 0) {
+                badge.textContent = savedArticles.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function selectSavedArticles() {
+            activeFeedId = '__saved__';
+            renderFeedList();
+            if(window.innerWidth < 768) toggleMobileMenu(false);
+            
+            resetFilters();
+            currentFeedTitleEl.textContent = 'Saved For Later';
+            currentFeedMetaEl.textContent = `${savedArticles.length} stories stored offline`;
+            
+            if(savedArticles.length === 0) {
+                document.getElementById('emptyStateTitle').textContent = 'No Saved Articles';
+                document.getElementById('emptyStateMsg').textContent = 'Click the bookmark icon on any article to save it here for later reading.';
+                controlsBar.classList.add('hidden');
+                showState('empty');
+            } else {
+                currentRawArticles = [...savedArticles];
+                updateView();
+                showState('content');
+            }
+        }
+
+        // --- UI State Management ---
+        function showState(state) {
+            loadingStateEl.classList.add('hidden');
+            errorStateEl.classList.add('hidden');
+            emptyStateEl.classList.add('hidden');
+            articlesGridEl.classList.add('hidden');
+            
+            if(state !== 'content' && activeFeedId !== '__saved__') controlsBar.classList.add('hidden');
+
+            switch(state) {
+                case 'loading': loadingStateEl.classList.remove('hidden'); break;
+                case 'error': errorStateEl.classList.remove('hidden'); break;
+                case 'empty': emptyStateEl.classList.remove('hidden'); break;
+                case 'content': articlesGridEl.classList.remove('hidden'); break;
+            }
+        }
+
+        // --- User Actions (Add/Remove Feeds) ---
+        function openAddFeedModal() {
+            addFeedModal.classList.remove('hidden');
+            setTimeout(() => {
+                addFeedModal.classList.remove('opacity-0');
+                addFeedModalContent.classList.remove('scale-95');
+            }, 10);
+            document.getElementById('feedNameInput').focus();
+            if(window.innerWidth < 768) toggleMobileMenu(false);
+        }
+
+        function closeAddFeedModal() {
+            addFeedModal.classList.add('opacity-0');
+            addFeedModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                addFeedModal.classList.add('hidden');
+                document.getElementById('addFeedForm').reset();
+            }, 300);
+        }
+
+        function handleAddFeed(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('feedNameInput').value.trim();
+            const urlInput = document.getElementById('feedUrlInput').value.trim();
+
+            if (!nameInput || !urlInput) return;
+
+            const newFeed = {
+                id: Date.now().toString(),
+                name: nameInput,
+                url: urlInput,
+                icon: 'rss'
+            };
+
+            feeds.push(newFeed);
+            saveFeeds();
+            renderFeedList();
+            closeAddFeedModal();
+            selectFeed(newFeed.id);
+        }
+
+        function removeFeed(e, id) {
+            e.stopPropagation(); 
+            
+            if(!confirm('Are you sure you want to remove this source?')) return;
+
+            feeds = feeds.filter(f => f.id !== id);
+            saveFeeds();
+            renderFeedList();
+
+            if (activeFeedId === id) {
+                if (feeds.length > 0) {
+                    selectFeed(feeds[0].id);
+                } else {
+                    activeFeedId = null;
+                    currentFeedTitleEl.textContent = 'Welcome to Currently';
+                    currentFeedMetaEl.textContent = '';
+                    document.getElementById('emptyStateTitle').textContent = 'No Sources Selected';
+                    document.getElementById('emptyStateMsg').textContent = 'Choose a feed from the sidebar or add your own to start reading.';
+                    showState('empty');
+                }
+            }
+        }
+
+        function toggleMobileMenu(forceState) {
+            const isClosing = forceState === false || !sidebar.classList.contains('-translate-x-full');
+            
+            if (isClosing) {
+                sidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            } else {
+                sidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.remove('hidden');
+            }
+        }
+
+        // --- Settings Logic ---
+        function openSettingsModal() {
+            refreshIntervalInput.value = appSettings.refreshInterval;
+            settingsModal.classList.remove('hidden');
+            setTimeout(() => {
+                settingsModal.classList.remove('opacity-0');
+                settingsModalContent.classList.remove('scale-95');
+            }, 10);
+            if(window.innerWidth < 768) toggleMobileMenu(false);
+        }
+
+        function closeSettingsModal() {
+            settingsModal.classList.add('opacity-0');
+            settingsModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                settingsModal.classList.add('hidden');
+            }, 300);
+        }
+
+        function handleSaveSettings(e) {
+            e.preventDefault();
+            const val = parseInt(refreshIntervalInput.value, 10);
+            if(val > 0) {
+                appSettings.refreshInterval = val;
+                localStorage.setItem('currently_settings', JSON.stringify(appSettings));
+            }
+            closeSettingsModal();
+            if(activeFeedId && activeFeedId !== '__saved__') selectFeed(activeFeedId);
+        }
+
+        function clearCache() {
+            if(confirm('Clear all cached articles? This will require re-fetching data.')) {
+                feedCache = {};
+                localStorage.removeItem('currently_cache');
+                alert('Cache cleared.');
+                if(activeFeedId && activeFeedId !== '__saved__') refreshCurrentFeed();
+            }
+        }
+        
+        function clearReadHistory() {
+             if(confirm('Clear your read history? All articles will appear as unread.')) {
+                readArticles.clear();
+                localStorage.removeItem('currently_read');
+                updateView();
+                alert('Read history cleared.');
+            }
+        }
+
+        // --- Article Modal Logic ---
+        function openArticleModal(index) {
+            openedArticleIndex = index;
+            const article = displayedArticles[index];
+            if (!article) return;
+            
+            markAsRead(article.link);
+            
+            document.getElementById('articleModalDate').textContent = article.date;
+            document.getElementById('articleModalTitle').textContent = article.title;
+            
+            const imgContainer = document.getElementById('articleModalImageContainer');
+            const imgEl = document.getElementById('articleModalImage');
+            
+            if (article.imageUrl) {
+                imgEl.src = article.imageUrl;
+                imgContainer.classList.remove('hidden');
+            } else {
+                imgContainer.classList.add('hidden');
+                imgEl.src = '';
+            }
+            
+            document.getElementById('articleModalDescription').textContent = article.description; 
+            document.getElementById('articleModalLink').href = article.link;
+            
+            const isSaved = savedArticles.some(sa => sa.link === article.link);
+            const icon = document.getElementById('articleModalSaveIcon');
+            if(isSaved) icon.classList.add('fill-brand-500', 'text-brand-500');
+            else icon.classList.remove('fill-brand-500', 'text-brand-500');
+            
+            articleModal.classList.remove('hidden');
+            setTimeout(() => {
+                articleModal.classList.remove('opacity-0');
+                articleModalContent.classList.remove('scale-95');
+            }, 10);
+            
+            document.body.style.overflow = 'hidden'; 
+            lucide.createIcons();
+        }
+
+        function closeArticleModal() {
+            articleModal.classList.add('opacity-0');
+            articleModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                articleModal.classList.add('hidden');
+                document.body.style.overflow = ''; 
+                openedArticleIndex = null;
+            }, 300);
+        }
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>

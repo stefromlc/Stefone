@@ -1,5 +1,22 @@
 [
   {
+    "title": "Currently",
+    "slug": "currently",
+    "description": "Save articles for later, filter unread stories, and search headlines instantly. Feeds cache locally for speed and refresh quietly on your schedule.",
+    "thumbnail": "assets/thumbs/currently.png",
+    "tags": [
+      "News",
+      "RSS",
+      "Tool",
+      "Tools"
+    ],
+    "category": "Tools",
+    "featured": false,
+    "date": "2026-02-21",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "Favicon Lab",
