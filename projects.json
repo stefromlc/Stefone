@@ -1,22 +1,5 @@
 [
   {
-    "title": "New Tab",
-    "slug": "new-tab",
-    "description": "Customize your dashboard with draggable widgets like search, clock, and notes. Stay private with local storage, full control over layout and style.",
-    "thumbnail": "assets/thumbs/new-tab.png",
-    "tags": [
-      "Dashboard",
-      "New Tab",
-      "RSS",
-      "Tab"
-    ],
-    "category": "Apps",
-    "featured": true,
-    "date": "2026-02-22",
-    "demoUrl": "",
-    "repoUrl": ""
-  },
-  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "Currently",
