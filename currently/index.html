@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -91,6 +90,11 @@
         
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
         @keyframes slideDown { to { transform: translateY(0); opacity: 1; } }
+        
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
+        }
 
         /* Wizard Animations */
         .wizard-step { display: none; opacity: 0; pointer-events: none; }
@@ -192,6 +196,9 @@
         #articleModalDescription pre code { background: transparent; padding: 0; }
         #articleModalDescription figcaption { text-align: center; font-size: 0.875em; color: #64748b; margin-top: 0.75em; }
         .dark #articleModalDescription figcaption { color: #94a3b8; }
+        #articleModalDescription figure { margin: 2em 0; text-align: center; display: block; overflow: hidden; }
+        #articleModalDescription p:empty, #articleModalDescription div:empty, #articleModalDescription ul:empty, #articleModalDescription ol:empty { display: none; }
+        #articleModalDescription br + br { display: none; } /* Prevent massive consecutive line breaks */
     </style>
     <!-- Prevent dark mode flash -->
     <script>
@@ -482,6 +489,13 @@
                         <h4 class="text-sm font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><i data-lucide="tv" class="w-4 h-4 text-brand-500"></i> TV Presentation Mode</h4>
                         <div class="space-y-4">
                             <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Live Headlines Ticker</label>
+                                <select id="tvTickerInput" class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm font-medium">
+                                    <option value="show">Show Scrolling Ticker</option>
+                                    <option value="hide">Hide Ticker</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Visual Layout</label>
                                 <select id="tvLayoutInput" class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm font-medium">
                                     <option value="split">Split Screen (Image Left, Text Right)</option>
@@ -549,6 +563,9 @@
                         </button>
                     </div>
                     <!-- Settings & Close Controls -->
+                    <button onclick="toggleExtractedFullText()" id="articleModalExtractBtn" class="text-slate-400 hover:text-brand-500 dark:text-slate-500 dark:hover:text-brand-400 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50" title="Extract Full Article">
+                        <i data-lucide="file-search" id="extractIcon" class="w-5 h-5"></i>
+                    </button>
                     <button onclick="toggleReaderMode()" id="readerModeBtn" class="text-slate-400 hover:text-brand-500 dark:text-slate-500 dark:hover:text-brand-400 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-slate-50 dark:bg-slate-800/50" title="Toggle Distraction-Free Reader Mode">
                         <i data-lucide="book-open" class="w-5 h-5"></i>
                     </button>
@@ -562,8 +579,8 @@
             </div>
             
             <!-- Scrollable Content -->
-            <div id="articleScrollArea" class="overflow-y-auto p-6 md:p-10 flex-1 bg-slate-50/30 dark:bg-slate-900 reader-mode-transition">
-                <div id="articleInnerContainer" class="reader-mode-transition">
+            <div id="articleScrollArea" class="overflow-y-auto overflow-x-hidden p-6 md:p-10 flex-1 bg-slate-50/30 dark:bg-slate-900 reader-mode-transition touch-pan-y">
+                <div id="articleInnerContainer" class="reader-mode-transition will-change-transform">
                     <h2 id="articleModalTitle" class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-8 leading-[1.15] tracking-tight reader-mode-transition"></h2>
                     
                     <div id="articleModalImageContainer" class="mb-10 rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg hidden reader-mode-transition">
@@ -598,32 +615,34 @@
         <!-- Presentation Content -->
         <div class="flex-1 flex items-center justify-center relative overflow-hidden" id="displayModeContent">
             <!-- Blurred Background Artwork -->
-            <div id="displayModeBg" class="absolute inset-0 bg-cover bg-center blur-3xl opacity-30 scale-110"></div>
+            <div id="displayModeBg" class="absolute inset-0 bg-cover bg-center blur-3xl opacity-30 scale-110 transition-all duration-700"></div>
             <!-- Main Content Grid -->
             <div id="displayModeInnerGrid" class="relative z-10 max-w-7xl mx-auto px-8 w-full flex flex-col md:flex-row gap-12 lg:gap-20 items-center h-full">
                 <div id="displayModeImgWrapper" class="w-full md:w-1/2 rounded-[2rem] overflow-hidden shadow-2xl hidden transform transition-all duration-700">
                     <img id="displayModeImg" src="" class="w-full h-auto max-h-[70vh] object-cover">
                 </div>
-                <div id="displayModeTextContainer" class="w-full md:w-1/2 flex flex-col justify-center z-20">
-                    <span id="displayModeDate" class="text-brand-400 font-bold uppercase tracking-widest text-sm mb-4"></span>
-                    <h2 id="displayModeTitle" class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6 line-clamp-4"></h2>
-                    <p id="displayModeDesc" class="text-xl md:text-2xl text-slate-300 leading-relaxed line-clamp-6 opacity-90"></p>
+                <div id="displayModeTextContainer" class="w-full md:w-1/2 flex flex-col justify-center z-20 transition-all duration-700">
+                    <span id="displayModeDate" class="text-brand-400 font-bold uppercase tracking-widest text-sm mb-4 transition-all duration-500"></span>
+                    <h2 id="displayModeTitle" class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6 line-clamp-4 transition-all duration-500"></h2>
+                    <p id="displayModeDesc" class="text-xl md:text-2xl text-slate-300 leading-relaxed line-clamp-6 opacity-90 transition-all duration-500"></p>
                 </div>
             </div>
         </div>
 
         <!-- TV QR Code Overlay -->
-        <div id="displayModeQr"
-     class="absolute bottom-10 right-10 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl z-30 hidden transition-opacity duration-500 border border-white/20">
-    
-    <img id="displayModeQrImg"
-         src=""
-         class="w-24 h-24 object-contain">
-         
-</div>
+        <div id="displayModeQr" class="absolute bottom-[4.5rem] right-10 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl z-30 hidden transition-opacity duration-500 border border-white/20">
+            <img id="displayModeQrImg" src="" class="w-24 h-24 object-contain">
+        </div>
         
+        <!-- Live Headlines Ticker -->
+        <div id="tvTickerWrapper" class="w-full bg-black/60 backdrop-blur-md border-t border-white/10 z-20 shrink-0 overflow-hidden hidden relative h-12">
+            <div id="tvTickerTrack" class="absolute whitespace-nowrap h-full flex items-center animate-[ticker_60s_linear_infinite] hover:[animation-play-state:paused] text-slate-200 text-lg md:text-xl font-medium tracking-wide">
+                <!-- Dynamic content inserted here -->
+            </div>
+        </div>
+
         <!-- Bottom Timeline / Progress Indicator -->
-        <div class="h-1.5 w-full bg-white/10 z-20 relative">
+        <div class="h-1.5 w-full bg-white/10 z-20 relative shrink-0">
             <div id="displayModeProgress" class="h-full bg-gradient-to-r from-brand-500 to-purple-500 w-0 transition-all ease-linear shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
         </div>
     </div>
@@ -772,12 +791,12 @@
                 elements.forEach(el => el.remove());
             });
             
-            // Remove dangerous attributes
+            // Remove dangerous attributes and layout-breaking attributes
             const allElements = doc.querySelectorAll('*');
             allElements.forEach(el => {
                 Array.from(el.attributes).forEach(attr => {
                     const name = attr.name.toLowerCase();
-                    if (name.startsWith('on')) {
+                    if (name.startsWith('on') || name === 'class' || name === 'id' || name === 'style') {
                         el.removeAttribute(name);
                     } else if ((name === 'href' || name === 'src' || name === 'data') && attr.value.toLowerCase().trim().startsWith('javascript:')) {
                         el.removeAttribute(name);
@@ -789,10 +808,10 @@
 
         // --- Core Application Data ---
         const DEFAULT_FEEDS = [
-            { id: '1', name: 'Sky News', url: 'https://feeds.skynews.com/feeds/rss/home.xml', icon: 'globe' },
-            { id: '2', name: 'BBC World', url: 'http://feeds.bbci.co.uk/news/world/rss.xml', icon: 'globe-2' },
-            { id: '3', name: 'TechCrunch', url: 'https://techcrunch.com/feed/', icon: 'cpu' },
-            { id: '4', name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml', icon: 'smartphone' }
+            { id: '1', name: 'Sky News', url: 'https://feeds.skynews.com/feeds/rss/home.xml', icon: 'globe', pinned: false },
+            { id: '2', name: 'BBC World', url: 'http://feeds.bbci.co.uk/news/world/rss.xml', icon: 'globe-2', pinned: false },
+            { id: '3', name: 'TechCrunch', url: 'https://techcrunch.com/feed/', icon: 'cpu', pinned: false },
+            { id: '4', name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml', icon: 'smartphone', pinned: false }
         ];
 
         // --- Wizard Curation Data Engine ---
@@ -887,7 +906,7 @@
         
         let activeFeedId = null;
         let feedCache = {}; 
-        let appSettings = { refreshInterval: 15, cycleSpeed: 10, theme: 'auto', density: 'comfortable', tvLayout: 'split', tvQrCode: 'show' }; 
+        let appSettings = { refreshInterval: 15, cycleSpeed: 10, theme: 'auto', density: 'comfortable', tvLayout: 'split', tvQrCode: 'show', tvTicker: 'show' }; 
         
         let currentRawArticles = []; 
         let displayedArticles = []; 
@@ -896,6 +915,10 @@
         
         let pendingNewStoriesCount = 0;
         let isReaderMode = false;
+        
+        // Extractor state
+        let isExtractedView = false;
+        const extractedTextCache = {};
         
         let searchQuery = '';
         let currentSort = 'newest';
@@ -977,6 +1000,49 @@
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && !document.getElementById('displayModeOverlay').classList.contains('hidden')) {
                     stopDisplayMode();
+                }
+            });
+            
+            setupSwipeGestures();
+        }
+
+        // --- Swipe Gestures Logic ---
+        function setupSwipeGestures() {
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchStartTime = 0;
+            const scrollArea = document.getElementById('articleScrollArea');
+
+            scrollArea.addEventListener('touchstart', e => {
+                if (e.touches.length > 1) return; // Ignore multi-touch (pinch/zoom)
+                touchStartX = e.touches[0].screenX;
+                touchStartY = e.touches[0].screenY;
+                touchStartTime = Date.now();
+            }, {passive: true});
+
+            scrollArea.addEventListener('touchend', e => {
+                if (e.changedTouches.length === 0) return;
+                const touchEndX = e.changedTouches[0].screenX;
+                const touchEndY = e.changedTouches[0].screenY;
+                const dx = touchEndX - touchStartX;
+                const dy = touchEndY - touchStartY;
+                const dt = Date.now() - touchStartTime;
+
+                if (dt > 800) return; // Ignore slow swipes
+
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+
+                // Horizontal Swipe priority
+                if (absDx > absDy && absDx > 60) {
+                    if (dx < 0) navigateArticle(1); // Swipe left -> Next
+                    else navigateArticle(-1); // Swipe right -> Prev
+                }
+                // Vertical Swipe priority (Pull down to close)
+                else if (absDy > absDx && dy > 80) {
+                    if (scrollArea.scrollTop <= 10) { // Top tolerance
+                        closeArticleModal();
+                    }
                 }
             });
         }
@@ -1113,10 +1179,10 @@
             
             // Location Folder
             let localFolderId = `folder_${fIdCounter++}`;
-            wizardState.proposed.folders.push({ id: localFolderId, name: 'Top Headlines', expanded: true });
+            wizardState.proposed.folders.push({ id: localFolderId, name: 'Top Headlines', expanded: true, pinned: true });
             if(WIZARD_FEEDS[wizardState.location]) {
                 WIZARD_FEEDS[wizardState.location].forEach(f => {
-                    wizardState.proposed.feeds.push({ ...f, id: `wf_${feedIdCounter++}`, folderId: localFolderId, selected: true });
+                    wizardState.proposed.feeds.push({ ...f, id: `wf_${feedIdCounter++}`, folderId: localFolderId, selected: true, pinned: false });
                 });
             }
 
@@ -1125,9 +1191,9 @@
                 const def = INTEREST_DEFS.find(d => d.id === interest);
                 if(def && WIZARD_FEEDS[interest]) {
                     let fId = `folder_${fIdCounter++}`;
-                    wizardState.proposed.folders.push({ id: fId, name: def.label, expanded: true });
+                    wizardState.proposed.folders.push({ id: fId, name: def.label, expanded: true, pinned: false });
                     WIZARD_FEEDS[interest].forEach(f => {
-                        wizardState.proposed.feeds.push({ ...f, id: `wf_${feedIdCounter++}`, folderId: fId, selected: true });
+                        wizardState.proposed.feeds.push({ ...f, id: `wf_${feedIdCounter++}`, folderId: fId, selected: true, pinned: false });
                     });
                 }
             });
@@ -1258,11 +1324,11 @@
         function updateThemeIcon() {
             const isDark = document.documentElement.classList.contains('dark');
             const isSepia = document.documentElement.classList.contains('theme-sepia');
-            const iconEl = document.getElementById('themeIcon');
-            if(iconEl) {
-                if (isSepia) iconEl.setAttribute('data-lucide', 'coffee');
-                else iconEl.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-                lucide.createIcons({ root: iconEl.parentNode });
+            const btn = document.querySelector('button[title="Toggle Theme"]');
+            if(btn) {
+                const iconName = isSepia ? 'coffee' : (isDark ? 'sun' : 'moon');
+                btn.innerHTML = `<i data-lucide="${iconName}" id="themeIcon" class="w-5 h-5"></i>`;
+                lucide.createIcons({ root: btn });
             }
         }
 
@@ -1292,6 +1358,18 @@
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
+        function togglePinFeed(e, id) {
+            e.stopPropagation();
+            const feed = feeds.find(f => f.id === id);
+            if(feed) { feed.pinned = !feed.pinned; saveFeeds(); renderFeedList(); }
+        }
+        
+        function togglePinFolder(e, id) {
+            e.stopPropagation();
+            const folder = folders.find(f => f.id === id);
+            if(folder) { folder.pinned = !folder.pinned; saveFolders(); renderFeedList(); }
+        }
+
         // --- Folders & Sidebar ---
         function renderFeedList() {
             feedListEl.innerHTML = '';
@@ -1302,11 +1380,23 @@
                 else grouped.unassigned.push(f);
             });
 
+            // Sorting logic for pins
+            grouped.unassigned.sort((a,b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+            const sortedFolders = [...folders].sort((a,b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+            Object.values(grouped).forEach(g => {
+                if (g.feeds) g.feeds.sort((a,b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+            });
+
             const createFeedItem = (feed) => {
                 const isActive = feed.id === activeFeedId;
                 const unreadCount = feedUnreadBadge[feed.id] || 0;
                 const li = document.createElement('li');
-                li.className = `group flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 ${isActive ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200 font-medium'}`;
+                li.className = `group flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 ${isActive ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-400 font-semibold border border-brand-100 dark:border-brand-800/50 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200 font-medium border border-transparent'}`;
+                
+                // Add left border to pinned feeds visually if they don't have active background
+                if (feed.pinned && !isActive) li.classList.add('border-l-brand-400', 'dark:border-l-brand-600', 'border-l-2');
+                else if (feed.pinned && isActive) li.classList.add('border-l-brand-500', 'border-l-2');
+
                 li.draggable = true;
                 li.ondragstart = (e) => handleDragStart(e, feed.id, 'feed');
                 li.ondragover = (e) => handleDragOver(e, li, 'feed');
@@ -1317,60 +1407,92 @@
                     <div class="flex items-center gap-2.5 overflow-hidden flex-1" onclick="selectFeed('${feed.id}')">
                         <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 cursor-grab hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
                         <i data-lucide="${feed.icon || 'rss'}" class="w-4 h-4 flex-shrink-0 ${isActive ? 'text-brand-500' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'}"></i>
-                        <span class="truncate text-[13px] select-none">${feed.name}</span>
+                        <span class="truncate text-[13px] select-none pr-1 ${isActive ? 'text-brand-700 dark:text-brand-400 font-bold' : ''}">${feed.name}</span>
+                        ${feed.pinned ? `<i data-lucide="pin" class="w-2.5 h-2.5 text-brand-500 fill-brand-500 flex-shrink-0 ml-[-0.25rem]"></i>` : ''}
                         ${unreadCount > 0 ? `<span class="ml-auto bg-brand-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">${unreadCount}</span>` : ''}
                     </div>
                 `;
 
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = "opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 ml-1";
+
+                const pinBtn = document.createElement('button');
+                pinBtn.className = `p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${feed.pinned ? 'text-brand-500' : 'text-slate-300 dark:text-slate-600 hover:text-slate-500'}`;
+                pinBtn.title = feed.pinned ? "Unpin Source" : "Pin Source";
+                pinBtn.onclick = (e) => togglePinFeed(e, feed.id);
+                pinBtn.innerHTML = `<i data-lucide="pin" class="w-3.5 h-3.5 pointer-events-none ${feed.pinned ? 'fill-brand-500' : ''}"></i>`;
+                actionsDiv.appendChild(pinBtn);
+
                 const btn = document.createElement('button');
-                btn.className = "text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 ml-1";
+                btn.className = "text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30";
                 btn.title = "Remove Source";
                 btn.onclick = (e) => removeFeed(e, feed.id);
                 btn.innerHTML = `<i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>`;
+                actionsDiv.appendChild(btn);
 
-                li.appendChild(btn);
+                li.appendChild(actionsDiv);
                 return li;
             };
 
             grouped.unassigned.forEach(feed => feedListEl.appendChild(createFeedItem(feed)));
 
-            folders.forEach(folder => {
+            sortedFolders.forEach(folder => {
                 const g = grouped[folder.id];
                 const folderWrapper = document.createElement('div');
                 folderWrapper.className = "mt-2";
                 
-                // Allow selecting the folder itself vs. expanding/collapsing
                 const isFolderActive = activeFeedId === folder.id;
                 const fHead = document.createElement('div');
                 fHead.className = `flex items-center justify-between px-2 py-1.5 cursor-pointer transition-colors group rounded-xl ${isFolderActive ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-400 font-semibold shadow-sm border border-brand-100 dark:border-brand-800/50' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200 border border-transparent'}`;
+                if (folder.pinned && !isFolderActive) fHead.classList.add('border-l-brand-400', 'dark:border-l-brand-600', 'border-l-2');
+                else if (folder.pinned && isFolderActive) fHead.classList.add('border-l-brand-500', 'border-l-2');
+
                 fHead.ondragover = (e) => handleDragOver(e, fHead, 'folder');
                 fHead.ondragleave = (e) => handleDragLeave(e, fHead, 'folder');
                 fHead.ondrop = (e) => { handleDrop(e, folder.id, 'folder', fHead); e.stopPropagation(); };
-                fHead.onclick = () => selectFolder(folder.id); // Clicking the header area selects the folder aggregate view
+                fHead.onclick = () => selectFolder(folder.id);
 
                 const fLeft = document.createElement('div');
                 fLeft.className = "flex items-center gap-1 flex-1 select-none overflow-hidden";
 
                 const chevronBtn = document.createElement('button');
                 chevronBtn.className = "p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-400 dark:text-slate-500 flex-shrink-0";
-                chevronBtn.onclick = (e) => { e.stopPropagation(); toggleFolder(folder.id); }; // Explicitly target chevron for collapse/expand
+                chevronBtn.onclick = (e) => { e.stopPropagation(); toggleFolder(folder.id); };
                 chevronBtn.innerHTML = `<i data-lucide="chevron-${folder.expanded ? 'down' : 'right'}" class="w-3.5 h-3.5 transition-transform duration-200"></i>`;
                 fLeft.appendChild(chevronBtn);
 
                 const fTitleText = document.createElement('span');
-                fTitleText.className = `text-[11px] font-bold uppercase tracking-wider truncate pr-2 ${isFolderActive ? 'text-brand-700 dark:text-brand-400' : ''}`;
+                fTitleText.className = `text-[11px] font-bold uppercase tracking-wider truncate pr-1 ${isFolderActive ? 'text-brand-700 dark:text-brand-400' : ''}`;
                 fTitleText.textContent = folder.name;
                 fLeft.appendChild(fTitleText);
 
+                if (folder.pinned) {
+                    const fpIcon = document.createElement('i');
+                    fpIcon.setAttribute('data-lucide', 'pin');
+                    fpIcon.className = "w-2.5 h-2.5 text-brand-500 fill-brand-500 flex-shrink-0";
+                    fLeft.appendChild(fpIcon);
+                }
+
                 fHead.appendChild(fLeft);
 
+                const fActions = document.createElement('div');
+                fActions.className = "opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 ml-auto flex-shrink-0";
+
+                const fPinBtn = document.createElement('button');
+                fPinBtn.className = `p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors ${folder.pinned ? 'text-brand-500' : 'text-slate-400 hover:text-brand-500'}`;
+                fPinBtn.title = folder.pinned ? "Unpin Folder" : "Pin Folder";
+                fPinBtn.onclick = (e) => { e.stopPropagation(); togglePinFolder(e, folder.id); };
+                fPinBtn.innerHTML = `<i data-lucide="pin" class="w-3.5 h-3.5 pointer-events-none ${folder.pinned ? 'fill-brand-500' : ''}"></i>`;
+                fActions.appendChild(fPinBtn);
+
                 const fDelBtn = document.createElement('button');
-                fDelBtn.className = "opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 transition-opacity p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 flex-shrink-0";
+                fDelBtn.className = "hover:text-red-500 dark:hover:text-red-400 transition-opacity p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30";
                 fDelBtn.title = "Delete Folder";
                 fDelBtn.onclick = (e) => { e.stopPropagation(); removeFolder(e, folder.id); };
                 fDelBtn.innerHTML = `<i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>`;
-                fHead.appendChild(fDelBtn);
+                fActions.appendChild(fDelBtn);
 
+                fHead.appendChild(fActions);
                 folderWrapper.appendChild(fHead);
 
                 if (folder.expanded) {
@@ -1579,8 +1701,8 @@
             try {
                 let rawText = null;
                 const proxies = [
-                    `https://corsproxy.io/?${encodeURIComponent(feed.url)}`,
                     `https://api.allorigins.win/raw?url=${encodeURIComponent(feed.url)}`,
+                    `https://corsproxy.io/?${encodeURIComponent(feed.url)}`,
                     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feed.url)}`
                 ];
 
@@ -1707,6 +1829,207 @@
 
             return { title, link, description: descriptionText, fullContent: sanitizedFullContent, date: formattedDate, rawDate: pubDateStr, imageUrl, feedId: feedContext.id, feedName: feedContext.name };
         }
+
+        // --- Extractor Logic ---
+        function extractArticleContent(html, url) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            
+            // 1. Aggressive Boilerplate Removal (Safe versions)
+            const junkSelectors = [
+                'script', 'style', 'noscript', 'nav', 'header', 'footer', 'aside', 'form', 'iframe', 'svg', 'canvas',
+                '.ads', '.comments', '#comments', '[role="banner"]', '[role="contentinfo"]', '[role="navigation"]',
+                '.sidebar', '.menu', '.social-share', '.share-buttons', '.newsletter-signup', '.cookie-banner',
+                '.cookie-consent', '#cookie-consent', '#fc-overlay-modal', '.tp-modal', '.consent-overlay', 
+                '.fc-consent-root', '[aria-hidden="true"]', '.popup', '.modal', '.overlay',
+                '.ad-slot', '.advertisement', '.promo', '.related-links', '.social-links',
+                '.sr-only', '.visually-hidden', '.screen-reader-text', '.off-screen',
+                '.trust-project', '.author-bio', '.article-share', '.share-icons'
+            ];
+
+            junkSelectors.forEach(sel => {
+                try { doc.querySelectorAll(sel).forEach(el => el.remove()); } catch (e) { }
+            });
+
+            // 2. Locate Main Content
+            let contentNode = null;
+            const semanticSelectors = ['article', 'main', '[role="main"]', '.article-body', '.story-body', '.post-content', '.entry-content', '#main-content'];
+            for (let sel of semanticSelectors) {
+                const node = doc.querySelector(sel);
+                if (node && node.textContent.trim().length > 200) {
+                    contentNode = node;
+                    break;
+                }
+            }
+
+            // 3. Fallback: Heuristic scoring based on paragraph density
+            if (!contentNode) {
+                const paragraphs = doc.querySelectorAll('p');
+                let maxScore = 0;
+                let bestParent = null;
+                const parentScores = new Map();
+
+                paragraphs.forEach(p => {
+                    const text = p.textContent.trim();
+                    if (text.length < 30) return;
+                    
+                    let parent = p.parentElement;
+                    const score = (parentScores.get(parent) || 0) + text.length;
+                    parentScores.set(parent, score);
+                    
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestParent = parent;
+                    }
+                });
+                contentNode = bestParent || doc.body;
+            }
+
+            // 4. Final Polish on the selected node
+            if (contentNode) {
+                if (url) {
+                    try {
+                        const base = new URL(url);
+                        contentNode.querySelectorAll('img').forEach(img => {
+                            let src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-srcset') || img.getAttribute('srcset');
+                            if (src) {
+                                let firstUrl = src.split(',')[0].trim().split(' ')[0];
+                                if (firstUrl.startsWith('/')) firstUrl = new URL(firstUrl, base.origin).href;
+                                img.setAttribute('src', firstUrl);
+                                img.removeAttribute('data-src');
+                                img.removeAttribute('srcset');
+                            }
+                        });
+                        contentNode.querySelectorAll('a').forEach(a => {
+                            let href = a.getAttribute('href');
+                            if (href && href.startsWith('/')) a.setAttribute('href', new URL(href, base.origin).href);
+                        });
+                    } catch(e) {}
+                }
+
+                for (let i = 0; i < 3; i++) {
+                    contentNode.querySelectorAll('p, li, div, span, blockquote, figure, ul, ol, a').forEach(el => {
+                        if (!el.parentNode) return; 
+                        
+                        const textClean = el.textContent.replace(/\s+/g, ''); 
+                        const hasMedia = el.querySelector('img, video, audio, iframe, picture');
+                        
+                        // Limit text matching to small blocks to avoid deleting the entire parent article wrapper
+                        if (el.textContent.length < 200) {
+                            const textLower = el.textContent.toLowerCase();
+                            if (textLower.includes('consented to x cookies') || 
+                                textLower.includes('privacy options') || 
+                                textLower.includes('allow cookies once') ||
+                                textLower.includes('why you can trust sky news') ||
+                                textLower.startsWith('image: ') || 
+                                textLower.includes('plc: reuters')) {
+                                el.remove();
+                                return;
+                            }
+                        }
+
+                        if (!hasMedia) {
+                            if (textClean.length === 0) {
+                                el.remove();
+                            } else if (textClean.length <= 2 && (el.tagName === 'LI' || el.tagName === 'SPAN' || el.tagName === 'DIV' || el.tagName === 'A')) {
+                                el.remove(); 
+                            } else if (el.tagName === 'FIGURE') {
+                                el.remove(); 
+                            } else if ((el.tagName === 'UL' || el.tagName === 'OL') && el.querySelectorAll('li').length === 0) {
+                                el.remove(); 
+                            }
+                        }
+                    });
+                }
+                
+                contentNode.innerHTML = contentNode.innerHTML.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
+            }
+
+            return sanitizeHTML(contentNode ? contentNode.innerHTML : '');
+        }
+
+        async function toggleExtractedFullText() {
+            const article = displayedArticles[openedArticleIndex];
+            if (!article) return;
+            
+            const descEl = document.getElementById('articleModalDescription');
+            const extractBtn = document.getElementById('articleModalExtractBtn');
+
+            if (isExtractedView) {
+                isExtractedView = false;
+                extractBtn.innerHTML = '<i data-lucide="file-search" id="extractIcon" class="w-5 h-5"></i>';
+                lucide.createIcons({ root: extractBtn });
+                descEl.innerHTML = article.fullContent || article.description;
+                return;
+            }
+
+            if (extractedTextCache[article.link]) {
+                isExtractedView = true;
+                extractBtn.innerHTML = '<i data-lucide="file-search" id="extractIcon" class="w-5 h-5 text-brand-500 fill-brand-50"></i>';
+                lucide.createIcons({ root: extractBtn });
+                descEl.innerHTML = extractedTextCache[article.link];
+                return;
+            }
+
+            // Fetch state
+            extractBtn.innerHTML = '<i data-lucide="loader-2" id="extractIcon" class="w-5 h-5 animate-spin"></i>';
+            lucide.createIcons({ root: extractBtn });
+
+            try {
+                let rawHtml = null;
+                // Use a series of fallback proxies to bypass CORS restrictions
+                const proxies = [
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(article.link)}`,
+                    `https://corsproxy.io/?${encodeURIComponent(article.link)}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(article.link)}`
+                ];
+
+                for (let proxy of proxies) {
+                    try {
+                        const response = await fetch(proxy);
+                        if (response.ok) {
+                            rawHtml = await response.text();
+                            // Simple check to ensure we got HTML content
+                            if (rawHtml && (rawHtml.includes('<html') || rawHtml.includes('<body') || rawHtml.includes('<div'))) {
+                                break; // Success
+                            }
+                        }
+                    } catch (e) {
+                        console.warn(`Extraction proxy failed: ${proxy}`, e);
+                    }
+                }
+
+                if (rawHtml) {
+                    let extracted = extractArticleContent(rawHtml, article.link);
+                    
+                    // Fallback if the extraction logic wiped everything out
+                    if (!extracted || extracted.replace(/<[^>]*>?/gm, '').trim().length < 50) {
+                        extracted = `<div class="mb-5 p-4 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 rounded-xl text-sm font-medium border border-brand-100 dark:border-brand-800/50">Could not cleanly extract the full article from this source. Showing standard preview instead.</div>` + (article.fullContent || article.description);
+                    }
+
+                    extractedTextCache[article.link] = extracted;
+                    
+                    if(openedArticleIndex !== null && displayedArticles[openedArticleIndex].link === article.link) {
+                        isExtractedView = true;
+                        extractBtn.innerHTML = '<i data-lucide="file-search" id="extractIcon" class="w-5 h-5 text-brand-500 fill-brand-50"></i>';
+                        lucide.createIcons({ root: extractBtn });
+                        descEl.innerHTML = extracted;
+                    }
+                } else {
+                    throw new Error("Failed to fetch article content from all proxies.");
+                }
+            } catch(e) {
+                console.error("Extraction failed", e);
+                extractBtn.innerHTML = '<i data-lucide="file-warning" id="extractIcon" class="w-5 h-5 text-red-500"></i>';
+                lucide.createIcons({ root: extractBtn });
+                setTimeout(() => {
+                    if (openedArticleIndex !== null && displayedArticles[openedArticleIndex].link === article.link && !isExtractedView) {
+                        extractBtn.innerHTML = '<i data-lucide="file-search" id="extractIcon" class="w-5 h-5"></i>';
+                        lucide.createIcons({ root: extractBtn });
+                    }
+                }, 2000);
+            }
+        }
+
 
         // --- Notifications ---
         function showNotificationBanner() {
@@ -1846,7 +2169,7 @@
         // --- Settings & UI Management ---
         function openAddFolderModal() { addFolderModal.classList.remove('hidden'); setTimeout(() => { addFolderModal.classList.remove('opacity-0'); document.getElementById('addFolderModalContent').classList.remove('scale-95'); }, 10); document.getElementById('folderNameInput').focus(); if(window.innerWidth < 768) toggleMobileMenu(false); }
         function closeAddFolderModal() { addFolderModal.classList.add('opacity-0'); document.getElementById('addFolderModalContent').classList.add('scale-95'); setTimeout(() => { addFolderModal.classList.add('hidden'); document.getElementById('addFolderForm').reset(); }, 300); }
-        function handleAddFolder(e) { e.preventDefault(); const name = document.getElementById('folderNameInput').value.trim(); if(name) { folders.push({ id: 'folder_' + Date.now(), name: name, expanded: true }); saveFolders(); renderFeedList(); closeAddFolderModal(); } }
+        function handleAddFolder(e) { e.preventDefault(); const name = document.getElementById('folderNameInput').value.trim(); if(name) { folders.push({ id: 'folder_' + Date.now(), name: name, expanded: true, pinned: false }); saveFolders(); renderFeedList(); closeAddFolderModal(); } }
         function removeFolder(e, id) { e.stopPropagation(); openConfirmModal('Delete Folder', 'Delete this folder? Sources inside will become unassigned.', 'Delete', () => { folders = folders.filter(f => f.id !== id); feeds.forEach(f => { if(f.folderId === id) delete f.folderId; }); saveFolders(); saveFeeds(); renderFeedList(); }); }
         
         function openAddFeedModal() {
@@ -1857,7 +2180,7 @@
         function handleAddFeed(e) {
             e.preventDefault(); const nameInput = document.getElementById('feedNameInput').value.trim(); let urlInput = document.getElementById('feedUrlInput').value.trim(); const folderId = document.getElementById('feedFolderInput').value;
             if (!nameInput || !urlInput) return; if (!/^https?:\/\//i.test(urlInput)) urlInput = 'https://' + urlInput;
-            const newFeed = { id: Date.now().toString(), name: nameInput, url: urlInput, icon: 'rss' }; if(folderId) newFeed.folderId = folderId;
+            const newFeed = { id: Date.now().toString(), name: nameInput, url: urlInput, icon: 'rss', pinned: false }; if(folderId) newFeed.folderId = folderId;
             feeds.push(newFeed); saveFeeds(); renderFeedList(); closeAddFeedModal(); selectFeed(newFeed.id);
         }
         function removeFeed(e, id) { e.stopPropagation(); openConfirmModal('Remove Source', 'Are you sure you want to remove this source?', 'Remove', () => { feeds = feeds.filter(f => f.id !== id); delete feedUnreadBadge[id]; saveFeeds(); saveBadges(); renderFeedList(); if (activeFeedId === id) { if(feeds.length > 0) selectAllFeeds(); else { activeFeedId = null; currentFeedTitleEl.textContent = 'Welcome to Currently'; currentFeedMetaEl.textContent = ''; document.getElementById('emptyStateTitle').textContent = 'No Sources Selected'; document.getElementById('emptyStateMsg').textContent = 'Choose a feed from the sidebar or add your own to start reading.'; showState('empty'); } } }); }
@@ -1871,6 +2194,7 @@
             document.getElementById('densityInput').value = appSettings.density || 'comfortable';
             document.getElementById('tvLayoutInput').value = appSettings.tvLayout || 'split';
             document.getElementById('tvQrCodeInput').value = appSettings.tvQrCode || 'show';
+            document.getElementById('tvTickerInput').value = appSettings.tvTicker || 'show';
             settingsModal.classList.remove('hidden'); setTimeout(() => { settingsModal.classList.remove('opacity-0'); document.getElementById('settingsModalContent').classList.remove('scale-95'); }, 10); if(window.innerWidth < 768) toggleMobileMenu(false);
         }
         function closeSettingsModal() { settingsModal.classList.add('opacity-0'); document.getElementById('settingsModalContent').classList.add('scale-95'); setTimeout(() => { settingsModal.classList.add('hidden'); }, 300); }
@@ -1885,6 +2209,7 @@
             appSettings.density = document.getElementById('densityInput').value;
             appSettings.tvLayout = document.getElementById('tvLayoutInput').value;
             appSettings.tvQrCode = document.getElementById('tvQrCodeInput').value;
+            appSettings.tvTicker = document.getElementById('tvTickerInput').value;
             
             localStorage.setItem('currently_settings', JSON.stringify(appSettings));
             applyTheme(); updateView();
@@ -1930,9 +2255,26 @@
         function navigateArticle(direction) {
             if (openedArticleIndex === null) return;
             const newIndex = openedArticleIndex + direction;
+            
             if (newIndex >= 0 && newIndex < displayedArticles.length) {
-                populateArticleModal(newIndex);
-                document.getElementById('articleScrollArea').scrollTop = 0;
+                const innerContainer = document.getElementById('articleInnerContainer');
+                
+                // Animation Out
+                innerContainer.style.transition = 'none';
+                innerContainer.style.opacity = '0';
+                innerContainer.style.transform = direction > 0 ? 'translateX(30px)' : 'translateX(-30px)';
+
+                setTimeout(() => {
+                    populateArticleModal(newIndex);
+                    document.getElementById('articleScrollArea').scrollTop = 0;
+
+                    // Animation In
+                    requestAnimationFrame(() => {
+                        innerContainer.style.transition = 'opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+                        innerContainer.style.opacity = '1';
+                        innerContainer.style.transform = 'translateX(0)';
+                    });
+                }, 50);
             }
         }
 
@@ -1942,6 +2284,14 @@
             if (!article) return;
             
             markAsRead(article.link);
+            
+            // Reset Extractor View logic
+            isExtractedView = false;
+            const extractBtn = document.getElementById('articleModalExtractBtn');
+            if(extractBtn) {
+                extractBtn.innerHTML = '<i data-lucide="file-search" id="extractIcon" class="w-5 h-5"></i>';
+            }
+
             document.getElementById('articleModalDate').textContent = article.date; 
             document.getElementById('articleModalTitle').textContent = article.title;
             
@@ -1965,6 +2315,11 @@
         }
 
         function openArticleModal(index) {
+            const innerContainer = document.getElementById('articleInnerContainer');
+            innerContainer.style.transition = 'none';
+            innerContainer.style.opacity = '1';
+            innerContainer.style.transform = 'translateX(0)';
+
             populateArticleModal(index);
             articleModal.classList.remove('hidden'); 
             setTimeout(() => { articleModal.classList.remove('opacity-0'); document.getElementById('articleModalContent').classList.remove('scale-95'); }, 10); 
@@ -1994,11 +2349,9 @@
         function handleTvSwipe() {
             const threshold = 50;
             if (tvTouchStartX - tvTouchEndX > threshold) {
-                // Swiped left -> Next Slide
                 displayModeIndex++;
                 renderDisplaySlide();
             } else if (tvTouchEndX - tvTouchStartX > threshold) {
-                // Swiped right -> Prev Slide
                 displayModeIndex--;
                 if (displayModeIndex < 0) displayModeIndex = Math.max(0, displayedArticles.length - 1);
                 renderDisplaySlide();
@@ -2014,6 +2367,19 @@
             
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen().catch(e => console.warn("Fullscreen request denied", e));
+            }
+
+            // Ticker setup
+            const tvTickerWrapper = document.getElementById('tvTickerWrapper');
+            if (appSettings.tvTicker !== 'hide') {
+                const titles = displayedArticles.slice(0, 20).map(a => a.title);
+                const separator = '<span class="mx-8 text-brand-500">•</span>';
+                const tickerHtml = titles.join(separator) + separator;
+                // Double up for a seamless linear transform loop
+                document.getElementById('tvTickerTrack').innerHTML = tickerHtml + tickerHtml;
+                tvTickerWrapper.classList.remove('hidden');
+            } else {
+                tvTickerWrapper.classList.add('hidden');
             }
 
             displayModeIndex = 0;
@@ -2098,6 +2464,15 @@
             // TV QR Code Rendering
             const qrContainer = document.getElementById('displayModeQr');
             const qrImg = document.getElementById('displayModeQrImg');
+            
+            // Re-adjust QR position if ticker is active
+            if (appSettings.tvTicker !== 'hide') {
+                qrContainer.classList.remove('bottom-10');
+                qrContainer.classList.add('bottom-[4.5rem]');
+            } else {
+                qrContainer.classList.remove('bottom-[4.5rem]');
+                qrContainer.classList.add('bottom-10');
+            }
             
             if (appSettings.tvQrCode !== 'hide' && article.link) {
                 // Generate QR Code pointing to the article
