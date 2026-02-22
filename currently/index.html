@@ -35,6 +35,7 @@
 <!-- Optional -->
 <meta name="theme-color" content="#3b82f6" />
 
+
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,6 +82,7 @@
         /* Line clamping */
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-4 { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
         .line-clamp-6 { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
 
         /* Smooth animations */
@@ -110,6 +112,58 @@
         /* Glass effect */
         .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
         .dark .glass { background: rgba(30, 41, 59, 0.85); border-color: rgba(255,255,255,0.05); }
+
+        /* Custom Theme Overrides */
+        /* OLED Theme - True Black Restyled */
+        html.theme-oled body { background-color: #000000 !important; color: #e5e5e5 !important; }
+        html.theme-oled .bg-slate-950, html.theme-oled .dark\:bg-slate-950,
+        html.theme-oled .bg-slate-900, html.theme-oled .dark\:bg-slate-900,
+        html.theme-oled .dark\:bg-slate-900\/50, html.theme-oled .dark\:bg-slate-900\/40, 
+        html.theme-oled .dark\:bg-slate-900\/80, html.theme-oled .dark\:bg-slate-800\/40 { 
+            background-color: #000000 !important; 
+        }
+        
+        /* Subtle interactive surfaces */
+        html.theme-oled .bg-slate-800, html.theme-oled .dark\:bg-slate-800 { background-color: #0a0a0a !important; }
+        html.theme-oled .dark\:hover\:bg-slate-800:hover { background-color: #141414 !important; }
+        
+        /* Ultra-subtle borders to separate pure black elements */
+        html.theme-oled .border-slate-800, html.theme-oled .dark\:border-slate-800,
+        html.theme-oled .dark\:border-slate-800\/50, html.theme-oled .dark\:border-slate-800\/60 { 
+            border-color: #1a1a1a !important; 
+        }
+        html.theme-oled .border-slate-700, html.theme-oled .dark\:border-slate-700 { border-color: #262626 !important; }
+        
+        /* Modals and floating elements */
+        html.theme-oled #articleModalContent, html.theme-oled #settingsModalContent,
+        html.theme-oled #addFeedModalContent, html.theme-oled #addFolderModalContent,
+        html.theme-oled #confirmModalContent {
+            background-color: #000000 !important;
+            border-color: #262626 !important;
+            box-shadow: 0 25px 50px -12px rgba(255, 255, 255, 0.05);
+        }
+
+        /* Top Nav Glass */
+        html.theme-oled .glass, html.theme-oled header.glass {
+            background: rgba(0, 0, 0, 0.85) !important;
+            border-bottom-color: #1a1a1a !important;
+        }
+
+        /* Adjust brand highlights to be dimmer on black */
+        html.theme-oled .dark\:bg-brand-900\/20, html.theme-oled .dark\:bg-brand-900\/30,
+        html.theme-oled .dark\:bg-brand-900\/40, html.theme-oled .dark\:bg-brand-900\/50 {
+            background-color: rgba(99, 102, 241, 0.08) !important;
+        }
+        
+        /* Sepia Theme */
+        html.theme-sepia body { background-color: #f4ecd8 !important; color: #433422 !important; }
+        html.theme-sepia .bg-white, html.theme-sepia .bg-slate-50, html.theme-sepia .dark\:bg-slate-900 { background-color: #fff8e7 !important; }
+        html.theme-sepia .bg-slate-100, html.theme-sepia .dark\:bg-slate-800 { background-color: #eaddc5 !important; }
+        html.theme-sepia .border-slate-200, html.theme-sepia .border-slate-100, html.theme-sepia .dark\:border-slate-800 { border-color: #d6c6a9 !important; }
+        html.theme-sepia .border-slate-200\/50, html.theme-sepia .border-slate-100\/50 { border-color: rgba(214, 198, 169, 0.5) !important; }
+        html.theme-sepia .text-slate-800, html.theme-sepia .text-slate-900, html.theme-sepia .dark\:text-white { color: #2c2216 !important; }
+        html.theme-sepia .text-slate-600, html.theme-sepia .text-slate-500, html.theme-sepia .dark\:text-slate-400 { color: #5c4b37 !important; }
+        html.theme-sepia .text-slate-400 { color: #8a735a !important; }
 
         /* Reader Mode specific transitions */
         .reader-mode-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -141,11 +195,11 @@
     </style>
     <!-- Prevent dark mode flash -->
     <script>
-        if (localStorage.getItem('currently_theme') === 'dark' || (!('currently_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        const initTheme = localStorage.getItem('currently_theme') || 'auto';
+        const isDark = initTheme === 'dark' || initTheme === 'oled' || (initTheme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) document.documentElement.classList.add('dark');
+        if (initTheme === 'oled') document.documentElement.classList.add('theme-oled');
+        if (initTheme === 'sepia') document.documentElement.classList.add('theme-sepia');
     </script>
 </head>
 <body class="bg-[#f8fafc] dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 h-screen flex overflow-hidden transition-colors duration-300 antialiased relative">
@@ -164,14 +218,8 @@
     <!-- Sidebar -->
     <aside id="sidebar" class="bg-white dark:bg-slate-900 w-72 h-full border-r border-slate-200/60 dark:border-slate-800 flex flex-col fixed md:relative z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none">
         
-        <!-- Back to Projects (Top Bar) -->
-        <a href="/projects/" class="flex items-center gap-2 px-6 py-3 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-            Back to Projects
-        </a>
-
         <!-- Header / Branding -->
-        <div class="p-6 pb-4">
+        <div class="p-6 pb-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
             <div class="flex items-center gap-3">
                 <div class="bg-gradient-to-br from-brand-500 to-purple-600 text-white p-2.5 rounded-2xl shadow-lg shadow-brand-500/20">
                     <i data-lucide="zap" class="w-5 h-5"></i>
@@ -184,7 +232,7 @@
         </div>
 
         <!-- Static Views Section -->
-        <div class="px-4 pb-4 border-b border-slate-100 dark:border-slate-800 space-y-1">
+        <div class="px-4 py-4 border-b border-slate-100 dark:border-slate-800 space-y-1">
             <button onclick="selectAllFeeds()" id="allFeedsBtn" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium group">
                 <i data-lucide="layers" class="w-4 h-4 text-brand-500 group-hover:scale-110 transition-transform"></i>
                 <span class="text-sm">All Feeds Digest</span>
@@ -249,11 +297,6 @@
                 <!-- TV Mode -->
                 <button onclick="startDisplayMode()" class="p-2.5 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-brand-50 dark:hover:bg-brand-900/30 shrink-0 shadow-sm" title="Presentation TV Mode">
                     <i data-lucide="tv" class="w-5 h-5"></i>
-                </button>
-
-                <!-- Dark Mode Toggle -->
-                <button onclick="toggleDarkMode()" class="p-2.5 text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-brand-400 transition-colors rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-brand-50 dark:hover:bg-brand-900/30 shrink-0 shadow-sm" title="Toggle Theme">
-                    <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
                 </button>
 
                 <!-- Refresh -->
@@ -400,14 +443,55 @@
             </div>
             
             <form id="settingsForm" onsubmit="handleSaveSettings(event)">
-                <div class="space-y-6">
+                <div class="space-y-5 max-h-[60vh] overflow-y-auto px-1 pr-3 -mr-2 pb-2">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Color Theme</label>
+                        <select id="themeInput" class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium">
+                            <option value="auto">System Auto</option>
+                            <option value="light">Light Mode</option>
+                            <option value="dark">Dark Mode (Slate)</option>
+                            <option value="oled">OLED Dark (True Black)</option>
+                            <option value="sepia">Sepia (Warm Reading)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Display Density</label>
+                        <select id="densityInput" class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium">
+                            <option value="comfortable">Comfortable Grid</option>
+                            <option value="compact">Compact Grid</option>
+                            <option value="list">List View</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Background Refresh (minutes)</label>
                         <input type="number" id="refreshIntervalInput" min="1" max="1440" required class="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all shadow-inner font-medium">
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-2.5 leading-relaxed">Feeds load instantly from memory and update silently in the background if they exceed this age.</p>
                     </div>
+                    <div class="pt-5 border-t border-slate-100 dark:border-slate-800/50">
+                        <h4 class="text-sm font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><i data-lucide="tv" class="w-4 h-4 text-brand-500"></i> TV Presentation Mode</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Visual Layout</label>
+                                <select id="tvLayoutInput" class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm font-medium">
+                                    <option value="split">Split Screen (Image Left, Text Right)</option>
+                                    <option value="immersive">Immersive (Fullscreen Image + Text Overlay)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">QR Code Sharing</label>
+                                <select id="tvQrCodeInput" class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm font-medium">
+                                    <option value="show">Show "Scan to Read" QR Code</option>
+                                    <option value="hide">Hide QR Code</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Slide Duration (seconds)</label>
+                                <input type="number" id="cycleSpeedInput" min="3" max="60" required class="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm font-medium">
+                            </div>
+                        </div>
+                    </div>
                     
-                    <div class="pt-6 border-t border-slate-100 dark:border-slate-800/50 space-y-4">
+                    <div class="pt-5 border-t border-slate-100 dark:border-slate-800/50 space-y-4">
                         <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50">
                             <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Cached Data</span>
                             <button type="button" onclick="clearCache()" class="px-4 py-2 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-xs font-bold transition-colors shadow-sm">Clear Cache</button>
@@ -416,13 +500,21 @@
                             <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Reading History</span>
                             <button type="button" onclick="clearReadHistory()" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-xs font-bold transition-colors shadow-sm">Reset History</button>
                         </div>
+                        <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Data Backup</span>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="exportBackup()" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-xs font-bold transition-colors shadow-sm" title="Export to JSON">Export</button>
+                                <button type="button" onclick="triggerImport()" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-xs font-bold transition-colors shadow-sm" title="Import from JSON">Import</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="mt-10 flex gap-3">
+                <div class="mt-8 flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/50">
                     <button type="button" onclick="closeSettingsModal()" class="flex-1 px-4 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-semibold transition-colors">Cancel</button>
                     <button type="submit" class="flex-1 px-4 py-3.5 bg-brand-600 text-white hover:bg-brand-700 rounded-2xl font-semibold shadow-lg shadow-brand-500/30 transition-all active:scale-95">Save Changes</button>
                 </div>
             </form>
+            <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="handleImportData(event)">
         </div>
     </div>
 
@@ -497,16 +589,22 @@
             <!-- Blurred Background Artwork -->
             <div id="displayModeBg" class="absolute inset-0 bg-cover bg-center blur-3xl opacity-30 scale-110"></div>
             <!-- Main Content Grid -->
-            <div class="relative z-10 max-w-7xl mx-auto px-8 w-full flex flex-col md:flex-row gap-12 lg:gap-20 items-center">
+            <div id="displayModeInnerGrid" class="relative z-10 max-w-7xl mx-auto px-8 w-full flex flex-col md:flex-row gap-12 lg:gap-20 items-center h-full">
                 <div id="displayModeImgWrapper" class="w-full md:w-1/2 rounded-[2rem] overflow-hidden shadow-2xl hidden transform transition-all duration-700">
                     <img id="displayModeImg" src="" class="w-full h-auto max-h-[70vh] object-cover">
                 </div>
-                <div id="displayModeTextContainer" class="w-full flex flex-col justify-center">
+                <div id="displayModeTextContainer" class="w-full md:w-1/2 flex flex-col justify-center z-20">
                     <span id="displayModeDate" class="text-brand-400 font-bold uppercase tracking-widest text-sm mb-4"></span>
                     <h2 id="displayModeTitle" class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6 line-clamp-4"></h2>
                     <p id="displayModeDesc" class="text-xl md:text-2xl text-slate-300 leading-relaxed line-clamp-6 opacity-90"></p>
                 </div>
             </div>
+        </div>
+
+        <!-- TV QR Code Overlay -->
+        <div id="displayModeQr" class="absolute bottom-10 right-10 bg-white/95 backdrop-blur-md p-3.5 rounded-[1.25rem] shadow-2xl z-30 flex items-center gap-4 hidden transition-opacity duration-500 border border-white/20">
+            <img id="displayModeQrImg" src="" class="w-16 h-16 rounded-xl border border-slate-200">
+            <div class="text-slate-800 text-[13px] font-extrabold w-24 leading-snug">Scan to read on your phone</div>
         </div>
         
         <!-- Bottom Timeline / Progress Indicator -->
@@ -595,13 +693,13 @@
                         <h3 class="font-bold text-slate-700 dark:text-slate-300 ml-1">Color Theme</h3>
                         <div class="grid grid-cols-3 gap-3">
                             <button onclick="wizardSetPref('theme', 'light')" class="pref-theme-btn flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-brand-300" data-val="light">
-                                <i data-lucide="sun" class="w-6 h-6 mb-2 text-amber-500"></i><span class="text-sm font-semibold">Light</span>
+                                <i data-lucide="sun" class="w-6 h-6 mb-2 text-amber-500"></i><span class="text-xs sm:text-sm font-semibold">Light</span>
                             </button>
                             <button onclick="wizardSetPref('theme', 'dark')" class="pref-theme-btn flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-brand-300" data-val="dark">
-                                <i data-lucide="moon" class="w-6 h-6 mb-2 text-indigo-400"></i><span class="text-sm font-semibold">Dark</span>
+                                <i data-lucide="moon" class="w-6 h-6 mb-2 text-indigo-400"></i><span class="text-xs sm:text-sm font-semibold">Dark</span>
                             </button>
                             <button onclick="wizardSetPref('theme', 'auto')" class="pref-theme-btn flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-brand-300" data-val="auto">
-                                <i data-lucide="monitor" class="w-6 h-6 mb-2 text-slate-500"></i><span class="text-sm font-semibold">Auto</span>
+                                <i data-lucide="monitor" class="w-6 h-6 mb-2 text-slate-500"></i><span class="text-xs sm:text-sm font-semibold">Auto</span>
                             </button>
                         </div>
                     </div>
@@ -609,12 +707,15 @@
                     <!-- Density -->
                     <div class="space-y-4">
                         <h3 class="font-bold text-slate-700 dark:text-slate-300 ml-1">Card Layout</h3>
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 gap-3">
                             <button onclick="wizardSetPref('density', 'comfortable')" class="pref-density-btn flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-brand-300" data-val="comfortable">
-                                <i data-lucide="layout-grid" class="w-6 h-6 mb-2 text-slate-500"></i><span class="text-sm font-semibold">Comfortable</span>
+                                <i data-lucide="layout-grid" class="w-6 h-6 mb-2 text-slate-500"></i><span class="text-xs sm:text-sm font-semibold text-center leading-tight mt-1">Comfort Grid</span>
                             </button>
                             <button onclick="wizardSetPref('density', 'compact')" class="pref-density-btn flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-brand-300" data-val="compact">
-                                <i data-lucide="grid-3x3" class="w-6 h-6 mb-2 text-slate-500"></i><span class="text-sm font-semibold">Compact</span>
+                                <i data-lucide="grid-3x3" class="w-6 h-6 mb-2 text-slate-500"></i><span class="text-xs sm:text-sm font-semibold text-center leading-tight mt-1">Compact Grid</span>
+                            </button>
+                            <button onclick="wizardSetPref('density', 'list')" class="pref-density-btn flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-brand-300" data-val="list">
+                                <i data-lucide="list" class="w-6 h-6 mb-2 text-slate-500"></i><span class="text-xs sm:text-sm font-semibold text-center leading-tight mt-1">List View</span>
                             </button>
                         </div>
                     </div>
@@ -771,7 +872,7 @@
         
         let activeFeedId = null;
         let feedCache = {}; 
-        let appSettings = { refreshInterval: 15, cycleSpeed: 10, theme: 'auto', density: 'comfortable' }; 
+        let appSettings = { refreshInterval: 15, cycleSpeed: 10, theme: 'auto', density: 'comfortable', tvLayout: 'split', tvQrCode: 'show' }; 
         
         let currentRawArticles = []; 
         let displayedArticles = []; 
@@ -1109,25 +1210,43 @@
         function applyTheme(themeVal) {
             if(!themeVal) themeVal = appSettings.theme || 'auto';
             const htmlClasses = document.documentElement.classList;
-            if (themeVal === 'dark' || (themeVal === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            
+            // Remove all custom themes and the default dark class first
+            htmlClasses.remove('dark', 'theme-oled', 'theme-sepia');
+            
+            // Determine if the base mode is dark
+            const isDarkModeBase = themeVal === 'dark' || themeVal === 'oled' || (themeVal === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (themeVal === 'sepia') {
+                htmlClasses.add('theme-sepia');
+            } else if (isDarkModeBase) {
                 htmlClasses.add('dark');
-            } else {
-                htmlClasses.remove('dark');
+                if (themeVal === 'oled') {
+                    htmlClasses.add('theme-oled');
+                }
             }
+            
             updateThemeIcon();
         }
 
         function toggleDarkMode() {
-            appSettings.theme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+            const currentTheme = appSettings.theme || 'auto';
+            if (currentTheme === 'sepia' || currentTheme === 'light' || (!document.documentElement.classList.contains('dark') && currentTheme === 'auto')) {
+                appSettings.theme = 'dark';
+            } else {
+                appSettings.theme = 'light';
+            }
             localStorage.setItem('currently_settings', JSON.stringify(appSettings));
             applyTheme();
         }
 
         function updateThemeIcon() {
             const isDark = document.documentElement.classList.contains('dark');
+            const isSepia = document.documentElement.classList.contains('theme-sepia');
             const iconEl = document.getElementById('themeIcon');
             if(iconEl) {
-                iconEl.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                if (isSepia) iconEl.setAttribute('data-lucide', 'coffee');
+                else iconEl.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
                 lucide.createIcons({ root: iconEl.parentNode });
             }
         }
@@ -1614,10 +1733,15 @@
         function renderArticles(articles) {
             articlesGridEl.innerHTML = ''; controlsBar.classList.remove('hidden');
             
-            const isCompact = appSettings.density === 'compact';
-            articlesGridEl.className = isCompact 
-                ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-12 max-w-[1600px] mx-auto'
-                : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8 pb-12 max-w-[1600px] mx-auto';
+            const density = appSettings.density || 'comfortable';
+            const isCompact = density === 'compact';
+            const isList = density === 'list';
+
+            articlesGridEl.className = isList 
+                ? 'flex flex-col gap-5 pb-12 max-w-4xl mx-auto w-full'
+                : (isCompact 
+                    ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-12 max-w-[1600px] mx-auto'
+                    : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8 pb-12 max-w-[1600px] mx-auto');
 
             const orderedDates = [...new Set(articles.map(a => a.date))];
             const groupedArticles = {}; orderedDates.forEach(d => groupedArticles[d] = []);
@@ -1637,19 +1761,26 @@
                 groupedArticles[dateStr].forEach(({ article, index }) => {
                     const isRead = readArticles.has(article.link); const isSaved = savedArticles.some(sa => sa.link === article.link);
                     const card = document.createElement('article');
-                    card.className = `bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-brand-500/5 dark:hover:shadow-black/50 ${isCompact?'':'hover:-translate-y-1'} transition-all duration-300 flex flex-col fade-in cursor-pointer group ${isRead ? 'opacity-70' : ''}`;
+                    card.className = `bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-brand-500/5 dark:hover:shadow-black/50 ${isCompact || isList ? '' : 'hover:-translate-y-1'} transition-all duration-300 flex ${isList ? 'flex-row items-stretch' : 'flex-col'} fade-in cursor-pointer group ${isRead ? 'opacity-70' : ''}`;
                     card.style.animationDelay = `${(delayCounter % 20) * 0.04}s`; card.onclick = () => openArticleModal(index);
 
-                    const imgHeight = isCompact ? 'h-36' : 'h-56';
-                    const pClass = isCompact ? 'p-4 md:p-5' : 'p-6 md:p-7';
-                    const titleClass = isCompact ? 'text-[1.05rem] mb-2 leading-tight line-clamp-2' : 'text-[1.15rem] leading-tight mb-3 line-clamp-2';
-                    const descClass = isCompact ? 'text-xs mb-3 line-clamp-2' : 'text-sm mb-5 line-clamp-3';
+                    const imgHeight = isList ? 'w-1/3 md:w-56 shrink-0' : (isCompact ? 'h-36' : 'h-56');
+                    const pClass = isCompact ? 'p-4' : 'p-6';
+                    const titleClass = isCompact ? 'text-[1.05rem] mb-2 leading-tight line-clamp-2' : (isList ? 'text-[1.2rem] md:text-[1.3rem] mb-2 leading-tight line-clamp-2' : 'text-[1.15rem] leading-tight mb-3 line-clamp-2');
+                    const descClass = isCompact ? 'text-xs mb-3 line-clamp-2' : (isList ? 'text-sm mb-4 line-clamp-3 md:line-clamp-4' : 'text-sm mb-5 line-clamp-3');
 
-                    const imageHtml = article.imageUrl 
-                        ? `<div class="${imgHeight} overflow-hidden bg-slate-100 dark:bg-slate-800 relative"><div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div><img src="${article.imageUrl}" alt="Article Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" onerror="this.style.display='none'"><button onclick="toggleSaveArticle(event, ${index})" class="absolute top-4 right-4 z-20 glass p-2 rounded-full text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:scale-110 transition-all shadow-sm group/btn" title="${isSaved ? 'Remove Bookmark' : 'Save for Later'}"><i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-brand-500 text-brand-500 group-hover/btn:fill-brand-600 group-hover/btn:text-brand-600' : ''}"></i></button></div>`
-                        : `<div class="h-4 bg-gradient-to-r from-brand-400 to-purple-500"></div><div class="p-5 pb-0 flex justify-end items-center"><button onclick="toggleSaveArticle(event, ${index})" class="text-slate-400 hover:text-brand-500 transition-colors p-1" title="${isSaved ? 'Remove Bookmark' : 'Save for Later'}"><i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-brand-500 text-brand-500' : ''}"></i></button></div>`; 
+                    const saveBtnHtml = `<button onclick="toggleSaveArticle(event, ${index})" class="glass p-2 rounded-full text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:scale-110 transition-all shadow-sm group/btn shrink-0" title="${isSaved ? 'Remove Bookmark' : 'Save for Later'}"><i data-lucide="bookmark" class="w-4 h-4 ${isSaved ? 'fill-brand-500 text-brand-500 group-hover/btn:fill-brand-600 group-hover/btn:text-brand-600' : ''}"></i></button>`;
 
-                    card.innerHTML = `${imageHtml}<div class="${pClass} flex flex-col flex-1 relative bg-white dark:bg-slate-900">${shouldShowSourceBadge && article.feedName ? `<span class="inline-block self-start px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider rounded-md mb-3">${article.feedName}</span>` : ''}<h3 class="font-bold ${titleClass} ${isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-800 dark:text-white'} group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" title="${article.title}">${article.title}</h3><p class="${descClass} ${isRead ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400'} flex-1 leading-relaxed">${article.description}</p><div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end items-center"><a href="${article.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-brand-900/50 hover:text-brand-600 dark:hover:text-brand-400 transition-all" title="Open directly to source"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a></div></div>`;
+                    let imageHtml = '';
+                    if (article.imageUrl) {
+                        imageHtml = `<div class="${imgHeight} overflow-hidden bg-slate-100 dark:bg-slate-800 relative"><div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div><img src="${article.imageUrl}" alt="Article Image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" onerror="this.style.display='none'"><div class="absolute top-4 right-4 z-20">${saveBtnHtml}</div></div>`;
+                    } else {
+                        imageHtml = `<div class="${isList ? 'w-3 shrink-0' : 'h-4'} bg-gradient-to-br from-brand-400 to-purple-500 relative"></div>`;
+                    }
+
+                    const textSaveBtnHtml = !article.imageUrl ? `<div class="absolute top-4 right-4 z-20">${saveBtnHtml}</div>` : '';
+
+                    card.innerHTML = `${imageHtml}<div class="${pClass} flex flex-col flex-1 relative bg-white dark:bg-slate-900 w-full min-w-0">${textSaveBtnHtml}${shouldShowSourceBadge && article.feedName ? `<span class="inline-block self-start px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider rounded-md mb-3">${article.feedName}</span>` : ''}<h3 class="font-bold pr-10 ${titleClass} ${isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-800 dark:text-white'} group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" title="${article.title}">${article.title}</h3><p class="${descClass} pr-2 ${isRead ? 'text-slate-500 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400'} flex-1 leading-relaxed">${article.description}</p><div class="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end items-center"><a href="${article.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-brand-900/50 hover:text-brand-600 dark:hover:text-brand-400 transition-all" title="Open directly to source"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a></div></div>`;
                     articlesGridEl.appendChild(card); delayCounter++;
                 });
             });
@@ -1723,6 +1854,8 @@
             document.getElementById('cycleSpeedInput').value = appSettings.cycleSpeed || 10;
             document.getElementById('themeInput').value = appSettings.theme || 'auto';
             document.getElementById('densityInput').value = appSettings.density || 'comfortable';
+            document.getElementById('tvLayoutInput').value = appSettings.tvLayout || 'split';
+            document.getElementById('tvQrCodeInput').value = appSettings.tvQrCode || 'show';
             settingsModal.classList.remove('hidden'); setTimeout(() => { settingsModal.classList.remove('opacity-0'); document.getElementById('settingsModalContent').classList.remove('scale-95'); }, 10); if(window.innerWidth < 768) toggleMobileMenu(false);
         }
         function closeSettingsModal() { settingsModal.classList.add('opacity-0'); document.getElementById('settingsModalContent').classList.add('scale-95'); setTimeout(() => { settingsModal.classList.add('hidden'); }, 300); }
@@ -1735,6 +1868,9 @@
             
             appSettings.theme = document.getElementById('themeInput').value;
             appSettings.density = document.getElementById('densityInput').value;
+            appSettings.tvLayout = document.getElementById('tvLayoutInput').value;
+            appSettings.tvQrCode = document.getElementById('tvQrCodeInput').value;
+            
             localStorage.setItem('currently_settings', JSON.stringify(appSettings));
             applyTheme(); updateView();
             
@@ -1742,6 +1878,38 @@
         }
         function clearCache() { openConfirmModal('Clear Cache', 'Clear all cached articles? This will require re-fetching data.', 'Clear Data', () => { feedCache = {}; feedUnreadBadge = {}; localStorage.removeItem('currently_cache'); localStorage.removeItem('currently_badges'); if(activeFeedId && activeFeedId !== '__saved__') refreshCurrentFeed(); }); }
         function clearReadHistory() { openConfirmModal('Reset History', 'Clear your read history? All articles will appear as unread.', 'Reset History', () => { readArticles.clear(); localStorage.removeItem('currently_read'); updateView(); }); }
+
+        function exportBackup() {
+            const data = { feeds: feeds, folders: folders, settings: appSettings };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `currently_backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        }
+
+        function triggerImport() { document.getElementById('importFileInput').click(); }
+
+        function handleImportData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.feeds && Array.isArray(data.feeds)) {
+                        openConfirmModal('Restore Backup', 'This will overwrite your current sources, folders, and settings. Proceed?', 'Restore', () => {
+                            feeds = data.feeds; folders = data.folders || [];
+                            if (data.settings) { appSettings = { ...appSettings, ...data.settings }; localStorage.setItem('currently_settings', JSON.stringify(appSettings)); applyTheme(); }
+                            saveFeeds(); saveFolders(); renderFeedList(); selectAllFeeds(); closeSettingsModal();
+                        });
+                    } else { openConfirmModal('Import Failed', 'The selected file is not a valid Currently backup.', 'OK', () => {}); }
+                } catch (err) { openConfirmModal('Import Failed', 'Could not parse the JSON backup file.', 'OK', () => {}); }
+                event.target.value = ''; // Reset input to allow re-importing same file if needed
+            };
+            reader.readAsText(file);
+        }
 
         // --- Article Modal Logic ---
         function navigateArticle(direction) {
@@ -1832,27 +2000,70 @@
             const article = displayedArticles[displayModeIndex];
             
             document.getElementById('displayModeDate').textContent = article.date + (article.feedName ? ` • ${article.feedName}` : '');
-            document.getElementById('displayModeTitle').textContent = article.title;
+            
+            const titleEl = document.getElementById('displayModeTitle');
+            const descEl = document.getElementById('displayModeDesc');
+            
+            titleEl.textContent = article.title;
             
             // Clean rich text description for pure text summary in TV mode
             const tmp = document.createElement('div');
             tmp.innerHTML = article.description;
-            document.getElementById('displayModeDesc').textContent = tmp.textContent || tmp.innerText;
+            descEl.textContent = tmp.textContent || tmp.innerText;
             
+            const innerGrid = document.getElementById('displayModeInnerGrid');
             const imgWrap = document.getElementById('displayModeImgWrapper');
             const imgEl = document.getElementById('displayModeImg');
             const bgEl = document.getElementById('displayModeBg');
             const textContainer = document.getElementById('displayModeTextContainer');
             
+            const isImmersive = appSettings.tvLayout === 'immersive';
+            
             if (article.imageUrl) {
                 imgEl.src = article.imageUrl;
                 bgEl.style.backgroundImage = `url(${article.imageUrl})`;
-                imgWrap.classList.remove('hidden');
-                textContainer.className = "w-full md:w-1/2 flex flex-col justify-center";
+                
+                if (isImmersive) {
+                    innerGrid.className = "relative z-10 max-w-7xl mx-auto px-8 w-full flex flex-col items-end pb-20 md:pb-32 h-full justify-end";
+                    imgWrap.classList.add('hidden');
+                    textContainer.className = "w-full z-20 drop-shadow-[0_10px_10px_rgba(0,0,0,0.8)]";
+                    titleEl.classList.add('drop-shadow-2xl');
+                    descEl.classList.remove('text-slate-300');
+                    descEl.classList.add('text-white', 'drop-shadow-lg');
+                    
+                    bgEl.classList.remove('blur-3xl', 'opacity-30', 'scale-110');
+                    bgEl.classList.add('opacity-50', 'blur-sm'); 
+                } else {
+                    innerGrid.className = "relative z-10 max-w-7xl mx-auto px-8 w-full flex flex-col md:flex-row gap-12 lg:gap-20 items-center h-full";
+                    imgWrap.classList.remove('hidden');
+                    textContainer.className = "w-full md:w-1/2 flex flex-col justify-center z-20";
+                    titleEl.classList.remove('drop-shadow-2xl');
+                    descEl.classList.add('text-slate-300');
+                    descEl.classList.remove('text-white', 'drop-shadow-lg');
+                    
+                    bgEl.classList.add('blur-3xl', 'opacity-30', 'scale-110');
+                    bgEl.classList.remove('opacity-50', 'blur-sm');
+                }
             } else {
                 bgEl.style.backgroundImage = 'none';
+                innerGrid.className = "relative z-10 max-w-7xl mx-auto px-8 w-full flex flex-col items-center justify-center h-full text-center";
                 imgWrap.classList.add('hidden');
-                textContainer.className = "w-full flex flex-col justify-center";
+                textContainer.className = "w-full flex flex-col justify-center items-center z-20 max-w-4xl mx-auto";
+                titleEl.classList.remove('drop-shadow-2xl');
+                descEl.classList.add('text-slate-300');
+                descEl.classList.remove('text-white', 'drop-shadow-lg');
+            }
+            
+            // TV QR Code Rendering
+            const qrContainer = document.getElementById('displayModeQr');
+            const qrImg = document.getElementById('displayModeQrImg');
+            
+            if (appSettings.tvQrCode !== 'hide' && article.link) {
+                // Generate QR Code pointing to the article
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(article.link)}&bgcolor=ffffff&color=0f172a&margin=0`;
+                qrContainer.classList.remove('hidden');
+            } else {
+                qrContainer.classList.add('hidden');
             }
             
             lucide.createIcons();
