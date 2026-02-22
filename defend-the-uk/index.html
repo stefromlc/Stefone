@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Primary Meta Tags -->
+<title>Defend the UK – Action Strategy Game with Real-Time Stats</title>
+<meta name="title" content="Defend the UK – Action Strategy Game with Real-Time Stats" />
+<meta name="description" content="Defend the UK from an incoming enemy fleet! Strategize, deploy boats, and fire cannons. Track your score and health in real time for intense action." />
+
+<!-- Favicon configuration -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22grad%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ffffff%22%20%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23c3c4ea%22%20%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%220%22%20fill%3D%22url(%23grad)%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2252%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2280%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22%23ffffff%22%3E%F0%9F%95%B9%EF%B8%8F%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://stefone.com/defend-the-uk/" />
+<meta property="og:title" content="Defend the UK – Action Strategy Game with Real-Time Stats" />
+<meta property="og:description" content="Defend the UK from an incoming enemy fleet! Strategize, deploy boats, and fire cannons. Track your score and health in real time for intense action." />
+<meta property="og:image" content="https://stefone.com/assets/thumbs/defend-the-uk.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Defend the UK – Action Strategy Game with Real-Time Stats preview" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Defend the UK – Action Strategy Game with Real-Time Stats" />
+<meta name="twitter:description" content="Defend the UK from an incoming enemy fleet! Strategize, deploy boats, and fire cannons. Track your score and health in real time for intense action." />
+<meta name="twitter:image" content="https://stefone.com/assets/thumbs/defend-the-uk.png" />
+
+<!-- Optional -->
+<meta name="theme-color" content="#ffffff">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0284c7; /* Ocean blue fallback */
+            touch-action: none; /* Prevent pinch zoom and scrolling on mobile */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        .hud {
+            position: absolute;
+            top: 60px; /* Offset for the back button */
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .panel {
+            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="text-white select-none">
+
+    <!-- Back to Projects Button -->
+    <a href="/projects/" class="absolute top-4 left-4 z-50 bg-slate-800/90 hover:bg-slate-700 text-white px-4 py-2 rounded-xl border border-slate-600 shadow-lg font-bold transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-2 pointer-events-auto text-sm sm:text-base">
+        <span>←</span>
+        <span>Projects</span>
+    </a>
+
+    <!-- HUD -->
+    <div id="hud" class="hud hidden">
+        <div class="flex items-center space-x-2 bg-slate-900/80 px-4 py-2 rounded-full border border-slate-700 shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md">
+            <span id="playerAvatarDisplay" class="text-2xl mr-1 drop-shadow-md">👨‍✈️</span>
+            <span class="text-xl text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]">❤️</span>
+            <div class="w-24 sm:w-32 h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50 shadow-inner">
+                <div id="healthBar" class="h-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-300 w-full shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
+            </div>
+            <span id="healthText" class="font-bold ml-2 text-sm sm:text-base text-slate-100 drop-shadow-md">100%</span>
+        </div>
+        <div class="flex items-center space-x-3 sm:space-x-4 bg-slate-900/80 px-4 py-2 rounded-full border border-slate-700 shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md">
+            <div class="flex items-center space-x-1 sm:space-x-2 border-r border-slate-600/70 pr-3 sm:pr-4">
+                <span class="text-lg sm:text-xl drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">🏆</span>
+                <span id="highScoreTextHud" class="font-bold text-lg sm:text-xl text-yellow-400 drop-shadow-md">0</span>
+            </div>
+            <div class="flex items-center space-x-1 sm:space-x-2">
+                <span class="text-lg sm:text-2xl drop-shadow-md">☠️</span>
+                <span id="scoreText" class="font-bold text-lg sm:text-xl text-blue-300 drop-shadow-md">0 / 50</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Defense Boat Button -->
+    <div id="deployContainer" class="absolute bottom-10 w-full flex justify-center pointer-events-none z-10 hidden">
+        <button id="deployBtn" class="pointer-events-auto px-6 py-3 bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white font-bold rounded-full shadow-[0_0_20px_rgba(37,99,235,0.6)] border border-blue-400 transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-2 opacity-50 cursor-not-allowed">
+            <span class="text-xl drop-shadow-md">⚓</span>
+            <span id="deployText" class="drop-shadow-md">Deploy Boat (5 ☠️)</span>
+        </button>
+    </div>
+
+    <!-- Menus -->
+    <div id="uiLayer" class="ui-layer">
+        <!-- Start Screen -->
+        <div id="startScreen" class="panel rounded-3xl p-6 sm:p-8 w-[90%] max-w-md text-center transform transition-all">
+            <h1 class="text-4xl sm:text-5xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-br from-blue-300 via-blue-100 to-red-400 drop-shadow-lg tracking-tight">DEFEND THE UK</h1>
+            <p class="text-blue-100 mb-2 text-base sm:text-lg font-medium drop-shadow-md">Enemy fleets are approaching the shores!</p>
+            <p class="text-yellow-400 mb-6 font-bold text-lg drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]">High Score: <span id="highScoreTextMenu">0</span></p>
+
+            <!-- Avatar Selection -->
+            <div class="mb-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-700/50 shadow-inner">
+                <p class="text-slate-300 mb-3 font-bold text-xs uppercase tracking-widest">Choose Commander</p>
+                <div class="flex justify-center space-x-2 sm:space-x-4" id="avatarSelection">
+                    <button class="avatar-btn text-3xl sm:text-4xl p-2 rounded-xl border-2 border-blue-500 bg-blue-800/60 transition-all transform hover:scale-110 shadow-[0_0_15px_rgba(59,130,246,0.5)]" data-avatar="👨‍✈️">👨‍✈️</button>
+                    <button class="avatar-btn text-3xl sm:text-4xl p-2 rounded-xl border-2 border-transparent hover:bg-blue-800/40 transition-all transform hover:scale-110" data-avatar="👩‍✈️">👩‍✈️</button>
+                    <button class="avatar-btn text-3xl sm:text-4xl p-2 rounded-xl border-2 border-transparent hover:bg-blue-800/40 transition-all transform hover:scale-110" data-avatar="🤖">🤖</button>
+                    <button class="avatar-btn text-3xl sm:text-4xl p-2 rounded-xl border-2 border-transparent hover:bg-blue-800/40 transition-all transform hover:scale-110" data-avatar="🐶">🐶</button>
+                </div>
+            </div>
+
+            <!-- Difficulty Selection -->
+            <div class="mb-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-700/50 shadow-inner">
+                <p class="text-slate-300 mb-3 font-bold text-xs uppercase tracking-widest">Difficulty</p>
+                <div class="flex flex-wrap justify-center gap-2 sm:gap-3">
+                    <button class="diff-btn px-3 sm:px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-green-600/60 hover:bg-green-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="easy">EASY</button>
+                    <button class="diff-btn px-3 sm:px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-yellow-600/80 hover:bg-yellow-500 transition-all transform hover:scale-105 ring-4 ring-white border-2 border-transparent" data-diff="normal">NORMAL</button>
+                    <button class="diff-btn px-3 sm:px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-orange-600/60 hover:bg-orange-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="hard">HARD</button>
+                    <button class="diff-btn px-3 sm:px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-red-600/60 hover:bg-red-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="expert">EXPERT</button>
+                    <button class="diff-btn px-3 sm:px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-purple-600/60 hover:bg-purple-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="nightmare">NIGHTMARE</button>
+                </div>
+            </div>
+            
+            <div class="bg-slate-900/60 rounded-2xl p-4 mb-6 text-left space-y-2 sm:space-y-3 border border-slate-700/50 shadow-inner text-sm sm:text-base font-medium text-slate-200">
+                <p class="flex items-center"><span class="text-xl sm:text-2xl mr-3 drop-shadow-md">🎯</span> Tap or click to fire cannons.</p>
+                <p class="flex items-center"><span class="text-xl sm:text-2xl mr-3 drop-shadow-md">⚓</span> Spend 5 points to deploy defenses.</p>
+                <p class="flex items-center"><span class="text-xl sm:text-2xl mr-3 drop-shadow-md">🛡️</span> Don't let them breach the island!</p>
+            </div>
+
+            <button id="startBtn" class="w-full py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white text-lg sm:text-xl font-bold rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-all transform hover:scale-105 active:scale-95 border border-blue-400/50">
+                START BATTLE
+            </button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="panel rounded-3xl p-8 max-w-md text-center hidden">
+            <h1 class="text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-br from-red-400 to-red-600 drop-shadow-lg tracking-tight">THE UK FELL!</h1>
+            <p class="text-slate-200 mb-6 text-xl font-medium">The enemy fleet breached our defenses.</p>
+            <p class="mb-4 text-2xl font-bold text-white">Boats Destroyed: <span id="finalScoreLoss" class="text-blue-400 drop-shadow-[0_0_5px_rgba(96,165,250,0.8)]">0</span></p>
+            <p class="mb-8 text-lg font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" id="newHighScoreAlertLoss"></p>
+            <button id="restartBtn" class="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white text-xl font-bold rounded-2xl shadow-[0_0_20px_rgba(220,38,38,0.5)] transition-all transform hover:scale-105 active:scale-95 border border-red-400/50">
+                TRY AGAIN
+            </button>
+        </div>
+
+        <!-- Victory Screen -->
+        <div id="victoryScreen" class="panel rounded-3xl p-8 max-w-md text-center hidden">
+            <h1 class="text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-yellow-500 drop-shadow-lg tracking-tight">RULE BRITANNIA!</h1>
+            <p class="text-slate-200 mb-6 text-xl font-medium">You successfully defended the shores!</p>
+            <p class="mb-4 text-2xl font-bold text-white">The invasion is over.</p>
+            <p class="mb-8 text-lg font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" id="newHighScoreAlertWin"></p>
+            <button id="playAgainBtn" class="w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-slate-900 text-xl font-black rounded-2xl shadow-[0_0_20px_rgba(234,179,8,0.6)] transition-all transform hover:scale-105 active:scale-95 border border-yellow-300/50">
+                PLAY AGAIN
+            </button>
+        </div>
+    </div>
+
+    <!-- The Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        // --- Setup & Context ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height, centerX, centerY, dpr, mapScale;
+
+        // UI Elements
+        const uiLayer = document.getElementById('uiLayer');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const victoryScreen = document.getElementById('victoryScreen');
+        const hud = document.getElementById('hud');
+        const healthBar = document.getElementById('healthBar');
+        const healthText = document.getElementById('healthText');
+        const scoreText = document.getElementById('scoreText');
+        const finalScoreLoss = document.getElementById('finalScoreLoss');
+        const highScoreTextMenu = document.getElementById('highScoreTextMenu');
+        const highScoreTextHud = document.getElementById('highScoreTextHud');
+        const playerAvatarDisplay = document.getElementById('playerAvatarDisplay');
+        const deployBtn = document.getElementById('deployBtn');
+        const newHighScoreAlertLoss = document.getElementById('newHighScoreAlertLoss');
+        const newHighScoreAlertWin = document.getElementById('newHighScoreAlertWin');
+
+        // Game State
+        let gameState = 'start';
+        let score = 0;
+        const WIN_SCORE = 50;
+        let health = 100;
+        let frameCount = 0;
+        let difficultyMultiplier = 1;
+        let isPlacingBoat = false;
+
+        // Difficulty Settings
+        let currentDifficulty = 'normal';
+        const diffSettings = {
+            easy: { maxBoats: 5, baseSpawn: 100, minSpawn: 25, speedMult: 0.8 },
+            normal: { maxBoats: 3, baseSpawn: 80, minSpawn: 15, speedMult: 1.0 },
+            hard: { maxBoats: 2, baseSpawn: 60, minSpawn: 8, speedMult: 1.4 },
+            expert: { maxBoats: 1, baseSpawn: 45, minSpawn: 5, speedMult: 1.8 },
+            nightmare: { maxBoats: 0, baseSpawn: 30, minSpawn: 2, speedMult: 2.4 }
+        };
+
+        // Persistent Data
+        let highScore = parseInt(localStorage.getItem('defendUkHighScore')) || 0;
+        let selectedAvatar = '👨‍✈️';
+
+        highScoreTextMenu.innerText = highScore;
+        highScoreTextHud.innerText = highScore;
+
+        // Avatar Selection Logic
+        document.querySelectorAll('.avatar-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.avatar-btn').forEach(b => {
+                    b.classList.remove('border-blue-500', 'bg-blue-800/60', 'shadow-[0_0_15px_rgba(59,130,246,0.5)]');
+                    b.classList.add('border-transparent');
+                });
+                const target = e.currentTarget;
+                target.classList.remove('border-transparent');
+                target.classList.add('border-blue-500', 'bg-blue-800/60', 'shadow-[0_0_15px_rgba(59,130,246,0.5)]');
+                selectedAvatar = target.getAttribute('data-avatar');
+                playerAvatarDisplay.innerText = selectedAvatar;
+            });
+        });
+
+        // Difficulty Selection Logic
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.diff-btn').forEach(b => {
+                    b.classList.remove('ring-4', 'ring-white', 'bg-opacity-100');
+                    b.classList.add('opacity-70');
+                });
+                const target = e.currentTarget;
+                target.classList.remove('opacity-70');
+                target.classList.add('ring-4', 'ring-white');
+                currentDifficulty = target.getAttribute('data-diff');
+            });
+        });
+
+        // Game Objects
+        let enemies = [];
+        let projectiles = [];
+        let particles = [];
+        let ripples = [];
+        let defenseBoats = [];
+        let flags = [];
+        let floatingTexts = [];
+
+        const flagImg = new Image();
+        flagImg.src = 'https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg';
+
+        // --- Map Setup ---
+        let ukRegionPath = new Path2D();
+
+        function initMap() {
+            const gbPoints = [
+                [3,-100], [8,-98], [12,-90], [15,-80], [22,-75], [26,-65], [20,-55], [24,-48], [18,-42], [14,-38],
+                [22,-25], [25,-15], [30,-5], [38,5], [42,8], [38,15], [45,22], [55,25], [52,32], [42,35], [48,42], 
+                [55,48], [62,55], [55,60], [42,60], [32,62], [22,65], [12,65], [0,68], [-12,68], [-25,75], [-45,88],
+                [-52,92], [-55,85], [-48,78], [-42,65], [-35,55], [-22,50], [-32,48], [-42,48], [-52,45], [-48,38],
+                [-42,35], [-35,30], [-30,25], [-42,22], [-48,15], [-42,12], [-32,15], [-25,18], [-20,10], [-25,0], 
+                [-32,-5], [-20,-15], [-25,-20], [-32,-18], [-38,-25], [-28,-30], [-32,-35], [-38,-35], [-32,-45], 
+                [-25,-50], [-32,-55], [-38,-65], [-30,-70], [-35,-80], [-25,-85], [-20,-95], [3,-100]
+            ];
+            const niPoints = [
+                [-45,-25], [-38,-20], [-35,-15], [-40,-5], [-45,0], [-55,2], [-68,0], [-72,-5], [-70,-15], [-60,-25], [-50,-28], [-45,-25]
+            ];
+            const iowPoints = [ [25, 68], [32, 68], [30, 72], [22, 70] ];
+            const iomPoints = [ [-32, -5], [-28, -2], [-32, 2], [-35, -2] ];
+
+            const addPolygon = (points) => {
+                ukRegionPath.moveTo(points[0][0], points[0][1]);
+                for (let i = 1; i < points.length; i++) {
+                    ukRegionPath.lineTo(points[i][0], points[i][1]);
+                }
+                ukRegionPath.closePath();
+            };
+
+            addPolygon(gbPoints);
+            addPolygon(niPoints);
+            addPolygon(iowPoints);
+            addPolygon(iomPoints);
+        }
+        initMap();
+
+        // --- Audio System ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'shoot') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'explosion') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'hit') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.5);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'deploy') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            }
+        }
+
+        // --- High-DPI Resize Handling ---
+        function resize() {
+            dpr = window.devicePixelRatio || 1;
+            width = window.innerWidth;
+            height = window.innerHeight;
+            
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            
+            ctx.scale(dpr, dpr);
+            
+            centerX = width / 2;
+            centerY = height / 2;
+            
+            // Dynamic map scaling based on screen size (fits well on mobile and desktop)
+            mapScale = Math.max(1.0, Math.min(width, height) / 350);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- Classes ---
+        class Enemy {
+            constructor() {
+                const edge = Math.floor(Math.random() * 4);
+                if (edge === 0) { this.x = Math.random() * width; this.y = -50; } 
+                else if (edge === 1) { this.x = width + 50; this.y = Math.random() * height; } 
+                else if (edge === 2) { this.x = Math.random() * width; this.y = height + 50; } 
+                else { this.x = -50; this.y = Math.random() * height; } 
+
+                this.isExplosive = Math.random() < 0.15; // Increased chance to 15%
+                this.radius = 16;
+                const angle = Math.atan2(centerY - this.y, centerX - this.x);
+                
+                // Explosive boats and normal boats move significantly faster
+                let baseSpeed = this.isExplosive ? (4.0 + Math.random() * 2) : (2.0 + Math.random() * 1.5);
+                this.speed = baseSpeed * difficultyMultiplier * diffSettings[currentDifficulty].speedMult;
+                
+                this.vx = Math.cos(angle) * this.speed;
+                this.vy = Math.sin(angle) * this.speed;
+                this.angle = angle;
+                
+                this.trailTimer = 0;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                this.trailTimer++;
+                if (this.trailTimer % 8 === 0) {
+                    ripples.push(new Ripple(this.x, this.y, 8));
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 5;
+                ctx.shadowOffsetY = 2;
+
+                // Red for explosive, Orange for normal dinghy
+                ctx.fillStyle = this.isExplosive ? '#dc2626' : '#ea580c'; 
+                ctx.beginPath();
+                ctx.roundRect(-14, -10, 28, 20, 10);
+                ctx.fill();
+
+                // Inner floor
+                ctx.shadowColor = 'transparent'; 
+                ctx.fillStyle = '#1f2937'; 
+                ctx.beginPath();
+                ctx.roundRect(-8, -6, 16, 12, 6);
+                ctx.fill();
+                
+                if (this.isExplosive) {
+                    // TNT Barrels
+                    ctx.fillStyle = '#450a0a';
+                    ctx.fillRect(-4, -6, 8, 12);
+                    
+                    // Flashing detonator light
+                    if (Math.floor(Date.now() / 150) % 2 === 0) {
+                        ctx.fillStyle = '#fef08a';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                
+                // Outboard motor
+                ctx.fillStyle = '#374151';
+                ctx.fillRect(-18, -3, 6, 6);
+
+                ctx.restore();
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, targetX, targetY) {
+                this.x = x;
+                this.y = y;
+                this.radius = 4;
+                const angle = Math.atan2(targetY - y, targetX - x);
+                const speed = 22; // Increased projectile speed for snappier play
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.history = [];
+            }
+
+            update() {
+                this.history.push({x: this.x, y: this.y});
+                if (this.history.length > 6) this.history.shift();
+
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+
+            draw() {
+                // Draw trailing light
+                if (this.history.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.history[0].x, this.history[0].y);
+                    for (let i = 1; i < this.history.length; i++) {
+                        ctx.lineTo(this.history[i].x, this.history[i].y);
+                    }
+                    ctx.lineTo(this.x, this.y);
+                    ctx.strokeStyle = 'rgba(250, 204, 21, 0.4)';
+                    ctx.lineWidth = this.radius * 1.5;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+
+                // Draw Core
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#fef08a'; // Bright yellow core
+                ctx.fill();
+                
+                // Glow
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = '#eab308';
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.radius = Math.random() * 4 + 1.5;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 6 + 1;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.color = color;
+                this.decay = Math.random() * 0.02 + 0.02;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.95; // Friction
+                this.vy *= 0.95;
+                this.radius *= 0.95; // Shrink
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                if (this.radius < 0.1) return;
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                // Removed shadowBlur here to fix the "slow-mo" lag spikes during big explosions
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class Ripple {
+            constructor(x, y, maxRadius) {
+                this.x = x;
+                this.y = y;
+                this.radius = 1;
+                this.maxRadius = maxRadius || 25;
+                this.alpha = 0.6;
+            }
+            update() {
+                this.radius += 0.6;
+                this.alpha -= 0.025;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = '#e0f2fe'; // Light blue foam
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        class FloatingText {
+            constructor(x, y, text, color) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color;
+                this.alpha = 1;
+                this.vy = -1;
+            }
+            update() {
+                this.y += this.vy;
+                this.alpha -= 0.02;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = 'black';
+                ctx.shadowBlur = 4;
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        class DefenseBoat {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 14;
+                this.range = 180;
+                this.fireCooldown = 50;
+                this.timer = 0;
+                this.angle = 0;
+            }
+
+            update() {
+                this.timer++;
+                let nearest = null;
+                let minDist = this.range;
+                
+                for (let e of enemies) {
+                    let d = Math.hypot(e.x - this.x, e.y - this.y);
+                    if (d < minDist) {
+                        minDist = d;
+                        nearest = e;
+                    }
+                }
+
+                if (nearest) {
+                    // Smooth rotation towards target
+                    let targetAngle = Math.atan2(nearest.y - this.y, nearest.x - this.x);
+                    // simple angle interpolation
+                    let diff = targetAngle - this.angle;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    this.angle += diff * 0.1;
+
+                    if (this.timer >= this.fireCooldown) {
+                        this.timer = 0;
+                        // Fire from slightly offset front
+                        let fireX = this.x + Math.cos(this.angle) * 10;
+                        let fireY = this.y + Math.sin(this.angle) * 10;
+                        projectiles.push(new Projectile(fireX, fireY, nearest.x, nearest.y));
+                        playSound('shoot');
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                let hullGrad = ctx.createLinearGradient(-15, 0, 18, 0);
+                hullGrad.addColorStop(0, '#1e3a8a'); // Dark blue
+                hullGrad.addColorStop(1, '#3b82f6'); // bright blue
+
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 6;
+                ctx.shadowOffsetY = 2;
+                
+                ctx.fillStyle = hullGrad; 
+                ctx.beginPath();
+                ctx.moveTo(18, 0); 
+                ctx.lineTo(-12, -10); 
+                ctx.lineTo(-12, 10); 
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.shadowColor = 'transparent';
+                ctx.fillStyle = '#60a5fa'; // Light blue cabin
+                ctx.beginPath();
+                ctx.roundRect(-8, -5, 12, 10, 2);
+                ctx.fill();
+                
+                // Gun barrel indicator
+                ctx.fillStyle = '#cbd5e1';
+                ctx.fillRect(4, -2, 8, 4);
+                
+                ctx.restore();
+            }
+        }
+
+        // --- Core Functions ---
+        function createExplosion(x, y, colors) {
+            playSound('explosion');
+            for (let i = 0; i < 30; i++) {
+                particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)]));
+            }
+            ripples.push(new Ripple(x, y, 50));
+        }
+
+        function drawUK() {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            
+            ctx.save();
+            ctx.scale(mapScale, mapScale);
+            
+            // Map Drop Shadow
+            ctx.shadowColor = 'rgba(0, 15, 30, 0.7)';
+            ctx.shadowBlur = 15 * mapScale;
+            ctx.shadowOffsetX = 8;
+            ctx.shadowOffsetY = 8;
+            
+            // Rich landmass gradient
+            let landGradient = ctx.createLinearGradient(-50, -100, 50, 100);
+            landGradient.addColorStop(0, '#4ade80'); // bright green top
+            landGradient.addColorStop(1, '#166534'); // dark green bottom
+
+            ctx.fillStyle = landGradient; 
+            ctx.fill(ukRegionPath);
+            
+            ctx.shadowColor = 'transparent'; // reset shadow for stroke
+            
+            ctx.strokeStyle = '#14532d'; // very dark green outline
+            ctx.lineWidth = 2.0 / mapScale; 
+            ctx.stroke(ukRegionPath);
+
+            // Subtle inner glow/highlight using a thin stroke inside
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 0.5 / mapScale;
+            ctx.stroke(ukRegionPath);
+
+            // Draw captured flags based on score
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetY = 1;
+            
+            const flagWidth = 18;
+            const flagHeight = 9;
+            
+            flags.forEach(f => {
+                if (flagImg.complete && flagImg.naturalHeight !== 0) {
+                    ctx.drawImage(flagImg, f.x - flagWidth/2, f.y - flagHeight/2, flagWidth, flagHeight);
+                }
+            });
+            ctx.shadowColor = 'transparent';
+
+            ctx.restore(); 
+
+            // Central Fortress / Cannon Turret
+            let turretGrad = ctx.createRadialGradient(0, 0, 5, 0, 0, 25);
+            turretGrad.addColorStop(0, '#94a3b8'); // light slate
+            turretGrad.addColorStop(1, '#334155'); // dark slate
+
+            ctx.shadowColor = 'rgba(0,0,0,0.6)';
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = turretGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, 22, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.shadowColor = 'transparent';
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            // Inner turret detail
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fillStyle = '#1e293b';
+            ctx.fill();
+
+            ctx.restore(); 
+        }
+
+        function updateUI() {
+            scoreText.innerText = `${score} / ${WIN_SCORE}`;
+            healthText.innerText = `${Math.max(0, health)}%`;
+            healthBar.style.width = `${Math.max(0, health)}%`;
+            
+            if (health > 60) {
+                healthBar.className = 'h-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-300 w-full shadow-[0_0_10px_rgba(74,222,128,0.5)]';
+            } else if (health > 30) {
+                healthBar.className = 'h-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-300 w-full shadow-[0_0_10px_rgba(250,204,21,0.5)]';
+            } else {
+                healthBar.className = 'h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-300 w-full shadow-[0_0_10px_rgba(239,68,68,0.5)]';
+            }
+
+            const maxB = diffSettings[currentDifficulty].maxBoats;
+            document.getElementById('deployText').innerText = `Deploy Boat (5 ☠️) [${defenseBoats.length}/${maxB}]`;
+
+            if (score >= 5 && defenseBoats.length < maxB) {
+                deployBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                deployBtn.classList.add('animate-pulse');
+            } else {
+                deployBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                deployBtn.classList.remove('animate-pulse');
+                if (isPlacingBoat) {
+                    isPlacingBoat = false;
+                    canvas.style.cursor = 'default';
+                }
+            }
+        }
+
+        function resetGame() {
+            score = 0;
+            health = 100;
+            frameCount = 0;
+            difficultyMultiplier = 1;
+            enemies = [];
+            projectiles = [];
+            particles = [];
+            ripples = [];
+            defenseBoats = [];
+            flags = [];
+            floatingTexts = [];
+            isPlacingBoat = false;
+            canvas.style.cursor = 'default';
+            updateUI();
+            
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            victoryScreen.classList.add('hidden');
+            hud.classList.remove('hidden');
+            document.getElementById('deployContainer').classList.remove('hidden');
+            
+            newHighScoreAlertLoss.innerText = "";
+            newHighScoreAlertWin.innerText = "";
+
+            gameState = 'playing';
+            initAudio();
+        }
+
+        function endGame(won) {
+            gameState = won ? 'victory' : 'gameover';
+            hud.classList.add('hidden');
+            document.getElementById('deployContainer').classList.add('hidden');
+            isPlacingBoat = false;
+            canvas.style.cursor = 'default';
+
+            // Check High Score
+            let isNewHighScore = false;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('defendUkHighScore', highScore);
+                highScoreTextMenu.innerText = highScore;
+                highScoreTextHud.innerText = highScore;
+                isNewHighScore = true;
+            }
+
+            if (won) {
+                if (isNewHighScore) newHighScoreAlertWin.innerText = "⭐ NEW HIGH SCORE! ⭐";
+                victoryScreen.classList.remove('hidden');
+            } else {
+                finalScoreLoss.innerText = score;
+                if (isNewHighScore) newHighScoreAlertLoss.innerText = "⭐ NEW HIGH SCORE! ⭐";
+                gameOverScreen.classList.remove('hidden');
+                playSound('hit');
+            }
+        }
+
+        // Logic to try finding a valid spot on the map for a new flag
+        function tryAddFlag() {
+            let valid = false;
+            let attempts = 0;
+            let fx, fy;
+            while(!valid && attempts < 50) {
+                fx = Math.random() * 150 - 80; 
+                fy = Math.random() * 200 - 100;
+                
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                if (ctx.isPointInPath(ukRegionPath, fx, fy)) {
+                    if (Math.hypot(fx, fy) > 28) {
+                        valid = true;
+                    }
+                }
+                ctx.restore();
+                attempts++;
+            }
+            if (valid) flags.push({x: fx, y: fy});
+        }
+
+        // --- Main Game Loop ---
+        function update() {
+            if (gameState !== 'playing') return;
+
+            frameCount++;
+            // Increased difficulty multiplier to scale faster
+            difficultyMultiplier = 1 + (score * 0.05);
+
+            // Enemies spawn based on selected difficulty settings
+            const conf = diffSettings[currentDifficulty];
+            let spawnRate = Math.max(conf.minSpawn, conf.baseSpawn - (score * 2.5)); 
+            if (frameCount % Math.floor(spawnRate) === 0) {
+                enemies.push(new Enemy());
+            }
+
+            for (let i = ripples.length - 1; i >= 0; i--) {
+                ripples[i].update();
+                if (ripples[i].alpha <= 0) ripples.splice(i, 1);
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                if (particles[i].alpha <= 0) particles.splice(i, 1);
+            }
+
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                floatingTexts[i].update();
+                if (floatingTexts[i].alpha <= 0) floatingTexts.splice(i, 1);
+            }
+
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                let p = projectiles[i];
+                p.update();
+
+                if (p.x < 0 || p.x > width || p.y < 0 || p.y > height) {
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+
+                let hit = false; 
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    let e = enemies[j];
+                    let dist = Math.hypot(p.x - e.x, p.y - e.y);
+                    if (dist < e.radius + p.radius) {
+                        createExplosion(e.x, e.y, ['#ff4757', '#ffa502', '#fef08a', '#1f2937']);
+                        
+                        // Reward for destroying explosive boats
+                        if (e.isExplosive) {
+                            if (health < 100) {
+                                health = Math.min(100, health + 20); // Heal 20%
+                                floatingTexts.push(new FloatingText(e.x, e.y, "+20 Health", "#4ade80"));
+                            } else {
+                                score++; // Bonus point if at max health
+                                floatingTexts.push(new FloatingText(e.x, e.y, "+1 Bonus Point", "#fcd34d"));
+                            }
+                        }
+                        
+                        enemies.splice(j, 1);
+                        projectiles.splice(i, 1);
+                        
+                        score++;
+                        tryAddFlag();
+                        updateUI();
+                        
+                        if (score >= WIN_SCORE) endGame(true);
+                        hit = true;
+                        break;
+                    }
+                }
+                if (hit) continue;
+            }
+
+            for (let i = defenseBoats.length - 1; i >= 0; i--) {
+                defenseBoats[i].update();
+            }
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let e = enemies[i];
+                e.update();
+
+                let hitBoat = false;
+                for (let j = defenseBoats.length - 1; j >= 0; j--) {
+                    let db = defenseBoats[j];
+                    let distToBoat = Math.hypot(db.x - e.x, db.y - e.y);
+                    if (distToBoat < e.radius + db.radius) {
+                        createExplosion(db.x, db.y, ['#3b82f6', '#60a5fa', '#ffffff', '#1e3a8a']);
+                        defenseBoats.splice(j, 1);
+                        
+                        // Bigger explosion if it was an explosive boat
+                        if (e.isExplosive) {
+                            createExplosion(e.x, e.y, ['#ff4757', '#ffa502', '#ffffff', '#dc2626']);
+                            createExplosion(e.x, e.y, ['#ff4757', '#ffa502']); // Extra particles
+                            
+                            // Reward for defense boat destroying an explosive boat
+                            if (health < 100) {
+                                health = Math.min(100, health + 20); // Heal 20%
+                                floatingTexts.push(new FloatingText(e.x, e.y, "+20 Health", "#4ade80"));
+                            } else {
+                                score++; // Bonus point if at max health
+                                floatingTexts.push(new FloatingText(e.x, e.y, "+1 Bonus Point", "#fcd34d"));
+                            }
+                        } else {
+                            createExplosion(e.x, e.y, ['#ff4757', '#ffa502', '#1f2937']);
+                        }
+                        
+                        enemies.splice(i, 1);
+                        hitBoat = true;
+                        score++;
+                        tryAddFlag();
+                        updateUI();
+                        if (score >= WIN_SCORE) endGame(true);
+                        playSound('explosion');
+                        break;
+                    }
+                }
+                if (hitBoat) continue;
+
+                // High-DPI compliant map hit detection
+                // isPointInPath needs untransformed physical canvas coordinates
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset to physical identity
+                ctx.translate(centerX * dpr, centerY * dpr); // Translate physically
+                ctx.scale(mapScale * dpr, mapScale * dpr); // Scale physically
+                let hitMap = ctx.isPointInPath(ukRegionPath, e.x * dpr, e.y * dpr);
+                ctx.restore();
+
+                let distToCenter = Math.hypot(centerX - e.x, centerY - e.y);
+
+                if (hitMap || distToCenter < 28) {
+                    // Deal appropriate damage
+                    if (e.isExplosive) {
+                        createExplosion(e.x, e.y, ['#ff4757', '#fef08a', '#ffffff', '#dc2626']);
+                        createExplosion(e.x, e.y, ['#ff4757', '#fef08a']);
+                        health -= 60; // Huge damage penalty
+                    } else {
+                        createExplosion(e.x, e.y, ['#ff4757', '#1e90ff', '#fcd34d']);
+                        health -= 20; // Normal damage penalty
+                    }
+                    
+                    // Remove 20% of the currently placed flags
+                    if (flags.length > 0) {
+                        let removeCount = Math.ceil(flags.length * 0.2);
+                        flags.splice(-removeCount, removeCount);
+                    }
+
+                    enemies.splice(i, 1);
+                    playSound('hit');
+                    
+                    // Shake effect
+                    canvas.style.transform = `translate(${Math.random()*12-6}px, ${Math.random()*12-6}px)`;
+                    setTimeout(() => canvas.style.transform = 'translate(0,0)', 80);
+
+                    updateUI();
+                    if (health <= 0) {
+                        health = 0;
+                        updateUI();
+                        endGame(false);
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            // Radial Ocean Gradient
+            let bgGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(width, height));
+            bgGradient.addColorStop(0, '#0ea5e9'); // Brighter blue center
+            bgGradient.addColorStop(1, '#082f49'); // Deep dark ocean edges
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Subtle moving grid overlay for water texture
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1.5;
+            const gridOffset = (frameCount * 0.4) % 50;
+            ctx.beginPath();
+            for (let x = gridOffset; x < width; x += 50) {
+                ctx.moveTo(x, 0); ctx.lineTo(x, height);
+            }
+            for (let y = gridOffset; y < height; y += 50) {
+                ctx.moveTo(0, y); ctx.lineTo(width, y);
+            }
+            ctx.stroke();
+
+            ripples.forEach(r => r.draw());
+            drawUK();
+            defenseBoats.forEach(b => b.draw());
+            enemies.forEach(e => e.draw());
+            projectiles.forEach(p => p.draw());
+            particles.forEach(p => p.draw());
+            floatingTexts.forEach(ft => ft.draw());
+
+            if (gameState === 'playing') {
+                if (isPlacingBoat && mousePos) {
+                    // Deployment range ghost
+                    ctx.beginPath();
+                    ctx.arc(mousePos.x, mousePos.y, 180, 0, Math.PI * 2);
+                    let deployGrad = ctx.createRadialGradient(mousePos.x, mousePos.y, 0, mousePos.x, mousePos.y, 180);
+                    deployGrad.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+                    deployGrad.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+                    ctx.fillStyle = deployGrad;
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)';
+                    ctx.setLineDash([5, 10]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    
+                    // Ghost boat
+                    ctx.save();
+                    ctx.translate(mousePos.x, mousePos.y);
+                    ctx.globalAlpha = 0.7;
+                    ctx.fillStyle = '#3b82f6'; 
+                    ctx.beginPath();
+                    ctx.moveTo(18, 0); 
+                    ctx.lineTo(-12, -10); 
+                    ctx.lineTo(-12, 10); 
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                } else if (!isPlacingBoat && mousePos) {
+                    // Central turret aiming barrel
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    const angle = Math.atan2(mousePos.y - centerY, mousePos.x - centerX);
+                    ctx.rotate(angle);
+                    
+                    // Draw nice barrel
+                    let barrelGrad = ctx.createLinearGradient(15, -6, 15, 6);
+                    barrelGrad.addColorStop(0, '#64748b');
+                    barrelGrad.addColorStop(0.5, '#94a3b8');
+                    barrelGrad.addColorStop(1, '#475569');
+                    ctx.fillStyle = barrelGrad;
+                    ctx.beginPath();
+                    ctx.roundRect(15, -5, 28, 10, 3);
+                    ctx.fill();
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(40, -4, 5, 8); // muzzle
+
+                    ctx.restore();
+                }
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        // --- Inputs ---
+        let mousePos = null;
+
+        window.addEventListener('mousemove', (e) => {
+            mousePos = { x: e.clientX, y: e.clientY };
+        });
+
+        function handleShoot(clientX, clientY) {
+            if (gameState !== 'playing') return;
+            initAudio();
+
+            if (isPlacingBoat) {
+                const maxB = diffSettings[currentDifficulty].maxBoats;
+                if (score >= 5 && defenseBoats.length < maxB) {
+                    score -= 5;
+                    updateUI();
+                    defenseBoats.push(new DefenseBoat(clientX, clientY));
+                    playSound('deploy');
+                    isPlacingBoat = false;
+                    canvas.style.cursor = 'default';
+                } else {
+                    playSound('error');
+                    isPlacingBoat = false;
+                    canvas.style.cursor = 'default';
+                }
+                return;
+            }
+
+            playSound('shoot');
+            // Fire from tip of barrel
+            const angle = Math.atan2(clientY - centerY, clientX - centerX);
+            const barrelTipX = centerX + Math.cos(angle) * 40;
+            const barrelTipY = centerY + Math.sin(angle) * 40;
+            projectiles.push(new Projectile(barrelTipX, barrelTipY, clientX, clientY));
+            
+            // Add a small muzzle flash particle
+            particles.push(new Particle(barrelTipX, barrelTipY, '#fef08a'));
+        }
+
+        window.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button') || e.target.closest('a')) return; 
+            handleShoot(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            if (gameState === 'playing') e.preventDefault(); 
+            const touch = e.touches[0];
+            mousePos = { x: touch.clientX, y: touch.clientY };
+            handleShoot(touch.clientX, touch.clientY);
+        }, { passive: false });
+
+        document.getElementById('startBtn').addEventListener('click', resetGame);
+        document.getElementById('restartBtn').addEventListener('click', resetGame);
+        document.getElementById('playAgainBtn').addEventListener('click', resetGame);
+
+        document.getElementById('deployBtn').addEventListener('click', () => {
+            initAudio();
+            const maxB = diffSettings[currentDifficulty].maxBoats;
+            if (score >= 5 && defenseBoats.length < maxB) {
+                isPlacingBoat = !isPlacingBoat;
+                canvas.style.cursor = isPlacingBoat ? 'crosshair' : 'default';
+                if (isPlacingBoat) playSound('deploy');
+            } else {
+                playSound('error');
+            }
+        });
+
+        // Add touchmove for ghost boat dragging on mobile
+        window.addEventListener('touchmove', (e) => {
+            if (gameState === 'playing' && isPlacingBoat) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                mousePos = { x: touch.clientX, y: touch.clientY };
+            }
+        }, { passive: false });
+
+        loop();
+    </script>
+</body>
+</html>

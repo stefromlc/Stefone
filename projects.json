@@ -1,5 +1,22 @@
 [
   {
+    "title": "Defend The UK",
+    "slug": "defend-the-uk",
+    "description": "Defend the UK from an incoming enemy fleet! Strategize, deploy boats, and fire cannons. Track your score and health in real time for intense action.",
+    "thumbnail": "assets/thumbs/defend-the-uk.png",
+    "tags": [
+      "Defend",
+      "Fun",
+      "Game",
+      "Uk"
+    ],
+    "category": "Games",
+    "featured": true,
+    "date": "2026-02-22",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "Currently",
