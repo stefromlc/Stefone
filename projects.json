@@ -1,8 +1,10 @@
 [
   {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "Currently",
     "slug": "currently",
-    "description": "Save articles for later, filter unread stories, and search headlines instantly. Feeds cache locally for speed and refresh quietly on your schedule.",
+    "description": "Save articles to read later, filter unread stories with a click, and search headlines in seconds. Feeds are cached locally for faster loading and refresh quietly in the background on your schedule, so you always have the latest updates without interruptions.",
     "thumbnail": "assets/thumbs/currently.png",
     "tags": [
       "News",
@@ -12,16 +14,14 @@
     ],
     "category": "Tools",
     "featured": false,
-    "date": "2026-02-21",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-02-21"
   },
   {
     "demoUrl": "",
     "repoUrl": "",
     "title": "Favicon Lab",
     "slug": "favicon-lab",
-    "description": "Generate, preview, and export complete favicon and meta tag setups in one streamlined workspace. Design with emoji, shapes, text, or your own upload, fine-tune colors, gradients, size, and radius, then see everything live in browser tab and mobile mockups. Instantly export optimized PNGs, SVG, a web manifest, and a ready-to-paste SEO snippet—all generated locally in your browser.",
+    "description": "Create, preview, and export favicon and meta tag setups in one place. Design with emoji, shapes, text, or uploads, tweak colors and sizes, and see live previews. Export optimized PNGs, SVG, a web manifest, and a ready-to-paste SEO snippet—all generated locally.",
     "thumbnail": "assets/thumbs/favicon-lab.png",
     "tags": [
       "Favicon",
@@ -53,6 +53,8 @@
     "repoUrl": ""
   },
   {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "Abstractify",
     "slug": "abstractify",
     "description": "Generate bold abstract art from any photo. Tweak styles and colors in real time, remix instantly, and export high-resolution results—all locally in your browser.",
@@ -65,10 +67,8 @@
       "Tool"
     ],
     "category": "Art",
-    "featured": true,
-    "date": "2026-02-16",
-    "demoUrl": "",
-    "repoUrl": ""
+    "featured": false,
+    "date": "2026-02-16"
   },
   {
     "demoUrl": "",
@@ -118,7 +118,7 @@
       "Windows 95"
     ],
     "category": "UI/UX",
-    "featured": true,
+    "featured": false,
     "date": "2026-02-08"
   },
   {
@@ -153,7 +153,7 @@
       "Tools"
     ],
     "category": "Apps",
-    "featured": true,
+    "featured": false,
     "date": "2026-02-13"
   },
   {
