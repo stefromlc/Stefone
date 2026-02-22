@@ -65,18 +65,6 @@
             align-items: center;
             z-index: 10;
         }
-        .hud {
-            position: absolute;
-            top: 60px; /* Offset for the back button */
-            left: 0;
-            width: 100%;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            box-sizing: border-box;
-            pointer-events: none;
-            z-index: 5;
-        }
         .panel {
             pointer-events: auto;
             background: rgba(15, 23, 42, 0.85);
@@ -90,101 +78,103 @@
 <body class="text-white select-none">
 
     <!-- Back to Projects Button -->
-    <a href="/projects/" class="absolute top-4 left-4 z-50 bg-slate-800/90 hover:bg-slate-700 text-white px-4 py-2 rounded-xl border border-slate-600 shadow-lg font-bold transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-2 pointer-events-auto text-sm sm:text-base">
-        <span>←</span>
-        <span>Projects</span>
+    <a href="/projects/" class="absolute top-2 left-2 sm:top-4 sm:left-4 z-50 bg-slate-800/90 hover:bg-slate-700 text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-slate-600 shadow-md sm:shadow-lg font-bold transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-1 sm:space-x-2 pointer-events-auto text-sm sm:text-base">
+        <span class="text-lg leading-none mt-[-2px] sm:mt-0">←</span>
+        <span class="hidden sm:inline">Projects</span>
     </a>
 
     <!-- HUD -->
-    <div id="hud" class="hud hidden">
-        <div class="flex items-center space-x-2 bg-slate-900/80 px-4 py-2 rounded-full border border-slate-700 shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md">
-            <span id="playerAvatarDisplay" class="text-2xl mr-1 drop-shadow-md">👨‍✈️</span>
-            <span class="text-xl text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]">❤️</span>
-            <div class="w-24 sm:w-32 h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50 shadow-inner">
+    <div id="hud" class="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 hidden flex items-center gap-1.5 sm:gap-3 pointer-events-none">
+        <!-- Health -->
+        <div class="flex items-center space-x-1 sm:space-x-2 bg-slate-900/80 px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-slate-700 shadow-md backdrop-blur-md pointer-events-auto">
+            <span id="playerAvatarDisplay" class="text-base sm:text-2xl drop-shadow-md">👨‍✈️</span>
+            <span class="hidden sm:inline text-xl text-red-500 drop-shadow-md">❤️</span>
+            <div class="w-16 sm:w-32 h-2.5 sm:h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50 shadow-inner">
                 <div id="healthBar" class="h-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-300 w-full shadow-[0_0_10px_rgba(74,222,128,0.5)]"></div>
             </div>
-            <span id="healthText" class="font-bold ml-2 text-sm sm:text-base text-slate-100 drop-shadow-md">100%</span>
+            <span id="healthText" class="font-bold ml-1 sm:ml-2 text-[11px] sm:text-base text-slate-100 drop-shadow-md w-8 sm:w-12 text-right">100%</span>
         </div>
-        <div class="flex items-center space-x-3 sm:space-x-4 bg-slate-900/80 px-4 py-2 rounded-full border border-slate-700 shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md">
-            <div class="flex items-center space-x-1 sm:space-x-2 border-r border-slate-600/70 pr-3 sm:pr-4">
-                <span class="text-lg sm:text-xl drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">🏆</span>
-                <span id="highScoreTextHud" class="font-bold text-lg sm:text-xl text-yellow-400 drop-shadow-md">0</span>
+        <!-- Scores -->
+        <div class="flex items-center space-x-1 sm:space-x-3 bg-slate-900/80 px-2 sm:px-4 py-1 sm:py-2 rounded-full border border-slate-700 shadow-md backdrop-blur-md pointer-events-auto">
+            <div class="flex items-center space-x-1 border-r border-slate-600/70 pr-1 sm:pr-4">
+                <span class="text-sm sm:text-xl drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">🏆</span>
+                <span id="highScoreTextHud" class="font-bold text-sm sm:text-xl text-yellow-400 drop-shadow-md">0</span>
             </div>
-            <div class="flex items-center space-x-1 sm:space-x-2">
-                <span class="text-lg sm:text-2xl drop-shadow-md">☠️</span>
-                <span id="scoreText" class="font-bold text-lg sm:text-xl text-blue-300 drop-shadow-md">0 / 50</span>
+            <div class="flex items-center space-x-1 pl-1">
+                <span class="text-sm sm:text-2xl drop-shadow-md">☠️</span>
+                <span id="scoreText" class="font-bold text-sm sm:text-xl text-blue-300 drop-shadow-md">0 / 50</span>
             </div>
         </div>
     </div>
 
     <!-- Defense Boat Button -->
-    <div id="deployContainer" class="absolute bottom-10 w-full flex justify-center pointer-events-none z-10 hidden">
-        <button id="deployBtn" class="pointer-events-auto px-6 py-3 bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white font-bold rounded-full shadow-[0_0_20px_rgba(37,99,235,0.6)] border border-blue-400 transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-2 opacity-50 cursor-not-allowed">
-            <span class="text-xl drop-shadow-md">⚓</span>
-            <span id="deployText" class="drop-shadow-md">Deploy Boat (5 ☠️)</span>
+    <div id="deployContainer" class="absolute bottom-6 sm:bottom-10 w-full flex justify-center pointer-events-none z-10 hidden px-2">
+        <button id="deployBtn" class="pointer-events-auto px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white font-bold rounded-full shadow-[0_0_20px_rgba(37,99,235,0.6)] border border-blue-400 transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-1.5 sm:space-x-2 opacity-50 cursor-not-allowed">
+            <span class="text-lg sm:text-xl drop-shadow-md mt-[-2px] sm:mt-0">⚓</span>
+            <span id="deployText" class="text-sm sm:text-base drop-shadow-md whitespace-nowrap">Deploy Boat (5 ☠️)</span>
         </button>
     </div>
 
     <!-- Menus -->
     <div id="uiLayer" class="ui-layer">
         <!-- Start Screen -->
-        <div id="startScreen" class="panel rounded-3xl p-6 sm:p-8 w-[90%] max-w-md text-center transform transition-all">
-            <h1 class="text-4xl sm:text-5xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-br from-blue-300 via-blue-100 to-red-400 drop-shadow-lg tracking-tight">DEFEND THE UK</h1>
-            <p class="text-blue-100 mb-2 text-base sm:text-lg font-medium drop-shadow-md">Enemy fleets are approaching the shores!</p>
-            <p class="text-yellow-400 mb-6 font-bold text-lg drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]">High Score: <span id="highScoreTextMenu">0</span></p>
+        <div id="startScreen" class="panel rounded-2xl sm:rounded-3xl p-5 sm:p-8 w-[95%] sm:w-[90%] max-w-md text-center transform transition-all">
+            <h1 class="text-3xl sm:text-5xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-br from-blue-300 via-blue-100 to-red-400 drop-shadow-lg tracking-tight">DEFEND THE UK</h1>
+            <p class="text-blue-100 mb-2 text-sm sm:text-lg font-medium drop-shadow-md">Enemy fleets are approaching the shores!</p>
+            <p class="text-yellow-400 mb-6 font-bold text-base sm:text-lg drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]">High Score: <span id="highScoreTextMenu">0</span></p>
 
             <!-- Avatar Selection -->
-            <div class="mb-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-700/50 shadow-inner">
-                <p class="text-slate-300 mb-3 font-bold text-xs uppercase tracking-widest">Choose Commander</p>
+            <div class="mb-5 bg-slate-900/60 p-3 sm:p-4 rounded-2xl border border-slate-700/50 shadow-inner">
+                <p class="text-slate-300 mb-2 font-bold text-xs uppercase tracking-widest">Choose Commander</p>
                 <div class="flex justify-center space-x-2 sm:space-x-4" id="avatarSelection">
-                    <button class="avatar-btn text-3xl sm:text-4xl p-2 rounded-xl border-2 border-blue-500 bg-blue-800/60 transition-all transform hover:scale-110 shadow-[0_0_15px_rgba(59,130,246,0.5)]" data-avatar="👨‍✈️">👨‍✈️</button>
-                    <button class="avatar-btn text-3xl sm:text-4xl p-2 rounded-xl border-2 border-transparent hover:bg-blue-800/40 transition-all transform hover:scale-110" data-avatar="👩‍✈️">👩‍✈️</button>
-                    <button class="avatar-btn text-3xl sm:text-4xl p-2 rounded-xl border-2 border-transparent hover:bg-blue-800/40 transition-all transform hover:scale-110" data-avatar="🤖">🤖</button>
-                    <button class="avatar-btn text-3xl sm:text-4xl p-2 rounded-xl border-2 border-transparent hover:bg-blue-800/40 transition-all transform hover:scale-110" data-avatar="🐶">🐶</button>
+                    <button class="avatar-btn text-2xl sm:text-4xl p-2 rounded-xl border-2 border-blue-500 bg-blue-800/60 transition-all transform hover:scale-110 shadow-[0_0_15px_rgba(59,130,246,0.5)]" data-avatar="👨‍✈️">👨‍✈️</button>
+                    <button class="avatar-btn text-2xl sm:text-4xl p-2 rounded-xl border-2 border-transparent hover:bg-blue-800/40 transition-all transform hover:scale-110" data-avatar="👩‍✈️">👩‍✈️</button>
+                    <button class="avatar-btn text-2xl sm:text-4xl p-2 rounded-xl border-2 border-transparent hover:bg-blue-800/40 transition-all transform hover:scale-110" data-avatar="🤖">🤖</button>
+                    <button class="avatar-btn text-2xl sm:text-4xl p-2 rounded-xl border-2 border-transparent hover:bg-blue-800/40 transition-all transform hover:scale-110" data-avatar="🐶">🐶</button>
                 </div>
             </div>
 
             <!-- Difficulty Selection -->
-            <div class="mb-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-700/50 shadow-inner">
-                <p class="text-slate-300 mb-3 font-bold text-xs uppercase tracking-widest">Difficulty</p>
+            <div class="mb-5 bg-slate-900/60 p-3 sm:p-4 rounded-2xl border border-slate-700/50 shadow-inner">
+                <p class="text-slate-300 mb-2 font-bold text-xs uppercase tracking-widest">Difficulty</p>
                 <div class="flex flex-wrap justify-center gap-2 sm:gap-3">
-                    <button class="diff-btn px-3 sm:px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-green-600/60 hover:bg-green-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="easy">EASY</button>
-                    <button class="diff-btn px-3 sm:px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-yellow-600/80 hover:bg-yellow-500 transition-all transform hover:scale-105 ring-4 ring-white border-2 border-transparent" data-diff="normal">NORMAL</button>
-                    <button class="diff-btn px-3 sm:px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-orange-600/60 hover:bg-orange-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="hard">HARD</button>
-                    <button class="diff-btn px-3 sm:px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-red-600/60 hover:bg-red-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="expert">EXPERT</button>
-                    <button class="diff-btn px-3 sm:px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-purple-600/60 hover:bg-purple-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="nightmare">NIGHTMARE</button>
+                    <button class="diff-btn px-2.5 sm:px-4 py-1.5 sm:py-2 font-bold text-xs sm:text-sm rounded-xl bg-green-600/60 hover:bg-green-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="easy">EASY</button>
+                    <button class="diff-btn px-2.5 sm:px-4 py-1.5 sm:py-2 font-bold text-xs sm:text-sm rounded-xl bg-yellow-600/80 hover:bg-yellow-500 transition-all transform hover:scale-105 ring-4 ring-white border-2 border-transparent" data-diff="normal">NORMAL</button>
+                    <button class="diff-btn px-2.5 sm:px-4 py-1.5 sm:py-2 font-bold text-xs sm:text-sm rounded-xl bg-orange-600/60 hover:bg-orange-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="hard">HARD</button>
+                    <button class="diff-btn px-2.5 sm:px-4 py-1.5 sm:py-2 font-bold text-xs sm:text-sm rounded-xl bg-red-600/60 hover:bg-red-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="expert">EXPERT</button>
+                    <button class="diff-btn px-2.5 sm:px-4 py-1.5 sm:py-2 font-bold text-xs sm:text-sm rounded-xl bg-purple-600/60 hover:bg-purple-500 transition-all transform hover:scale-105 opacity-70 border-2 border-transparent" data-diff="nightmare">NIGHTMARE</button>
                 </div>
             </div>
             
-            <div class="bg-slate-900/60 rounded-2xl p-4 mb-6 text-left space-y-2 sm:space-y-3 border border-slate-700/50 shadow-inner text-sm sm:text-base font-medium text-slate-200">
-                <p class="flex items-center"><span class="text-xl sm:text-2xl mr-3 drop-shadow-md">🎯</span> Tap or click to fire cannons.</p>
-                <p class="flex items-center"><span class="text-xl sm:text-2xl mr-3 drop-shadow-md">⚓</span> Spend 5 points to deploy defenses.</p>
-                <p class="flex items-center"><span class="text-xl sm:text-2xl mr-3 drop-shadow-md">🛡️</span> Don't let them breach the island!</p>
+            <div class="bg-slate-900/60 rounded-2xl p-3 sm:p-4 mb-5 text-left space-y-2 border border-slate-700/50 shadow-inner text-xs sm:text-base font-medium text-slate-200">
+                <p class="flex items-center"><span class="text-lg sm:text-2xl mr-2 drop-shadow-md">🎯</span> Tap or click to fire cannons.</p>
+                <p class="flex items-center"><span class="text-lg sm:text-2xl mr-2 drop-shadow-md">⚓</span> Spend 5 points to deploy defenses.</p>
+                <p class="flex items-center"><span class="text-lg sm:text-2xl mr-2 drop-shadow-md">🛡️</span> Don't let them breach the island!</p>
             </div>
 
-            <button id="startBtn" class="w-full py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white text-lg sm:text-xl font-bold rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-all transform hover:scale-105 active:scale-95 border border-blue-400/50">
+            <button id="startBtn" class="w-full py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white text-base sm:text-xl font-bold rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-all transform hover:scale-105 active:scale-95 border border-blue-400/50">
                 START BATTLE
             </button>
         </div>
 
         <!-- Game Over Screen -->
-        <div id="gameOverScreen" class="panel rounded-3xl p-8 max-w-md text-center hidden">
-            <h1 class="text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-br from-red-400 to-red-600 drop-shadow-lg tracking-tight">THE UK FELL!</h1>
-            <p class="text-slate-200 mb-6 text-xl font-medium">The enemy fleet breached our defenses.</p>
-            <p class="mb-4 text-2xl font-bold text-white">Boats Destroyed: <span id="finalScoreLoss" class="text-blue-400 drop-shadow-[0_0_5px_rgba(96,165,250,0.8)]">0</span></p>
-            <p class="mb-8 text-lg font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" id="newHighScoreAlertLoss"></p>
-            <button id="restartBtn" class="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white text-xl font-bold rounded-2xl shadow-[0_0_20px_rgba(220,38,38,0.5)] transition-all transform hover:scale-105 active:scale-95 border border-red-400/50">
+        <div id="gameOverScreen" class="panel rounded-3xl p-8 max-w-md text-center hidden w-[90%] sm:w-full">
+            <h1 class="text-4xl sm:text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-br from-red-400 to-red-600 drop-shadow-lg tracking-tight">THE UK FELL!</h1>
+            <p class="text-slate-200 mb-6 text-lg sm:text-xl font-medium">The enemy fleet breached our defenses.</p>
+            <p class="mb-4 text-xl sm:text-2xl font-bold text-white">Boats Destroyed: <span id="finalScoreLoss" class="text-blue-400 drop-shadow-[0_0_5px_rgba(96,165,250,0.8)]">0</span></p>
+            <p class="mb-8 text-base sm:text-lg font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" id="newHighScoreAlertLoss"></p>
+            <button id="restartBtn" class="w-full py-3 sm:py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white text-lg sm:text-xl font-bold rounded-2xl shadow-[0_0_20px_rgba(220,38,38,0.5)] transition-all transform hover:scale-105 active:scale-95 border border-red-400/50">
                 TRY AGAIN
             </button>
         </div>
 
         <!-- Victory Screen -->
-        <div id="victoryScreen" class="panel rounded-3xl p-8 max-w-md text-center hidden">
-            <h1 class="text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-yellow-500 drop-shadow-lg tracking-tight">RULE BRITANNIA!</h1>
-            <p class="text-slate-200 mb-6 text-xl font-medium">You successfully defended the shores!</p>
-            <p class="mb-4 text-2xl font-bold text-white">The invasion is over.</p>
-            <p class="mb-8 text-lg font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" id="newHighScoreAlertWin"></p>
-            <button id="playAgainBtn" class="w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-slate-900 text-xl font-black rounded-2xl shadow-[0_0_20px_rgba(234,179,8,0.6)] transition-all transform hover:scale-105 active:scale-95 border border-yellow-300/50">
+        <div id="victoryScreen" class="panel rounded-3xl p-8 max-w-md text-center hidden w-[90%] sm:w-full">
+            <h1 class="text-4xl sm:text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-yellow-500 drop-shadow-lg tracking-tight">RULE BRITANNIA!</h1>
+            <p class="text-slate-200 mb-6 text-lg sm:text-xl font-medium">You successfully defended the shores!</p>
+            <p class="mb-4 text-xl sm:text-2xl font-bold text-white">The invasion is over.</p>
+            <p class="mb-8 text-base sm:text-lg font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" id="newHighScoreAlertWin"></p>
+            <button id="playAgainBtn" class="w-full py-3 sm:py-4 bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-slate-900 text-lg sm:text-xl font-black rounded-2xl shadow-[0_0_20px_rgba(234,179,8,0.6)] transition-all transform hover:scale-105 active:scale-95 border border-yellow-300/50">
                 PLAY AGAIN
             </button>
         </div>
@@ -1171,12 +1161,12 @@
         }
 
         window.addEventListener('mousedown', (e) => {
-            if (e.target.closest('button') || e.target.closest('a')) return; 
+            if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.panel') || e.target.closest('#hud')) return; 
             handleShoot(e.clientX, e.clientY);
         });
 
         window.addEventListener('touchstart', (e) => {
-            if (e.target.closest('button') || e.target.closest('a')) return;
+            if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.panel') || e.target.closest('#hud')) return;
             if (gameState === 'playing') e.preventDefault(); 
             const touch = e.touches[0];
             mousePos = { x: touch.clientX, y: touch.clientY };
