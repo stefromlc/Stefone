@@ -3,7 +3,7 @@
     "title": "Defend The UK",
     "slug": "defend-the-uk",
     "description": "Defend the UK from an incoming enemy fleet! Strategize, deploy boats, and fire cannons. Track your score and health in real time for intense action.",
-    "thumbnail": "assets/thumbs/defend-the-uk.png",
+    "thumbnail": "assets/thumbs/defend-the-uk.jpg",
     "tags": [
       "Defend",
       "Fun",
@@ -22,7 +22,7 @@
     "title": "Currently",
     "slug": "currently",
     "description": "Save articles to read later, filter unread stories with a click, and search headlines in seconds. Feeds are cached locally for faster loading and refresh quietly in the background on your schedule, so you always have the latest updates without interruptions.",
-    "thumbnail": "assets/thumbs/currently.png",
+    "thumbnail": "assets/thumbs/currently.jpg",
     "tags": [
       "News",
       "RSS",
@@ -39,7 +39,7 @@
     "title": "Favicon Lab",
     "slug": "favicon-lab",
     "description": "Create, preview, and export favicon and meta tag setups in one place. Design with emoji, shapes, text, or uploads, tweak colors and sizes, and see live previews. Export optimized PNGs, SVG, a web manifest, and a ready-to-paste SEO snippet—all generated locally.",
-    "thumbnail": "assets/thumbs/favicon-lab.png",
+    "thumbnail": "assets/thumbs/favicon-lab.jpg",
     "tags": [
       "Favicon",
       "Meta",
@@ -54,7 +54,7 @@
     "title": "Monster Tracker",
     "slug": "monster-tracker",
     "description": "Log every can, track your stash, and see the real impact of your energy habit in one neon-lit dashboard. Monitor spending, stock levels, caffeine, sugar, hydration debt, and long-term forecasts—all stored locally in your browser.",
-    "thumbnail": "assets/thumbs/monster-tracker.png",
+    "thumbnail": "assets/thumbs/monster-tracker.jpg",
     "tags": [
       "App",
       "Drink",
@@ -75,7 +75,7 @@
     "title": "Abstractify",
     "slug": "abstractify",
     "description": "Generate bold abstract art from any photo. Tweak styles and colors in real time, remix instantly, and export high-resolution results—all locally in your browser.",
-    "thumbnail": "assets/thumbs/abstractify.png",
+    "thumbnail": "assets/thumbs/abstractify.jpg",
     "tags": [
       "Abstract",
       "Art",
@@ -93,7 +93,7 @@
     "title": "SpendScope",
     "slug": "spendscope",
     "description": "Track recurring spending and see exactly how small habits compound over days, months, and years. Explore long-term “wealth potential” and fun goals in the Reward Gallery.",
-    "thumbnail": "assets/thumbs/spendscope.png",
+    "thumbnail": "assets/thumbs/spendscope.jpg",
     "tags": [
       "Financial",
       "Scope",
@@ -111,7 +111,7 @@
     "title": "AirTouch Gallery",
     "slug": "airtouch-gallery",
     "description": "Browse photos or explore maps with hands-free gestures using your webcam. Pinch, pan, zoom, rotate, and switch modes, all running locally for smooth, private control.",
-    "thumbnail": "assets/thumbs/airtouch-gallery.png",
+    "thumbnail": "assets/thumbs/airtouch-gallery.jpg",
     "tags": [
       "Gesture Control",
       "Hands-Free",
@@ -128,7 +128,7 @@
     "title": "Open95",
     "slug": "open95",
     "description": "A browser-based retro OS inspired by Windows 95, complete with a working desktop, classic apps, and saved state. Includes a built-in Marketplace where every app is free.",
-    "thumbnail": "assets/thumbs/open95.png",
+    "thumbnail": "assets/thumbs/open95.jpg",
     "tags": [
       "Nostalgia",
       "Retro",
@@ -144,7 +144,7 @@
     "title": "Tune 3310",
     "slug": "tune-3310",
     "description": "Make your own Nokia 3310-style ringtone by tapping in notes and shaping the melody. A tiny, nostalgic tool for iconic beeps and monochrome-era vibes.",
-    "thumbnail": "assets/thumbs/tune-3310.png",
+    "thumbnail": "assets/thumbs/tune-3310.jpg",
     "tags": [
       "Fun",
       "Nokia",
@@ -162,7 +162,7 @@
     "title": "TimeBox",
     "slug": "timebox",
     "description": "A cinematic 3D word clock that turns the current time into a floating, glowing scene. Tweak presets, camera motion, and glow settings—or let it run as an ambient screensaver.",
-    "thumbnail": "assets/thumbs/timebox.png",
+    "thumbnail": "assets/thumbs/timebox.jpg",
     "tags": [
       "Clock",
       "Fun",
@@ -179,7 +179,7 @@
     "title": "PromptVault",
     "slug": "promptvault",
     "description": "A focused place to write, store, and reuse AI prompts without clutter. Everything stays organized, searchable, and available offline with a calm, writing-first layout.",
-    "thumbnail": "assets/thumbs/promptvault.png",
+    "thumbnail": "assets/thumbs/promptvault.jpg",
     "tags": [
       "AI Tools",
       "Organization",
@@ -197,7 +197,7 @@
     "title": "Sonar",
     "slug": "sonar",
     "description": "A retro naval tactics game with Battleship energy and a CRT-glow interface. Hunt ships with sonar pings, smart AI, and punchy sound for tight, strategic rounds.",
-    "thumbnail": "assets/thumbs/sonar.png",
+    "thumbnail": "assets/thumbs/sonar.jpg",
     "tags": [
       "Arcade",
       "Battleships",
@@ -216,7 +216,7 @@
     "title": "JobHunter",
     "slug": "jobhunter",
     "description": "A private, offline job-hunt dashboard: track applications with Kanban, prep STAR stories, and tailor CVs or cover letters—securely stored on your device.",
-    "thumbnail": "assets/thumbs/jobhunter.png",
+    "thumbnail": "assets/thumbs/jobhunter.jpg",
     "tags": [
       "Apps",
       "Hunter",
@@ -235,7 +235,7 @@
     "title": "Sound Canvas",
     "slug": "sound-canvas",
     "description": "Turn audio into animated visuals you can tweak in real time. Explore styles, dial in the look, and export shareable audio art in a few clicks.",
-    "thumbnail": "assets/thumbs/sound-canvas.png",
+    "thumbnail": "assets/thumbs/sound-canvas.jpg",
     "tags": [
       "Audio",
       "Export",
@@ -253,7 +253,7 @@
     "title": "Split PDF",
     "slug": "split-pdf",
     "description": "Split PDFs right in your browser—by page count or equal chunks—with no uploads and no fuss. Fast, private, and fully on-device.",
-    "thumbnail": "assets/thumbs/split-pdf.png",
+    "thumbnail": "assets/thumbs/split-pdf.jpg",
     "tags": [
       "PDF",
       "Productivity",
@@ -269,7 +269,7 @@
     "title": "MetaView",
     "slug": "metaview",
     "description": "Preview how any URL will look on social, search, and messaging, then refine titles, descriptions, and images live. Includes quick audits and copy-ready meta tags for a clean finish.",
-    "thumbnail": "assets/thumbs/metaview.png",
+    "thumbnail": "assets/thumbs/metaview.jpg",
     "tags": [
       "Audit",
       "Productivity",
@@ -288,7 +288,7 @@
     "title": "LifeStats",
     "slug": "lifestats",
     "description": "Convert your age into surprisingly relatable numbers like sleep, heartbeats, and steps. More playful perspective than precision—made to make time feel tangible.",
-    "thumbnail": "assets/thumbs/lifestats.png",
+    "thumbnail": "assets/thumbs/lifestats.jpg",
     "tags": [
       "Data",
       "Interactive",
@@ -306,7 +306,7 @@
     "title": "StreamPack",
     "slug": "streampack",
     "description": "A self-hosted staging tool for packing shows and movies onto a USB drive with clarity and control. Auto-group episodes, build a queue fast, and track storage so nothing overflows.",
-    "thumbnail": "assets/thumbs/streampack.png",
+    "thumbnail": "assets/thumbs/streampack.jpg",
     "tags": [
       "File",
       "Jellyfin",
