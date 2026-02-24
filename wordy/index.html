@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Primary Meta Tags -->
+<title>Wordy – Themed Word Search Game Online</title>
+<meta name="title" content="Wordy – Themed Word Search Game Online" />
+<meta name="description" content="Dive into vibrant themed boards and hunt hidden words across Tech, Star Wars, Nature, and more. Smooth drag controls and polished animations." />
+
+<!-- Favicon configuration -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2225%22%20fill%3D%22%23f0f7f9%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2252%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2265%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22%23ffffff%22%3E%F0%9F%94%8D%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://stefone.com/wordy/" />
+<meta property="og:title" content="Wordy – Themed Word Search Game Online" />
+<meta property="og:description" content="Dive into vibrant themed boards and hunt hidden words across Tech, Star Wars, Nature, and more. Smooth drag controls and polished animations." />
+<meta property="og:image" content="https://stefone.com/assets/thumbs/wordy.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Wordy – Themed Word Search Game Online preview" />
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Wordy – Themed Word Search Game Online" />
+<meta name="twitter:description" content="Dive into vibrant themed boards and hunt hidden words across Tech, Star Wars, Nature, and more. Smooth drag controls and polished animations." />
+<meta name="twitter:image" content="https://stefone.com/assets/thumbs/wordy.jpg" />
+
+<!-- Optional -->
+<meta name="theme-color" content="#f0f7f9">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            touch-action: manipulation;
+            overscroll-behavior: none;
+            color: #1e293b;
+        }
+
+        /* Dynamic Background & Frosted Overlay */
+        .bg-dynamic {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.8s ease-in-out;
+            background-color: #e0e7ff; /* Fallback */
+        }
+
+        .bg-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: rgba(255, 255, 255, 0.35); /* Lowered frost opacity */
+            backdrop-filter: blur(8px); /* Lowered blur */
+            -webkit-backdrop-filter: blur(8px);
+            transition: background 0.3s ease;
+        }
+
+        html.dark .bg-overlay {
+            background: rgba(15, 23, 42, 0.65); /* Dark mode frost */
+        }
+
+        /* Premium Glass Panel */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255,255,255,1);
+            transition: all 0.3s ease;
+        }
+
+        html.dark .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        /* Game Board Enhancements */
+        .grid-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: #ffffff;
+            border-radius: 1.25rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 8px rgba(255,255,255,0.4);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        html.dark .grid-container {
+            background: rgba(15, 23, 42, 0.85);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 8px rgba(255,255,255,0.1);
+        }
+
+        .grid-letters {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        .grid-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            color: #475569;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border-radius: 0.5rem;
+        }
+
+        html.dark .grid-cell {
+            color: #94a3b8;
+        }
+
+        .grid-cell.highlighted {
+            transform: scale(1.15);
+            color: #0f172a;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        html.dark .grid-cell.highlighted {
+            color: #f8fafc;
+        }
+
+        .svg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .selection-line {
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0.6;
+            transition: stroke 0.2s ease, opacity 0.2s ease;
+            mix-blend-mode: multiply;
+        }
+
+        .selection-line.active {
+            opacity: 0.5;
+            stroke: #cbd5e1;
+        }
+
+        /* Particle Visuals */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 20;
+            animation: burst 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes burst {
+            0% { transform: scale(1) translate(0, 0); opacity: 1; }
+            100% { transform: scale(0) translate(var(--tx), var(--ty)); opacity: 0; }
+        }
+
+        /* Word List Styling */
+        .word-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .word-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: var(--tw-gradient-from);
+            opacity: 0.1;
+            transition: width 0.4s ease;
+            z-index: 0;
+        }
+
+        .word-item.found {
+            opacity: 0.6;
+            transform: scale(0.96);
+            border-color: transparent !important;
+            background: #f1f5f9;
+            animation: pulseFound 0.4s ease;
+        }
+        
+        @keyframes pulseFound {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(0.96); }
+        }
+
+        html.dark .word-item.found {
+            background: rgba(15, 23, 42, 0.6) !important;
+        }
+
+        .word-item.found span {
+            text-decoration: line-through;
+            color: #64748b;
+        }
+
+        .word-item > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.02);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
+
+        /* Modal Animation */
+        @keyframes popIn {
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .modal-animate {
+            animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* UI Controls */
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            box-shadow: 0 4px 15px -3px rgba(99, 102, 241, 0.4);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            box-shadow: 0 6px 20px -3px rgba(99, 102, 241, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 px-4 sm:px-8">
+
+    <div id="bg-dynamic" class="bg-dynamic"></div>
+    <div class="bg-overlay"></div>
+
+    <!-- Header & Navigation -->
+    <header class="w-full max-w-6xl flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+        <div class="flex items-center gap-4">
+            <a href="/projects/" class="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 active:scale-95" title="Back to Projects">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </a>
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 tracking-tight flex items-center gap-2">
+                    Word Search
+                </h1>
+                <p class="text-slate-500 dark:text-slate-300 font-medium text-sm mt-0.5" id="progress-text">Find 0 of 0 words</p>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-3 glass-panel p-2.5 rounded-2xl">
+            <!-- Theme Toggle -->
+            <button id="theme-toggle" class="flex items-center justify-center w-9 h-9 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Toggle Dark Mode">
+                <svg id="theme-icon-light" class="w-5 h-5 hidden dark:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <svg id="theme-icon-dark" class="w-5 h-5 block dark:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+
+            <!-- Preset Selector -->
+            <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                <svg class="w-4 h-4 text-slate-400 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <select id="preset-select" class="bg-transparent border-none outline-none text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer pr-2 appearance-none">
+                    <option value="tech">Tech & Code</option>
+                    <option value="starwars">Star Wars</option>
+                    <option value="astronomy">Astronomy</option>
+                    <option value="animals">Animals</option>
+                    <option value="music">Music</option>
+                    <option value="nature">Nature</option>
+                </select>
+            </div>
+
+            <!-- Difficulty Selector -->
+            <div class="relative bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                <svg class="w-4 h-4 text-slate-400 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                <select id="difficulty-select" class="bg-transparent border-none outline-none text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer pr-2 appearance-none">
+                    <option value="easy">Easy (10x10)</option>
+                    <option value="medium" selected>Medium (15x15)</option>
+                    <option value="hard">Hard (20x20)</option>
+                </select>
+            </div>
+
+            <button id="new-game-btn" class="btn-primary text-white text-sm font-bold py-2 px-5 rounded-xl transition-all active:scale-95 flex items-center gap-2 ml-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
+                Shuffle
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="w-full max-w-6xl flex flex-col lg:flex-row gap-8 items-start">
+        
+        <!-- Game Board -->
+        <div class="w-full lg:w-2/3 flex-shrink-0 relative">
+            <div id="grid-container" class="grid-container">
+                <svg id="svg-overlay" class="svg-overlay"></svg>
+                <div id="grid-letters" class="grid-letters"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar / Word List -->
+        <div class="w-full lg:w-1/3 glass-panel rounded-3xl p-6 flex flex-col h-auto lg:h-[calc(100vw*2/3)] lg:max-h-[750px] max-w-md mx-auto lg:mx-0">
+            <div class="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-600/60 pb-4 mb-5">
+                <h2 class="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                    Targets
+                </h2>
+                <span id="words-left-badge" class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-xs py-1.5 px-3 rounded-full shadow-md">
+                    0 left
+                </span>
+            </div>
+            <div id="word-list" class="flex-1 overflow-y-auto flex flex-wrap gap-2.5 content-start pr-2">
+                <!-- Words injected here -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/60 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-[2rem] p-10 max-w-sm w-full shadow-2xl modal-animate text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-amber-400 via-pink-500 to-indigo-500"></div>
+            
+            <div class="w-24 h-24 bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-white dark:border-slate-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#victory-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                        <linearGradient id="victory-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#6366f1" />
+                            <stop offset="100%" stop-color="#d946ef" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            
+            <h2 class="text-4xl font-extrabold text-slate-800 dark:text-white mb-3 tracking-tight">Stellar!</h2>
+            <p class="text-slate-500 dark:text-slate-300 mb-8 font-medium text-lg">You conquered the <span id="modal-preset" class="font-bold text-indigo-500 dark:text-indigo-400">Tech</span> board on <span id="modal-difficulty" class="capitalize font-bold text-purple-500 dark:text-purple-400">medium</span>.</p>
+            
+            <button id="play-again-btn" class="w-full btn-primary text-white font-bold py-4 px-6 rounded-2xl transition-all active:scale-95 text-lg shadow-lg">
+                Play Next Round
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Web Audio API Synth ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'tick') {
+                // Subtle click when dragging over letters
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+                gainNode.gain.setValueAtTime(0.05, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'success') {
+                // Bright chime for finding a word
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.15, now + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'victory') {
+                // Ascending arpeggio for winning
+                osc.type = 'sine';
+                const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
+                notes.forEach((freq, i) => {
+                    osc.frequency.setValueAtTime(freq, now + i * 0.15);
+                });
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.2, now + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + (notes.length * 0.15) + 0.5);
+                osc.start(now);
+                osc.stop(now + (notes.length * 0.15) + 0.5);
+            }
+        }
+
+        // --- Game Configuration & Data ---
+        const HIGHLIGHT_COLORS = [
+            '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e'
+        ];
+
+        const ALL_DIRECTIONS = [
+            [1, 0],   // Horizontal (left → right)
+            [-1, 0],  // Horizontal (right → left)
+            [0, 1],   // Vertical (top → bottom)
+            [0, -1],  // Vertical (bottom → top)
+            [1, 1],   // Diagonal (top-left → bottom-right)
+            [-1, -1], // Diagonal (bottom-right → top-left)
+            [1, -1],  // Diagonal (bottom-left → top-right)
+            [-1, 1]   // Diagonal (top-right → bottom-left)
+        ];
+
+        const DIFFICULTIES = {
+            easy: { size: 10, wordCount: 8, directions: ALL_DIRECTIONS }, 
+            medium: { size: 15, wordCount: 14, directions: ALL_DIRECTIONS }, 
+            hard: { size: 20, wordCount: 22, directions: ALL_DIRECTIONS } 
+        };
+
+const CATEGORIES = {
+  tech: [
+    "ALGORITHM","APPLICATION","BANDWIDTH","BROWSER","BYTE","CACHE","CLOUD","COMPILER",
+    "DATABASE","DEBUG","ENCRYPTION","FIREWALL","HARDWARE","INTERFACE","INTERNET","KERNEL",
+    "KEYBOARD","LATENCY","LOGIC","MALWARE","MEMORY","MONITOR","NETWORK","NODE","PACKET",
+    "PASSWORD","PIXEL","PROTOCOL","PYTHON","QUERY","ROUTER","RUNTIME","SCRIPT","SERVER",
+    "SOFTWARE","SYNTAX","SYSTEM","TERMINAL","THREAD","TOKEN","VARIABLE","VIRTUAL","WIDGET",
+    "MICROSOFT","APPLE","GOOGLE","AMAZON","META","INTEL","NVIDIA","SAMSUNG",
+    "CISCO","ORACLE","TESLA","SPOTIFY","NETFLIX","LINUX","WINDOWS","ANDROID","MACOS",
+    "CHROME","SAFARI","FIREFOX","GITHUB","GITLAB","DOCKER","KUBERNETES","AZURE",
+    "FRAMEWORK","LIBRARY","MICROSERVICE","DEVOPS","PIPELINE","AGILE",
+    "SCRUM","BACKEND","FRONTEND","FULLSTACK","JAVASCRIPT","TYPESCRIPT","JAVA","RUST",
+    "SWIFT","KOTLIN","CPLUSPLUS","HTML","CSS","NOSQL","REDIS",
+    "BLOCKCHAIN","CRYPTOGRAPHY","DATAWAREHOUSE","VIRTUALIZATION","CONTAINER","HYPERVISOR",
+    "AUTOMATION","ROBOTICS","SEMICONDUCTOR","FIRMWARE","MAINFRAME","WORKSTATION"
+  ],
+
+  starwars: [
+    "SKYWALKER","VADER","JEDI","SITH","LIGHTSABER","TATOOINE","DROID","MILLENNIUM",
+    "FALCON","YODA","CHEWBACCA","MANDALORIAN","GROGU","ENDOR","HOTH","BLASTER",
+    "GALAXY","FORCE","EMPIRE","REBELLION","WOOKIEE","EWOK","KENOBI","LEIA","HAN",
+    "LUKE","ANAKIN","PADME","PALPATINE","SIDIOUS","MAUL","DOOKU","GRIEVOUS","AHSOKA",
+    "REY","FINN","POE","KYLO","BENSOLO","SNOKE","PHASMA",
+    "IGLOO","DROIDEKA","TIEFIGHTER","XWING","YWING","AWING","BWING","STARDESTROYER",
+    "DEATHSTAR","SUPERLASER","CORUSCANT","NABOO","KASHYYYK",
+    "MUSTAFAR","GEONOSIS","KAMINO","DAGOBAH","BESPIN","ALDERAAN","JAKKU","CRAIT","SCARIF",
+    "JEDHA","ILUM","MORABAND","SULLUST","LOTHAL","HUTT","JABBA","BOBAFETT","JANGOFETT",
+    "CADBANE","HERA","SABINE","EZRA","KANAN","THRAWN","TARKIN","MACEWINDU","QUIGON",
+    "OBIWAN","CLONETROOPER","STORMTROOPER","PODRACER","HYPERSPACE","HOLOCRON","KYBER",
+    "CARBONITE","SANDCRAWLER","CANTINA","MOSEISLEY","KESSEL",
+    "ORDER","SABER","CLONES","SENATE","REPUBLIC","OUTER","RIMWORLD"
+  ],
+
+  astronomy: [
+    "ASTRONOMY","GALAXY","NEBULA","PLANET","COMET","ASTEROID","METEOR","ORBIT","GRAVITY",
+    "UNIVERSE","ECLIPSE","HORIZON","ZENITH","QUASAR","PULSAR","VACUUM","STELLAR","COSMOS",
+    "SUPERNOVA","BLACKHOLE","CONSTELLATION","TELESCOPE","EQUINOX","SOLSTICE","STAR",
+    "MOON","SATELLITE","EXOPLANET","DWARFPLANET","KUIPER","OORT","ASTROPHYSICS","SPECTRUM",
+    "REDSHIFT","BLUESHIFT","LIGHTYEAR","PARSEC","AURORA","MAGNETOSPHERE","IONOSPHERE",
+    "EXOSPHERE","TROPOSPHERE","STRATOSPHERE","MESOSPHERE","THERMOSPHERE","PHOTON",
+    "SPECTROSCOPY","INTERFEROMETER","OBSERVATORY","RADIO","INFRARED","ULTRAVIOLET",
+    "GAMMARAY","MICROWAVE","COSMICRAYS","BIGBANG","DARKMATTER","DARKENERGY","SPACETIME",
+    "RELATIVITY","SINGULARITY","EVENTHORIZON","ACCRETION","DISK","PLASMA","FUSION",
+    "NUCLEOSYNTHESIS","CLUSTER","SUPRACLUSTER","MILKYWAY","ANDROMEDA","LOCALGROUP","HUBBLE",
+    "JAMESWEBB","KEPLER","GAIA","SPITZER","CHANDRA","FERMI","VOYAGER","CASSINI",
+    "NEWHORIZONS","MERCURY","VENUS","EARTH","MARS","JUPITER","SATURN","URANUS","NEPTUNE",
+    "PLUTO","CERES","ERIS","HAUMEA","MAKEMAKE","RING","ATMOSPHERE","EQUATOR","SOLAR"
+  ],
+
+  animals: [
+    "ELEPHANT","GIRAFFE","PENGUIN","DOLPHIN","CHEETAH","KANGAROO","GORILLA","OCTOPUS",
+    "PANTHER","FALCON","IGUANA","JAGUAR","LEOPARD","OSTRICH","PELICAN","WALRUS","ZEBRA",
+    "RHINOCEROS","HIPPOPOTAMUS","CHIMPANZEE","CROCODILE","ALLIGATOR","FLAMINGO","MEERKAT",
+    "LION","TIGER","BEAR","WOLF","FOX","DEER","MOOSE","ELK","BISON","BUFFALO","CAMEL",
+    "LLAMA","ALPACA","GOAT","SHEEP","COW","HORSE","DONKEY","MULE","PIG","BOAR","RABBIT",
+    "HARE","SQUIRREL","RACCOON","OTTER","BEAVER","BADGER","SKUNK","MINK","SEAL",
+    "MANATEE","WHALE","ORCA","SHARK","RAY","EEL","SALMON","TROUT","TUNA","SQUID","CRAB",
+    "LOBSTER","SHRIMP","JELLYFISH","SEAHORSE","STARFISH","CORAL","SPONGE","EAGLE","HAWK",
+    "PARROT","TOUCAN","PEACOCK","SWAN","GOOSE","DUCK","HUMMINGBIRD","WOODPECKER",
+    "ROBIN","SPARROW","PIGEON","CROW","RAVEN","SNAKE","COBRA","PYTHON","VIPER",
+    "ANTELOPE","LEMUR","HYENA","ARMADILLO","PORCUPINE","WOMBAT"
+  ],
+
+  music: [
+    "SYMPHONY","HARMONY","MELODY","RHYTHM","CHORUS","GUITAR","PIANO","VIOLIN","TRUMPET",
+    "SONATA","TEMPO","TREBLE","BASS","ACOUSTIC","DYNAMIC","OCTAVE","CHORD","VOCAL",
+    "DRUMS","CYMBAL","SNARE","KICK","HIHAT","TOMTOM","PERCUSSION","MARIMBA","XYLOPHONE",
+    "TIMPANI","CONGA","BONGO","TAMBOURINE","TRIANGLE","CELLO","VIOLA","BASSOON","OBOE",
+    "CLARINET","FLUTE","PICCOLO","SAXOPHONE","TROMBONE","TUBA","HARP",
+    "ORCHESTRA","CONDUCTOR","COMPOSER","ARRANGEMENT","SCORE","STAFF","CLEF","KEYSIGNATURE",
+    "TIMESIGNATURE","MEASURE","BARLINE","REST","NOTE","ARPEGGIO","GLISSANDO","VIBRATO",
+    "LEGATO","STACCATO","ACCENT","FERMATA","MODULATION","CADENCE","COUNTERPOINT","POLYPHONY",
+    "MONOPHONY","HOMOPHONY","IMPROVISATION","JAZZ","BLUES","ROCK","POP","HIPHOP",
+    "COUNTRY","FOLK","REGGAE","SOUL","FUNK","DISCO","TECHNO","HOUSE","TRANCE","DUBSTEP",
+    "AMBIENT","METAL","PUNK","LYRICS","VERSE","BRIDGE","HOOK","REFRAIN","BEAT",
+    "GROOVE","SYNCOPATION","SWING"
+  ],
+
+  nature: [
+    "MOUNTAIN","OCEAN","FOREST","DESERT","CANYON","GLACIER","VOLCANO","ISLAND","RIVER",
+    "TUNDRA","JUNGLE","PRAIRIE","VALLEY","LAGOON","OASIS","PLATEAU","SAVANNA","MARSH",
+    "WATERFALL","CLIFF","COAST","BEACH","DUNE","REEF","BAY","COVE","ESTUARY","DELTA",
+    "FJORD","STRAIT","GULF","LAKE","POND","STREAM","BROOK","SPRING","MEADOW","GRASSLAND",
+    "WETLAND","SWAMP","BOG","FEN","MANGROVE","RAINFOREST","WOODLAND","TAIGA","STEPPE",
+    "CAVE","GROTTO","ARCH","BUTTE","MESA","RIDGE","PEAK","SUMMIT","CRATER",
+    "LAVA","GEYSER","HOTSPRING","SINKHOLE","THUNDER","LIGHTNING","RAINBOW",
+    "AURORA","BLIZZARD","HURRICANE","TORNADO","MONSOON","DROUGHT","FLOOD",
+    "TYPHOON","CYCLONE","ECOSYSTEM","BIOME","HABITAT","FOODCHAIN","POLLINATION",
+    "PHOTOSYNTHESIS","CARBONCYCLE","NITROGENCYCLE","WATERCYCLE","CEDAR","PINE","OAK",
+    "MAPLE","BIRCH","REDWOOD","SEQUOIA","BAMBOO","FERN","MOSS","LICHEN","WILDFLOWER",
+    "CACTUS","PALM","CORAL","KELP"
+  ]
+};
+
+        const BACKGROUNDS = {
+            tech: "https://images6.alphacoders.com/648/648552.jpg",
+            starwars: "https://wallpapers.com/images/featured/star-wars-plzcoaffexgf4h81.jpg",
+            astronomy: "https://cdn.mos.cms.futurecdn.net/HuGGeENt6kGyixe3hT9tnY.jpg",
+            animals: "https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=2068&auto=format&fit=crop",
+            music: "https://images6.alphacoders.com/135/thumb-1920-1355053.png",
+            nature: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2071&auto=format&fit=crop"
+        };
+
+        // --- Game State ---
+        let state = {
+            preset: 'tech',
+            difficulty: 'medium',
+            size: 15,
+            grid: [],
+            wordsToFind: [],
+            foundWords: [],
+            wordPaths: {},
+            
+            // Interaction state
+            isDragging: false,
+            startCell: null,
+            currentCell: null,
+            cellWidth: 0,
+            cellHeight: 0
+        };
+
+        // --- DOM Elements ---
+        const els = {
+            container: document.getElementById('grid-container'),
+            letters: document.getElementById('grid-letters'),
+            svg: document.getElementById('svg-overlay'),
+            wordList: document.getElementById('word-list'),
+            difficulty: document.getElementById('difficulty-select'),
+            preset: document.getElementById('preset-select'),
+            newGameBtn: document.getElementById('new-game-btn'),
+            progressText: document.getElementById('progress-text'),
+            wordsLeftBadge: document.getElementById('words-left-badge'),
+            modal: document.getElementById('victory-modal'),
+            playAgainBtn: document.getElementById('play-again-btn'),
+            modalDiff: document.getElementById('modal-difficulty'),
+            modalPreset: document.getElementById('modal-preset')
+        };
+
+        // --- Core Logic ---
+
+        function initGame() {
+            state.difficulty = els.difficulty.value;
+            state.preset = els.preset.value;
+            
+            document.getElementById('bg-dynamic').style.backgroundImage = `url('${BACKGROUNDS[state.preset]}')`;
+            
+            const config = DIFFICULTIES[state.difficulty];
+            state.size = config.size;
+            state.foundWords = [];
+            state.wordPaths = {};
+            els.modal.classList.add('hidden');
+
+            generatePuzzle(config);
+            renderGrid();
+            renderWordList();
+            updateProgress();
+            setupInteractions();
+            
+            // Wait for DOM layout to settle before precise sizing
+            requestAnimationFrame(() => {
+                requestAnimationFrame(resizeGrid);
+            });
+        }
+
+        function generatePuzzle(config) {
+            state.grid = Array(config.size).fill(null).map(() => Array(config.size).fill(''));
+            
+            let pool = [...CATEGORIES[state.preset]].sort(() => 0.5 - Math.random());
+            let selectedWords = pool.slice(0, config.wordCount).sort((a, b) => b.length - a.length);
+            state.wordsToFind = [];
+
+            for (let word of selectedWords) {
+                // Ensure word isn't longer than the board size
+                if (word.length > config.size) continue;
+
+                let placed = false;
+                let attempts = 0;
+                
+                while (!placed && attempts < 250) {
+                    attempts++;
+                    const dir = config.directions[Math.floor(Math.random() * config.directions.length)];
+                    const dx = dir[0];
+                    const dy = dir[1];
+                    
+                    const startX = Math.floor(Math.random() * config.size);
+                    const startY = Math.floor(Math.random() * config.size);
+
+                    const endX = startX + dx * (word.length - 1);
+                    const endY = startY + dy * (word.length - 1);
+
+                    if (endX >= 0 && endX < config.size && endY >= 0 && endY < config.size) {
+                        let canPlace = true;
+                        for (let i = 0; i < word.length; i++) {
+                            const nx = startX + dx * i;
+                            const ny = startY + dy * i;
+                            if (state.grid[ny][nx] !== '' && state.grid[ny][nx] !== word[i]) {
+                                canPlace = false;
+                                break;
+                            }
+                        }
+
+                        if (canPlace) {
+                            for (let i = 0; i < word.length; i++) {
+                                const nx = startX + dx * i;
+                                const ny = startY + dy * i;
+                                state.grid[ny][nx] = word[i];
+                            }
+                            state.wordsToFind.push(word);
+                            placed = true;
+                        }
+                    }
+                }
+            }
+
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            for (let y = 0; y < config.size; y++) {
+                for (let x = 0; x < config.size; x++) {
+                    if (state.grid[y][x] === '') {
+                        state.grid[y][x] = alphabet[Math.floor(Math.random() * alphabet.length)];
+                    }
+                }
+            }
+            
+            state.wordsToFind.sort(); 
+        }
+
+        // --- Rendering ---
+
+        function renderGrid() {
+            els.letters.style.gridTemplateColumns = `repeat(${state.size}, 1fr)`;
+            els.letters.style.gridTemplateRows = `repeat(${state.size}, 1fr)`;
+            els.letters.innerHTML = '';
+            els.svg.innerHTML = '';
+
+            const fontSize = state.size <= 10 ? 'text-2xl md:text-3xl' : 
+                             state.size <= 15 ? 'text-lg md:text-xl' : 'text-sm md:text-base';
+
+            for (let y = 0; y < state.size; y++) {
+                for (let x = 0; x < state.size; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = `grid-cell ${fontSize}`;
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.textContent = state.grid[y][x];
+                    els.letters.appendChild(cell);
+                }
+            }
+
+            const activeLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            activeLine.id = 'active-line';
+            activeLine.classList.add('selection-line', 'active');
+            activeLine.style.display = 'none';
+            els.svg.appendChild(activeLine);
+        }
+
+        function renderWordList() {
+            els.wordList.innerHTML = '';
+            state.wordsToFind.forEach(word => {
+                const el = document.createElement('div');
+                el.className = 'word-item bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-xl font-bold text-slate-700 dark:text-slate-200 text-sm md:text-base shadow-sm flex-grow text-center lg:text-left lg:flex-grow-0';
+                el.id = `word-${word}`;
+                el.innerHTML = `<span>${word}</span>`;
+                els.wordList.appendChild(el);
+            });
+        }
+
+        function updateProgress() {
+            const total = state.wordsToFind.length;
+            const found = state.foundWords.length;
+            const percentage = total > 0 ? Math.round((found / total) * 100) : 0;
+            
+            els.progressText.textContent = `Found ${found} of ${total} words (${percentage}%)`;
+            els.wordsLeftBadge.textContent = `${total - found} left`;
+            
+            if (found === total && total > 0) {
+                playSound('victory');
+                setTimeout(showVictory, 600);
+            }
+        }
+
+        function redrawLines() {
+            if (!state.cellWidth) return;
+            
+            els.svg.innerHTML = '';
+            const activeLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            activeLine.id = 'active-line';
+            activeLine.classList.add('selection-line', 'active');
+            activeLine.style.display = state.isDragging ? 'block' : 'none';
+            els.svg.appendChild(activeLine);
+
+            const strokeWidth = state.cellWidth * 0.55;
+            activeLine.setAttribute('stroke-width', strokeWidth);
+
+            Object.values(state.wordPaths).forEach(data => {
+                const { path, color } = data;
+                drawPermanentLine(path.startX, path.startY, path.endX, path.endY, color);
+            });
+
+            if (state.isDragging && state.startCell && state.currentCell) {
+                updateActiveLine(state.currentCell.x, state.currentCell.y);
+            }
+        }
+
+        function createBurst(x, y, color) {
+            const numParticles = 8;
+            for (let i = 0; i < numParticles; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Randomize trajectory
+                const angle = (Math.PI * 2 / numParticles) * i + (Math.random() - 0.5);
+                const distance = 40 + Math.random() * 40;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                particle.style.backgroundColor = color;
+                particle.style.width = `${6 + Math.random() * 6}px`;
+                particle.style.height = particle.style.width;
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                
+                els.container.appendChild(particle);
+                
+                // Clean up after animation
+                setTimeout(() => {
+                    if (particle.parentNode) particle.parentNode.removeChild(particle);
+                }, 600);
+            }
+        }
+
+        // --- Interactions ---
+
+        function setupInteractions() {
+            const newContainer = els.container.cloneNode(true);
+            els.container.parentNode.replaceChild(newContainer, els.container);
+            els.container = newContainer;
+            
+            els.letters = document.getElementById('grid-letters');
+            els.svg = document.getElementById('svg-overlay');
+
+            els.container.addEventListener('pointerdown', handlePointerDown);
+            window.addEventListener('pointermove', handlePointerMove);
+            window.addEventListener('pointerup', handlePointerUp);
+            window.addEventListener('pointercancel', handlePointerUp);
+            
+            window.addEventListener('resize', resizeGrid);
+        }
+
+        function resizeGrid() {
+            const rect = els.container.getBoundingClientRect();
+            state.cellWidth = rect.width / state.size;
+            state.cellHeight = rect.height / state.size;
+            redrawLines();
+        }
+
+        function getCellFromCoords(clientX, clientY) {
+            const rect = els.container.getBoundingClientRect();
+            let x = Math.floor((clientX - rect.left) / state.cellWidth);
+            let y = Math.floor((clientY - rect.top) / state.cellHeight);
+            
+            x = Math.max(0, Math.min(x, state.size - 1));
+            y = Math.max(0, Math.min(y, state.size - 1));
+            
+            return { x, y };
+        }
+
+        function handlePointerDown(e) {
+            if (e.target.closest('#victory-modal') && !e.target.closest('#victory-modal').classList.contains('hidden')) return;
+            
+            // Resume Audio Context on first interaction
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            state.isDragging = true;
+            const cell = getCellFromCoords(e.clientX, e.clientY);
+            state.startCell = cell;
+            state.currentCell = cell;
+            
+            const activeLine = document.getElementById('active-line');
+            const strokeWidth = state.cellWidth * 0.55;
+            activeLine.setAttribute('stroke-width', strokeWidth);
+            
+            updateActiveLine(cell.x, cell.y);
+            activeLine.style.display = 'block';
+            
+            highlightCell(cell.x, cell.y, true);
+            playSound('tick');
+        }
+
+        function handlePointerMove(e) {
+            if (!state.isDragging || !state.startCell) return;
+            
+            const rawCell = getCellFromCoords(e.clientX, e.clientY);
+            
+            const dx = rawCell.x - state.startCell.x;
+            const dy = rawCell.y - state.startCell.y;
+            
+            let snappedX = state.startCell.x;
+            let snappedY = state.startCell.y;
+
+            if (Math.abs(dx) > Math.abs(dy) * 2) {
+                snappedX = rawCell.x;
+            } else if (Math.abs(dy) > Math.abs(dx) * 2) {
+                snappedY = rawCell.y;
+            } else {
+                const dist = Math.min(Math.abs(dx), Math.abs(dy));
+                snappedX = state.startCell.x + (dx > 0 ? dist : -dist);
+                snappedY = state.startCell.y + (dy > 0 ? dist : -dist);
+            }
+
+            snappedX = Math.max(0, Math.min(snappedX, state.size - 1));
+            snappedY = Math.max(0, Math.min(snappedY, state.size - 1));
+
+            if (state.currentCell.x !== snappedX || state.currentCell.y !== snappedY) {
+                highlightCell(state.currentCell.x, state.currentCell.y, false); 
+                state.currentCell = { x: snappedX, y: snappedY };
+                updateActiveLine(snappedX, snappedY);
+                highlightCell(snappedX, snappedY, true); 
+                playSound('tick');
+            }
+        }
+
+        function handlePointerUp(e) {
+            if (!state.isDragging) return;
+            state.isDragging = false;
+            
+            const activeLine = document.getElementById('active-line');
+            if (activeLine) activeLine.style.display = 'none';
+            
+            if (state.startCell && state.currentCell) {
+                highlightCell(state.startCell.x, state.startCell.y, false);
+                highlightCell(state.currentCell.x, state.currentCell.y, false);
+                checkSelection();
+            }
+            
+            state.startCell = null;
+            state.currentCell = null;
+        }
+
+        function updateActiveLine(endX, endY) {
+            const activeLine = document.getElementById('active-line');
+            if (!activeLine || !state.startCell) return;
+            
+            const startCx = (state.startCell.x + 0.5) * state.cellWidth;
+            const startCy = (state.startCell.y + 0.5) * state.cellHeight;
+            const endCx = (endX + 0.5) * state.cellWidth;
+            const endCy = (endY + 0.5) * state.cellHeight;
+            
+            activeLine.setAttribute('x1', startCx);
+            activeLine.setAttribute('y1', startCy);
+            activeLine.setAttribute('x2', endCx);
+            activeLine.setAttribute('y2', endCy);
+        }
+
+        function highlightCell(x, y, isHighlighted) {
+            const index = y * state.size + x;
+            const cellEl = els.letters.children[index];
+            if (cellEl) {
+                if (isHighlighted) cellEl.classList.add('highlighted');
+                else cellEl.classList.remove('highlighted');
+            }
+        }
+
+        function checkSelection() {
+            const sx = state.startCell.x;
+            const sy = state.startCell.y;
+            const ex = state.currentCell.x;
+            const ey = state.currentCell.y;
+            
+            if (sx === ex && sy === ey) return;
+
+            const dx = Math.sign(ex - sx);
+            const dy = Math.sign(ey - sy);
+            const length = Math.max(Math.abs(ex - sx), Math.abs(ey - sy)) + 1;
+            
+            let word1 = "";
+            let word2 = ""; 
+            
+            for (let i = 0; i < length; i++) {
+                const char = state.grid[sy + dy * i][sx + dx * i];
+                word1 += char;
+                word2 = char + word2;
+            }
+
+            const match = state.wordsToFind.find(w => !state.foundWords.includes(w) && (w === word1 || w === word2));
+            
+            if (match) {
+                state.foundWords.push(match);
+                playSound('success');
+                
+                const color = HIGHLIGHT_COLORS[(state.foundWords.length - 1) % HIGHLIGHT_COLORS.length];
+                
+                state.wordPaths[match] = {
+                    path: { startX: sx, startY: sy, endX: ex, endY: ey },
+                    color: color
+                };
+
+                drawPermanentLine(sx, sy, ex, ey, color);
+
+                // Trigger burst effect at the center of the found word
+                const midCx = ((sx + ex) / 2 + 0.5) * state.cellWidth;
+                const midCy = ((sy + ey) / 2 + 0.5) * state.cellHeight;
+                createBurst(midCx, midCy, color);
+                
+                const wordEl = document.getElementById(`word-${match}`);
+                if (wordEl) {
+                    wordEl.classList.add('found');
+                    wordEl.style.setProperty('--tw-gradient-from', color);
+                    wordEl.style.borderColor = color;
+                }
+                
+                updateProgress();
+            }
+        }
+
+        function drawPermanentLine(sx, sy, ex, ey, color) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.classList.add('selection-line');
+            
+            const startCx = (sx + 0.5) * state.cellWidth;
+            const startCy = (sy + 0.5) * state.cellHeight;
+            const endCx = (ex + 0.5) * state.cellWidth;
+            const endCy = (ey + 0.5) * state.cellHeight;
+            
+            line.setAttribute('x1', startCx);
+            line.setAttribute('y1', startCy);
+            line.setAttribute('x2', endCx);
+            line.setAttribute('y2', endCy);
+            
+            line.setAttribute('stroke', color);
+            line.setAttribute('stroke-width', state.cellWidth * 0.55);
+            
+            const activeLine = document.getElementById('active-line');
+            els.svg.insertBefore(line, activeLine);
+        }
+
+        function showVictory() {
+            els.modalPreset.textContent = els.preset.options[els.preset.selectedIndex].text;
+            els.modalDiff.textContent = state.difficulty;
+            els.modal.classList.remove('hidden');
+        }
+
+        // --- Init ---
+        els.newGameBtn.addEventListener('click', initGame);
+        els.difficulty.addEventListener('change', initGame);
+        els.preset.addEventListener('change', initGame);
+        els.playAgainBtn.addEventListener('click', initGame);
+
+        // --- Theme Toggle Init ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        
+        function initTheme() {
+            try {
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {
+                // Ignore localStorage errors in restricted environments
+            }
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            try {
+                localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            } catch (e) {}
+        });
+
+        initTheme();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initGame, 100);
+        });
+
+    </script>
+</body>
+</html>

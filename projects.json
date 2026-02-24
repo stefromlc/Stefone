@@ -1,5 +1,23 @@
 [
   {
+    "title": "Wordy",
+    "slug": "wordy",
+    "description": "Dive into vibrant themed boards and hunt hidden words across Tech, Star Wars, Nature, and more. Smooth drag controls and polished animations.",
+    "thumbnail": "assets/thumbs/wordy.jpg",
+    "tags": [
+      "Fun",
+      "Game",
+      "Wordsearch"
+    ],
+    "category": "Games",
+    "featured": true,
+    "date": "2026-02-24",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "Defend The UK",
     "slug": "defend-the-uk",
     "description": "Defend the UK from an incoming enemy fleet! Strategize, deploy boats, and fire cannons. Track your score and health in real time for intense action.",
@@ -12,9 +30,7 @@
     ],
     "category": "Games",
     "featured": true,
-    "date": "2026-02-22",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-02-22"
   },
   {
     "demoUrl": "",
@@ -51,6 +67,8 @@
     "date": "2026-02-21"
   },
   {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "Monster Tracker",
     "slug": "monster-tracker",
     "description": "Log every can, track your stash, and see the real impact of your energy habit in one neon-lit dashboard. Monitor spending, stock levels, caffeine, sugar, hydration debt, and long-term forecasts—all stored locally in your browser.",
@@ -65,9 +83,7 @@
     ],
     "category": "Apps",
     "featured": true,
-    "date": "2026-02-20",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-02-20"
   },
   {
     "demoUrl": "",
