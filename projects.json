@@ -1,5 +1,24 @@
 [
   {
+    "title": "Zine Maker",
+    "slug": "zine-maker",
+    "description": "Create and customize your own printable 8-page pocket zines in minutes. Import from Wiki, RSS, Markdown, or build page-by-page with full control over fonts, layouts, images, and print-ready formatting. Fold, cut, and share your story.",
+    "thumbnail": "assets/thumbs/zine-maker.jpg",
+    "tags": [
+      "Book",
+      "Booklet",
+      "Comic",
+      "Maker",
+      "Tools",
+      "Zine"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-02-26",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "Wordy",
     "slug": "wordy",
     "description": "Dive into vibrant themed boards and hunt hidden words across Tech, Star Wars, Nature, and more. Smooth drag controls and polished animations.",

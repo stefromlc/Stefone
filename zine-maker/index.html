@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zine Maker Pro - 8-Page Printable Booklets</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- html2pdf for native PDF saving -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Caveat:wght@400;600;700&family=Comic+Neue:wght@400;700&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base typography & Themes for Zine Content */
+        .font-serif-book { font-family: 'Merriweather', serif; }
+        .font-sans-book { font-family: 'Inter', sans-serif; }
+        .font-mono-book { font-family: 'Roboto Mono', monospace; }
+        .font-elegant { font-family: 'Playfair Display', serif; }
+        .font-typewriter { font-family: 'Courier Prime', monospace; }
+        .font-handwritten { font-family: 'Caveat', cursive; font-size: 1.2em; }
+        .font-comic { font-family: 'Comic Neue', cursive; font-size: 1.1em; }
+        .font-friendly { font-family: 'Fredoka', sans-serif; font-size: 1.05em; }
+
+        body { overflow-x: hidden; background-color: #f8fafc; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Screen Preview Styles */
+        #preview-wrapper {
+            background-color: #f1f5f9;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+            min-height: 100vh;
+        }
+
+        /* --- SHEET LAYOUTS --- */
+        .zine-sheet {
+            width: 297mm;
+            height: 210mm;
+            margin: 3rem auto;
+            background: #ffffff;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 15px rgba(0,0,0,0.03);
+            position: relative;
+            display: grid;
+            overflow: hidden;
+            box-sizing: border-box;
+            page-break-after: always;
+            break-after: page;
+            flex-shrink: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: top center;
+        }
+        
+        /* Layout: 8-Page Pocket Zine */
+        .zine-sheet.mini-mode {
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+        }
+        
+        /* Layout: A5 Saddle-Stitch Booklet */
+        .zine-sheet.booklet-mode {
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: 1fr;
+        }
+
+        /* Photocopy Grain Effect Overlay */
+        .zine-grain::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+            z-index: 50;
+            opacity: 0.7;
+            mix-blend-mode: multiply;
+        }
+
+        /* Guides & Overlays */
+        .guide-v { position: absolute; top: 0; bottom: 0; width: 1px; background: repeating-linear-gradient(to bottom, transparent, transparent 6px, #cbd5e1 6px, #cbd5e1 12px); z-index: 5; }
+        .guide-h { position: absolute; left: 0; right: 0; height: 1px; background: repeating-linear-gradient(to right, transparent, transparent 6px, #cbd5e1 6px, #cbd5e1 12px); z-index: 5; }
+        .guide-cut {
+            position: absolute; top: 50%; left: 25%; width: 50%; height: 2px;
+            background: repeating-linear-gradient(to right, transparent, transparent 6px, #6366f1 6px, #6366f1 12px);
+            transform: translateY(-50%); z-index: 10; display: flex; align-items: center; justify-content: center;
+        }
+        .guide-fold {
+            position: absolute; top: 0; bottom: 0; left: 50%; width: 1px;
+            background: repeating-linear-gradient(to bottom, transparent, transparent 6px, #94a3b8 6px, #94a3b8 12px);
+            z-index: 5; display: flex; align-items: center; justify-content: center;
+        }
+        .spine-text-render {
+            position: absolute; left: 50%; top: 50%;
+            transform: translate(-50%, -50%) rotate(-90deg);
+            transform-origin: center center;
+            font-size: 11pt; font-family: 'Inter', sans-serif; font-weight: 800; color: #1e293b; white-space: nowrap; z-index: 40;
+            background: white; padding: 2px 15px; border-radius: 4px; box-shadow: 0 0 0 2px white;
+        }
+
+        /* Page Slot Dimension Rules */
+        .page-slot { position: relative; box-sizing: border-box; }
+        .mini-mode .page-slot { width: 74.25mm; height: 105mm; }
+        .booklet-mode .page-slot { width: 148.5mm; height: 210mm; }
+        .show-page-borders .page-slot { border: 1px dashed #e2e8f0; }
+
+        .rotator { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        .rotated { transform: rotate(180deg); }
+
+        .page-content-wrapper { position: absolute; overflow: hidden; }
+        .mini-mode .page-content-wrapper { top: 5mm; left: 5mm; width: 64.25mm; height: 95mm; }
+        .booklet-mode .page-content-wrapper { top: 10mm; left: 10mm; width: 128.5mm; height: 190mm; }
+
+        /* Multi-column pagination core */
+        .multi-col-content {
+            column-fill: auto;
+            position: absolute; top: 0; left: 0;
+            line-height: var(--zine-line-height, 1.5);
+            color: #0f172a; word-wrap: break-word;
+        }
+
+        .page-number {
+            position: absolute; bottom: 2mm; width: 100%; text-align: center;
+            font-family: 'Inter', sans-serif; font-size: 7pt; color: #94a3b8; font-weight: 500;
+        }
+
+        /* Content Formatting */
+        .zine-content h1, .zine-content h2, .zine-content h3 { 
+            font-weight: 700; color: #000; break-after: avoid; page-break-after: avoid; line-height: 1.2; font-family: inherit;
+        }
+        .zine-content h1 { font-size: calc(var(--zine-title-size, 1.4) * 1em); border-bottom: 2px solid #1e293b; margin-top: 1.2em; margin-bottom: 0.4em; padding-bottom: 4px; }
+        .zine-content h2 { font-size: calc(var(--zine-title-size, 1.4) * 0.85em); margin-top: 1.2em; margin-bottom: 0.4em; }
+        .zine-content h3 { font-size: calc(var(--zine-title-size, 1.4) * 0.75em); font-weight: 600; margin-top: 1em; margin-bottom: 0.3em; }
+        .zine-content p { margin-bottom: 0.8em; widows: 2; orphans: 2; }
+        .zine-content ul, .zine-content ol { margin-bottom: 0.8em; padding-left: 1.2em; }
+        .zine-content li { margin-bottom: 0.3em; }
+        .zine-content a { color: inherit; text-decoration: none; border-bottom: 1px dashed #64748b; }
+        .zine-content blockquote { border-left: 3px solid #0f172a; padding-left: 0.8em; color: #334155; font-style: italic; margin: 1em 0; font-size: 1.1em; }
+        .zine-content code { background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-family: 'Courier Prime', monospace; font-size: 0.85em; border: 1px solid #e2e8f0; }
+        
+        /* Image Handling & Filters */
+        .zine-content .thumb, .zine-content img, .zine-content figure, .zine-content table { 
+            break-inside: avoid; page-break-inside: avoid; max-width: 100%; margin: 0.8em auto; display: block;
+        }
+        
+        /* All inline and global images uniform treatment */
+        .mini-mode .zine-content img { height: 40mm; }
+        .booklet-mode .zine-content img { height: 80mm; }
+        .zine-content img { width: 100%; object-fit: cover; border-radius: 4px; }
+        
+        /* Image Styles applied via JS classes */
+        .filter-grayscale img { filter: grayscale(100%); }
+        .filter-contrast img { filter: grayscale(100%) contrast(150%) brightness(110%); mix-blend-mode: multiply; }
+        .filter-sepia img { filter: sepia(100%) saturate(150%) hue-rotate(-15deg); }
+
+        .zine-content .thumbcaption, .zine-content figcaption { font-size: 0.75em; color: #64748b; margin-top: 0.4em; font-family: 'Inter', sans-serif; line-height: 1.3; text-align: center; font-style: italic; }
+        .zine-content table { border-collapse: collapse; font-size: 0.75em; width: 100%; margin-bottom: 1em; }
+        .zine-content th, .zine-content td { border: 1px solid #cbd5e1; padding: 0.4em; }
+        .zine-content iframe, .zine-content video { display: none !important; }
+
+        /* Print Media Styles */
+        @media print {
+            .no-print { display: none !important; }
+            @page { size: A4 landscape; margin: 0; }
+            body, html, #preview-wrapper, #output { 
+                background: white !important; padding: 0 !important; margin: 0 !important; height: auto !important; min-height: auto !important;
+                display: block !important;
+            }
+            #preview-wrapper { overflow: visible !important; width: 100% !important; display: block !important; }
+            .zine-sheet { box-shadow: none !important; margin: 0 !important; border: none !important; transform: none !important; page-break-after: always; break-after: page; }
+            .zine-sheet:last-child { page-break-after: auto !important; break-after: auto !important; }
+            .zine-grain::after { opacity: 0.3; } 
+        }
+        
+        /* Temporary Export Styles for html2pdf */
+        .pdf-exporting #output { background: white !important; padding: 0 !important; margin: 0 !important; display: block !important; }
+        .pdf-exporting .zine-sheet { box-shadow: none !important; margin: 0 !important; transform: none !important; border: none !important; page-break-after: always; break-after: page; }
+        .pdf-exporting .zine-sheet:last-child { page-break-after: auto !important; break-after: auto !important; }
+
+        /* Spinner */
+        .loader-ring {
+            border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #fff;
+            border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Interactive Images */
+        .draggable-img { transition: box-shadow 0.2s, transform 0.1s ease-out; cursor: pointer !important; }
+        .draggable-img:hover {
+            box-shadow: 0 0 0 3px #6366f1, 0 10px 15px -3px rgba(0,0,0,0.3) !important;
+            z-index: 50;
+        }
+
+        /* Accordion transition */
+        .accordion-content { transition: max-height 0.3s ease-in-out, opacity 0.3s ease, margin 0.3s ease; max-height: 0; opacity: 0; overflow: hidden; }
+        .accordion-content.open { max-height: 1500px; opacity: 1; }
+        .accordion-icon { transition: transform 0.3s ease; }
+        .accordion-button[aria-expanded="true"] .accordion-icon { transform: rotate(180deg); }
+
+        /* Toast notification */
+        .toast { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease; transform: translateY(-150%); opacity: 0; pointer-events: none; }
+        .toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+
+        /* Segemented Control Customization */
+        .tab-btn.active { background-color: white; color: #4f46e5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-weight: 600; }
+        .tab-btn { color: #64748b; font-weight: 500; }
+        .tab-btn:hover:not(.active) { color: #1e293b; background-color: rgba(255,255,255,0.5); }
+    </style>
+</head>
+<body class="font-sans text-slate-800 h-screen flex flex-col md:flex-row overflow-hidden selection:bg-brand-200 selection:text-brand-900">
+
+    <!-- Image Editor Modal Overlay -->
+    <div id="image-editor-modal" class="fixed inset-0 z-[100] bg-slate-900/80 hidden flex flex-col items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white p-5 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col gap-4">
+            <div class="flex justify-between items-center px-1">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                    <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                    Crop & Reposition
+                </h3>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 p-1.5 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="relative w-full bg-slate-100 rounded-xl overflow-hidden shadow-inner flex items-center justify-center border border-slate-200 mx-auto" id="modal-crop-container" style="max-height: 45vh;">
+                <img id="modal-preview-img" src="" class="cursor-grab select-none" draggable="false" style="width:100%; height:100%; object-fit:cover;">
+                <div class="absolute inset-0 border-2 border-brand-500/30 pointer-events-none rounded-xl"></div>
+            </div>
+            <p class="text-[10px] text-slate-400 text-center font-medium mt-1">Drag the image above to reposition within the print frame.</p>
+
+            <div class="flex flex-col gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-600 uppercase tracking-wider">Zoom Level</label>
+                    <span id="modal-zoom-val" class="text-xs font-mono font-bold text-brand-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">1.00x</span>
+                </div>
+                <input type="range" id="modal-zoom" min="0.5" max="3" step="0.05" value="1" class="w-full accent-brand-500 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                
+                <div class="flex items-center justify-between mt-2 pt-3 border-t border-slate-200/60">
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" id="modal-lock-ratio" class="accent-brand-500 w-4 h-4 rounded cursor-pointer" checked>
+                        <span class="text-xs font-bold text-slate-600 group-hover:text-brand-600 transition-colors">Fill Frame (Crop Edges)</span>
+                    </label>
+                    <button id="modal-reset-btn" class="text-xs font-bold text-slate-500 hover:text-brand-600 transition-colors bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm active:scale-95">Reset Default</button>
+                </div>
+            </div>
+            <button id="modal-save-btn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand-500/30 transition-colors active:scale-95 mt-1">Apply Changes</button>
+        </div>
+    </div>
+
+    <!-- Sidebar / Settings Panel -->
+    <aside class="no-print w-full md:w-[24rem] bg-white border-r border-slate-200 flex flex-col h-full flex-shrink-0 z-20 shadow-xl relative">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-100 bg-white shrink-0 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <a href="/projects/" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-brand-600 transition-colors bg-slate-50 hover:bg-brand-50 px-2 py-1 rounded-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                    Back to Projects
+                </a>
+                <button id="reset-app-btn" class="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 hover:text-red-700 transition-colors bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md" title="Reset everything to default">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Reset
+                </button>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-brand-500 to-brand-700 p-2.5 rounded-xl text-white shadow-md shadow-brand-500/20">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-900 tracking-tight leading-none">Zine Maker <span class="text-brand-600 text-sm align-top">PRO</span></h1>
+                    <p class="text-[11px] text-slate-500 font-semibold uppercase tracking-wider mt-1">Pocket Booklet Engine</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-grow overflow-y-auto custom-scrollbar pb-6">
+            
+            <!-- Global Theme Selector -->
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide flex items-center gap-2">
+                    <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+                    Start with a Preset
+                </label>
+                <div class="relative">
+                    <select id="template-select" class="w-full pl-4 pr-10 py-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer text-slate-800 font-semibold shadow-sm appearance-none transition-shadow hover:shadow-md">
+                        <option value="" disabled selected>Choose a vibe to auto-fill...</option>
+                        <option value="default">Basic Zine (Classic)</option>
+                        <option value="comic">Comic Book (Action)</option>
+                        <option value="childrens">Children's Story (Friendly)</option>
+                        <option value="photo">Photo Portfolio (Visual)</option>
+                        <option value="poetry">Poetry Chapbook (Elegant)</option>
+                        <option value="recipe">Recipe Collection (Structured)</option>
+                        <option value="manual">Field Guide (Technical)</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accordion 1: Data Source -->
+            <div class="border-b border-slate-100">
+                <button class="accordion-button w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors focus:outline-none group" aria-expanded="true" onclick="toggleAccordion('acc-content')">
+                    <span class="font-bold text-slate-800 text-sm uppercase tracking-wide flex items-center gap-2">
+                        <div class="p-1 rounded bg-brand-100 text-brand-600 group-hover:scale-110 transition-transform"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div>
+                        1. Content Setup
+                    </span>
+                    <svg class="accordion-icon w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="acc-content" class="accordion-content open px-6 pb-6 bg-white">
+                    
+                    <!-- Content Source Tabs -->
+                    <div class="flex p-1.5 bg-slate-100 rounded-xl overflow-x-auto gap-1 mb-6 border border-slate-200/60 shadow-inner">
+                        <button id="tab-builder" class="tab-btn active flex-1 min-w-[70px] py-1.5 px-2 text-xs rounded-lg transition-all">Builder</button>
+                        <button id="tab-wiki" class="tab-btn flex-1 min-w-[70px] py-1.5 px-2 text-xs rounded-lg transition-all">Wiki</button>
+                        <button id="tab-rss" class="tab-btn flex-1 min-w-[70px] py-1.5 px-2 text-xs rounded-lg transition-all">RSS</button>
+                        <button id="tab-markdown" class="tab-btn flex-1 min-w-[70px] py-1.5 px-2 text-xs rounded-lg transition-all">MD</button>
+                        <button id="tab-recipe" class="tab-btn flex-1 min-w-[70px] py-1.5 px-2 text-xs rounded-lg transition-all">Recipe</button>
+                    </div>
+
+                    <!-- Page Builder Inputs -->
+                    <div id="panel-builder" class="space-y-4 flex-col">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-bold text-slate-700">Custom Pages</label>
+                            <span class="text-[10px] font-mono font-bold bg-brand-100 text-brand-700 px-2 py-0.5 rounded-md border border-brand-200" id="page-count-display">2 Pages</span>
+                        </div>
+                        
+                        <!-- Horizontal Page Navigator -->
+                        <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-2 pt-1" id="builder-navigator">
+                            <!-- Dynamic tabs injected here -->
+                        </div>
+
+                        <!-- Active Page Editor Area -->
+                        <div id="builder-active-editor" class="bg-white border border-slate-200 rounded-2xl p-4 text-sm flex flex-col gap-3 relative shadow-sm transition-all min-h-[180px]">
+                            <!-- Dynamic form injected here -->
+                        </div>
+
+                        <div class="flex gap-2 pt-2">
+                            <button id="btn-add-page" class="flex-grow py-2.5 border-2 border-dashed border-slate-300 rounded-xl text-sm text-slate-600 font-bold hover:border-brand-400 hover:text-brand-600 hover:bg-brand-50 transition-all flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg> Add Page
+                            </button>
+                            <button id="btn-clear-builder" class="px-3 py-2.5 border-2 border-slate-200 bg-slate-50 rounded-xl text-sm text-slate-500 font-bold hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-all" title="Reset Builder">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Wikipedia Inputs -->
+                    <div id="panel-wiki" class="space-y-4 hidden mt-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Wikipedia URL</label>
+                            <input type="url" id="wiki-url" placeholder="https://en.wikipedia.org/wiki/..." 
+                                   class="w-full px-3 py-2.5 border border-slate-200 rounded-xl shadow-sm text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow"
+                                   value="https://en.wikipedia.org/wiki/Zine">
+                        </div>
+                        
+                        <div class="mt-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                Cover Options
+                            </label>
+                            <input type="text" id="wiki-title" placeholder="Custom Title (Override)" class="w-full px-3 py-2 border border-slate-200 rounded-lg shadow-sm text-xs focus:ring-2 focus:ring-brand-500 outline-none transition-colors">
+                            <div class="flex gap-2">
+                                <input type="text" id="wiki-image" placeholder="Custom Cover Image URL" class="w-full px-3 py-2 border border-slate-200 rounded-lg shadow-sm text-xs focus:ring-2 focus:ring-brand-500 outline-none transition-colors">
+                                <label class="bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 px-3 rounded-lg cursor-pointer flex items-center justify-center transition-colors shadow-sm shrink-0" title="Upload Image">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    <input type="file" class="hidden" accept="image/*" onchange="window.handleGenericUpload(this, 'wiki-image')">
+                                </label>
+                            </div>
+                            <select id="wiki-cover-layout" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer">
+                                <option value="classic">Layout: Classic Block</option>
+                                <option value="full">Layout: Full Bleed Photo</option>
+                                <option value="minimal">Layout: Minimalist (Text Only)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- RSS Feed Inputs -->
+                    <div id="panel-rss" class="space-y-4 hidden mt-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">RSS Feed URL</label>
+                            <input type="url" id="rss-url" placeholder="https://news.ycombinator.com/rss" 
+                                   class="w-full px-3 py-2.5 border border-slate-200 rounded-xl shadow-sm text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow"
+                                   value="http://rss.cnn.com/rss/cnn_topstories.rss">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Article Limit</label>
+                            <input type="number" id="rss-limit" min="1" max="25" value="5" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl shadow-sm text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                        </div>
+
+                        <div class="mt-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                Cover Options
+                            </label>
+                            <input type="text" id="rss-title" placeholder="Zine Title (Override)" class="w-full px-3 py-2 border border-slate-200 rounded-lg shadow-sm text-xs focus:ring-2 focus:ring-brand-500 outline-none transition-colors">
+                            <div class="flex gap-2">
+                                <input type="text" id="rss-image" placeholder="Cover Image URL" class="w-full px-3 py-2 border border-slate-200 rounded-lg shadow-sm text-xs focus:ring-2 focus:ring-brand-500 outline-none transition-colors">
+                                <label class="bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 px-3 rounded-lg cursor-pointer flex items-center justify-center transition-colors shadow-sm shrink-0" title="Upload Image">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    <input type="file" class="hidden" accept="image/*" onchange="window.handleGenericUpload(this, 'rss-image')">
+                                </label>
+                            </div>
+                            <select id="rss-cover-layout" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer">
+                                <option value="classic">Layout: Classic Block</option>
+                                <option value="full">Layout: Full Bleed Photo</option>
+                                <option value="minimal">Layout: Minimalist (Text Only)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Markdown Content Inputs -->
+                    <div id="panel-markdown" class="space-y-4 hidden mt-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5 flex justify-between">
+                                Flowing Content <span class="text-[10px] text-slate-400 font-normal">Markdown supported</span>
+                            </label>
+                            <textarea id="md-text" rows="8" placeholder="# Chapter 1\nWrite your content here. It will automatically flow across the pages." 
+                                      class="w-full px-3 py-3 border border-slate-200 rounded-xl shadow-sm text-sm font-mono text-slate-600 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none resize-y transition-colors"></textarea>
+                        </div>
+
+                        <div class="mt-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                Cover Options
+                            </label>
+                            <input type="text" id="md-title" placeholder="Zine Title" class="w-full px-3 py-2 border border-slate-200 rounded-lg shadow-sm text-xs focus:ring-2 focus:ring-brand-500 outline-none transition-colors">
+                            <div class="flex gap-2">
+                                <input type="text" id="md-image" placeholder="Cover Image URL" class="w-full px-3 py-2 border border-slate-200 rounded-lg shadow-sm text-xs focus:ring-2 focus:ring-brand-500 outline-none transition-colors">
+                                <label class="bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 px-3 rounded-lg cursor-pointer flex items-center justify-center transition-colors shadow-sm shrink-0" title="Upload Image">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    <input type="file" id="md-image-upload" class="hidden" accept="image/*">
+                                </label>
+                            </div>
+                            <select id="md-cover-layout" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer">
+                                <option value="classic">Layout: Classic Block</option>
+                                <option value="full">Layout: Full Bleed Photo</option>
+                                <option value="minimal">Layout: Minimalist (Text Only)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Recipe Scraper Inputs -->
+                    <div id="panel-recipe" class="space-y-4 hidden mt-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Recipe URL or Source Code</label>
+                            <textarea id="recipe-url" rows="4" placeholder="https://... OR paste HTML source" 
+                                   class="w-full px-3 py-2.5 border border-slate-200 rounded-xl shadow-sm text-sm focus:ring-2 focus:ring-brand-500 outline-none resize-y transition-shadow">https://www.bbc.co.uk/food/recipes/chocolate_cake_48307</textarea>
+                        </div>
+                        
+                        <div class="mt-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                Cover Options
+                            </label>
+                            <input type="text" id="recipe-title" placeholder="Custom Title (Override)" class="w-full px-3 py-2 border border-slate-200 rounded-lg shadow-sm text-xs focus:ring-2 focus:ring-brand-500 outline-none transition-colors">
+                            <div class="flex gap-2">
+                                <input type="text" id="recipe-image" placeholder="Custom Cover Image URL" class="w-full px-3 py-2 border border-slate-200 rounded-lg shadow-sm text-xs focus:ring-2 focus:ring-brand-500 outline-none transition-colors">
+                                <label class="bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 px-3 rounded-lg cursor-pointer flex items-center justify-center transition-colors shadow-sm shrink-0" title="Upload Image">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    <input type="file" class="hidden" accept="image/*" onchange="window.handleGenericUpload(this, 'recipe-image')">
+                                </label>
+                            </div>
+                            <select id="recipe-cover-layout" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer">
+                                <option value="classic">Layout: Classic Block</option>
+                                <option value="full">Layout: Full Bleed Photo</option>
+                                <option value="minimal">Layout: Minimalist (Text Only)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Accordion 2: Typography & Layout -->
+            <div class="border-b border-slate-100">
+                <button class="accordion-button w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors focus:outline-none group" aria-expanded="false" onclick="toggleAccordion('acc-typography')">
+                    <span class="font-bold text-slate-800 text-sm uppercase tracking-wide flex items-center gap-2">
+                        <div class="p-1 rounded bg-purple-100 text-purple-600 group-hover:scale-110 transition-transform"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"></path></svg></div>
+                        2. Typography & Layout
+                    </span>
+                    <svg class="accordion-icon w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="acc-typography" class="accordion-content px-6 pb-6 bg-white space-y-5 pt-2">
+                    
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Booklet Format
+                        </label>
+                        <select id="setting-layout-mode" class="w-full px-3 py-2.5 border border-purple-200 shadow-sm rounded-xl text-sm bg-purple-50 font-bold text-purple-900 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none cursor-pointer transition-colors">
+                            <option value="mini">8-Page Pocket Zine (Fold & Cut)</option>
+                            <option value="booklet">A5 Saddle-Stitch (Multi-Sheet Duplex)</option>
+                        </select>
+                    </div>
+
+                    <div id="spine-text-container" class="hidden mb-4 p-3 bg-purple-50/50 border border-purple-100 rounded-xl">
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Booklet Spine Text</label>
+                        <input type="text" id="setting-spine-text" placeholder="e.g. VOL 1 - 2026" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-purple-500 outline-none transition-colors">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Font Family</label>
+                        <select id="setting-font" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none cursor-pointer transition-colors">
+                            <option value="font-sans-book">Modern (Inter)</option>
+                            <option value="font-serif-book">Classic (Merriweather)</option>
+                            <option value="font-elegant">Elegant (Playfair Display)</option>
+                            <option value="font-comic">Comic Book (Comic Neue)</option>
+                            <option value="font-friendly">Friendly (Fredoka)</option>
+                            <option value="font-typewriter">Typewriter (Courier)</option>
+                            <option value="font-handwritten">Handwritten (Caveat)</option>
+                            <option value="font-mono-book">Code (Roboto Mono)</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-xs font-bold text-slate-700">Body Size</label>
+                                <span id="setting-size-val" class="text-[10px] font-mono font-bold bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-600">8.5pt</span>
+                            </div>
+                            <input type="range" id="setting-size" min="6" max="24" step="0.5" value="8.5" class="w-full accent-purple-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-xs font-bold text-slate-700">Title Size</label>
+                                <span id="setting-title-size-val" class="text-[10px] font-mono font-bold bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-600">1.4x</span>
+                            </div>
+                            <input type="range" id="setting-title-size" min="0.8" max="3.5" step="0.1" value="1.4" class="w-full accent-purple-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        <div class="col-span-2 mt-1">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-xs font-bold text-slate-700">Line Spacing</label>
+                                <span id="setting-line-val" class="text-[10px] font-mono font-bold bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-600">1.5x</span>
+                            </div>
+                            <input type="range" id="setting-line" min="1.1" max="2.5" step="0.1" value="1.5" class="w-full accent-purple-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <label class="text-sm font-bold text-slate-700">Text Alignment</label>
+                        <select id="setting-align" class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-purple-500 outline-none cursor-pointer shadow-sm">
+                            <option value="justify">Justify</option>
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Accordion 3: Styling & Print -->
+            <div class="border-b border-slate-100">
+                <button class="accordion-button w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors focus:outline-none group" aria-expanded="false" onclick="toggleAccordion('acc-styling')">
+                    <span class="font-bold text-slate-800 text-sm uppercase tracking-wide flex items-center gap-2">
+                        <div class="p-1 rounded bg-teal-100 text-teal-600 group-hover:scale-110 transition-transform"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg></div>
+                        3. Aesthetics
+                    </span>
+                    <svg class="accordion-icon w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="acc-styling" class="accordion-content px-6 pb-6 bg-white space-y-5 pt-2">
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Image Processing Style</label>
+                        <select id="setting-img-filter" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none cursor-pointer transition-colors">
+                            <option value="none">Normal (Full Color)</option>
+                            <option value="filter-grayscale">Grayscale (Classic Zine)</option>
+                            <option value="filter-contrast">High Contrast (Photocopy)</option>
+                            <option value="filter-sepia">Sepia (Vintage)</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Max Sheet Limit</label>
+                        <select id="setting-max-sheets" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none cursor-pointer transition-colors">
+                            <option value="0">Unlimited (All Content)</option>
+                            <option value="1">1 Sheet</option>
+                            <option value="2">2 Sheets</option>
+                            <option value="3">3 Sheets</option>
+                            <option value="4">4 Sheets</option>
+                            <option value="5">5 Sheets</option>
+                        </select>
+                        <p class="text-[10px] text-slate-500 mt-1.5 leading-tight">Limits physical sheets generated to save paper.</p>
+                    </div>
+
+                    <div class="space-y-4 pt-2">
+                        <div class="flex items-center justify-between group">
+                            <label class="text-sm font-semibold text-slate-700 cursor-pointer group-hover:text-teal-700 transition-colors" for="setting-hide-images">Remove Images (Ink Saver)</label>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="setting-hide-images" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center justify-between group">
+                            <label class="text-sm font-semibold text-slate-700 cursor-pointer group-hover:text-teal-700 transition-colors" for="setting-imposition">Show Fold Overlay Guides</label>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="setting-imposition" class="sr-only peer" checked>
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between group">
+                            <label class="text-sm font-semibold text-slate-700 cursor-pointer group-hover:text-teal-700 transition-colors" for="setting-borders">Show Page Borders</label>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="setting-borders" class="sr-only peer" checked>
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between group">
+                            <label class="text-sm font-semibold text-slate-700 cursor-pointer group-hover:text-teal-700 transition-colors" for="setting-image-styles">Photo Borders & Tilt</label>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="setting-image-styles" class="sr-only peer" checked>
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between group">
+                            <div class="flex flex-col cursor-pointer" onclick="document.getElementById('setting-grain').click()">
+                                <label class="text-sm font-semibold text-slate-700 group-hover:text-teal-700 transition-colors pointer-events-none">Photocopy Grain</label>
+                                <span class="text-[10px] text-slate-500 pointer-events-none">Adds subtle texture overlay</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="setting-grain" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="p-5 border-t border-slate-200 bg-white shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] shrink-0 space-y-3 relative z-10">
+            <button id="generate-btn" class="w-full bg-brand-600 hover:bg-brand-700 text-white px-4 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 group active:scale-[0.98]">
+                <span id="generate-text">Generate Layout</span>
+                <svg id="generate-icon" class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <div id="generate-spinner" class="loader-ring hidden ml-2"></div>
+            </button>
+            <div class="flex gap-2">
+                <button id="save-pdf-btn" disabled class="flex-1 bg-teal-600 disabled:bg-slate-200 disabled:shadow-none disabled:text-slate-400 disabled:cursor-not-allowed hover:bg-teal-700 text-white px-3 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2 active:scale-[0.98] text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Save .pdf
+                </button>
+                <button id="print-btn" disabled class="flex-1 bg-slate-800 disabled:bg-slate-200 disabled:shadow-none disabled:text-slate-400 disabled:cursor-not-allowed hover:bg-slate-900 text-white px-3 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-slate-800/20 flex items-center justify-center gap-2 active:scale-[0.98] text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Print
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content / Preview Area -->
+    <main id="preview-wrapper" class="flex-grow overflow-y-auto relative w-full flex flex-col items-center">
+        
+        <!-- Toast Notification Container -->
+        <div id="toast" class="toast fixed top-6 z-50 flex items-center w-full max-w-sm p-4 rounded-xl shadow-xl bg-white border border-slate-100" role="alert">
+            <!-- Content injected via JS -->
+        </div>
+
+        <!-- Info Banner -->
+        <div id="print-instruction" class="no-print hidden w-full bg-brand-50 border-b border-brand-200 text-brand-900 px-6 py-3.5 text-sm flex items-center justify-between sticky top-0 z-10 shadow-sm backdrop-blur-md bg-opacity-90">
+            <div class="flex items-center gap-3">
+                <div class="bg-brand-100 text-brand-600 p-1.5 rounded-lg shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <span>
+                    <strong class="font-extrabold tracking-wide" id="instruction-title">PRINT INSTRUCTIONS:</strong> <span id="instruction-body">Set printer to <strong>A4 Landscape</strong>, <strong>No Margins (0px)</strong>, and <strong>Scale 100%</strong>.</span>
+                </span>
+            </div>
+            <button class="text-brand-500 hover:text-brand-800 p-1.5 rounded-lg hover:bg-brand-200/50 transition-colors" onclick="document.getElementById('print-instruction').style.display='none'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="no-print absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-8 text-center pointer-events-none">
+            <div class="bg-white p-10 rounded-3xl shadow-2xl shadow-slate-200/50 flex flex-col items-center max-w-sm border border-slate-100">
+                <div class="bg-brand-50 p-5 rounded-2xl mb-5 text-brand-500 shadow-inner">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <h2 class="text-2xl font-black text-slate-800 mb-2">Ready to Make a Zine?</h2>
+                <p class="text-sm text-slate-500 leading-relaxed font-medium">Configure your settings on the left and click <br><strong class="text-brand-600 bg-brand-50 px-1 rounded">Generate Layout</strong> to see the magic happen.</p>
+            </div>
+        </div>
+
+        <div id="output" class="flex flex-col items-center pb-20 w-full z-0 transition-opacity duration-300"></div>
+        
+    </main>
+
+    <script>
+        // --- State Management ---
+        let currentMode = 'builder';
+        const ALL_MODES = ['wiki', 'rss', 'markdown', 'builder', 'recipe'];
+        
+        // 3D Pixar Cinematic style wholesome imagery
+        const defaultWholesomeImg = 'https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=600'; 
+        const cinematicFoodImg = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=600';
+        const cinematicNatureImg = 'https://images.unsplash.com/photo-1551033406-611cf9a28f67?auto=format&fit=crop&q=80&w=600';
+        const cinematicHeroImg = 'https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&q=80&w=600';
+        const cinematicAnimalImg = 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=600';
+
+        // Global unified image tweak state: { [imgId]: { scale: number, x: number, y: number, fit: 'cover'|'contain' } }
+        let imageTweaks = {};
+
+        // Pre-configured Templates
+        const zineTemplates = {
+            'default': {
+                name: "Basic Zine",
+                settings: { font: 'font-sans-book', align: 'justify', filter: 'none' },
+                pages: [
+                    { type: 'cover', title: 'My Awesome Zine', text: 'By Creator Name', image: defaultWholesomeImg },
+                    { type: 'quote', title: '', text: '“Creativity is contagious, pass it on.”', author: 'Albert Einstein', image: '' },
+                    { type: 'image-top', title: '', text: 'This is the start of an amazing story inside a tiny pocket booklet. Everything you see here is printable and foldable!', image: defaultWholesomeImg }
+                ]
+            },
+            'comic': {
+                name: "Comic Strip",
+                settings: { font: 'font-comic', align: 'left', filter: 'filter-contrast' },
+                pages: [
+                    { type: 'cover', title: 'THE ADVENTURE', text: 'Issue #1', image: cinematicHeroImg },
+                    { type: 'image-full', title: '', text: '', image: cinematicAnimalImg },
+                    { type: 'image-bottom', title: '', text: 'POW! The journey begins with a sudden flash of light...', image: cinematicHeroImg }
+                ]
+            },
+            'childrens': {
+                name: "Children's Story",
+                settings: { font: 'font-friendly', align: 'center', filter: 'none' },
+                pages: [
+                    { type: 'cover', title: 'The Little Bear', text: 'A Bedtime Story', image: cinematicAnimalImg },
+                    { type: 'image-top', title: '', text: 'Once upon a time in a bright, beautiful forest, lived a little bear.', image: cinematicAnimalImg },
+                    { type: 'image-full', title: '', text: '', image: defaultWholesomeImg }
+                ]
+            },
+            'photo': {
+                name: "Photo Portfolio",
+                settings: { font: 'font-sans-book', align: 'center', filter: 'none' },
+                pages: [
+                    { type: 'cover', title: 'Captured Light', text: 'A Visual Journey', image: cinematicNatureImg },
+                    { type: 'image-full', title: '', text: '', image: defaultWholesomeImg },
+                    { type: 'image-bottom', title: '', text: 'Exploring the breathtaking world in cinematic 3D lighting.', image: cinematicNatureImg }
+                ]
+            },
+            'poetry': {
+                name: "Poetry Chapbook",
+                settings: { font: 'font-elegant', align: 'center', filter: 'filter-sepia' },
+                pages: [
+                    { type: 'cover', title: 'Whispers', text: 'Selected Poems', image: '' },
+                    { type: 'quote', title: '', text: 'A word is dead\nWhen it is said,\nSome say.\n\nI say it just\nBegins to live\nThat day.', author: 'Emily Dickinson', image: '' },
+                    { type: 'text', title: '', text: 'The sun sets,\nthe moon rises,\nand we dream of vibrant worlds.', image: '' }
+                ]
+            },
+            'recipe': {
+                name: "Recipe Collection",
+                settings: { font: 'font-serif-book', align: 'left', filter: 'none' },
+                pages: [
+                    { type: 'cover', title: 'Family Recipes', text: 'Delicious & Wholesome', image: cinematicFoodImg },
+                    { type: 'image-top', title: '', text: '### Perfect Pizza\n\n**Ingredients:**\n- Fresh Dough\n- Tomato Sauce\n- Mozzarella\n\n**Steps:**\n1. Roll the dough.\n2. Add toppings.\n3. Bake until golden.', image: cinematicFoodImg }
+                ]
+            },
+            'manual': {
+                name: "Field Guide",
+                settings: { font: 'font-mono-book', align: 'left', filter: 'filter-grayscale' },
+                pages: [
+                    { type: 'cover', title: 'SURVIVAL GUIDE', text: 'Vol. 4: Wilderness', image: cinematicNatureImg },
+                    { type: 'chapter', title: 'Chapter 1', text: 'Identifying Flora', image: '' },
+                    { type: 'image-top', title: '', text: '### Leaf Patterns\n\n1. Symmetrical\n2. Asymmetrical\n\nAlways check the edges.', image: cinematicNatureImg }
+                ]
+            }
+        };
+
+        // Page Builder Data Model
+        let builderPages = [...zineTemplates['default'].pages].map((p, i) => ({...p, id: Date.now() + i}));
+        let activePageIndex = 0;
+
+        // Caching for live updates
+        let cachedHtml = '';
+        let cachedTitle = '';
+        let cachedImage = '';
+        let rebuildTimeout;
+        
+        // --- DOM Elements ---
+        const tabs = {
+            wiki: document.getElementById('tab-wiki'),
+            rss: document.getElementById('tab-rss'),
+            markdown: document.getElementById('tab-markdown'),
+            builder: document.getElementById('tab-builder'),
+            recipe: document.getElementById('tab-recipe')
+        };
+        const panels = {
+            wiki: document.getElementById('panel-wiki'),
+            rss: document.getElementById('panel-rss'),
+            markdown: document.getElementById('panel-markdown'),
+            builder: document.getElementById('panel-builder'),
+            recipe: document.getElementById('panel-recipe')
+        };
+        
+        // Settings Elements
+        const settings = {
+            layoutMode: document.getElementById('setting-layout-mode'),
+            spineText: document.getElementById('setting-spine-text'),
+            spineContainer: document.getElementById('spine-text-container'),
+            font: document.getElementById('setting-font'),
+            size: document.getElementById('setting-size'),
+            sizeVal: document.getElementById('setting-size-val'),
+            titleSize: document.getElementById('setting-title-size'),
+            titleSizeVal: document.getElementById('setting-title-size-val'),
+            lineHeight: document.getElementById('setting-line'),
+            lineVal: document.getElementById('setting-line-val'),
+            align: document.getElementById('setting-align'),
+            imgFilter: document.getElementById('setting-img-filter'),
+            hideImages: document.getElementById('setting-hide-images'),
+            showBorders: document.getElementById('setting-borders'),
+            showGrain: document.getElementById('setting-grain'),
+            imageStyles: document.getElementById('setting-image-styles'),
+            maxSheets: document.getElementById('setting-max-sheets'),
+            showImposition: document.getElementById('setting-imposition')
+        };
+
+        // UI Controls
+        const generateBtn = document.getElementById('generate-btn');
+        const printBtn = document.getElementById('print-btn');
+        const savePdfBtn = document.getElementById('save-pdf-btn');
+        const generateText = document.getElementById('generate-text');
+        const generateIcon = document.getElementById('generate-icon');
+        const generateSpinner = document.getElementById('generate-spinner');
+        const output = document.getElementById('output');
+        const emptyState = document.getElementById('empty-state');
+        const toastEl = document.getElementById('toast');
+        const printInstruction = document.getElementById('print-instruction');
+
+        // --- Event Listeners ---
+        
+        ALL_MODES.forEach(mode => {
+            tabs[mode].addEventListener('click', () => switchTab(mode));
+            
+            if (mode !== 'builder') {
+                ['title', 'image', 'cover-layout'].forEach(suffix => {
+                    const el = document.getElementById(`${mode}-${suffix}`);
+                    if (el) el.addEventListener('input', triggerRebuild);
+                });
+            }
+        });
+
+        document.getElementById('md-text').addEventListener('input', triggerRebuild);
+
+        // Setting changes
+        settings.size.addEventListener('input', (e) => { settings.sizeVal.textContent = e.target.value + 'pt'; triggerRebuild(); });
+        settings.titleSize.addEventListener('input', (e) => { settings.titleSizeVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x'; triggerRebuild(); });
+        settings.lineHeight.addEventListener('input', (e) => { settings.lineVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x'; triggerRebuild(); });
+        
+        ['layoutMode', 'spineText', 'font', 'align', 'imgFilter', 'hideImages', 'showBorders', 'showGrain', 'imageStyles', 'maxSheets', 'showImposition'].forEach(key => {
+            if(settings[key]) {
+                settings[key].addEventListener('change', () => {
+                    if (key === 'layoutMode') {
+                        settings.spineContainer.classList.toggle('hidden', settings.layoutMode.value !== 'booklet');
+                    }
+                    triggerRebuild();
+                });
+                if(settings[key].type === 'text') settings[key].addEventListener('input', triggerRebuild);
+            }
+        });
+
+        document.getElementById('md-image-upload').addEventListener('change', (e) => {
+            handleImageUpload(e.target.files[0], (dataUrl) => {
+                document.getElementById('md-image').value = dataUrl;
+                triggerRebuild();
+            });
+        });
+
+        window.handleGenericUpload = function(input, targetId) {
+            handleImageUpload(input.files[0], (dataUrl) => {
+                document.getElementById(targetId).value = dataUrl;
+                triggerRebuild();
+            });
+        };
+
+        document.getElementById('reset-app-btn').addEventListener('click', () => {
+            if (confirm("Reset everything? All your current work and custom settings will be lost.")) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+            }
+        });
+
+        // Builder Tab Listeners
+        document.getElementById('btn-add-page').addEventListener('click', () => {
+            builderPages.push({ id: Date.now(), type: 'text', title: '', text: '', image: '', author: '' });
+            activePageIndex = builderPages.length - 1;
+            renderBuilderUI();
+            triggerRebuild();
+            const nav = document.getElementById('builder-navigator');
+            setTimeout(() => { nav.scrollLeft = nav.scrollWidth; }, 50);
+        });
+
+        document.getElementById('btn-clear-builder').addEventListener('click', () => {
+            builderPages = [{ id: Date.now(), type: 'cover', title: 'New Zine', text: '', image: '', author: '' }];
+            activePageIndex = 0;
+            renderBuilderUI();
+            triggerRebuild();
+            showToast('Builder reset successfully.', 'success');
+        });
+
+        document.getElementById('template-select').addEventListener('change', (e) => {
+            const templateKey = e.target.value;
+            if(!templateKey || !zineTemplates[templateKey]) return;
+            
+            const template = zineTemplates[templateKey];
+            builderPages = template.pages.map((p, index) => ({
+                id: Date.now() + index, type: p.type, title: p.title, text: p.text, image: p.image, author: p.author || ''
+            }));
+            settings.font.value = template.settings.font;
+            settings.align.value = template.settings.align;
+            settings.imgFilter.value = template.settings.filter;
+            activePageIndex = 0; 
+            e.target.value = ""; 
+            showToast(`Applied "${template.name}" Theme!`, 'success');
+            
+            if(currentMode !== 'builder') switchTab('builder');
+            else renderBuilderUI();
+            
+            triggerRebuild();
+        });
+
+        const activeEditor = document.getElementById('builder-active-editor');
+        activeEditor.addEventListener('input', (e) => {
+            const id = parseInt(e.target.dataset.id);
+            const page = builderPages.find(p => p.id === id);
+            if(!page) return;
+
+            let needsRebuild = false;
+            if(e.target.classList.contains('in-title')) { page.title = e.target.value; needsRebuild = true; }
+            if(e.target.classList.contains('in-img')) { page.image = e.target.value; needsRebuild = true; }
+            if(e.target.classList.contains('in-text')) { page.text = e.target.value; needsRebuild = true; }
+            if(e.target.classList.contains('in-author')) { page.author = e.target.value; needsRebuild = true; }
+            if (needsRebuild) triggerRebuild();
+        });
+
+        activeEditor.addEventListener('change', (e) => {
+            if(e.target.classList.contains('sel-template')) {
+                const id = parseInt(e.target.dataset.id);
+                const page = builderPages.find(p => p.id === id);
+                if(page) page.type = e.target.value;
+                renderBuilderUI(); 
+                triggerRebuild();
+            }
+            if(e.target.classList.contains('file-upload-builder')) {
+                const id = parseInt(e.target.dataset.id);
+                const page = builderPages.find(p => p.id === id);
+                if(page && e.target.files[0]) {
+                    handleImageUpload(e.target.files[0], (dataUrl) => {
+                        page.image = dataUrl;
+                        renderBuilderUI(); 
+                        triggerRebuild();
+                    });
+                }
+            }
+        });
+
+        activeEditor.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if(!btn) return;
+            const id = parseInt(btn.dataset.id);
+            const index = builderPages.findIndex(p => p.id === id);
+            if(index === -1) return;
+
+            if(btn.classList.contains('btn-del')) {
+                builderPages.splice(index, 1);
+                if (activePageIndex >= builderPages.length) activePageIndex = Math.max(0, builderPages.length - 1);
+                renderBuilderUI(); triggerRebuild();
+            } else if(btn.classList.contains('btn-up') && index > 0) {
+                [builderPages[index-1], builderPages[index]] = [builderPages[index], builderPages[index-1]];
+                activePageIndex = index - 1; renderBuilderUI(); triggerRebuild();
+            } else if(btn.classList.contains('btn-down') && index < builderPages.length - 1) {
+                [builderPages[index+1], builderPages[index]] = [builderPages[index], builderPages[index+1]];
+                activePageIndex = index + 1; renderBuilderUI(); triggerRebuild();
+            }
+        });
+
+        generateBtn.addEventListener('click', processContent);
+        printBtn.addEventListener('click', () => window.print());
+        savePdfBtn.addEventListener('click', downloadPDF);
+
+        // --- Modal Image Editor Logic ---
+        let editorTargetImg = null;
+        let editorImgId = null;
+        let editorTw = {scale: 1, x: 50, y: 50, fit: 'cover'};
+        let isModalDragging = false;
+        let modalStartX = 0, modalStartY = 0;
+        let startModalTwX = 50, startModalTwY = 50;
+
+        output.addEventListener('click', (e) => {
+            // Prevent accidental navigation if clicking any link in the preview
+            const link = e.target.closest('a');
+            if (link) {
+                e.preventDefault();
+            }
+
+            if(e.target.classList.contains('draggable-img')) {
+                e.preventDefault();
+                e.stopPropagation();
+                editorTargetImg = e.target;
+                editorImgId = e.target.getAttribute('data-id');
+                const tw = imageTweaks[editorImgId] || {scale: 1, x: 50, y: 50, fit: 'cover'};
+                editorTw = {...tw};
+
+                const container = document.getElementById('modal-crop-container');
+                if (e.target.clientWidth && e.target.clientHeight) {
+                    container.style.aspectRatio = `${e.target.clientWidth} / ${e.target.clientHeight}`;
+                }
+
+                const previewImg = document.getElementById('modal-preview-img');
+                previewImg.src = e.target.src;
+                
+                document.getElementById('modal-zoom').value = editorTw.scale;
+                document.getElementById('modal-zoom-val').textContent = editorTw.scale.toFixed(2) + 'x';
+                document.getElementById('modal-lock-ratio').checked = editorTw.fit === 'cover';
+                
+                updateEditorPreview();
+                document.getElementById('image-editor-modal').classList.remove('hidden');
+            }
+        });
+
+        function updateEditorPreview() {
+            const previewImg = document.getElementById('modal-preview-img');
+            previewImg.style.transform = `scale(${editorTw.scale})`;
+            previewImg.style.objectPosition = `${editorTw.x}% ${editorTw.y}%`;
+            previewImg.style.objectFit = editorTw.fit || 'cover';
+        }
+
+        const modalPreviewImg = document.getElementById('modal-preview-img');
+        modalPreviewImg.addEventListener('mousedown', (e) => {
+            isModalDragging = true;
+            modalStartX = e.clientX; modalStartY = e.clientY;
+            startModalTwX = editorTw.x; startModalTwY = editorTw.y;
+            modalPreviewImg.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+        window.addEventListener('mousemove', (e) => {
+            if(!isModalDragging) return;
+            const deltaX = e.clientX - modalStartX;
+            const deltaY = e.clientY - modalStartY;
+            editorTw.x = Math.max(0, Math.min(100, startModalTwX - deltaX * 0.2));
+            editorTw.y = Math.max(0, Math.min(100, startModalTwY - deltaY * 0.2));
+            updateEditorPreview();
+        });
+        window.addEventListener('mouseup', () => {
+            isModalDragging = false;
+            modalPreviewImg.style.cursor = 'grab';
+        });
+
+        document.getElementById('modal-zoom').addEventListener('input', (e) => {
+            editorTw.scale = parseFloat(e.target.value);
+            document.getElementById('modal-zoom-val').textContent = editorTw.scale.toFixed(2) + 'x';
+            updateEditorPreview();
+        });
+
+        document.getElementById('modal-lock-ratio').addEventListener('change', (e) => {
+            editorTw.fit = e.target.checked ? 'cover' : 'contain';
+            updateEditorPreview();
+        });
+
+        document.getElementById('modal-reset-btn').addEventListener('click', () => {
+            editorTw = {scale: 1, x: 50, y: 50, fit: 'cover'};
+            document.getElementById('modal-zoom').value = 1;
+            document.getElementById('modal-zoom-val').textContent = '1.00x';
+            document.getElementById('modal-lock-ratio').checked = true;
+            updateEditorPreview();
+        });
+
+        document.getElementById('modal-save-btn').addEventListener('click', () => {
+            imageTweaks[editorImgId] = {...editorTw};
+            
+            document.querySelectorAll(`img[data-id="${editorImgId}"]`).forEach(img => {
+                img.style.transform = `scale(${editorTw.scale})`;
+                img.style.objectPosition = `${editorTw.x}% ${editorTw.y}%`;
+                img.style.objectFit = editorTw.fit;
+            });
+            document.getElementById('image-editor-modal').classList.add('hidden');
+        });
+
+        document.getElementById('close-modal-btn').addEventListener('click', () => {
+            document.getElementById('image-editor-modal').classList.add('hidden');
+        });
+
+
+        // --- Init ---
+        renderBuilderUI();
+        switchTab('builder');
+
+        // --- Functions ---
+        function getImgId(src) {
+            if (!src) return 'img_empty';
+            let hash = 0;
+            for (let i = 0; i < src.length; i++) { hash = ((hash << 5) - hash) + src.charCodeAt(i); hash |= 0; }
+            return 'img_' + Math.abs(hash);
+        }
+
+        function toggleAccordion(id) {
+            const el = document.getElementById(id);
+            const btn = el.previousElementSibling;
+            const isOpen = el.classList.contains('open');
+            if (isOpen) { el.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); } 
+            else { el.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
+        }
+
+        function showToast(message, type = 'error') {
+            const isSuccess = type === 'success';
+            toastEl.className = `toast fixed top-6 z-50 flex items-center w-full max-w-sm p-4 rounded-xl shadow-2xl border ${isSuccess ? 'bg-white border-emerald-100 text-emerald-800' : 'bg-white border-red-100 text-red-800'}`;
+            
+            const icon = isSuccess 
+                ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>`
+                : `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                
+            const iconBg = isSuccess ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600';
+            const btnHover = isSuccess ? 'hover:bg-emerald-50 text-emerald-400' : 'hover:bg-red-50 text-red-400';
+
+            toastEl.innerHTML = `
+                <div class="inline-flex items-center justify-center flex-shrink-0 w-9 h-9 rounded-xl ${iconBg}">
+                    ${icon}
+                </div>
+                <div class="ml-3 text-sm font-bold">${message}</div>
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 transition-colors ${btnHover}" aria-label="Close" onclick="hideToast()">
+                    <span class="sr-only">Close</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            `;
+            
+            void toastEl.offsetWidth; // force reflow
+            toastEl.classList.add('show');
+            setTimeout(hideToast, 4000);
+        }
+
+        function hideToast() { document.getElementById('toast').classList.remove('show'); }
+
+        function switchTab(mode) {
+            currentMode = mode;
+            ALL_MODES.forEach(m => {
+                tabs[m].classList.remove('active');
+                panels[m].classList.add('hidden');
+                if (m === 'builder') panels[m].classList.remove('flex');
+            });
+            tabs[mode].classList.add('active');
+            if(mode === 'builder') {
+                panels.builder.classList.remove('hidden');
+                panels.builder.classList.add('flex');
+            } else { panels[mode].classList.remove('hidden'); }
+
+            if (cachedHtml || mode === 'builder') triggerRebuild();
+        }
+
+        function triggerRebuild() {
+            if (currentMode === 'builder') {
+                scheduleBuild(generateBuilderHtml(settings.imageStyles.checked), '', '', true, 'classic');
+                return;
+            }
+
+            const overrideTitle = document.getElementById(`${currentMode}-title`)?.value.trim() || '';
+            const overrideImg = document.getElementById(`${currentMode}-image`)?.value.trim() || '';
+            const coverLayout = document.getElementById(`${currentMode}-cover-layout`)?.value || 'classic';
+
+            if (currentMode === 'markdown') {
+                const text = document.getElementById('md-text').value.trim();
+                scheduleBuild(marked.parse(text), overrideTitle || 'Untitled', overrideImg, false, coverLayout);
+                return;
+            }
+
+            if ((currentMode === 'wiki' || currentMode === 'rss' || currentMode === 'recipe') && cachedHtml) {
+                scheduleBuild(cachedHtml, overrideTitle || cachedTitle || 'Untitled', overrideImg || cachedImage || '', false, coverLayout);
+            }
+        }
+
+        function scheduleBuild(html, title, img, isBuilder, coverLayout) {
+            clearTimeout(rebuildTimeout);
+            rebuildTimeout = setTimeout(async () => {
+                output.style.opacity = '0.5';
+                await buildBooklet(html, title, img, isBuilder, coverLayout);
+                output.style.opacity = '1';
+            }, 300);
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                generateText.textContent = "Processing...";
+                generateIcon.classList.add('hidden');
+                generateSpinner.classList.remove('hidden');
+                generateBtn.disabled = true; printBtn.disabled = true; savePdfBtn.disabled = true;
+                hideToast();
+            } else {
+                generateText.textContent = "Generate Layout";
+                generateIcon.classList.remove('hidden');
+                generateSpinner.classList.add('hidden');
+                generateBtn.disabled = false;
+            }
+        }
+
+        function parseISO8601Duration(duration) {
+            if (!duration) return '';
+            const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (!match) return duration;
+            const h = match[1] ? `${match[1]} hr ` : '';
+            const m = match[2] ? `${match[2]} min` : '';
+            return (h + m).trim() || duration;
+        }
+
+        function handleImageUpload(file, callback) {
+            if (!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = (e) => callback(e.target.result);
+            reader.readAsDataURL(file);
+        }
+
+        async function fetchWithProxy(url) {
+            const proxies = [
+                `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+                `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+            ];
+            for (let proxyUrl of proxies) {
+                try {
+                    const response = await fetch(proxyUrl);
+                    if (response.ok) {
+                        if (proxyUrl.includes('allorigins.win/get')) {
+                            const data = await response.json();
+                            if (data.contents) return data.contents;
+                        } else return await response.text();
+                    }
+                } catch (e) {}
+            }
+            throw new Error("Site blocks automated fetching.");
+        }
+
+        function renderBuilderUI() {
+            if (activePageIndex >= builderPages.length) activePageIndex = Math.max(0, builderPages.length - 1);
+            document.getElementById('page-count-display').textContent = `${builderPages.length} Pg${builderPages.length !== 1 ? 's' : ''}`;
+            
+            const nav = document.getElementById('builder-navigator');
+            const editor = document.getElementById('builder-active-editor');
+            
+            nav.innerHTML = '';
+            builderPages.forEach((page, index) => {
+                let badgeText = `P.${index + 1}`;
+                if (index === 0) badgeText = "Cover";
+                else if (index === builderPages.length - 1 && builderPages.length >= 4) badgeText = "Back";
+
+                const btn = document.createElement('button');
+                const isActive = index === activePageIndex;
+                btn.className = `shrink-0 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all border ${isActive ? 'bg-brand-600 text-white border-brand-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`;
+                btn.textContent = badgeText;
+                btn.onclick = () => { activePageIndex = index; renderBuilderUI(); };
+                nav.appendChild(btn);
+            });
+
+            if (builderPages.length === 0) {
+                editor.innerHTML = `<p class="text-center text-slate-400 py-6 text-xs font-medium">No pages. Add one to begin.</p>`;
+                return;
+            }
+
+            const page = builderPages[activePageIndex];
+            const hasTitle = ['cover', 'chapter'].includes(page.type);
+            const hasImg = ['cover', 'image-top', 'image-bottom', 'image-full'].includes(page.type);
+            const hasText = ['cover', 'text', 'image-top', 'image-bottom', 'quote', 'chapter'].includes(page.type);
+            const hasAuthor = page.type === 'quote';
+
+            editor.innerHTML = `
+                <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <span class="flex items-center gap-1.5">
+                        <select class="border-none bg-transparent text-sm font-bold cursor-pointer outline-none sel-template text-slate-800 focus:ring-0 appearance-none hover:text-brand-600 transition-colors" data-id="${page.id}">
+                            <option value="cover" ${page.type==='cover'?'selected':''}>Title Cover</option>
+                            <option value="chapter" ${page.type==='chapter'?'selected':''}>Chapter Heading</option>
+                            <option value="text" ${page.type==='text'?'selected':''}>Text Block</option>
+                            <option value="image-top" ${page.type==='image-top'?'selected':''}>Image Top</option>
+                            <option value="image-bottom" ${page.type==='image-bottom'?'selected':''}>Image Bottom</option>
+                            <option value="image-full" ${page.type==='image-full'?'selected':''}>Full Image</option>
+                            <option value="quote" ${page.type==='quote'?'selected':''}>Pull Quote</option>
+                        </select>
+                        <svg class="w-4 h-4 text-slate-400 pointer-events-none -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                    <div class="flex items-center gap-1">
+                        <button class="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 btn-up transition-colors" data-id="${page.id}" title="Move Page Left" ${activePageIndex===0?'disabled':''}>
+                            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button class="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 btn-down transition-colors" data-id="${page.id}" title="Move Page Right" ${activePageIndex===builderPages.length-1?'disabled':''}>
+                            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                        <button class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 btn-del ml-1 transition-colors" data-id="${page.id}" title="Delete Page">
+                            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                ${hasTitle ? `<input type="text" class="border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-xs w-full in-title focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-semibold text-slate-700 transition-colors" data-id="${page.id}" value="${page.title}" placeholder="${page.type === 'cover' ? 'Main Title (e.g., ZINE VOL. 1)' : 'Heading Text'}">` : ''}
+                ${hasImg ? `
+                <div class="flex gap-2">
+                    <input type="text" class="border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-xs flex-grow w-full in-img focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none transition-colors" data-id="${page.id}" value="${page.image}" placeholder="Image URL (https://...)">
+                    <label class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-3 rounded-xl cursor-pointer text-xs font-bold flex items-center justify-center transition-colors shrink-0 shadow-sm" title="Upload local image">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <input type="file" class="hidden file-upload-builder" data-id="${page.id}" accept="image/*">
+                    </label>
+                </div>
+                ` : ''}
+                ${hasText ? `<textarea class="border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-xs w-full in-text resize-y focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none transition-colors text-slate-600 ${page.type==='quote'?'italic text-center font-serif':''}" data-id="${page.id}" rows="${['cover', 'quote', 'chapter'].includes(page.type) ? '2' : '6'}" placeholder="${page.type==='quote' ? 'Enter a profound quote...' : 'Type content here (Markdown supported)'}">${page.text}</textarea>` : ''}
+                ${hasAuthor ? `<input type="text" class="border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-xs w-full in-author focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none font-semibold text-slate-700 transition-colors text-center" data-id="${page.id}" value="${page.author || ''}" placeholder="Who said it? (e.g., Albert Einstein)">` : ''}
+            `;
+        }
+
+        function generateBuilderHtml(applyImageStyles = true) {
+            let html = '';
+            builderPages.forEach((page, index) => {
+                html += `<div style="break-after: column; overflow: hidden; display: flex; flex-direction: column; padding: 2mm; box-sizing: border-box; height: 100%;">`;
+                
+                const placeholderImg = `<div style="width:100%; height:100%; background:repeating-linear-gradient(45deg, #f8fafc, #f8fafc 10px, #f1f5f9 10px, #f1f5f9 20px); display:flex; align-items:center; justify-content:center; color:#cbd5e1; font-size:12px; font-weight:bold; border: 2px dashed #e2e8f0; border-radius:8px; text-transform:uppercase; letter-spacing:1px; font-family:'Inter', sans-serif;">Image Box</div>`;
+                
+                const imgNode = page.image ? `<img src="${page.image}" data-id="${page.id}" style="width: 100%; height:100%; border-radius: inherit; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">` : placeholderImg;
+                
+                const textHtml = marked.parse(page.text || '');
+                const textNode = `<div class="zine-content flex-grow" style="overflow-wrap: break-word;">${textHtml}</div>`;
+
+                if (page.type === 'cover') {
+                    html += `<div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 5mm;">`;
+                    html += `<h1 style="font-size: calc(var(--zine-title-size, 1.4) * 1.5em); margin-bottom: 0.2em; line-height: 1.1; font-family: inherit; border:none;">${page.title || 'Untitled'}</h1>`;
+                    if(page.image) {
+                        const styleStr = applyImageStyles 
+                            ? `border: 5px solid #fff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transform: rotate(-2deg);` 
+                            : `border-radius: 8px;`;
+                        html += `<div style="height: 45%; width: 90%; margin: 1.5em 0; ${styleStr} overflow: hidden; position: relative; z-index: 10;">${imgNode}</div>`;
+                    }
+                    html += `<div style="margin-top: 1em; color: #475569; font-size: 0.9em; font-weight: 600;">${textHtml}</div>`;
+                    html += `</div>`;
+                } else if (page.type === 'chapter') {
+                    html += `<div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 4mm;">`;
+                    html += `<h2 style="font-size: calc(var(--zine-title-size, 1.4) * 2em); border-bottom: none; margin: 0; line-height: 1.1; font-family: inherit;">${page.title || 'Chapter'}</h2>`;
+                    if(page.text) html += `<div style="margin-top: 1em; font-size: 1.2em; color: #64748b;">${textHtml}</div>`;
+                    html += `</div>`;
+                } else if (page.type === 'text') {
+                    html += `<div style="padding-top: 2mm;">${textNode}</div>`;
+                } else if (page.type === 'image-top') {
+                    html += `<div style="height: 45%; flex-shrink: 0; margin-bottom: 5mm; overflow: hidden; border-radius: 4px; position: relative; z-index: 10;">${imgNode}</div>`;
+                    html += textNode;
+                } else if (page.type === 'image-bottom') {
+                    html += textNode;
+                    html += `<div style="height: 45%; flex-shrink: 0; margin-top: 5mm; overflow: hidden; border-radius: 4px; position: relative; z-index: 10;">${imgNode}</div>`;
+                } else if (page.type === 'image-full') {
+                    html += `<div style="width: 100%; height: 100%; padding: 0; margin: -2mm; width: calc(100% + 4mm); height: calc(100% + 4mm); overflow: hidden; position: relative; z-index: 10;">${imgNode}</div>`;
+                } else if (page.type === 'quote') {
+                    html += `<div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 4mm;">`;
+                    html += `<svg style="width: 36px; height: 36px; color: #cbd5e1; margin-bottom: 15px;" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>`;
+                    html += `<div style="font-size: 1.3em; line-height: 1.4; font-weight: bold; font-style: italic;">${textHtml}</div>`;
+                    if (page.author) {
+                        html += `<div style="margin-top: 15px; font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">&mdash; ${page.author}</div>`;
+                    }
+                    html += `</div>`;
+                }
+                
+                html += `</div>`;
+            });
+            return html;
+        }
+
+        async function processContent() {
+            setLoading(true);
+            emptyState.classList.add('hidden');
+            output.innerHTML = '';
+            
+            try {
+                if (currentMode === 'wiki') {
+                    const url = document.getElementById('wiki-url').value.trim();
+                    if (!url) throw new Error("Please enter a Wikipedia URL.");
+                    
+                    const match = url.match(/([a-z\-]+)\.wikipedia\.org\/wiki\/(.+)/);
+                    if (!match) throw new Error("Invalid Wikipedia URL format.");
+
+                    const lang = match[1];
+                    const title = match[2];
+                    const apiUrl = `https://${lang}.wikipedia.org/w/api.php?action=parse&format=json&page=${title}&prop=text|displaytitle&disableeditsection=true&origin=*`;
+                    
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error.info);
+
+                    cachedHtml = cleanWikiHtml(data.parse.text['*']);
+                    cachedTitle = data.parse.displaytitle || decodeURIComponent(title).replace(/_/g, ' ');
+
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.parse.text['*'];
+                    const possibleImages = tempDiv.querySelectorAll('.infobox img, .thumb img, .infobox-image img');
+                    cachedImage = '';
+                    for (let img of possibleImages) {
+                        const w = img.getAttribute('width');
+                        if (!w || parseInt(w) > 50) {
+                            cachedImage = img.getAttribute('src');
+                            if (cachedImage.startsWith('//')) cachedImage = 'https:' + cachedImage;
+                            break;
+                        }
+                    }
+                    triggerRebuild();
+                
+                } else if (currentMode === 'rss') {
+                    const url = document.getElementById('rss-url').value.trim();
+                    if (!url) throw new Error("Please enter an RSS Feed URL.");
+
+                    const limit = parseInt(document.getElementById('rss-limit').value) || 5;
+
+                    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+                    
+                    const response = await fetch(apiUrl);
+                    if(!response.ok) throw new Error("Failed to fetch feed. Check URL.");
+                    
+                    const data = await response.json();
+                    if(data.status !== 'ok') throw new Error("Could not parse this RSS feed.");
+
+                    let rssHtml = '';
+                    const itemsToProcess = data.items.slice(0, limit);
+
+                    itemsToProcess.forEach(item => {
+                        rssHtml += `<h2 style="font-size: 1.4em; margin-bottom: 0.2em; border-bottom: none;">${item.title}</h2>`;
+                        
+                        let metaText = [];
+                        if(item.author) metaText.push(`<strong>${item.author}</strong>`);
+                        if(item.pubDate) {
+                            const dateObj = new Date(item.pubDate);
+                            if(!isNaN(dateObj)) metaText.push(`<em>${dateObj.toLocaleDateString()}</em>`);
+                        }
+                        if(metaText.length > 0) {
+                            rssHtml += `<p style="font-size: 0.75em; color: #64748b; margin-bottom: 1em; text-transform: uppercase; letter-spacing: 0.5px;">${metaText.join(' &bull; ')}</p>`;
+                        }
+
+                        if(item.thumbnail) {
+                            rssHtml += `<img src="${item.thumbnail}" style="max-height: 40mm; object-fit: cover; margin-bottom: 1em; border-radius:4px; width: 100%;" />`;
+                        }
+
+                        let articleContent = item.content || item.description || '';
+                        const tempDoc = new DOMParser().parseFromString(articleContent, 'text/html');
+                        tempDoc.querySelectorAll('iframe, script, style, object, embed, form').forEach(el => el.remove());
+                        
+                        rssHtml += `<div>${tempDoc.body.innerHTML}</div>`;
+                        rssHtml += `<div style="text-align: center; margin: 2em 0; color: #cbd5e1;">***</div>`;
+                    });
+
+                    cachedHtml = rssHtml;
+                    cachedTitle = data.feed.title || "The Daily Zine";
+                    cachedImage = data.feed.image || '';
+
+                    triggerRebuild();
+
+                } else if (currentMode === 'recipe') {
+                    const inputVal = document.getElementById('recipe-url').value.trim();
+                    if (!inputVal) throw new Error("Please enter a Recipe URL or paste the HTML source code.");
+
+                    let htmlString = "";
+                    if (inputVal.startsWith('http') && !inputVal.includes('<html')) {
+                        try { htmlString = await fetchWithProxy(inputVal); } 
+                        catch (err) { throw new Error("Site blocks automated fetching. Paste the page HTML source code instead."); }
+                    } else { htmlString = inputVal; }
+
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlString, 'text/html');
+                    
+                    let recipeData = null;
+                    const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
+                    for(let script of scripts) {
+                        try {
+                            const json = JSON.parse(script.textContent);
+                            const graph = json['@graph'] || (Array.isArray(json) ? json : [json]);
+                            const recipe = graph.find(item => item['@type'] === 'Recipe' || (Array.isArray(item['@type']) && item['@type'].includes('Recipe')));
+                            if(recipe) { recipeData = recipe; break; }
+                        } catch(e) {}
+                    }
+
+                    if(!recipeData) throw new Error("Could not find standard Recipe data on this page.");
+
+                    cachedTitle = recipeData.name || "Delicious Recipe";
+                    cachedImage = '';
+                    if (recipeData.image) {
+                        if (typeof recipeData.image === 'string') cachedImage = recipeData.image;
+                        else if (Array.isArray(recipeData.image)) cachedImage = typeof recipeData.image[0] === 'string' ? recipeData.image[0] : recipeData.image[0].url;
+                        else if (recipeData.image.url) cachedImage = recipeData.image.url;
+                    }
+
+                    let recipeHtml = `<h2>Ingredients</h2><ul>`;
+                    if (recipeData.recipeIngredient) {
+                        recipeData.recipeIngredient.forEach(ing => { recipeHtml += `<li>${ing}</li>`; });
+                    }
+                    recipeHtml += `</ul><h2>Instructions</h2><ol>`;
+                    if (recipeData.recipeInstructions) {
+                        let instructions = Array.isArray(recipeData.recipeInstructions) ? recipeData.recipeInstructions : [recipeData.recipeInstructions];
+                        let steps = [];
+                        instructions.forEach(inst => {
+                            if (inst['@type'] === 'HowToStep') steps.push(inst.text);
+                            else if (inst['@type'] === 'HowToSection' && inst.itemListElement) {
+                                inst.itemListElement.forEach(subInst => steps.push(subInst.text));
+                            }
+                            else if (typeof inst === 'string') steps.push(inst);
+                        });
+
+                        steps.forEach(step => {
+                            let cleanStep = step.replace(/<[^>]*>?/gm, ''); 
+                            recipeHtml += `<li>${cleanStep}</li>`;
+                        });
+                    }
+                    recipeHtml += `</ol>`;
+
+                    let metaHtml = '<div style="margin-bottom: 1.5em; font-size: 0.85em; color: #64748b; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px;">';
+                    let metaInfo = [];
+                    if(recipeData.prepTime) metaInfo.push(`<strong>Prep:</strong> ${parseISO8601Duration(recipeData.prepTime)}`);
+                    if(recipeData.cookTime) metaInfo.push(`<strong>Cook:</strong> ${parseISO8601Duration(recipeData.cookTime)}`);
+                    if(recipeData.recipeYield) {
+                        let y = Array.isArray(recipeData.recipeYield) ? recipeData.recipeYield[0] : recipeData.recipeYield;
+                        metaInfo.push(`<strong>Yields:</strong> ${y}`);
+                    }
+                    metaHtml += metaInfo.join(' &bull; ') + '</div>';
+                    cachedHtml = metaHtml + recipeHtml;
+
+                    triggerRebuild();
+
+                } else if (currentMode === 'markdown' || currentMode === 'builder') {
+                    triggerRebuild(); 
+                }
+                
+                printInstruction.classList.remove('hidden');
+
+            } catch (err) {
+                showToast(err.message);
+                if (output.innerHTML === '') emptyState.classList.remove('hidden');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function downloadPDF() {
+            setLoading(true);
+            generateText.textContent = "Creating PDF...";
+            
+            const element = document.getElementById('output');
+            
+            document.body.classList.add('pdf-exporting');
+            
+            const opt = {
+                margin: 0,
+                filename: 'zine-maker-pro-export.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                pagebreak: { mode: ['css'] }
+            };
+
+            try {
+                await html2pdf().set(opt).from(element).save();
+                showToast("PDF downloaded successfully!", "success");
+            } catch (error) {
+                showToast("Failed to create PDF. Please use the Print option instead.");
+            } finally {
+                document.body.classList.remove('pdf-exporting');
+                setLoading(false);
+            }
+        }
+
+        function cleanWikiHtml(html) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const removeSelectors = ['.infobox', '.navbox', '.metadata', '.reference', '.reflist', '.mw-editsection', '.toc', '.ambox', '.sidebar', '.portal', 'table.box-Multiple_issues', '#See_also', '#References', '#External_links', '#Further_reading'];
+            removeSelectors.forEach(s => doc.querySelectorAll(s).forEach(el => el.remove()));
+
+            const skipHeadings = ['See also', 'References', 'External links', 'Further reading'];
+            doc.querySelectorAll('h2').forEach(h2 => {
+                if (skipHeadings.includes(h2.textContent.trim())) {
+                    let current = h2.nextElementSibling;
+                    while (current && current.tagName !== 'H2') {
+                        const next = current.nextElementSibling;
+                        current.remove();
+                        current = next;
+                    }
+                    h2.remove();
+                }
+            });
+
+            doc.querySelectorAll('img').forEach(img => {
+                let src = img.getAttribute('src');
+                if (src && src.startsWith('//')) img.setAttribute('src', 'https:' + src);
+                img.removeAttribute('srcset'); img.removeAttribute('width'); img.removeAttribute('height');
+            });
+            doc.querySelectorAll('[style]').forEach(el => { el.style.width = ''; el.style.minWidth = ''; el.style.maxWidth = '100%'; });
+
+            return doc.body.innerHTML;
+        }
+
+        async function buildBooklet(contentHtml, title, coverImageUrl, isBuilderMode, coverLayout = 'classic') {
+            if(!contentHtml && isBuilderMode) contentHtml = generateBuilderHtml(settings.imageStyles.checked);
+            if(!contentHtml) return;
+            
+            output.innerHTML = '';
+
+            const config = {
+                layoutMode: settings.layoutMode.value,
+                spineText: settings.spineText.value.trim(),
+                fontClass: settings.font.value,
+                fontSize: settings.size.value + 'pt',
+                titleSize: settings.titleSize.value,
+                lineHeight: settings.lineHeight.value,
+                textAlign: settings.align.value,
+                hideImages: settings.hideImages.checked,
+                imgFilter: settings.imgFilter.value,
+                showBorders: settings.showBorders.checked,
+                showGrain: settings.showGrain.checked,
+                imageStyles: settings.imageStyles.checked,
+                maxSheets: parseInt(settings.maxSheets.value) || 0,
+                showImpositionOverlay: settings.showImposition.checked
+            };
+            
+            const isBooklet = config.layoutMode === 'booklet';
+            const colWidth = isBooklet ? '128.5mm' : '64.25mm';
+            const colGap = isBooklet ? '20mm' : '10mm';
+            const pageHeight = isBooklet ? '190mm' : '95mm';
+            const advanceMm = isBooklet ? 148.5 : 74.25;
+
+            // Update UI text for context
+            if (isBooklet) {
+                document.getElementById('instruction-title').textContent = "BOOKLET PRINTING:";
+                document.getElementById('instruction-body').innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins</strong>, and <strong>Print on Both Sides (Flip on Short Edge)</strong>. Fold in half and staple.";
+            } else {
+                document.getElementById('instruction-title').textContent = "PRINT INSTRUCTIONS:";
+                document.getElementById('instruction-body').innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins (0px)</strong>. Fold along the gray lines and cut the center dotted line.";
+            }
+            
+            let combinedHtml = contentHtml;
+            if (!isBuilderMode) {
+                const datePrinted = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                let autoCoverHtml = '';
+                
+                if (coverLayout === 'full') {
+                    let coverImgHtml = '';
+                    if (coverImageUrl && !config.hideImages) {
+                        coverImgHtml = `<img src="${coverImageUrl}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:-1; opacity: 0.85;">`;
+                    }
+                    autoCoverHtml = `
+                        <div style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; break-after: column; padding: 10px; position:relative; overflow:hidden;">
+                            ${coverImgHtml}
+                            <div style="background: rgba(255,255,255,0.9); padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 85%; z-index:10; border: 1px solid rgba(0,0,0,0.05);">
+                                <h1 style="font-size: calc(var(--zine-title-size, 1.4) * 1.8em); margin-bottom: 0.2em; line-height: 1.1; font-family: inherit; border:none;">${title}</h1>
+                                <div style="color: #475569; font-size: 0.75em; font-family: 'Courier Prime', monospace; font-weight:bold; margin-top:10px;">
+                                    VOL 1. &bull; ${datePrinted}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (coverLayout === 'minimal') {
+                    autoCoverHtml = `
+                        <div style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; break-after: column; padding: 10px;">
+                            <h1 style="font-size: calc(var(--zine-title-size, 1.4) * 2em); border: none; margin-bottom: 0.2em; line-height: 1.1; font-family: inherit;">${title}</h1>
+                            <div style="margin-top: 20mm; color: #64748b; font-size: 0.75em; font-family: 'Courier Prime', monospace; border-top: 1px solid #cbd5e1; padding-top: 5px; width: 50%;">
+                                VOL 1. &bull; ${datePrinted}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    let coverImgHtml = '';
+                    if (coverImageUrl && !config.hideImages) {
+                        if (config.imageStyles) {
+                            coverImgHtml = `<div style="padding: 3mm; background: #fff; border: 1px solid #e2e8f0; transform: rotate(-1.5deg); margin: 1em 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"><img src="${coverImageUrl}" style="max-height: ${isBooklet ? '80mm' : '40mm'}; max-width: 100%; object-fit: contain;"></div>`;
+                        } else {
+                            coverImgHtml = `<div style="margin: 1em 0; border-radius: 8px; overflow: hidden;"><img src="${coverImageUrl}" style="max-height: ${isBooklet ? '80mm' : '40mm'}; max-width: 100%; object-fit: contain;"></div>`;
+                        }
+                    }
+                    autoCoverHtml = `
+                        <div style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; break-after: column; padding: 10px;">
+                            <h1 style="font-size: calc(var(--zine-title-size, 1.4) * 1.6em); border: none; margin-bottom: 0.2em; line-height: 1.1; font-family: inherit;">${title}</h1>
+                            ${coverImgHtml}
+                            <div style="margin-top: auto; color: #64748b; font-size: 0.75em; font-family: 'Courier Prime', monospace; border-top: 1px solid #cbd5e1; padding-top: 5px; width: 80%;">
+                                VOL 1. &bull; ${datePrinted}
+                            </div>
+                        </div>
+                    `;
+                }
+                combinedHtml = autoCoverHtml + contentHtml;
+            }
+
+            const tempWrapper = document.createElement('div');
+            tempWrapper.innerHTML = combinedHtml;
+            tempWrapper.querySelectorAll('img').forEach((img, index) => {
+                let id = img.getAttribute('data-id');
+                if (!id) {
+                    id = getImgId(img.src) + '_' + index;
+                    img.setAttribute('data-id', id);
+                }
+
+                if (!imageTweaks[id]) {
+                    imageTweaks[id] = { scale: 1, x: 50, y: 50, fit: 'cover' };
+                }
+
+                const tw = imageTweaks[id];
+                img.classList.add('draggable-img');
+                img.style.objectFit = tw.fit || 'cover';
+                img.style.transform = `scale(${tw.scale})`;
+                img.style.objectPosition = `${tw.x}% ${tw.y}%`;
+
+                // Remove link from wrapped images so clicks open the editor instead of navigating
+                const parentLink = img.closest('a');
+                if (parentLink) {
+                    parentLink.removeAttribute('href');
+                }
+            });
+            combinedHtml = tempWrapper.innerHTML;
+
+            const measurer = document.createElement('div');
+            measurer.className = `multi-col-content zine-content ${config.fontClass} ${config.imgFilter}`;
+            measurer.style.fontSize = config.fontSize;
+            measurer.style.setProperty('--zine-title-size', config.titleSize);
+            measurer.style.setProperty('--zine-line-height', config.lineHeight);
+            measurer.style.textAlign = config.textAlign;
+            measurer.style.columnWidth = colWidth;
+            measurer.style.columnGap = colGap;
+            measurer.style.height = pageHeight;
+            measurer.innerHTML = combinedHtml;
+            
+            if (config.hideImages) {
+                measurer.querySelectorAll('img, figure, .thumb').forEach(el => el.style.display = 'none');
+            }
+
+            const measureWrapper = document.createElement('div');
+            measureWrapper.style.position = 'absolute';
+            measureWrapper.style.top = '-9999px';
+            measureWrapper.style.left = '-9999px';
+            measureWrapper.style.width = colWidth; 
+            measureWrapper.style.height = pageHeight;
+            measureWrapper.appendChild(measurer);
+            document.body.appendChild(measureWrapper);
+
+            const images = measurer.querySelectorAll('img');
+            const imagePromises = Array.from(images).map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+            });
+            await Promise.all(imagePromises);
+
+            const mmBox = document.createElement('div');
+            mmBox.style.width = advanceMm + 'mm'; 
+            mmBox.style.position = 'absolute';
+            document.body.appendChild(mmBox);
+            const pxAdvance = mmBox.getBoundingClientRect().width;
+            document.body.removeChild(mmBox);
+
+            const scrollWidth = measurer.scrollWidth;
+            let totalPages = Math.ceil(scrollWidth / pxAdvance); 
+            
+            let padTo = isBooklet ? 4 : 8;
+            while (totalPages % padTo !== 0) totalPages++;
+
+            const sheets = [];
+            let numSheets = totalPages / padTo;
+            
+            if (config.maxSheets > 0 && numSheets > config.maxSheets) {
+                numSheets = config.maxSheets;
+            }
+
+            for (let s = 0; s < numSheets; s++) {
+                if (isBooklet) {
+                    // Physical sheet logic (each sheet produces 2 document elements: Front and Back)
+                    sheets.push([totalPages - 2*s, 2*s + 1]); // Front Side
+                    sheets.push([2*s + 2, totalPages - 2*s - 1]); // Back Side
+                } else {
+                    const base = s * 8;
+                    sheets.push([
+                        base + 5, base + 4, base + 3, base + 2,
+                        base + 6, base + 7, base + 8, base + 1
+                    ]);
+                }
+            }
+
+            sheets.forEach((sheetPages, sheetIndex) => {
+                const isFrontSide = isBooklet ? (sheetIndex % 2 === 0) : true;
+                const sheetEl = document.createElement('div');
+                sheetEl.className = `zine-sheet ${isBooklet ? 'booklet-mode' : 'mini-mode'} ${config.showBorders ? 'show-page-borders' : ''} ${config.showGrain ? 'zine-grain' : ''}`;
+                
+                if (isBooklet) {
+                    sheetEl.innerHTML = `<div class="guide-fold"></div>`;
+                    if (isFrontSide && sheetIndex === 0 && config.spineText) {
+                        sheetEl.innerHTML += `<div class="spine-text-render">${config.spineText}</div>`;
+                    }
+                } else {
+                    sheetEl.innerHTML = `
+                        <div class="guide-v" style="left: 25%;"></div>
+                        <div class="guide-v" style="left: 50%;"></div>
+                        <div class="guide-v" style="left: 75%;"></div>
+                        <div class="guide-h" style="top: 50%;"></div>
+                        <div class="guide-cut"><span style="background: white; padding: 2px 10px; font-weight: 800; color: #4f46e5; font-size: 11px; font-family: 'Inter', sans-serif; letter-spacing: 1px; border-radius: 12px; box-shadow: 0 0 0 4px white;">✂ FOLD & CUT</span></div>
+                    `;
+                }
+
+                sheetPages.forEach((pageNum, index) => {
+                    const slot = document.createElement('div');
+                    slot.className = 'page-slot';
+
+                    const rotator = document.createElement('div');
+                    rotator.className = 'rotator';
+                    if (!isBooklet && index < 4) rotator.classList.add('rotated');
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'page-content-wrapper';
+
+                    const contentClone = measurer.cloneNode(true);
+                    contentClone.style.transform = `translateX(calc(-1 * ${pageNum - 1} * ${advanceMm}mm))`;
+                    
+                    wrapper.appendChild(contentClone);
+                    rotator.appendChild(wrapper);
+
+                    const actualPagesWithContent = Math.ceil(scrollWidth / pxAdvance);
+                    if (pageNum <= actualPagesWithContent && pageNum > 1) {
+                        const pageNumberLabel = document.createElement('div');
+                        pageNumberLabel.className = 'page-number';
+                        pageNumberLabel.textContent = `- ${pageNum} -`;
+                        rotator.appendChild(pageNumberLabel);
+                    }
+
+                    // Imposition Visual Overlay
+                    if (config.showImpositionOverlay) {
+                        const overlay = document.createElement('div');
+                        overlay.className = 'absolute inset-0 flex items-center justify-center pointer-events-none z-50 text-[120px] font-black text-brand-500 opacity-20 select-none';
+                        overlay.textContent = pageNum;
+                        rotator.appendChild(overlay);
+                    }
+
+                    slot.appendChild(rotator);
+                    sheetEl.appendChild(slot);
+                });
+
+                output.appendChild(sheetEl);
+            });
+
+            document.body.removeChild(measureWrapper);
+            
+            const hasSheets = output.querySelectorAll('.zine-sheet').length > 0;
+            printBtn.disabled = !hasSheets;
+            savePdfBtn.disabled = !hasSheets;
+        }
+    </script>
+</body>
+</html>
