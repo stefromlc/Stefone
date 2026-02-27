@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <!-- Primary Meta Tags -->
-<title>Zine Maker – Create Printable 8-Page Pocket Zines</title>
+ <title>Zine Maker – Create Printable 8-Page Pocket Zines</title>
 <meta name="title" content="Zine Maker – Create Printable 8-Page Pocket Zines" />
 <meta name="description" content="Create printable 8-page pocket zines in minutes. Import from Wiki, RSS, or Markdown, customize layouts and fonts, and export print-ready booklets." />
 <meta name="keywords" content="zine maker, printable zine, pocket zine generator, 8 page booklet creator, DIY zine online, foldable booklet tool" />
 
-<!-- Open Graph -->
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://www.stefone.com/zine-maker/" />
 <meta property="og:title" content="Zine Maker – Create Printable 8-Page Pocket Zines" />
@@ -17,16 +15,13 @@
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Zine Maker printable 8-page pocket booklet layout preview" />
 
-<!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Zine Maker – Create Printable 8-Page Pocket Zines" />
 <meta name="twitter:description" content="Create printable 8-page pocket zines in minutes. Import from Wiki, RSS, or Markdown, customize layouts and fonts, and export print-ready booklets." />
 <meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/zine-maker.jpg" />
 
-<!-- Theme Color -->
 <meta name="theme-color" content="#6366f1" />
 
-<!-- SVG Favicon (No JPG, Fully Coded) -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
   <rect width='100' height='100' rx='18' fill='%236366f1'/>
@@ -36,8 +31,8 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- html2pdf for native PDF saving -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -285,7 +280,6 @@
 </head>
 <body class="font-sans text-slate-800 h-screen flex flex-col md:flex-row overflow-hidden selection:bg-brand-200 selection:text-brand-900">
 
-    <!-- Image Editor Modal Overlay -->
     <div id="image-editor-modal" class="fixed inset-0 z-[100] bg-slate-900/80 hidden flex flex-col items-center justify-center backdrop-blur-sm p-4">
         <div class="bg-white p-5 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col gap-4">
             <div class="flex justify-between items-center px-1">
@@ -323,9 +317,7 @@
         </div>
     </div>
 
-    <!-- Sidebar / Settings Panel -->
     <aside class="no-print w-full md:w-[24rem] bg-white border-r border-slate-200 flex flex-col h-full flex-shrink-0 z-20 shadow-xl relative">
-        <!-- Header -->
         <div class="px-6 py-4 border-b border-slate-100 bg-white shrink-0 flex flex-col gap-3">
             <div class="flex items-center justify-between">
                 <a href="/projects/" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-brand-600 transition-colors bg-slate-50 hover:bg-brand-50 px-2 py-1 rounded-md">
@@ -350,7 +342,6 @@
 
         <div class="flex-grow overflow-y-auto custom-scrollbar pb-6">
             
-            <!-- Global Theme Selector -->
             <div class="p-5 border-b border-slate-100 bg-slate-50/50">
                 <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide flex items-center gap-2">
                     <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
@@ -373,7 +364,6 @@
                 </div>
             </div>
 
-            <!-- Accordion 1: Data Source -->
             <div class="border-b border-slate-100">
                 <button class="accordion-button w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors focus:outline-none group" aria-expanded="true" onclick="toggleAccordion('acc-content')">
                     <span class="font-bold text-slate-800 text-sm uppercase tracking-wide flex items-center gap-2">
@@ -384,7 +374,6 @@
                 </button>
                 <div id="acc-content" class="accordion-content open px-6 pb-6 bg-white">
                     
-                    <!-- Content Source Tabs -->
                     <div class="flex p-1.5 bg-slate-100 rounded-xl overflow-x-auto gap-1 mb-6 border border-slate-200/60 shadow-inner">
                         <button id="tab-builder" class="tab-btn active flex-1 min-w-[70px] py-1.5 px-2 text-xs rounded-lg transition-all">Builder</button>
                         <button id="tab-wiki" class="tab-btn flex-1 min-w-[70px] py-1.5 px-2 text-xs rounded-lg transition-all">Wiki</button>
@@ -393,22 +382,17 @@
                         <button id="tab-recipe" class="tab-btn flex-1 min-w-[70px] py-1.5 px-2 text-xs rounded-lg transition-all">Recipe</button>
                     </div>
 
-                    <!-- Page Builder Inputs -->
                     <div id="panel-builder" class="space-y-4 flex-col">
                         <div class="flex items-center justify-between">
                             <label class="block text-xs font-bold text-slate-700">Custom Pages</label>
                             <span class="text-[10px] font-mono font-bold bg-brand-100 text-brand-700 px-2 py-0.5 rounded-md border border-brand-200" id="page-count-display">2 Pages</span>
                         </div>
                         
-                        <!-- Horizontal Page Navigator -->
                         <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-2 pt-1" id="builder-navigator">
-                            <!-- Dynamic tabs injected here -->
-                        </div>
+                            </div>
 
-                        <!-- Active Page Editor Area -->
                         <div id="builder-active-editor" class="bg-white border border-slate-200 rounded-2xl p-4 text-sm flex flex-col gap-3 relative shadow-sm transition-all min-h-[180px]">
-                            <!-- Dynamic form injected here -->
-                        </div>
+                            </div>
 
                         <div class="flex gap-2 pt-2">
                             <button id="btn-add-page" class="flex-grow py-2.5 border-2 border-dashed border-slate-300 rounded-xl text-sm text-slate-600 font-bold hover:border-brand-400 hover:text-brand-600 hover:bg-brand-50 transition-all flex items-center justify-center gap-2">
@@ -420,7 +404,6 @@
                         </div>
                     </div>
 
-                    <!-- Wikipedia Inputs -->
                     <div id="panel-wiki" class="space-y-4 hidden mt-2">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">Wikipedia URL</label>
@@ -449,7 +432,6 @@
                         </div>
                     </div>
 
-                    <!-- RSS Feed Inputs -->
                     <div id="panel-rss" class="space-y-4 hidden mt-2">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">RSS Feed URL</label>
@@ -482,7 +464,6 @@
                         </div>
                     </div>
 
-                    <!-- Markdown Content Inputs -->
                     <div id="panel-markdown" class="space-y-4 hidden mt-2">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5 flex justify-between">
@@ -512,7 +493,6 @@
                         </div>
                     </div>
 
-                    <!-- Recipe Scraper Inputs -->
                     <div id="panel-recipe" class="space-y-4 hidden mt-2">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">Recipe URL or Source Code</label>
@@ -543,7 +523,6 @@
                 </div>
             </div>
 
-            <!-- Accordion 2: Typography & Layout -->
             <div class="border-b border-slate-100">
                 <button class="accordion-button w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors focus:outline-none group" aria-expanded="false" onclick="toggleAccordion('acc-typography')">
                     <span class="font-bold text-slate-800 text-sm uppercase tracking-wide flex items-center gap-2">
@@ -621,12 +600,11 @@
                 </div>
             </div>
 
-            <!-- Accordion 3: Styling & Print -->
             <div class="border-b border-slate-100">
                 <button class="accordion-button w-full px-6 py-4 flex items-center justify-between bg-white hover:bg-slate-50 transition-colors focus:outline-none group" aria-expanded="false" onclick="toggleAccordion('acc-styling')">
                     <span class="font-bold text-slate-800 text-sm uppercase tracking-wide flex items-center gap-2">
                         <div class="p-1 rounded bg-teal-100 text-teal-600 group-hover:scale-110 transition-transform"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg></div>
-                        3. Aesthetics
+                        3. Aesthetics & Extras
                     </span>
                     <svg class="accordion-icon w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
@@ -708,12 +686,45 @@
                         </div>
                     </div>
 
+                    <div class="space-y-4 pt-4 border-t border-slate-100 mt-2">
+                        <div class="flex items-center justify-between group">
+                            <div class="flex flex-col cursor-pointer" onclick="document.getElementById('setting-front-qr').click()">
+                                <label class="text-sm font-semibold text-slate-700 group-hover:text-teal-700 transition-colors pointer-events-none">Front Page QR Code</label>
+                                <span class="text-[10px] text-slate-500 pointer-events-none">Link front cover to web URL</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="setting-front-qr" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                            </label>
+                        </div>
+                        <div id="front-qr-options" class="hidden flex-col gap-2 pl-3 border-l-2 border-teal-100">
+                            <input type="url" id="setting-front-qr-url" placeholder="Custom URL (Leave blank to use source)" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-teal-500 shadow-sm transition-colors">
+                            <select id="setting-front-qr-pos" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-teal-500 shadow-sm transition-colors cursor-pointer bg-white">
+                                <option value="bottom-right">Position: Bottom Right</option>
+                                <option value="bottom-left">Position: Bottom Left</option>
+                                <option value="top-right">Position: Top Right</option>
+                                <option value="top-left">Position: Top Left</option>
+                                <option value="center-bottom">Position: Center Bottom</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center justify-between group">
+                            <div class="flex flex-col cursor-pointer" onclick="document.getElementById('setting-watermark').click()">
+                                <label class="text-sm font-semibold text-slate-700 group-hover:text-teal-700 transition-colors pointer-events-none">Zine Maker Watermark</label>
+                                <span class="text-[10px] text-slate-500 pointer-events-none">Shows subtle badge on back page</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="setting-watermark" class="sr-only peer" checked>
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                            </label>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
         </div>
 
-        <!-- Action Buttons -->
         <div class="p-5 border-t border-slate-200 bg-white shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] shrink-0 space-y-3 relative z-10">
             <button id="generate-btn" class="w-full bg-brand-600 hover:bg-brand-700 text-white px-4 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 group active:scale-[0.98]">
                 <span id="generate-text">Generate Layout</span>
@@ -730,7 +741,6 @@
                     Print
                 </button>
             </div>
-            <!-- New Serialization Buttons -->
             <div class="flex gap-2 pt-1">
                 <button id="save-json-btn" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-2.5 rounded-xl font-bold transition-all shadow-sm border border-slate-200 flex items-center justify-center gap-1.5 active:scale-[0.98] text-xs">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
@@ -745,15 +755,11 @@
         </div>
     </aside>
 
-    <!-- Main Content / Preview Area -->
     <main id="preview-wrapper" class="flex-grow overflow-y-auto relative w-full flex flex-col items-center">
         
-        <!-- Toast Notification Container -->
         <div id="toast" class="toast fixed top-6 z-50 flex items-center w-full max-w-sm p-4 rounded-xl shadow-xl bg-white border border-slate-100" role="alert">
-            <!-- Content injected via JS -->
-        </div>
+            </div>
 
-        <!-- Info Banner -->
         <div id="print-instruction" class="no-print hidden w-full bg-brand-50 border-b border-brand-200 text-brand-900 px-6 py-3.5 text-sm flex items-center justify-between sticky top-0 z-10 shadow-sm backdrop-blur-md bg-opacity-90">
             <div class="flex items-center gap-3">
                 <div class="bg-brand-100 text-brand-600 p-1.5 rounded-lg shrink-0">
@@ -768,7 +774,6 @@
             </button>
         </div>
 
-        <!-- Empty State -->
         <div id="empty-state" class="no-print absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-8 text-center pointer-events-none">
             <div class="bg-white p-10 rounded-3xl shadow-2xl shadow-slate-200/50 flex flex-col items-center max-w-sm border border-slate-100">
                 <div class="bg-brand-50 p-5 rounded-2xl mb-5 text-brand-500 shadow-inner">
@@ -795,7 +800,7 @@
         const cinematicHeroImg = 'https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&q=80&w=600';
         const cinematicAnimalImg = 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=600';
 
-        // Global unified image tweak state: { [imgId]: { scale: number, x: number, y: number, fit: 'cover'|'contain' } }
+        // Global unified image tweak state
         let imageTweaks = {};
 
         // Pre-configured Templates
@@ -874,6 +879,22 @@
         let cachedImage = '';
         let rebuildTimeout;
         
+        // --- Helper for QR Generator ---
+        function createQRCodeBase64(value, size = 150) {
+            if (!value) return null;
+            try {
+                const qr = new QRious({
+                    value: value,
+                    size: size,
+                    level: 'M'
+                });
+                return qr.toDataURL();
+            } catch (e) {
+                console.error("QR Generation failed", e);
+                return null;
+            }
+        }
+
         // --- DOM Elements ---
         const tabs = {
             wiki: document.getElementById('tab-wiki'),
@@ -910,7 +931,12 @@
             imageStyles: document.getElementById('setting-image-styles'),
             maxSheets: document.getElementById('setting-max-sheets'),
             showImposition: document.getElementById('setting-imposition'),
-            cutGuides: document.getElementById('setting-cut-guides')
+            cutGuides: document.getElementById('setting-cut-guides'),
+            showFrontQr: document.getElementById('setting-front-qr'),
+            frontQrUrl: document.getElementById('setting-front-qr-url'),
+            frontQrPos: document.getElementById('setting-front-qr-pos'),
+            showWatermark: document.getElementById('setting-watermark'),
+            frontQrOptions: document.getElementById('front-qr-options')
         };
 
         // UI Controls
@@ -945,6 +971,16 @@
         settings.titleSize.addEventListener('input', (e) => { settings.titleSizeVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x'; triggerRebuild(); });
         settings.lineHeight.addEventListener('input', (e) => { settings.lineVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x'; triggerRebuild(); });
         
+        // QR Code & Watermark Setting Listeners
+        settings.showFrontQr.addEventListener('change', (e) => {
+            settings.frontQrOptions.classList.toggle('hidden', !e.target.checked);
+            settings.frontQrOptions.classList.toggle('flex', e.target.checked);
+            triggerRebuild();
+        });
+        settings.frontQrUrl.addEventListener('input', triggerRebuild);
+        settings.frontQrPos.addEventListener('change', triggerRebuild);
+        settings.showWatermark.addEventListener('change', triggerRebuild);
+
         ['layoutMode', 'spineText', 'font', 'align', 'imgFilter', 'hideImages', 'showBorders', 'showGrain', 'imageStyles', 'maxSheets', 'showImposition', 'cutGuides'].forEach(key => {
             if(settings[key]) {
                 settings[key].addEventListener('change', () => {
@@ -1236,7 +1272,11 @@
                         showGrain: settings.showGrain.checked,
                         imageStyles: settings.imageStyles.checked,
                         showImposition: settings.showImposition.checked,
-                        cutGuides: settings.cutGuides.checked
+                        cutGuides: settings.cutGuides.checked,
+                        showFrontQr: settings.showFrontQr.checked,
+                        frontQrUrl: settings.frontQrUrl.value,
+                        frontQrPos: settings.frontQrPos.value,
+                        showWatermark: settings.showWatermark.checked
                     }
                 };
 
@@ -1332,6 +1372,14 @@
                         settings.showImposition.checked = !!s.showImposition;
                         settings.cutGuides.checked = s.cutGuides !== undefined ? s.cutGuides : true;
 
+                        // QR & Watermark
+                        settings.showFrontQr.checked = !!s.showFrontQr;
+                        settings.frontQrUrl.value = s.frontQrUrl || '';
+                        settings.frontQrPos.value = s.frontQrPos || 'bottom-right';
+                        settings.showWatermark.checked = s.showWatermark !== undefined ? s.showWatermark : true;
+
+                        settings.frontQrOptions.classList.toggle('hidden', !settings.showFrontQr.checked);
+                        settings.frontQrOptions.classList.toggle('flex', settings.showFrontQr.checked);
                         settings.spineContainer.classList.toggle('hidden', settings.layoutMode.value !== 'booklet');
                     }
 
@@ -1425,6 +1473,12 @@
                 panels.builder.classList.remove('hidden');
                 panels.builder.classList.add('flex');
             } else { panels[mode].classList.remove('hidden'); }
+
+            // Auto-populate URL hint based on active tab
+            if (mode === 'wiki') settings.frontQrUrl.placeholder = "Uses Wiki Link (or Custom URL)";
+            else if (mode === 'recipe') settings.frontQrUrl.placeholder = "Uses Recipe Link (or Custom URL)";
+            else if (mode === 'rss') settings.frontQrUrl.placeholder = "Uses RSS Link (or Custom URL)";
+            else settings.frontQrUrl.placeholder = "Custom URL (Leave blank to use source)";
 
             if (cachedHtml || mode === 'builder') triggerRebuild();
         }
@@ -1895,8 +1949,30 @@
                 imageStyles: settings.imageStyles.checked,
                 maxSheets: parseInt(settings.maxSheets.value) || 0,
                 showImpositionOverlay: settings.showImposition.checked,
-                showCutGuides: settings.cutGuides.checked
+                showCutGuides: settings.cutGuides.checked,
+                showFrontQr: settings.showFrontQr.checked,
+                frontQrUrl: settings.frontQrUrl.value.trim(),
+                frontQrPos: settings.frontQrPos.value,
+                showWatermark: settings.showWatermark.checked
             };
+
+            // Process QR Configuration Generation dynamically
+            let activeQrUrl = config.frontQrUrl;
+            if (!activeQrUrl) {
+                if (currentMode === 'wiki') activeQrUrl = document.getElementById('wiki-url').value;
+                else if (currentMode === 'recipe') activeQrUrl = document.getElementById('recipe-url').value;
+                else if (currentMode === 'rss') activeQrUrl = document.getElementById('rss-url').value;
+            }
+            
+            let frontQrBase64 = null;
+            if (config.showFrontQr && activeQrUrl) {
+                frontQrBase64 = createQRCodeBase64(activeQrUrl, 150);
+            }
+            
+            let watermarkQrBase64 = null;
+            if (config.showWatermark) {
+                watermarkQrBase64 = createQRCodeBase64("https://www.stefone.com/zine-maker/", 100);
+            }
             
             const isBooklet = config.layoutMode === 'booklet';
             const isSignature = config.layoutMode === 'signature';
@@ -2114,6 +2190,40 @@
                     
                     wrapper.appendChild(contentClone);
                     rotator.appendChild(wrapper);
+
+                    // Inject custom Front Page QR Code (Absolute positioning breaks out of column flow safely)
+                    if (pageNum === 1 && frontQrBase64) {
+                        const qrImg = document.createElement('img');
+                        qrImg.src = frontQrBase64;
+                        qrImg.className = 'absolute z-50 bg-white p-1 rounded border border-slate-200 shadow-sm';
+                        qrImg.style.width = '20mm';
+                        qrImg.style.height = '20mm';
+                        
+                        switch (config.frontQrPos) {
+                            case 'bottom-right': qrImg.style.bottom = '8mm'; qrImg.style.right = '8mm'; break;
+                            case 'bottom-left': qrImg.style.bottom = '8mm'; qrImg.style.left = '8mm'; break;
+                            case 'top-right': qrImg.style.top = '8mm'; qrImg.style.right = '8mm'; break;
+                            case 'top-left': qrImg.style.top = '8mm'; qrImg.style.left = '8mm'; break;
+                            case 'center-bottom': qrImg.style.bottom = '8mm'; qrImg.style.left = '50%'; qrImg.style.transform = 'translateX(-50%)'; break;
+                        }
+                        rotator.appendChild(qrImg);
+                    }
+
+                    // Inject Back Page Watermark
+                    if (pageNum === totalPages && config.showWatermark && watermarkQrBase64) {
+                        const watermarkDiv = document.createElement('div');
+                        watermarkDiv.className = 'absolute z-50 flex flex-col items-center justify-center opacity-60';
+                        watermarkDiv.style.bottom = '6mm';
+                        watermarkDiv.style.left = '50%';
+                        watermarkDiv.style.transform = 'translateX(-50%)';
+                        watermarkDiv.style.width = '100%';
+                        
+                        watermarkDiv.innerHTML = `
+                            <img src="${watermarkQrBase64}" style="width: 14mm; height: 14mm; background: white; padding: 2px; border-radius: 4px; mix-blend-mode: multiply;">
+                            <span style="font-size: 6pt; font-family: 'Inter', sans-serif; font-weight: 600; color: #475569; margin-top: 3px; letter-spacing: 0.2px;">Created using Zine Maker Pro</span>
+                        `;
+                        rotator.appendChild(watermarkDiv);
+                    }
 
                     const actualPagesWithContent = Math.ceil(scrollWidth / pxAdvance);
                     if (pageNum <= actualPagesWithContent && pageNum > 1) {
