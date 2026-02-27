@@ -700,6 +700,7 @@
                         <div id="front-qr-options" class="hidden flex-col gap-2 pl-3 border-l-2 border-teal-100">
                             <input type="url" id="setting-front-qr-url" placeholder="Custom URL (Leave blank to use source)" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-teal-500 shadow-sm transition-colors">
                             <select id="setting-front-qr-pos" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-teal-500 shadow-sm transition-colors cursor-pointer bg-white">
+				<option value="center" selected>Position: Center</option>
                                 <option value="bottom-right">Position: Bottom Right</option>
                                 <option value="bottom-left">Position: Bottom Left</option>
                                 <option value="top-right">Position: Top Right</option>
@@ -1952,7 +1953,7 @@
                 showCutGuides: settings.cutGuides.checked,
                 showFrontQr: settings.showFrontQr.checked,
                 frontQrUrl: settings.frontQrUrl.value.trim(),
-                frontQrPos: settings.frontQrPos.value,
+                frontQrPos: settings.frontQrPos.value || 'center',
                 showWatermark: settings.showWatermark.checked
             };
 
@@ -2196,15 +2197,16 @@
                         const qrImg = document.createElement('img');
                         qrImg.src = frontQrBase64;
                         qrImg.className = 'absolute z-50 bg-white p-1 rounded border border-slate-200 shadow-sm';
-                        qrImg.style.width = '20mm';
-                        qrImg.style.height = '20mm';
+                        qrImg.style.width = '30mm';
+                        qrImg.style.height = '30mm';
                         
                         switch (config.frontQrPos) {
-                            case 'bottom-right': qrImg.style.bottom = '8mm'; qrImg.style.right = '8mm'; break;
-                            case 'bottom-left': qrImg.style.bottom = '8mm'; qrImg.style.left = '8mm'; break;
-                            case 'top-right': qrImg.style.top = '8mm'; qrImg.style.right = '8mm'; break;
-                            case 'top-left': qrImg.style.top = '8mm'; qrImg.style.left = '8mm'; break;
-                            case 'center-bottom': qrImg.style.bottom = '8mm'; qrImg.style.left = '50%'; qrImg.style.transform = 'translateX(-50%)'; break;
+			    case 'center': qrImg.style.top = '50%'; qrImg.style.left = '50%'; qrImg.style.transform = 'translate(-50%, -50%)'; break;
+                            case 'bottom-right': qrImg.style.bottom = '20mm'; qrImg.style.right = '8mm'; break;
+                            case 'bottom-left': qrImg.style.bottom = '20mm'; qrImg.style.left = '8mm'; break;
+                            case 'top-right': qrImg.style.top = '35mm'; qrImg.style.right = '8mm'; break;
+                            case 'top-left': qrImg.style.top = '35mm'; qrImg.style.left = '8mm'; break;
+                            case 'center-bottom': qrImg.style.bottom = '20mm'; qrImg.style.left = '50%'; qrImg.style.transform = 'translateX(-50%)'; break;
                         }
                         rotator.appendChild(qrImg);
                     }
@@ -2219,7 +2221,7 @@
                         watermarkDiv.style.width = '100%';
                         
                         watermarkDiv.innerHTML = `
-                            <img src="${watermarkQrBase64}" style="width: 14mm; height: 14mm; background: white; padding: 2px; border-radius: 4px; mix-blend-mode: multiply;">
+                            <img src="${watermarkQrBase64}" style="width: 20mm; height: 20mm; background: white; padding: 2px; border-radius: 4px; mix-blend-mode: multiply;">
                             <span style="font-size: 6pt; font-family: 'Inter', sans-serif; font-weight: 600; color: #475569; margin-top: 3px; letter-spacing: 0.2px;">Created using Zine Maker Pro</span>
                         `;
                         rotator.appendChild(watermarkDiv);
