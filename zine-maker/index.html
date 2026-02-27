@@ -114,7 +114,7 @@
             transform-origin: top center;
         }
         
-        /* Layout: 8-Page Pocket Zine */
+        /* Layout: 8-Page Pocket Zine & Signature Mode */
         .zine-sheet.mini-mode {
             grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(2, 1fr);
@@ -139,16 +139,16 @@
         }
 
         /* Guides & Overlays */
-        .guide-v { position: absolute; top: 0; bottom: 0; width: 1px; background: repeating-linear-gradient(to bottom, transparent, transparent 6px, #cbd5e1 6px, #cbd5e1 12px); z-index: 5; }
-        .guide-h { position: absolute; left: 0; right: 0; height: 1px; background: repeating-linear-gradient(to right, transparent, transparent 6px, #cbd5e1 6px, #cbd5e1 12px); z-index: 5; }
+        .guide-v { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed #cbd5e1; z-index: 5; }
+        .guide-h { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed #cbd5e1; z-index: 5; }
         .guide-cut {
-            position: absolute; top: 50%; left: 25%; width: 50%; height: 2px;
-            background: repeating-linear-gradient(to right, transparent, transparent 6px, #6366f1 6px, #6366f1 12px);
+            position: absolute; top: 50%; left: 25%; width: 50%; height: 0;
+            border-top: 2px dashed #6366f1;
             transform: translateY(-50%); z-index: 10; display: flex; align-items: center; justify-content: center;
         }
         .guide-fold {
-            position: absolute; top: 0; bottom: 0; left: 50%; width: 1px;
-            background: repeating-linear-gradient(to bottom, transparent, transparent 6px, #94a3b8 6px, #94a3b8 12px);
+            position: absolute; top: 0; bottom: 0; left: 50%; width: 0;
+            border-left: 1px dashed #94a3b8;
             z-index: 5; display: flex; align-items: center; justify-content: center;
         }
         .spine-text-render {
@@ -228,15 +228,30 @@
                 display: block !important;
             }
             #preview-wrapper { overflow: visible !important; width: 100% !important; display: block !important; }
-            .zine-sheet { box-shadow: none !important; margin: 0 !important; border: none !important; transform: none !important; page-break-after: always; break-after: page; }
+            
+            /* Enforce strict layout and prevent spooler crashes */
+            .zine-sheet { 
+                box-shadow: none !important; margin: 0 !important; border: none !important; transform: none !important; 
+                page-break-after: always !important; break-after: page !important; 
+                width: 297mm !important; height: 210mm !important; overflow: hidden !important;
+            }
             .zine-sheet:last-child { page-break-after: auto !important; break-after: auto !important; }
-            .zine-grain::after { opacity: 0.3; } 
+            
+            /* CRITICAL: Browsers crash trying to print feTurbulence filters */
+            .zine-grain::after { display: none !important; background-image: none !important; } 
         }
         
         /* Temporary Export Styles for html2pdf */
         .pdf-exporting #output { background: white !important; padding: 0 !important; margin: 0 !important; display: block !important; }
-        .pdf-exporting .zine-sheet { box-shadow: none !important; margin: 0 !important; transform: none !important; border: none !important; page-break-after: always; break-after: page; }
+        .pdf-exporting .zine-sheet { 
+            box-shadow: none !important; margin: 0 !important; transform: none !important; border: none !important; 
+            page-break-after: always !important; break-after: page !important; 
+            width: 297mm !important; height: 210mm !important; overflow: hidden !important;
+        }
         .pdf-exporting .zine-sheet:last-child { page-break-after: auto !important; break-after: auto !important; }
+        
+        /* CRITICAL: html2canvas crashes processing complex SVG noise filters */
+        .pdf-exporting .zine-grain::after { display: none !important; background-image: none !important; }
 
         /* Spinner */
         .loader-ring {
@@ -545,7 +560,8 @@
                             Booklet Format
                         </label>
                         <select id="setting-layout-mode" class="w-full px-3 py-2.5 border border-purple-200 shadow-sm rounded-xl text-sm bg-purple-50 font-bold text-purple-900 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none cursor-pointer transition-colors">
-                            <option value="mini">8-Page Pocket Zine (Fold & Cut)</option>
+                            <option value="mini">8-Page Pocket Zine (Single/Sequential Sheets)</option>
+                            <option value="signature" selected>8-Page Pocket Signature (Nested Multi-Sheet)</option>
                             <option value="booklet">A5 Saddle-Stitch (Multi-Sheet Duplex)</option>
                         </select>
                     </div>
@@ -647,11 +663,19 @@
                                 <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
                             </label>
                         </div>
+
+                        <div class="flex items-center justify-between group">
+                            <label class="text-sm font-semibold text-slate-700 cursor-pointer group-hover:text-teal-700 transition-colors" for="setting-cut-guides">Show Cut & Fold Lines</label>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="setting-cut-guides" class="sr-only peer" checked>
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
+                            </label>
+                        </div>
                         
                         <div class="flex items-center justify-between group">
                             <label class="text-sm font-semibold text-slate-700 cursor-pointer group-hover:text-teal-700 transition-colors" for="setting-imposition">Show Fold Overlay Guides</label>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="setting-imposition" class="sr-only peer" checked>
+                                <input type="checkbox" id="setting-imposition" class="sr-only peer">
                                 <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
                             </label>
                         </div>
@@ -659,7 +683,7 @@
                         <div class="flex items-center justify-between group">
                             <label class="text-sm font-semibold text-slate-700 cursor-pointer group-hover:text-teal-700 transition-colors" for="setting-borders">Show Page Borders</label>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="setting-borders" class="sr-only peer" checked>
+                                <input type="checkbox" id="setting-borders" class="sr-only peer">
                                 <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
                             </label>
                         </div>
@@ -667,7 +691,7 @@
                         <div class="flex items-center justify-between group">
                             <label class="text-sm font-semibold text-slate-700 cursor-pointer group-hover:text-teal-700 transition-colors" for="setting-image-styles">Photo Borders & Tilt</label>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="setting-image-styles" class="sr-only peer" checked>
+                                <input type="checkbox" id="setting-image-styles" class="sr-only peer">
                                 <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-500"></div>
                             </label>
                         </div>
@@ -873,7 +897,8 @@
             showGrain: document.getElementById('setting-grain'),
             imageStyles: document.getElementById('setting-image-styles'),
             maxSheets: document.getElementById('setting-max-sheets'),
-            showImposition: document.getElementById('setting-imposition')
+            showImposition: document.getElementById('setting-imposition'),
+            cutGuides: document.getElementById('setting-cut-guides')
         };
 
         // UI Controls
@@ -908,7 +933,7 @@
         settings.titleSize.addEventListener('input', (e) => { settings.titleSizeVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x'; triggerRebuild(); });
         settings.lineHeight.addEventListener('input', (e) => { settings.lineVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x'; triggerRebuild(); });
         
-        ['layoutMode', 'spineText', 'font', 'align', 'imgFilter', 'hideImages', 'showBorders', 'showGrain', 'imageStyles', 'maxSheets', 'showImposition'].forEach(key => {
+        ['layoutMode', 'spineText', 'font', 'align', 'imgFilter', 'hideImages', 'showBorders', 'showGrain', 'imageStyles', 'maxSheets', 'showImposition', 'cutGuides'].forEach(key => {
             if(settings[key]) {
                 settings[key].addEventListener('change', () => {
                     if (key === 'layoutMode') {
@@ -1588,17 +1613,25 @@
 
         async function downloadPDF() {
             setLoading(true);
-            generateText.textContent = "Creating PDF...";
+            generateText.textContent = "Creating PDF (This may take a minute)...";
             
             const element = document.getElementById('output');
             
             document.body.classList.add('pdf-exporting');
             
+            // CRITICAL FIX: Allow browser to repaint loading state and export styles before freezing thread
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
             const opt = {
                 margin: 0,
                 filename: 'zine-maker-pro-export.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: { 
+                    scale: 1.5, // Reduced scale to prevent memory crashes
+                    useCORS: true, 
+                    logging: false,
+                    allowTaint: true
+                },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
                 pagebreak: { mode: ['css'] }
             };
@@ -1607,7 +1640,8 @@
                 await html2pdf().set(opt).from(element).save();
                 showToast("PDF downloaded successfully!", "success");
             } catch (error) {
-                showToast("Failed to create PDF. Please use the Print option instead.");
+                console.error(error);
+                showToast("Failed to create PDF automatically. Please try the 'Print' button -> 'Save as PDF' instead.");
             } finally {
                 document.body.classList.remove('pdf-exporting');
                 setLoading(false);
@@ -1664,10 +1698,12 @@
                 showGrain: settings.showGrain.checked,
                 imageStyles: settings.imageStyles.checked,
                 maxSheets: parseInt(settings.maxSheets.value) || 0,
-                showImpositionOverlay: settings.showImposition.checked
+                showImpositionOverlay: settings.showImposition.checked,
+                showCutGuides: settings.cutGuides.checked
             };
             
             const isBooklet = config.layoutMode === 'booklet';
+            const isSignature = config.layoutMode === 'signature';
             const colWidth = isBooklet ? '128.5mm' : '64.25mm';
             const colGap = isBooklet ? '20mm' : '10mm';
             const pageHeight = isBooklet ? '190mm' : '95mm';
@@ -1677,6 +1713,9 @@
             if (isBooklet) {
                 document.getElementById('instruction-title').textContent = "BOOKLET PRINTING:";
                 document.getElementById('instruction-body').innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins</strong>, and <strong>Print on Both Sides (Flip on Short Edge)</strong>. Fold in half and staple.";
+            } else if (isSignature) {
+                document.getElementById('instruction-title').textContent = "SIGNATURE PRINTING:";
+                document.getElementById('instruction-body').innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins (0px)</strong>. Fold & cut each sheet, then <strong>nest them inside each other</strong> and staple the center.";
             } else {
                 document.getElementById('instruction-title').textContent = "PRINT INSTRUCTIONS:";
                 document.getElementById('instruction-body').innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins (0px)</strong>. Fold along the gray lines and cut the center dotted line.";
@@ -1810,6 +1849,7 @@
             
             if (config.maxSheets > 0 && numSheets > config.maxSheets) {
                 numSheets = config.maxSheets;
+                totalPages = numSheets * padTo; // Ensure bounds match the sheet limit
             }
 
             for (let s = 0; s < numSheets; s++) {
@@ -1817,7 +1857,21 @@
                     // Physical sheet logic (each sheet produces 2 document elements: Front and Back)
                     sheets.push([totalPages - 2*s, 2*s + 1]); // Front Side
                     sheets.push([2*s + 2, totalPages - 2*s - 1]); // Back Side
+                } else if (isSignature) {
+                    // Signature logic (nested 8-page sheets)
+                    let p1 = (s * 4) + 1;
+                    let p2 = (s * 4) + 2;
+                    let p3 = (s * 4) + 3;
+                    let p4 = (s * 4) + 4;
+                    let p5 = totalPages - (s * 4) - 3;
+                    let p6 = totalPages - (s * 4) - 2;
+                    let p7 = totalPages - (s * 4) - 1;
+                    let p8 = totalPages - (s * 4);
+                    
+                    // Maps exactly to the physical 8-grid of an A4 sheet.
+                    sheets.push([p5, p4, p3, p2, p6, p7, p8, p1]);
                 } else {
+                    // Standard mini mode (sequential separate 8-page zines)
                     const base = s * 8;
                     sheets.push([
                         base + 5, base + 4, base + 3, base + 2,
@@ -1837,13 +1891,15 @@
                         sheetEl.innerHTML += `<div class="spine-text-render">${config.spineText}</div>`;
                     }
                 } else {
-                    sheetEl.innerHTML = `
-                        <div class="guide-v" style="left: 25%;"></div>
-                        <div class="guide-v" style="left: 50%;"></div>
-                        <div class="guide-v" style="left: 75%;"></div>
-                        <div class="guide-h" style="top: 50%;"></div>
-                        <div class="guide-cut"><span style="background: white; padding: 2px 10px; font-weight: 800; color: #4f46e5; font-size: 11px; font-family: 'Inter', sans-serif; letter-spacing: 1px; border-radius: 12px; box-shadow: 0 0 0 4px white;">✂ FOLD & CUT</span></div>
-                    `;
+                    if (config.showCutGuides) {
+                        sheetEl.innerHTML = `
+                            <div class="guide-v" style="left: 25%;"></div>
+                            <div class="guide-v" style="left: 50%;"></div>
+                            <div class="guide-v" style="left: 75%;"></div>
+                            <div class="guide-h" style="top: 50%;"></div>
+                            <div class="guide-cut"><span style="background: white; padding: 2px 10px; font-weight: 800; color: #4f46e5; font-size: 11px; font-family: 'Inter', sans-serif; letter-spacing: 1px; border-radius: 12px; box-shadow: 0 0 0 4px white;">✂ FOLD & CUT</span></div>
+                        `;
+                    }
                 }
 
                 sheetPages.forEach((pageNum, index) => {
