@@ -1,5 +1,21 @@
 [
   {
+    "title": "Newspaper Builder",
+    "slug": "newspaper-builder",
+    "description": "Turn RSS feeds into a beautifully typeset pocket newspaper. Customize mastheads, layouts, and typography, then generate print-ready signature sheets with smart pagination and PDF export. ",
+    "thumbnail": "assets/thumbs/newspaper-builder.jpg",
+    "tags": [
+      "Maker",
+      "Newspaper",
+      "RSS"
+    ],
+    "category": "Experiments",
+    "featured": false,
+    "date": "2026-02-28",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "Zine Maker",
     "slug": "zine-maker",
     "description": "Create and customize your own printable 8-page pocket zines in minutes. Import from Wiki, RSS, Markdown, or build page-by-page with full control over fonts, layouts, images, and print-ready formatting. Fold, cut, and share your story.",
