@@ -439,9 +439,26 @@
                                    class="w-full px-3 py-2.5 border border-slate-200 rounded-xl shadow-sm text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-shadow"
                                    value="http://rss.cnn.com/rss/cnn_topstories.rss">
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Article Limit</label>
-                            <input type="number" id="rss-limit" min="1" max="25" value="5" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl shadow-sm text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Article Limit</label>
+                                <input type="number" id="rss-limit" min="1" max="25" value="5" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl shadow-sm text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Article Style</label>
+                                <select id="rss-content-mode" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl shadow-sm text-sm focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer bg-white transition-shadow">
+                                    <option value="full">Full Content</option>
+                                    <option value="list">Summaries Only</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 flex items-center justify-between group">
+                            <label class="text-xs font-bold text-slate-700 cursor-pointer group-hover:text-brand-600 transition-colors" for="rss-include-images">Include Article Images</label>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="rss-include-images" class="sr-only peer" checked>
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-500"></div>
+                            </label>
                         </div>
 
                         <div class="mt-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
@@ -804,6 +821,14 @@
         // Global unified image tweak state
         let imageTweaks = {};
 
+        // Caching for live updates
+        let cachedHtml = '';
+        let cachedTitle = '';
+        let cachedImage = '';
+        let rebuildTimeout;
+        let cachedRssData = null;
+        let cachedRssUrl = '';
+
         // Pre-configured Templates
         const zineTemplates = {
             'default': {
@@ -873,12 +898,6 @@
         // Page Builder Data Model
         let builderPages = [...zineTemplates['default'].pages].map((p, i) => ({...p, id: Date.now() + i}));
         let activePageIndex = 0;
-
-        // Caching for live updates
-        let cachedHtml = '';
-        let cachedTitle = '';
-        let cachedImage = '';
-        let rebuildTimeout;
         
         // --- Helper for QR Generator ---
         function createQRCodeBase64(value, size = 150) {
@@ -955,7 +974,7 @@
         // --- Event Listeners ---
         
         ALL_MODES.forEach(mode => {
-            tabs[mode].addEventListener('click', () => switchTab(mode));
+            tabs[mode]?.addEventListener('click', () => switchTab(mode));
             
             if (mode !== 'builder') {
                 ['title', 'image', 'cover-layout'].forEach(suffix => {
@@ -964,51 +983,65 @@
                 });
             }
         });
+        
+        // Listen to RSS structural changes safely
+        function handleRssSettingChange() {
+            if (cachedHtml && currentMode === 'rss') {
+                processContent();
+            }
+        }
+        document.getElementById('rss-content-mode')?.addEventListener('change', handleRssSettingChange);
+        document.getElementById('rss-include-images')?.addEventListener('change', handleRssSettingChange);
+        document.getElementById('rss-limit')?.addEventListener('change', handleRssSettingChange);
 
-        document.getElementById('md-text').addEventListener('input', triggerRebuild);
+        document.getElementById('md-text')?.addEventListener('input', triggerRebuild);
 
-        // Setting changes
-        settings.size.addEventListener('input', (e) => { settings.sizeVal.textContent = e.target.value + 'pt'; triggerRebuild(); });
-        settings.titleSize.addEventListener('input', (e) => { settings.titleSizeVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x'; triggerRebuild(); });
-        settings.lineHeight.addEventListener('input', (e) => { settings.lineVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x'; triggerRebuild(); });
+        // Setting changes safely
+        settings.size?.addEventListener('input', (e) => { if(settings.sizeVal) settings.sizeVal.textContent = e.target.value + 'pt'; triggerRebuild(); });
+        settings.titleSize?.addEventListener('input', (e) => { if(settings.titleSizeVal) settings.titleSizeVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x'; triggerRebuild(); });
+        settings.lineHeight?.addEventListener('input', (e) => { if(settings.lineVal) settings.lineVal.textContent = parseFloat(e.target.value).toFixed(1) + 'x'; triggerRebuild(); });
         
         // QR Code & Watermark Setting Listeners
-        settings.showFrontQr.addEventListener('change', (e) => {
-            settings.frontQrOptions.classList.toggle('hidden', !e.target.checked);
-            settings.frontQrOptions.classList.toggle('flex', e.target.checked);
+        settings.showFrontQr?.addEventListener('change', (e) => {
+            if(settings.frontQrOptions) {
+                settings.frontQrOptions.classList.toggle('hidden', !e.target.checked);
+                settings.frontQrOptions.classList.toggle('flex', e.target.checked);
+            }
             triggerRebuild();
         });
-        settings.frontQrUrl.addEventListener('input', triggerRebuild);
-        settings.frontQrPos.addEventListener('change', triggerRebuild);
-        settings.showWatermark.addEventListener('change', triggerRebuild);
+        settings.frontQrUrl?.addEventListener('input', triggerRebuild);
+        settings.frontQrPos?.addEventListener('change', triggerRebuild);
+        settings.showWatermark?.addEventListener('change', triggerRebuild);
 
         ['layoutMode', 'spineText', 'font', 'align', 'imgFilter', 'hideImages', 'showBorders', 'showGrain', 'imageStyles', 'maxSheets', 'showImposition', 'cutGuides'].forEach(key => {
             if(settings[key]) {
                 settings[key].addEventListener('change', () => {
-                    if (key === 'layoutMode') {
+                    if (key === 'layoutMode' && settings.spineContainer) {
                         settings.spineContainer.classList.toggle('hidden', settings.layoutMode.value !== 'booklet');
                     }
                     triggerRebuild();
                 });
-                if(settings[key].type === 'text') settings[key].addEventListener('input', triggerRebuild);
+                if(settings[key].type === 'text' || settings[key].type === 'number') settings[key].addEventListener('input', triggerRebuild);
             }
         });
 
-        document.getElementById('md-image-upload').addEventListener('change', (e) => {
+        document.getElementById('md-image-upload')?.addEventListener('change', (e) => {
             handleImageUpload(e.target.files[0], (dataUrl) => {
-                document.getElementById('md-image').value = dataUrl;
+                const imgEl = document.getElementById('md-image');
+                if (imgEl) imgEl.value = dataUrl;
                 triggerRebuild();
             });
         });
 
         window.handleGenericUpload = function(input, targetId) {
             handleImageUpload(input.files[0], (dataUrl) => {
-                document.getElementById(targetId).value = dataUrl;
+                const targetEl = document.getElementById(targetId);
+                if (targetEl) targetEl.value = dataUrl;
                 triggerRebuild();
             });
         };
 
-        document.getElementById('reset-app-btn').addEventListener('click', () => {
+        document.getElementById('reset-app-btn')?.addEventListener('click', () => {
             if (confirm("Reset everything? All your current work and custom settings will be lost.")) {
                 localStorage.clear();
                 sessionStorage.clear();
@@ -1017,16 +1050,16 @@
         });
 
         // Builder Tab Listeners
-        document.getElementById('btn-add-page').addEventListener('click', () => {
+        document.getElementById('btn-add-page')?.addEventListener('click', () => {
             builderPages.push({ id: Date.now(), type: 'text', title: '', text: '', image: '', author: '' });
             activePageIndex = builderPages.length - 1;
             renderBuilderUI();
             triggerRebuild();
             const nav = document.getElementById('builder-navigator');
-            setTimeout(() => { nav.scrollLeft = nav.scrollWidth; }, 50);
+            if(nav) setTimeout(() => { nav.scrollLeft = nav.scrollWidth; }, 50);
         });
 
-        document.getElementById('btn-clear-builder').addEventListener('click', () => {
+        document.getElementById('btn-clear-builder')?.addEventListener('click', () => {
             builderPages = [{ id: Date.now(), type: 'cover', title: 'New Zine', text: '', image: '', author: '' }];
             activePageIndex = 0;
             renderBuilderUI();
@@ -1034,7 +1067,7 @@
             showToast('Builder reset successfully.', 'success');
         });
 
-        document.getElementById('template-select').addEventListener('change', (e) => {
+        document.getElementById('template-select')?.addEventListener('change', (e) => {
             const templateKey = e.target.value;
             if(!templateKey || !zineTemplates[templateKey]) return;
             
@@ -1042,9 +1075,9 @@
             builderPages = template.pages.map((p, index) => ({
                 id: Date.now() + index, type: p.type, title: p.title, text: p.text, image: p.image, author: p.author || ''
             }));
-            settings.font.value = template.settings.font;
-            settings.align.value = template.settings.align;
-            settings.imgFilter.value = template.settings.filter;
+            if(settings.font) settings.font.value = template.settings.font;
+            if(settings.align) settings.align.value = template.settings.align;
+            if(settings.imgFilter) settings.imgFilter.value = template.settings.filter;
             activePageIndex = 0; 
             e.target.value = ""; 
             showToast(`Applied "${template.name}" Theme!`, 'success');
@@ -1056,7 +1089,7 @@
         });
 
         const activeEditor = document.getElementById('builder-active-editor');
-        activeEditor.addEventListener('input', (e) => {
+        activeEditor?.addEventListener('input', (e) => {
             const id = parseInt(e.target.dataset.id);
             const page = builderPages.find(p => p.id === id);
             if(!page) return;
@@ -1069,7 +1102,7 @@
             if (needsRebuild) triggerRebuild();
         });
 
-        activeEditor.addEventListener('change', (e) => {
+        activeEditor?.addEventListener('change', (e) => {
             if(e.target.classList.contains('sel-template')) {
                 const id = parseInt(e.target.dataset.id);
                 const page = builderPages.find(p => p.id === id);
@@ -1090,7 +1123,7 @@
             }
         });
 
-        activeEditor.addEventListener('click', (e) => {
+        activeEditor?.addEventListener('click', (e) => {
             const btn = e.target.closest('button');
             if(!btn) return;
             const id = parseInt(btn.dataset.id);
@@ -1110,9 +1143,9 @@
             }
         });
 
-        generateBtn.addEventListener('click', processContent);
-        printBtn.addEventListener('click', () => window.print());
-        savePdfBtn.addEventListener('click', downloadPDF);
+        generateBtn?.addEventListener('click', processContent);
+        printBtn?.addEventListener('click', () => window.print());
+        savePdfBtn?.addEventListener('click', downloadPDF);
 
         // --- Modal Image Editor Logic ---
         let editorTargetImg = null;
@@ -1122,7 +1155,7 @@
         let modalStartX = 0, modalStartY = 0;
         let startModalTwX = 50, startModalTwY = 50;
 
-        output.addEventListener('click', (e) => {
+        output?.addEventListener('click', (e) => {
             // Prevent accidental navigation if clicking any link in the preview
             const link = e.target.closest('a');
             if (link) {
@@ -1138,31 +1171,40 @@
                 editorTw = {...tw};
 
                 const container = document.getElementById('modal-crop-container');
-                if (e.target.clientWidth && e.target.clientHeight) {
+                if (container && e.target.clientWidth && e.target.clientHeight) {
                     container.style.aspectRatio = `${e.target.clientWidth} / ${e.target.clientHeight}`;
                 }
 
                 const previewImg = document.getElementById('modal-preview-img');
-                previewImg.src = e.target.src;
+                if (previewImg) {
+                    previewImg.src = e.target.src;
+                }
                 
-                document.getElementById('modal-zoom').value = editorTw.scale;
-                document.getElementById('modal-zoom-val').textContent = editorTw.scale.toFixed(2) + 'x';
-                document.getElementById('modal-lock-ratio').checked = editorTw.fit === 'cover';
+                const zoomEl = document.getElementById('modal-zoom');
+                if (zoomEl) zoomEl.value = editorTw.scale;
+                
+                const zoomValEl = document.getElementById('modal-zoom-val');
+                if (zoomValEl) zoomValEl.textContent = editorTw.scale.toFixed(2) + 'x';
+                
+                const lockRatioEl = document.getElementById('modal-lock-ratio');
+                if (lockRatioEl) lockRatioEl.checked = editorTw.fit === 'cover';
                 
                 updateEditorPreview();
-                document.getElementById('image-editor-modal').classList.remove('hidden');
+                document.getElementById('image-editor-modal')?.classList.remove('hidden');
             }
         });
 
         function updateEditorPreview() {
             const previewImg = document.getElementById('modal-preview-img');
-            previewImg.style.transform = `scale(${editorTw.scale})`;
-            previewImg.style.objectPosition = `${editorTw.x}% ${editorTw.y}%`;
-            previewImg.style.objectFit = editorTw.fit || 'cover';
+            if (previewImg) {
+                previewImg.style.transform = `scale(${editorTw.scale})`;
+                previewImg.style.objectPosition = `${editorTw.x}% ${editorTw.y}%`;
+                previewImg.style.objectFit = editorTw.fit || 'cover';
+            }
         }
 
         const modalPreviewImg = document.getElementById('modal-preview-img');
-        modalPreviewImg.addEventListener('mousedown', (e) => {
+        modalPreviewImg?.addEventListener('mousedown', (e) => {
             isModalDragging = true;
             modalStartX = e.clientX; modalStartY = e.clientY;
             startModalTwX = editorTw.x; startModalTwY = editorTw.y;
@@ -1179,29 +1221,33 @@
         });
         window.addEventListener('mouseup', () => {
             isModalDragging = false;
-            modalPreviewImg.style.cursor = 'grab';
+            if(modalPreviewImg) modalPreviewImg.style.cursor = 'grab';
         });
 
-        document.getElementById('modal-zoom').addEventListener('input', (e) => {
+        document.getElementById('modal-zoom')?.addEventListener('input', (e) => {
             editorTw.scale = parseFloat(e.target.value);
-            document.getElementById('modal-zoom-val').textContent = editorTw.scale.toFixed(2) + 'x';
+            const zoomValEl = document.getElementById('modal-zoom-val');
+            if (zoomValEl) zoomValEl.textContent = editorTw.scale.toFixed(2) + 'x';
             updateEditorPreview();
         });
 
-        document.getElementById('modal-lock-ratio').addEventListener('change', (e) => {
+        document.getElementById('modal-lock-ratio')?.addEventListener('change', (e) => {
             editorTw.fit = e.target.checked ? 'cover' : 'contain';
             updateEditorPreview();
         });
 
-        document.getElementById('modal-reset-btn').addEventListener('click', () => {
+        document.getElementById('modal-reset-btn')?.addEventListener('click', () => {
             editorTw = {scale: 1, x: 50, y: 50, fit: 'cover'};
-            document.getElementById('modal-zoom').value = 1;
-            document.getElementById('modal-zoom-val').textContent = '1.00x';
-            document.getElementById('modal-lock-ratio').checked = true;
+            const zoomEl = document.getElementById('modal-zoom');
+            if (zoomEl) zoomEl.value = 1;
+            const zoomValEl = document.getElementById('modal-zoom-val');
+            if (zoomValEl) zoomValEl.textContent = '1.00x';
+            const lockRatioEl = document.getElementById('modal-lock-ratio');
+            if (lockRatioEl) lockRatioEl.checked = true;
             updateEditorPreview();
         });
 
-        document.getElementById('modal-save-btn').addEventListener('click', () => {
+        document.getElementById('modal-save-btn')?.addEventListener('click', () => {
             imageTweaks[editorImgId] = {...editorTw};
             
             document.querySelectorAll(`img[data-id="${editorImgId}"]`).forEach(img => {
@@ -1209,17 +1255,17 @@
                 img.style.objectPosition = `${editorTw.x}% ${editorTw.y}%`;
                 img.style.objectFit = editorTw.fit;
             });
-            document.getElementById('image-editor-modal').classList.add('hidden');
+            document.getElementById('image-editor-modal')?.classList.add('hidden');
         });
 
-        document.getElementById('close-modal-btn').addEventListener('click', () => {
-            document.getElementById('image-editor-modal').classList.add('hidden');
+        document.getElementById('close-modal-btn')?.addEventListener('click', () => {
+            document.getElementById('image-editor-modal')?.classList.add('hidden');
         });
 
 
         // --- Project Persistence (Save/Load JSON) ---
         
-        document.getElementById('save-json-btn').addEventListener('click', () => {
+        document.getElementById('save-json-btn')?.addEventListener('click', () => {
             try {
                 const safeVal = (id) => document.getElementById(id)?.value || '';
                 
@@ -1243,7 +1289,9 @@
                             limit: safeVal('rss-limit'),
                             title: safeVal('rss-title'),
                             image: safeVal('rss-image'),
-                            coverLayout: safeVal('rss-cover-layout') || 'classic'
+                            coverLayout: safeVal('rss-cover-layout') || 'classic',
+                            contentMode: safeVal('rss-content-mode') || 'full',
+                            includeImages: document.getElementById('rss-include-images')?.checked
                         },
                         markdown: {
                             text: safeVal('md-text'),
@@ -1259,25 +1307,25 @@
                         }
                     },
                     settings: {
-                        layoutMode: settings.layoutMode.value,
-                        spineText: settings.spineText.value,
-                        font: settings.font.value,
-                        size: settings.size.value,
-                        titleSize: settings.titleSize.value,
-                        lineHeight: settings.lineHeight.value,
-                        align: settings.align.value,
-                        imgFilter: settings.imgFilter.value,
-                        maxSheets: settings.maxSheets.value,
-                        hideImages: settings.hideImages.checked,
-                        showBorders: settings.showBorders.checked,
-                        showGrain: settings.showGrain.checked,
-                        imageStyles: settings.imageStyles.checked,
-                        showImposition: settings.showImposition.checked,
-                        cutGuides: settings.cutGuides.checked,
-                        showFrontQr: settings.showFrontQr.checked,
-                        frontQrUrl: settings.frontQrUrl.value,
-                        frontQrPos: settings.frontQrPos.value,
-                        showWatermark: settings.showWatermark.checked
+                        layoutMode: settings.layoutMode?.value,
+                        spineText: settings.spineText?.value,
+                        font: settings.font?.value,
+                        size: settings.size?.value,
+                        titleSize: settings.titleSize?.value,
+                        lineHeight: settings.lineHeight?.value,
+                        align: settings.align?.value,
+                        imgFilter: settings.imgFilter?.value,
+                        maxSheets: settings.maxSheets?.value,
+                        hideImages: settings.hideImages?.checked,
+                        showBorders: settings.showBorders?.checked,
+                        showGrain: settings.showGrain?.checked,
+                        imageStyles: settings.imageStyles?.checked,
+                        showImposition: settings.showImposition?.checked,
+                        cutGuides: settings.cutGuides?.checked,
+                        showFrontQr: settings.showFrontQr?.checked,
+                        frontQrUrl: settings.frontQrUrl?.value,
+                        frontQrPos: settings.frontQrPos?.value,
+                        showWatermark: settings.showWatermark?.checked
                     }
                 };
 
@@ -1294,7 +1342,7 @@
             }
         });
 
-        document.getElementById('load-json-input').addEventListener('change', (event) => {
+        document.getElementById('load-json-input')?.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -1335,6 +1383,9 @@
                             safeSet('rss-url', i.rss.url); safeSet('rss-limit', i.rss.limit);
                             safeSet('rss-title', i.rss.title); safeSet('rss-image', i.rss.image);
                             safeSet('rss-cover-layout', i.rss.coverLayout);
+                            safeSet('rss-content-mode', i.rss.contentMode || 'full');
+                            const incImgEl = document.getElementById('rss-include-images');
+                            if (incImgEl) incImgEl.checked = i.rss.includeImages !== false; // default true
                         }
                         if(i.markdown) {
                             safeSet('md-text', i.markdown.text); safeSet('md-title', i.markdown.title);
@@ -1349,39 +1400,43 @@
                     // Restore Settings
                     if (projectState.settings) {
                         const s = projectState.settings;
-                        settings.layoutMode.value = s.layoutMode || 'signature';
-                        settings.spineText.value = s.spineText || '';
-                        settings.font.value = s.font || 'font-sans-book';
+                        if (settings.layoutMode) settings.layoutMode.value = s.layoutMode || 'signature';
+                        if (settings.spineText) settings.spineText.value = s.spineText || '';
+                        if (settings.font) settings.font.value = s.font || 'font-sans-book';
                         
-                        settings.size.value = s.size || '8.5';
-                        settings.sizeVal.textContent = settings.size.value + 'pt';
+                        if (settings.size) settings.size.value = s.size || '8.5';
+                        if (settings.sizeVal) settings.sizeVal.textContent = settings.size.value + 'pt';
                         
-                        settings.titleSize.value = s.titleSize || '1.4';
-                        settings.titleSizeVal.textContent = parseFloat(settings.titleSize.value).toFixed(1) + 'x';
+                        if (settings.titleSize) settings.titleSize.value = s.titleSize || '1.4';
+                        if (settings.titleSizeVal) settings.titleSizeVal.textContent = parseFloat(settings.titleSize.value).toFixed(1) + 'x';
                         
-                        settings.lineHeight.value = s.lineHeight || '1.5';
-                        settings.lineVal.textContent = parseFloat(settings.lineHeight.value).toFixed(1) + 'x';
+                        if (settings.lineHeight) settings.lineHeight.value = s.lineHeight || '1.5';
+                        if (settings.lineVal) settings.lineVal.textContent = parseFloat(settings.lineHeight.value).toFixed(1) + 'x';
                         
-                        settings.align.value = s.align || 'justify';
-                        settings.imgFilter.value = s.imgFilter || 'none';
-                        settings.maxSheets.value = s.maxSheets || '0';
+                        if (settings.align) settings.align.value = s.align || 'justify';
+                        if (settings.imgFilter) settings.imgFilter.value = s.imgFilter || 'none';
+                        if (settings.maxSheets) settings.maxSheets.value = s.maxSheets || '0';
                         
-                        settings.hideImages.checked = !!s.hideImages;
-                        settings.showBorders.checked = !!s.showBorders;
-                        settings.showGrain.checked = !!s.showGrain;
-                        settings.imageStyles.checked = !!s.imageStyles;
-                        settings.showImposition.checked = !!s.showImposition;
-                        settings.cutGuides.checked = s.cutGuides !== undefined ? s.cutGuides : true;
+                        if (settings.hideImages) settings.hideImages.checked = !!s.hideImages;
+                        if (settings.showBorders) settings.showBorders.checked = !!s.showBorders;
+                        if (settings.showGrain) settings.showGrain.checked = !!s.showGrain;
+                        if (settings.imageStyles) settings.imageStyles.checked = !!s.imageStyles;
+                        if (settings.showImposition) settings.showImposition.checked = !!s.showImposition;
+                        if (settings.cutGuides) settings.cutGuides.checked = s.cutGuides !== undefined ? s.cutGuides : true;
 
                         // QR & Watermark
-                        settings.showFrontQr.checked = !!s.showFrontQr;
-                        settings.frontQrUrl.value = s.frontQrUrl || '';
-                        settings.frontQrPos.value = s.frontQrPos || 'bottom-right';
-                        settings.showWatermark.checked = s.showWatermark !== undefined ? s.showWatermark : true;
+                        if (settings.showFrontQr) settings.showFrontQr.checked = !!s.showFrontQr;
+                        if (settings.frontQrUrl) settings.frontQrUrl.value = s.frontQrUrl || '';
+                        if (settings.frontQrPos) settings.frontQrPos.value = s.frontQrPos || 'bottom-right';
+                        if (settings.showWatermark) settings.showWatermark.checked = s.showWatermark !== undefined ? s.showWatermark : true;
 
-                        settings.frontQrOptions.classList.toggle('hidden', !settings.showFrontQr.checked);
-                        settings.frontQrOptions.classList.toggle('flex', settings.showFrontQr.checked);
-                        settings.spineContainer.classList.toggle('hidden', settings.layoutMode.value !== 'booklet');
+                        if (settings.frontQrOptions && settings.showFrontQr) {
+                            settings.frontQrOptions.classList.toggle('hidden', !settings.showFrontQr.checked);
+                            settings.frontQrOptions.classList.toggle('flex', settings.showFrontQr.checked);
+                        }
+                        if (settings.spineContainer && settings.layoutMode) {
+                            settings.spineContainer.classList.toggle('hidden', settings.layoutMode.value !== 'booklet');
+                        }
                     }
 
                     // Restore Mode & Trigger Render
@@ -1427,13 +1482,15 @@
 
         function toggleAccordion(id) {
             const el = document.getElementById(id);
+            if (!el) return;
             const btn = el.previousElementSibling;
             const isOpen = el.classList.contains('open');
-            if (isOpen) { el.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); } 
-            else { el.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
+            if (isOpen) { el.classList.remove('open'); btn?.setAttribute('aria-expanded', 'false'); } 
+            else { el.classList.add('open'); btn?.setAttribute('aria-expanded', 'true'); }
         }
 
         function showToast(message, type = 'error') {
+            if (!toastEl) return;
             const isSuccess = type === 'success';
             toastEl.className = `toast fixed top-6 z-50 flex items-center w-full max-w-sm p-4 rounded-xl shadow-2xl border ${isSuccess ? 'bg-white border-emerald-100 text-emerald-800' : 'bg-white border-red-100 text-red-800'}`;
             
@@ -1460,33 +1517,35 @@
             setTimeout(hideToast, 4000);
         }
 
-        function hideToast() { document.getElementById('toast').classList.remove('show'); }
+        function hideToast() { document.getElementById('toast')?.classList.remove('show'); }
 
         function switchTab(mode) {
             currentMode = mode;
             ALL_MODES.forEach(m => {
-                tabs[m].classList.remove('active');
-                panels[m].classList.add('hidden');
-                if (m === 'builder') panels[m].classList.remove('flex');
+                tabs[m]?.classList.remove('active');
+                panels[m]?.classList.add('hidden');
+                if (m === 'builder') panels[m]?.classList.remove('flex');
             });
-            tabs[mode].classList.add('active');
+            tabs[mode]?.classList.add('active');
             if(mode === 'builder') {
-                panels.builder.classList.remove('hidden');
-                panels.builder.classList.add('flex');
-            } else { panels[mode].classList.remove('hidden'); }
+                panels.builder?.classList.remove('hidden');
+                panels.builder?.classList.add('flex');
+            } else { panels[mode]?.classList.remove('hidden'); }
 
             // Auto-populate URL hint based on active tab
-            if (mode === 'wiki') settings.frontQrUrl.placeholder = "Uses Wiki Link (or Custom URL)";
-            else if (mode === 'recipe') settings.frontQrUrl.placeholder = "Uses Recipe Link (or Custom URL)";
-            else if (mode === 'rss') settings.frontQrUrl.placeholder = "Uses RSS Link (or Custom URL)";
-            else settings.frontQrUrl.placeholder = "Custom URL (Leave blank to use source)";
+            if (settings.frontQrUrl) {
+                if (mode === 'wiki') settings.frontQrUrl.placeholder = "Uses Wiki Link (or Custom URL)";
+                else if (mode === 'recipe') settings.frontQrUrl.placeholder = "Uses Recipe Link (or Custom URL)";
+                else if (mode === 'rss') settings.frontQrUrl.placeholder = "Uses RSS Link (or Custom URL)";
+                else settings.frontQrUrl.placeholder = "Custom URL (Leave blank to use source)";
+            }
 
             if (cachedHtml || mode === 'builder') triggerRebuild();
         }
 
         function triggerRebuild() {
             if (currentMode === 'builder') {
-                scheduleBuild(generateBuilderHtml(settings.imageStyles.checked), '', '', true, 'classic');
+                scheduleBuild(generateBuilderHtml(settings.imageStyles?.checked), '', '', true, 'classic');
                 return;
             }
 
@@ -1495,7 +1554,8 @@
             const coverLayout = document.getElementById(`${currentMode}-cover-layout`)?.value || 'classic';
 
             if (currentMode === 'markdown') {
-                const text = document.getElementById('md-text').value.trim();
+                const textEl = document.getElementById('md-text');
+                const text = textEl ? textEl.value.trim() : '';
                 scheduleBuild(marked.parse(text), overrideTitle || 'Untitled', overrideImg, false, coverLayout);
                 return;
             }
@@ -1508,24 +1568,26 @@
         function scheduleBuild(html, title, img, isBuilder, coverLayout) {
             clearTimeout(rebuildTimeout);
             rebuildTimeout = setTimeout(async () => {
-                output.style.opacity = '0.5';
+                if(output) output.style.opacity = '0.5';
                 await buildBooklet(html, title, img, isBuilder, coverLayout);
-                output.style.opacity = '1';
+                if(output) output.style.opacity = '1';
             }, 300);
         }
 
         function setLoading(isLoading) {
             if (isLoading) {
-                generateText.textContent = "Processing...";
-                generateIcon.classList.add('hidden');
-                generateSpinner.classList.remove('hidden');
-                generateBtn.disabled = true; printBtn.disabled = true; savePdfBtn.disabled = true;
+                if(generateText) generateText.textContent = "Processing...";
+                if(generateIcon) generateIcon.classList.add('hidden');
+                if(generateSpinner) generateSpinner.classList.remove('hidden');
+                if(generateBtn) generateBtn.disabled = true; 
+                if(printBtn) printBtn.disabled = true; 
+                if(savePdfBtn) savePdfBtn.disabled = true;
                 hideToast();
             } else {
-                generateText.textContent = "Generate Layout";
-                generateIcon.classList.remove('hidden');
-                generateSpinner.classList.add('hidden');
-                generateBtn.disabled = false;
+                if(generateText) generateText.textContent = "Generate Layout";
+                if(generateIcon) generateIcon.classList.remove('hidden');
+                if(generateSpinner) generateSpinner.classList.add('hidden');
+                if(generateBtn) generateBtn.disabled = false;
             }
         }
 
@@ -1567,24 +1629,29 @@
 
         function renderBuilderUI() {
             if (activePageIndex >= builderPages.length) activePageIndex = Math.max(0, builderPages.length - 1);
-            document.getElementById('page-count-display').textContent = `${builderPages.length} Pg${builderPages.length !== 1 ? 's' : ''}`;
+            const countDisp = document.getElementById('page-count-display');
+            if (countDisp) countDisp.textContent = `${builderPages.length} Pg${builderPages.length !== 1 ? 's' : ''}`;
             
             const nav = document.getElementById('builder-navigator');
             const editor = document.getElementById('builder-active-editor');
             
-            nav.innerHTML = '';
-            builderPages.forEach((page, index) => {
-                let badgeText = `P.${index + 1}`;
-                if (index === 0) badgeText = "Cover";
-                else if (index === builderPages.length - 1 && builderPages.length >= 4) badgeText = "Back";
+            if (nav) {
+                nav.innerHTML = '';
+                builderPages.forEach((page, index) => {
+                    let badgeText = `P.${index + 1}`;
+                    if (index === 0) badgeText = "Cover";
+                    else if (index === builderPages.length - 1 && builderPages.length >= 4) badgeText = "Back";
 
-                const btn = document.createElement('button');
-                const isActive = index === activePageIndex;
-                btn.className = `shrink-0 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all border ${isActive ? 'bg-brand-600 text-white border-brand-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`;
-                btn.textContent = badgeText;
-                btn.onclick = () => { activePageIndex = index; renderBuilderUI(); };
-                nav.appendChild(btn);
-            });
+                    const btn = document.createElement('button');
+                    const isActive = index === activePageIndex;
+                    btn.className = `shrink-0 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all border ${isActive ? 'bg-brand-600 text-white border-brand-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`;
+                    btn.textContent = badgeText;
+                    btn.onclick = () => { activePageIndex = index; renderBuilderUI(); };
+                    nav.appendChild(btn);
+                });
+            }
+
+            if (!editor) return;
 
             if (builderPages.length === 0) {
                 editor.innerHTML = `<p class="text-center text-slate-400 py-6 text-xs font-medium">No pages. Add one to begin.</p>`;
@@ -1694,12 +1761,13 @@
 
         async function processContent() {
             setLoading(true);
-            emptyState.classList.add('hidden');
-            output.innerHTML = '';
+            if(emptyState) emptyState.classList.add('hidden');
+            if(output) output.innerHTML = '';
             
             try {
                 if (currentMode === 'wiki') {
-                    const url = document.getElementById('wiki-url').value.trim();
+                    const wikiEl = document.getElementById('wiki-url');
+                    const url = wikiEl ? wikiEl.value.trim() : '';
                     if (!url) throw new Error("Please enter a Wikipedia URL.");
                     
                     const match = url.match(/([a-z\-]+)\.wikipedia\.org\/wiki\/(.+)/);
@@ -1731,24 +1799,44 @@
                     triggerRebuild();
                 
                 } else if (currentMode === 'rss') {
-                    const url = document.getElementById('rss-url').value.trim();
+                    const rssEl = document.getElementById('rss-url');
+                    const url = rssEl ? rssEl.value.trim() : '';
                     if (!url) throw new Error("Please enter an RSS Feed URL.");
 
-                    const limit = parseInt(document.getElementById('rss-limit').value) || 5;
+                    const limitEl = document.getElementById('rss-limit');
+                    const limit = limitEl ? (parseInt(limitEl.value) || 5) : 5;
+                    
+                    const modeEl = document.getElementById('rss-content-mode');
+                    const contentMode = modeEl ? modeEl.value : 'full';
+                    
+                    const incImgEl = document.getElementById('rss-include-images');
+                    const includeImages = incImgEl ? incImgEl.checked : true;
 
-                    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
-                    
-                    const response = await fetch(apiUrl);
-                    if(!response.ok) throw new Error("Failed to fetch feed. Check URL.");
-                    
-                    const data = await response.json();
-                    if(data.status !== 'ok') throw new Error("Could not parse this RSS feed.");
+                    // Fetch optimization - cache the last downloaded payload!
+                    let data;
+                    if (cachedRssUrl === url && cachedRssData) {
+                        data = cachedRssData;
+                    } else {
+                        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+                        const response = await fetch(apiUrl);
+                        if(!response.ok) throw new Error("Failed to fetch feed. Check URL.");
+                        data = await response.json();
+                        if(data.status !== 'ok') throw new Error("Could not parse this RSS feed.");
+                        cachedRssData = data;
+                        cachedRssUrl = url;
+                    }
 
                     let rssHtml = '';
                     const itemsToProcess = data.items.slice(0, limit);
 
                     itemsToProcess.forEach(item => {
-                        rssHtml += `<h2 style="font-size: 1.4em; margin-bottom: 0.2em; border-bottom: none;">${item.title}</h2>`;
+                        // Wrap entire item as an article, avoiding breaks completely if it's just a summary list
+                        rssHtml += `<article style="${contentMode === 'list' ? 'break-inside: avoid; page-break-inside: avoid;' : ''}">`;
+                        
+                        // Wrap Header block (Title, Meta, Image) so it never gets orphaned at the bottom of a page
+                        rssHtml += `<div style="break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid; padding-top: 0.5em;">`;
+                        
+                        rssHtml += `<h2 style="font-size: 1.4em; margin-bottom: 0.2em; border-bottom: none; margin-top: 0;">${item.title}</h2>`;
                         
                         let metaText = [];
                         if(item.author) metaText.push(`<strong>${item.author}</strong>`);
@@ -1760,16 +1848,51 @@
                             rssHtml += `<p style="font-size: 0.75em; color: #64748b; margin-bottom: 1em; text-transform: uppercase; letter-spacing: 0.5px;">${metaText.join(' &bull; ')}</p>`;
                         }
 
-                        if(item.thumbnail) {
-                            rssHtml += `<img src="${item.thumbnail}" style="max-height: 40mm; object-fit: cover; margin-bottom: 1em; border-radius:4px; width: 100%;" />`;
+                        let imageUrl = item.thumbnail;
+                        if (!imageUrl && item.enclosure && item.enclosure.link && item.enclosure.type && item.enclosure.type.startsWith('image/')) {
+                            imageUrl = item.enclosure.link;
+                        }
+                        if (!imageUrl) {
+                            const tempDoc = new DOMParser().parseFromString(item.content || item.description || '', 'text/html');
+                            const firstImg = tempDoc.querySelector('img');
+                            if (firstImg) imageUrl = firstImg.src;
                         }
 
-                        let articleContent = item.content || item.description || '';
-                        const tempDoc = new DOMParser().parseFromString(articleContent, 'text/html');
-                        tempDoc.querySelectorAll('iframe, script, style, object, embed, form').forEach(el => el.remove());
-                        
-                        rssHtml += `<div>${tempDoc.body.innerHTML}</div>`;
+                        if(imageUrl && includeImages) {
+                            rssHtml += `<img src="${imageUrl}" style="max-height: 40mm; object-fit: cover; margin-bottom: 1em; border-radius:4px; width: 100%;" />`;
+                        }
+
+                        rssHtml += `</div>`; // Close Header wrapper
+
+                        if (contentMode === 'full') {
+                            let articleContent = item.content || item.description || '';
+                            const tempDoc = new DOMParser().parseFromString(articleContent, 'text/html');
+                            tempDoc.querySelectorAll('iframe, script, style, object, embed, form').forEach(el => el.remove());
+                            
+                            if (imageUrl && includeImages) {
+                                const firstBodyImg = tempDoc.querySelector('img');
+                                if (firstBodyImg && firstBodyImg.src === imageUrl) {
+                                    firstBodyImg.remove();
+                                }
+                            }
+
+                            if (!includeImages) {
+                                tempDoc.querySelectorAll('img').forEach(el => el.remove());
+                            }
+                            
+                            rssHtml += `<div>${tempDoc.body.innerHTML}</div>`;
+                        } else {
+                            let desc = item.description || '';
+                            let plainDesc = new DOMParser().parseFromString(desc, 'text/html').body.textContent || '';
+                            plainDesc = plainDesc.trim().substring(0, 150);
+                            if (plainDesc.length === 150) plainDesc += '...';
+                            if (plainDesc) {
+                                rssHtml += `<p style="font-size: 0.85em; color: #475569; margin-bottom: 1em;">${plainDesc}</p>`;
+                            }
+                        }
+
                         rssHtml += `<div style="text-align: center; margin: 2em 0; color: #cbd5e1;">***</div>`;
+                        rssHtml += `</article>`;
                     });
 
                     cachedHtml = rssHtml;
@@ -1779,7 +1902,8 @@
                     triggerRebuild();
 
                 } else if (currentMode === 'recipe') {
-                    const inputVal = document.getElementById('recipe-url').value.trim();
+                    const recipeEl = document.getElementById('recipe-url');
+                    const inputVal = recipeEl ? recipeEl.value.trim() : '';
                     if (!inputVal) throw new Error("Please enter a Recipe URL or paste the HTML source code.");
 
                     let htmlString = "";
@@ -1852,11 +1976,11 @@
                     triggerRebuild(); 
                 }
                 
-                printInstruction.classList.remove('hidden');
+                if (printInstruction) printInstruction.classList.remove('hidden');
 
             } catch (err) {
                 showToast(err.message);
-                if (output.innerHTML === '') emptyState.classList.remove('hidden');
+                if (output && output.innerHTML === '' && emptyState) emptyState.classList.remove('hidden');
             } finally {
                 setLoading(false);
             }
@@ -1864,7 +1988,7 @@
 
         async function downloadPDF() {
             setLoading(true);
-            generateText.textContent = "Creating PDF (This may take a minute)...";
+            if(generateText) generateText.textContent = "Creating PDF (This may take a minute)...";
             
             const element = document.getElementById('output');
             
@@ -1930,39 +2054,39 @@
         }
 
         async function buildBooklet(contentHtml, title, coverImageUrl, isBuilderMode, coverLayout = 'classic') {
-            if(!contentHtml && isBuilderMode) contentHtml = generateBuilderHtml(settings.imageStyles.checked);
+            if(!contentHtml && isBuilderMode) contentHtml = generateBuilderHtml(settings.imageStyles?.checked);
             if(!contentHtml) return;
             
-            output.innerHTML = '';
+            if(output) output.innerHTML = '';
 
             const config = {
-                layoutMode: settings.layoutMode.value,
-                spineText: settings.spineText.value.trim(),
-                fontClass: settings.font.value,
-                fontSize: settings.size.value + 'pt',
-                titleSize: settings.titleSize.value,
-                lineHeight: settings.lineHeight.value,
-                textAlign: settings.align.value,
-                hideImages: settings.hideImages.checked,
-                imgFilter: settings.imgFilter.value,
-                showBorders: settings.showBorders.checked,
-                showGrain: settings.showGrain.checked,
-                imageStyles: settings.imageStyles.checked,
-                maxSheets: parseInt(settings.maxSheets.value) || 0,
-                showImpositionOverlay: settings.showImposition.checked,
-                showCutGuides: settings.cutGuides.checked,
-                showFrontQr: settings.showFrontQr.checked,
-                frontQrUrl: settings.frontQrUrl.value.trim(),
-                frontQrPos: settings.frontQrPos.value || 'center',
-                showWatermark: settings.showWatermark.checked
+                layoutMode: settings.layoutMode?.value || 'signature',
+                spineText: settings.spineText?.value.trim() || '',
+                fontClass: settings.font?.value || 'font-sans-book',
+                fontSize: (settings.size?.value || '8.5') + 'pt',
+                titleSize: settings.titleSize?.value || '1.4',
+                lineHeight: settings.lineHeight?.value || '1.5',
+                textAlign: settings.align?.value || 'justify',
+                hideImages: settings.hideImages?.checked || false,
+                imgFilter: settings.imgFilter?.value || 'none',
+                showBorders: settings.showBorders?.checked || false,
+                showGrain: settings.showGrain?.checked || false,
+                imageStyles: settings.imageStyles?.checked || false,
+                maxSheets: parseInt(settings.maxSheets?.value) || 0,
+                showImpositionOverlay: settings.showImposition?.checked || false,
+                showCutGuides: settings.cutGuides?.checked || false,
+                showFrontQr: settings.showFrontQr?.checked || false,
+                frontQrUrl: settings.frontQrUrl?.value.trim() || '',
+                frontQrPos: settings.frontQrPos?.value || 'center',
+                showWatermark: settings.showWatermark?.checked || false
             };
 
             // Process QR Configuration Generation dynamically
             let activeQrUrl = config.frontQrUrl;
             if (!activeQrUrl) {
-                if (currentMode === 'wiki') activeQrUrl = document.getElementById('wiki-url').value;
-                else if (currentMode === 'recipe') activeQrUrl = document.getElementById('recipe-url').value;
-                else if (currentMode === 'rss') activeQrUrl = document.getElementById('rss-url').value;
+                if (currentMode === 'wiki') activeQrUrl = document.getElementById('wiki-url')?.value;
+                else if (currentMode === 'recipe') activeQrUrl = document.getElementById('recipe-url')?.value;
+                else if (currentMode === 'rss') activeQrUrl = document.getElementById('rss-url')?.value;
             }
             
             let frontQrBase64 = null;
@@ -1983,15 +2107,20 @@
             const advanceMm = isBooklet ? 148.5 : 74.25;
 
             // Update UI text for context
-            if (isBooklet) {
-                document.getElementById('instruction-title').textContent = "BOOKLET PRINTING:";
-                document.getElementById('instruction-body').innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins</strong>, and <strong>Print on Both Sides (Flip on Short Edge)</strong>. Fold in half and staple.";
-            } else if (isSignature) {
-                document.getElementById('instruction-title').textContent = "SIGNATURE PRINTING:";
-                document.getElementById('instruction-body').innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins (0px)</strong>. Fold & cut each sheet, then <strong>nest them inside each other</strong> and staple the center.";
-            } else {
-                document.getElementById('instruction-title').textContent = "PRINT INSTRUCTIONS:";
-                document.getElementById('instruction-body').innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins (0px)</strong>. Fold along the gray lines and cut the center dotted line.";
+            const instTitle = document.getElementById('instruction-title');
+            const instBody = document.getElementById('instruction-body');
+            
+            if (instTitle && instBody) {
+                if (isBooklet) {
+                    instTitle.textContent = "BOOKLET PRINTING:";
+                    instBody.innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins</strong>, and <strong>Print on Both Sides (Flip on Short Edge)</strong>. Fold in half and staple.";
+                } else if (isSignature) {
+                    instTitle.textContent = "SIGNATURE PRINTING:";
+                    instBody.innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins (0px)</strong>. Fold & cut each sheet, then <strong>nest them inside each other</strong> and staple the center.";
+                } else {
+                    instTitle.textContent = "PRINT INSTRUCTIONS:";
+                    instBody.innerHTML = "Set to <strong>A4 Landscape</strong>, <strong>No Margins (0px)</strong>. Fold along the gray lines and cut the center dotted line.";
+                }
             }
             
             let combinedHtml = contentHtml;
@@ -2247,14 +2376,16 @@
                     sheetEl.appendChild(slot);
                 });
 
-                output.appendChild(sheetEl);
+                if (output) output.appendChild(sheetEl);
             });
 
             document.body.removeChild(measureWrapper);
             
-            const hasSheets = output.querySelectorAll('.zine-sheet').length > 0;
-            printBtn.disabled = !hasSheets;
-            savePdfBtn.disabled = !hasSheets;
+            if (output) {
+                const hasSheets = output.querySelectorAll('.zine-sheet').length > 0;
+                if(printBtn) printBtn.disabled = !hasSheets;
+                if(savePdfBtn) savePdfBtn.disabled = !hasSheets;
+            }
         }
     </script>
 </body>

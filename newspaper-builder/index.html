@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newspaper Builder - Pocket Edition</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: '#fcfbf8',
+                        ink: '#111111',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --body-size: 5.5pt;
+            --title-multiplier: 1;
+            --line-height: 1.35;
+        }
+
+        /* Base Newspaper Typography */
+        .font-masthead { font-family: 'UnifrakturMaguntia', cursive; }
+        .font-headline { font-family: 'Playfair Display', serif; }
+        .font-body { font-family: 'Lora', serif; }
+        .font-sans { font-family: 'Inter', sans-serif; }
+
+        body { background-color: #e5e7eb; overflow-x: hidden; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
+
+        /* Print Media Styles - FIXED */
+        @media print {
+            .no-print { display: none !important; }
+            @page { size: A4 landscape; margin: 0; }
+            body, html { 
+                background: white !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                height: auto !important; 
+                min-height: auto !important; 
+                overflow: visible !important; 
+                display: block !important; 
+            }
+            #preview-wrapper, #preview-container, #output { 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                width: 100% !important; 
+                height: auto !important; 
+                min-height: auto !important; 
+                overflow: visible !important; 
+                display: block !important; 
+                position: static !important; 
+            }
+            .newspaper-sheet { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                page-break-after: always !important; 
+                break-after: page !important;
+                width: 297mm !important; 
+                height: 210mm !important;
+                overflow: hidden !important;
+                display: grid !important;
+            }
+            .newspaper-sheet:last-child { 
+                page-break-after: auto !important; 
+                break-after: auto !important; 
+            }
+            aside { display: none !important; }
+        }
+
+        /* PDF Export Strict Styles */
+        .pdf-exporting, .pdf-exporting body, .pdf-exporting html {
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
+            background: white !important;
+        }
+        .pdf-exporting #preview-wrapper {
+            padding: 0 !important;
+            margin: 0 !important;
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
+            background: white !important;
+        }
+        .pdf-exporting #preview-container {
+            padding: 0 !important;
+            margin: 0 !important;
+            background: white !important;
+        }
+        .pdf-exporting .newspaper-sheet {
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            page-break-after: always !important;
+            break-after: page !important;
+        }
+        .pdf-exporting .newspaper-sheet:last-child {
+            page-break-after: auto !important;
+            break-after: auto !important;
+        }
+        .pdf-exporting aside { display: none !important; }
+        
+        /* html2canvas struggles with mix-blend-mode, this prevents black/missing images */
+        .pdf-exporting .img-vintage { 
+            mix-blend-mode: normal !important; 
+            filter: grayscale(100%) !important; 
+        }
+
+        /* Pocket Signature Layout Elements */
+        .newspaper-sheet {
+            width: 297mm;
+            height: 210mm;
+            background-color: #ffffff;
+            margin: 2rem auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 15px rgba(0,0,0,0.03);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            page-break-after: always;
+            break-after: page;
+        }
+
+        .page-slot {
+            width: 74.25mm;
+            height: 105mm;
+            position: relative;
+            box-sizing: border-box;
+            border: 1px dashed #e2e8f0; /* Cut/fold guides */
+        }
+
+        .rotator { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        .rotated { transform: rotate(180deg); }
+
+        .page-content-wrapper {
+            position: absolute;
+            top: 5mm; 
+            left: 5mm;
+            width: 64.25mm; 
+            height: 95mm;
+            overflow: hidden !important;
+            color: #111;
+            background-color: transparent;
+        }
+
+        /* Newspaper specific styles */
+        .border-double-thick { border-top: 2px double #111; border-bottom: 2px double #111; }
+        .border-single-thick { border-top: 1px solid #111; border-bottom: 1px solid #111; }
+        .text-justify { text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
+
+        .news-img {
+            width: 100%;
+            height: auto;
+            max-height: 35mm;
+            object-fit: cover;
+            display: block;
+            margin-bottom: 0.25rem;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .img-vintage {
+            filter: grayscale(100%) contrast(110%);
+            mix-blend-mode: multiply;
+        }
+        
+        .img-color {
+            filter: none;
+            mix-blend-mode: normal;
+        }
+
+        /* Flowing Columns Container */
+        .multi-column-flow {
+            column-fill: auto;
+            position: absolute;
+            top: 0;
+            left: 0;
+            word-wrap: break-word;
+        }
+
+        /* Article Formatting inside flow using dynamic CSS Variables */
+        .article { margin-bottom: calc(var(--body-size) * 1.5); } 
+        .article h3 { font-family: 'Playfair Display', serif; font-weight: 800; line-height: 1.1; margin-bottom: 0.15rem; break-after: avoid; page-break-after: avoid; }
+        .article p { font-family: 'Lora', serif; font-size: var(--body-size); line-height: var(--line-height); text-align: justify; margin-bottom: calc(var(--body-size) * 0.75); }
+        .article .meta { font-family: 'Inter', sans-serif; font-size: calc(var(--body-size) * 0.75); font-weight: 700; text-transform: uppercase; margin-bottom: 0.1rem; break-after: avoid; page-break-after: avoid; }
+        
+        /* Dropcap for lead story */
+        .dropcap::first-letter, .dropcap > p:first-of-type::first-letter {
+            float: left;
+            font-size: calc(var(--body-size) * 2.8);
+            line-height: 0.8;
+            padding-right: 0.08em;
+            padding-top: 0.08em;
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+        }
+
+        /* Layout Modes (Scale headlines relative to typography choice) */
+        .mode-broadsheet .article h3 { font-size: calc(8pt * var(--title-multiplier)); }
+        .mode-tabloid .article h3 { font-size: calc(7.5pt * var(--title-multiplier)); }
+        .mode-minimal .font-headline { font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+        .mode-minimal .article h3 { font-size: calc(7.5pt * var(--title-multiplier)); }
+        .mode-minimal .font-masthead { font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; }
+        
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6;
+            border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Measurement helper */
+        #mm-converter { width: 1mm; height: 1mm; position: absolute; top: -9999px; }
+    </style>
+</head>
+<body class="h-screen flex flex-col md:flex-row font-sans text-gray-800">
+    <div id="mm-converter"></div>
+
+    <!-- Sidebar / Builder UI -->
+    <aside class="no-print w-full md:w-[28rem] bg-white border-r border-gray-200 flex flex-col h-full flex-shrink-0 z-20 shadow-xl overflow-y-auto custom-scrollbar">
+        <div class="px-6 py-5 border-b border-gray-100 bg-gray-50 flex items-center gap-3 sticky top-0 z-10">
+            <div class="bg-black text-white p-2 rounded flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-gray-900 tracking-tight leading-none">Newspaper Builder</h1>
+                <p class="text-[11px] text-blue-600 font-bold uppercase tracking-wider mt-1">Pocket Signature Edition</p>
+            </div>
+        </div>
+
+        <div class="p-6 space-y-8 flex-grow">
+            <!-- Section 1: Identity -->
+            <section class="space-y-4">
+                <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2 border-b pb-2">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    Newspaper Identity
+                </h2>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Newspaper Name</label>
+                    <input type="text" id="cfg-name" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold" value="The Daily Echo">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Tagline</label>
+                    <input type="text" id="cfg-tagline" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm italic" value="All the news that fits in print.">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Location</label>
+                        <input type="text" id="cfg-location" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-xs" value="New York, NY">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Issue Number</label>
+                        <input type="text" id="cfg-issue" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-xs" value="Vol. 1 No. 1">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Edition / Price (Optional)</label>
+                    <input type="text" id="cfg-edition" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-xs" value="Morning Edition • 25 Cents">
+                </div>
+            </section>
+
+            <!-- Section 2: RSS Feeds -->
+            <section class="space-y-4">
+                <div class="flex items-center justify-between border-b pb-2">
+                    <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                        <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
+                        RSS Feeds
+                    </h2>
+                    <button id="btn-add-feed" class="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-2 py-1 rounded">
+                        + Add Feed
+                    </button>
+                </div>
+                <div id="feeds-container" class="space-y-3">
+                    <!-- Feeds injected here -->
+                </div>
+            </section>
+
+            <!-- Section 3: Content Options -->
+            <section class="space-y-4">
+                <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2 border-b pb-2">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                    Content & Generation
+                </h2>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Article Length</label>
+                    <select id="cfg-article-mode" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm cursor-pointer">
+                        <option value="short" selected>Short Summaries (~150 chars)</option>
+                        <option value="long">Long Excerpts (~500 chars)</option>
+                        <option value="full">Full Articles (May span multiple pages)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Max Physical Sheets</label>
+                    <select id="cfg-max-sheets" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm cursor-pointer">
+                        <option value="0" selected>Unlimited (Print Everything)</option>
+                        <option value="1">1 Sheet (8 Pages)</option>
+                        <option value="2">2 Sheets (16 Pages)</option>
+                        <option value="3">3 Sheets (24 Pages)</option>
+                        <option value="4">4 Sheets (32 Pages)</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Section 4: Layout & Aesthetics -->
+            <section class="space-y-4">
+                <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2 border-b pb-2">
+                    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
+                    Aesthetics & Options
+                </h2>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Typography Mode</label>
+                    <select id="cfg-mode" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm cursor-pointer">
+                        <option value="mode-broadsheet" selected>Classic Broadsheet Styling</option>
+                        <option value="mode-tabloid">Tabloid Styling</option>
+                        <option value="mode-minimal">Modern Minimalist Styling</option>
+                    </select>
+                </div>
+
+                <!-- Font Sliders -->
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-3">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Body Font Size</label>
+                            <span id="cfg-font-size-val" class="text-[10px] font-mono text-blue-600 font-bold bg-white px-1.5 py-0.5 rounded border border-gray-200">5.5pt</span>
+                        </div>
+                        <input type="range" id="cfg-font-size" min="4" max="9" step="0.5" value="5.5" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Headline Scale</label>
+                                <span id="cfg-title-scale-val" class="text-[10px] font-mono text-blue-600 font-bold bg-white px-1.5 py-0.5 rounded border border-gray-200">1.0x</span>
+                            </div>
+                            <input type="range" id="cfg-title-scale" min="0.7" max="1.6" step="0.1" value="1.0" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Line Spacing</label>
+                                <span id="cfg-line-height-val" class="text-[10px] font-mono text-blue-600 font-bold bg-white px-1.5 py-0.5 rounded border border-gray-200">1.35x</span>
+                            </div>
+                            <input type="range" id="cfg-line-height" min="1.1" max="1.8" step="0.05" value="1.35" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Paper Color</label>
+                    <select id="cfg-paper" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm cursor-pointer">
+                        <option value="newsprint">Classic Newsprint (Off-white)</option>
+                        <option value="white" selected>Pure White (Ink Saver)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Section Headers</label>
+                    <select id="cfg-headers" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm cursor-pointer">
+                        <option value="solid" selected>Solid Black Background</option>
+                        <option value="outline">Minimal Outline (No Background)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Image Processing</label>
+                    <select id="cfg-images" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm cursor-pointer">
+                        <option value="vintage">Vintage Grayscale (Photocopy Effect)</option>
+                        <option value="color" selected>Standard Full Color</option>
+                    </select>
+                </div>
+            </section>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="p-4 border-t border-gray-200 bg-white shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] sticky bottom-0 z-10 space-y-3">
+            <button id="btn-generate" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded font-bold transition-all shadow-md flex items-center justify-center gap-2">
+                <span id="txt-generate">Typeset & Generate</span>
+                <div id="spin-generate" class="loader hidden ml-2"></div>
+            </button>
+            <div class="flex gap-2">
+                <button id="btn-pdf" disabled class="flex-1 bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 hover:bg-black text-white px-3 py-2.5 rounded font-bold transition-all text-sm flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Save PDF
+                </button>
+                <button id="btn-print" disabled class="flex-1 bg-gray-200 disabled:bg-gray-100 disabled:text-gray-400 hover:bg-gray-300 text-gray-800 px-3 py-2.5 rounded font-bold transition-all text-sm flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Print
+                </button>
+            </div>
+            
+            <!-- Project Save/Load Action Bar -->
+            <div class="flex gap-2 pt-1">
+                <button id="save-json-btn" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-2 rounded font-bold transition-all shadow-sm border border-gray-200 flex items-center justify-center gap-1.5 text-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                    Save Project
+                </button>
+                <label class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-2 rounded font-bold transition-all shadow-sm border border-gray-200 flex items-center justify-center gap-1.5 text-xs cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Load Project
+                    <input type="file" id="load-json-input" class="hidden" accept=".json">
+                </label>
+            </div>
+            
+            <div id="error-msg" class="hidden text-xs text-red-600 bg-red-50 p-3 rounded border border-red-200 font-semibold space-y-1"></div>
+        </div>
+    </aside>
+
+    <!-- Main Content / Preview -->
+    <main class="flex-grow overflow-y-auto relative w-full flex flex-col items-center bg-gray-300 py-10" id="preview-wrapper">
+        <div id="print-instruction" class="no-print hidden w-full bg-blue-50 border-b border-blue-200 text-blue-900 px-6 py-3.5 text-sm flex items-center justify-between sticky top-0 z-10 shadow-sm backdrop-blur-md bg-opacity-90 max-w-4xl rounded mb-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-100 text-blue-600 p-1.5 rounded-lg shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <span>
+                    <strong class="font-extrabold tracking-wide">SIGNATURE PRINTING:</strong> Set to <strong>A4 Landscape</strong>, <strong>No Margins (0px)</strong>. Fold & cut each sheet, then <strong>nest them inside each other</strong> and staple the center.
+                </span>
+            </div>
+        </div>
+
+        <div id="preview-container" class="flex flex-col items-center w-full transition-opacity duration-300 relative">
+            <!-- Blank State -->
+            <div id="blank-state" class="no-print absolute inset-0 flex flex-col items-center justify-center text-gray-400 p-8 text-center pointer-events-none z-0 mt-32">
+                <svg class="w-20 h-20 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+                <h2 class="text-xl font-bold text-gray-500 mb-2">Nested Signature Builder Ready</h2>
+                <p class="text-sm">Configure your feeds and identity, then click <strong>Typeset & Generate</strong>.</p>
+            </div>
+            
+            <!-- Sheets will be injected here -->
+            <div id="output"></div>
+        </div>
+    </main>
+
+    <script>
+        // --- State Management ---
+        const state = {
+            feeds: [
+                { id: Date.now(), section: 'World News', url: 'http://rss.cnn.com/rss/edition_world.rss', limit: 25 },
+                { id: Date.now()+1, section: 'Technology', url: 'http://rss.cnn.com/rss/edition_technology.rss', limit: 25 }
+            ]
+        };
+
+        const articles = []; // Parsed and combined articles
+        let errorMessages = [];
+        let currentFeedStateHash = ""; // Caches the state of feeds to prevent re-fetching on aesthetic changes
+
+        // --- DOM Elements ---
+        const feedsContainer = document.getElementById('feeds-container');
+        const btnAddFeed = document.getElementById('btn-add-feed');
+        const btnGenerate = document.getElementById('btn-generate');
+        const btnPrint = document.getElementById('btn-print');
+        const btnPdf = document.getElementById('btn-pdf');
+        const output = document.getElementById('output');
+        const blankState = document.getElementById('blank-state');
+        const errorMsgContainer = document.getElementById('error-msg');
+        const printInstruction = document.getElementById('print-instruction');
+
+        // --- Auto Render Logic ---
+        let renderTimeout;
+        function triggerAutoRender() {
+            // Only trigger if we have already generated once (blank state is hidden)
+            if (!document.getElementById('blank-state').classList.contains('hidden')) return;
+            
+            clearTimeout(renderTimeout);
+            renderTimeout = setTimeout(() => {
+                processAndRender();
+            }, 400); // 400ms debounce
+        }
+        
+        // --- Typography Live Updates ---
+        document.getElementById('cfg-font-size').addEventListener('input', (e) => {
+            document.getElementById('cfg-font-size-val').textContent = e.target.value + 'pt';
+            triggerAutoRender();
+        });
+        document.getElementById('cfg-title-scale').addEventListener('input', (e) => {
+            document.getElementById('cfg-title-scale-val').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+            triggerAutoRender();
+        });
+        document.getElementById('cfg-line-height').addEventListener('input', (e) => {
+            document.getElementById('cfg-line-height-val').textContent = parseFloat(e.target.value).toFixed(2) + 'x';
+            triggerAutoRender();
+        });
+
+        // Add auto-render to all other configuration inputs
+        const autoRenderIds = [
+            'cfg-name', 'cfg-tagline', 'cfg-location', 'cfg-issue', 'cfg-edition',
+            'cfg-article-mode', 'cfg-max-sheets', 'cfg-mode', 'cfg-paper', 'cfg-headers', 'cfg-images'
+        ];
+        autoRenderIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', triggerAutoRender);
+                el.addEventListener('input', triggerAutoRender);
+            }
+        });
+
+        // --- Initialization ---
+        function renderFeeds() {
+            feedsContainer.innerHTML = '';
+            state.feeds.forEach((feed, index) => {
+                const feedEl = document.createElement('div');
+                feedEl.className = 'bg-white p-3 border border-gray-200 rounded relative shadow-sm';
+                feedEl.innerHTML = `
+                    <button class="absolute -top-2 -right-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-full p-1" onclick="removeFeed(${feed.id})" title="Remove Feed">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" value="${feed.section}" onchange="updateFeed(${feed.id}, 'section', this.value)" placeholder="Section Name" class="w-1/3 px-2 py-1 border border-gray-200 rounded text-xs outline-none focus:border-blue-500">
+                        <input type="number" value="${feed.limit}" min="1" max="50" onchange="updateFeed(${feed.id}, 'limit', this.value)" placeholder="Max" class="w-16 px-2 py-1 border border-gray-200 rounded text-xs outline-none focus:border-blue-500" title="Article Limit">
+                    </div>
+                    <input type="url" value="${feed.url}" onchange="updateFeed(${feed.id}, 'url', this.value)" placeholder="RSS URL (e.g., https://.../rss)" class="w-full px-2 py-1 border border-gray-200 rounded text-xs outline-none focus:border-blue-500 text-gray-600">
+                `;
+                feedsContainer.appendChild(feedEl);
+            });
+        }
+
+        window.removeFeed = (id) => {
+            state.feeds = state.feeds.filter(f => f.id !== id);
+            renderFeeds();
+            triggerAutoRender();
+        };
+
+        window.updateFeed = (id, key, value) => {
+            const feed = state.feeds.find(f => f.id === id);
+            if (feed) feed[key] = value;
+            triggerAutoRender();
+        };
+
+        btnAddFeed.addEventListener('click', () => {
+            state.feeds.push({ id: Date.now(), section: 'New Section', url: '', limit: 25 });
+            renderFeeds();
+        });
+
+        renderFeeds();
+
+        // --- Core Generation Logic ---
+        
+        function pushError(msg) {
+            errorMessages.push(`<div>⚠ ${msg}</div>`);
+            errorMsgContainer.innerHTML = errorMessages.join('');
+            errorMsgContainer.classList.remove('hidden');
+        }
+
+        function clearErrors() {
+            errorMessages = [];
+            errorMsgContainer.classList.add('hidden');
+            errorMsgContainer.innerHTML = '';
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                document.getElementById('txt-generate').textContent = "Processing...";
+                document.getElementById('spin-generate').classList.remove('hidden');
+                btnGenerate.disabled = true; btnPrint.disabled = true; btnPdf.disabled = true;
+                clearErrors();
+            } else {
+                document.getElementById('txt-generate').textContent = "Typeset & Generate";
+                document.getElementById('spin-generate').classList.add('hidden');
+                btnGenerate.disabled = false;
+            }
+        }
+
+        function getTodayDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date().toLocaleDateString('en-US', options);
+        }
+
+        function stripHtmlAndFormat(htmlContent) {
+            if (!htmlContent) return '';
+            const tempDoc = new DOMParser().parseFromString(htmlContent, 'text/html');
+            
+            tempDoc.querySelectorAll('script, style, iframe, object, embed, form, button, nav').forEach(el => el.remove());
+            
+            tempDoc.querySelectorAll('*').forEach(el => {
+                el.removeAttribute('style');
+                el.removeAttribute('class');
+                el.removeAttribute('width');
+                el.removeAttribute('height');
+            });
+
+            let cleanHtml = '';
+            tempDoc.body.childNodes.forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
+                    cleanHtml += `<p>${node.textContent.trim()}</p>`;
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    if (node.tagName === 'P' || node.tagName === 'H1' || node.tagName === 'H2' || node.tagName === 'H3') {
+                        cleanHtml += `<p>${node.innerHTML}</p>`;
+                    } else if (node.tagName === 'IMG') {
+                        // ignore inline images
+                    } else {
+                        const text = node.textContent.trim();
+                        if (text.length > 10) cleanHtml += `<p>${text}</p>`;
+                    }
+                }
+            });
+
+            return cleanHtml || `<p>${tempDoc.body.textContent}</p>`;
+        }
+
+        function extractExcerpt(htmlContent, length = 150) {
+            const tempDoc = new DOMParser().parseFromString(htmlContent, 'text/html');
+            let text = tempDoc.body.textContent.trim();
+            if (text.length > length) {
+                return text.substring(0, text.lastIndexOf(' ', length)) + '...';
+            }
+            return text;
+        }
+
+        // FULL ARTICLE SCRAPER (Bypasses RSS Truncation)
+        async function fetchFullArticle(url) {
+            const proxies = [
+                `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+            ];
+            for (let proxyUrl of proxies) {
+                try {
+                    const res = await fetch(proxyUrl);
+                    if (!res.ok) continue;
+                    let html = "";
+                    if (proxyUrl.includes('allorigins')) {
+                        const data = await res.json();
+                        html = data.contents;
+                    } else {
+                        html = await res.text();
+                    }
+
+                    if (!html) continue;
+
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    // Clean up junk that often pollutes text scraping
+                    doc.querySelectorAll('script, style, nav, header, footer, aside, iframe, form, button, .ad, .advert, .related, .social, .menu, .cookie, .banner, noscript, svg').forEach(el => el.remove());
+
+                    let articleNode = doc.querySelector('article, .article-body, .post-content, .entry-content, .content-body, main, [itemprop="articleBody"]');
+
+                    let paragraphs = [];
+                    if (articleNode) {
+                        paragraphs = Array.from(articleNode.querySelectorAll('p'));
+                    } else {
+                        paragraphs = Array.from(doc.querySelectorAll('p'));
+                    }
+
+                    let fullText = '';
+                    paragraphs.forEach(p => {
+                        const txt = p.textContent.trim();
+                        // Filter out short links, cookie notices, "read more", etc.
+                        if (txt.length > 45 && !txt.toLowerCase().includes('read more') && !txt.toLowerCase().includes('click here') && !txt.toLowerCase().includes('sign up to our')) {
+                            fullText += `<p>${txt}</p>`;
+                        }
+                    });
+
+                    if (fullText.length > 200) return fullText;
+                } catch (e) {
+                    console.warn("Scrape error:", e);
+                }
+            }
+            return null;
+        }
+
+        async function fetchFeedContent(feedUrl, limit, config) {
+            let finalItems = null;
+
+            const proxies = [
+                `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`,
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feedUrl)}`
+            ];
+            
+            for (let proxyUrl of proxies) {
+                try {
+                    const res = await fetch(proxyUrl);
+                    if (!res.ok) continue;
+                    
+                    let xmlText = "";
+                    if (proxyUrl.includes('allorigins.win/get')) {
+                        const data = await res.json();
+                        if (!data.contents) continue;
+                        xmlText = data.contents;
+                    } else {
+                        xmlText = await res.text();
+                    }
+
+                    if (!xmlText || (!xmlText.includes('<rss') && !xmlText.includes('<feed'))) continue;
+                    
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+                    
+                    const items = Array.from(xmlDoc.querySelectorAll("item, entry")).slice(0, limit);
+                    
+                    if (items.length > 0) {
+                        finalItems = items.map(item => {
+                            const title = item.querySelector("title")?.textContent || "Untitled";
+                            const linkNode = item.querySelector("link");
+                            const link = linkNode?.textContent || linkNode?.getAttribute('href') || "";
+                            const pubDate = item.querySelector("pubDate, published, updated")?.textContent || "";
+                            const author = item.querySelector("creator, author name, author")?.textContent || "";
+                            
+                            const desc = item.querySelector("description, summary")?.textContent || "";
+                            const contentEnc = item.getElementsByTagNameNS("*", "encoded")[0]?.textContent || item.querySelector("content")?.textContent || "";
+                            
+                            let img = "";
+                            const enc = item.querySelector("enclosure[type^='image']");
+                            if (enc) {
+                                img = enc.getAttribute("url");
+                            } else {
+                                const media = item.getElementsByTagNameNS("*", "content")[0];
+                                if (media && media.getAttribute("url")) {
+                                    img = media.getAttribute("url");
+                                } else {
+                                    const tmp = document.createElement('div');
+                                    tmp.innerHTML = contentEnc || desc;
+                                    const firstImg = tmp.querySelector("img");
+                                    if (firstImg) img = firstImg.src;
+                                }
+                            }
+                            
+                            return {
+                                title, link, author, pubDate, image: img,
+                                excerpt: extractExcerpt(contentEnc || desc, 150),
+                                content: stripHtmlAndFormat(contentEnc || desc)
+                            };
+                        });
+                        break;
+                    }
+                } catch (e) {
+                    console.warn(`Proxy ${proxyUrl} failed for ${feedUrl}`, e);
+                }
+            }
+
+            // Fallback to rss2json
+            if (!finalItems) {
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&count=${limit}`;
+                const response = await fetch(apiUrl);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'ok') {
+                        finalItems = data.items.slice(0, limit).map(item => {
+                            let img = item.thumbnail || item.enclosure?.link;
+                            if (!img) {
+                                const tmp = document.createElement('div');
+                                tmp.innerHTML = item.content || item.description;
+                                const firstImg = tmp.querySelector("img");
+                                if (firstImg) img = firstImg.src;
+                            }
+                            return {
+                                title: item.title, link: item.link, author: item.author, pubDate: item.pubDate, image: img,
+                                excerpt: extractExcerpt(item.content || item.description, 150),
+                                content: stripHtmlAndFormat(item.content || item.description)
+                            };
+                        });
+                    }
+                }
+            }
+            
+            if (!finalItems || finalItems.length === 0) throw new Error("Invalid feed or empty response");
+
+            // AUGMENT WITH FULL TEXT IF REQUESTED (Bypasses RSS Truncation Limits)
+            if (config && config.articleMode !== 'short') {
+                document.getElementById('txt-generate').textContent = "Extracting full text (may take a moment)...";
+                const batchSize = 4; // Process in parallel to speed it up without being blocked
+                for (let i = 0; i < finalItems.length; i += batchSize) {
+                    const batch = finalItems.slice(i, i + batchSize);
+                    await Promise.all(batch.map(async (item) => {
+                        // If the RSS feed only gave us a tiny snippet, scrape the real article
+                        if (item.content.length < 1500 && item.link) {
+                            const full = await fetchFullArticle(item.link);
+                            if (full && full.length > item.content.length) {
+                                item.content = full;
+                                item.excerpt = extractExcerpt(full, 150);
+                            }
+                        }
+                    }));
+                }
+                document.getElementById('txt-generate').textContent = "Processing layout...";
+            }
+
+            return finalItems;
+        }
+
+        async function fetchAllFeeds(config) {
+            articles.length = 0; 
+            
+            for (const feed of state.feeds) {
+                if (!feed.url) continue;
+                try {
+                    const items = await fetchFeedContent(feed.url, feed.limit || 25, config);
+                    items.forEach(item => {
+                        item.section = feed.section;
+                        articles.push(item);
+                    });
+                } catch (err) {
+                    console.error(`Failed to fetch ${feed.url}:`, err);
+                    pushError(`Failed to load feed "${feed.section}". Make sure the URL is a valid RSS link.`);
+                }
+            }
+        }
+
+        function buildFrontPage(config) {
+            if (articles.length === 0) return `<div class="p-2 text-center text-[5px] font-bold">No articles found. Check your feed URLs.</div>`;
+
+            const leadArticle = articles[0];
+            const secondaryArticle = articles[1]; 
+            
+            const imgClass = config.imgStyle === 'vintage' ? 'img-vintage' : 'img-color';
+
+            let leadText = '';
+            if (config.articleMode === 'full') {
+                leadText = leadArticle.content;
+            } else if (config.articleMode === 'long') {
+                leadText = `<p>${extractExcerpt(leadArticle.content, 500)}</p>`;
+            } else {
+                leadText = `<p>${leadArticle.excerpt}</p>`;
+            }
+
+            // Lead Story Html
+            let leadHtml = `
+                <div class="border-b border-black pb-1 mb-1">
+                    <div class="mb-[2px] uppercase text-[4px] font-bold tracking-widest text-gray-500 font-sans border-b border-black inline-block pb-[1px]">${leadArticle.section}</div>
+                    <h2 class="font-headline font-black mb-1 tracking-tight" style="font-size: calc(14px * var(--title-multiplier)); line-height: 1.05;">${leadArticle.title}</h2>
+                    ${leadArticle.image ? `<img src="${leadArticle.image}" class="news-img border border-gray-300 mb-1 ${imgClass}" alt="Lead Image">` : ''}
+                    <div class="flex items-center gap-1 text-[4.5px] font-sans font-bold uppercase mb-1 border-y border-gray-300 py-[1px]">
+                        <span>By ${leadArticle.author || 'Staff Writer'}</span>
+                        ${leadArticle.pubDate ? `<span>| ${new Date(leadArticle.pubDate).toLocaleDateString()}</span>` : ''}
+                    </div>
+                    <div class="font-body text-justify dropcap" style="font-size: var(--body-size); line-height: var(--line-height);">
+                        ${leadText}
+                    </div>
+                    <p class="font-sans text-[4.5px] font-bold italic mt-1 text-right">Continued on Page 2 ➔</p>
+                </div>
+            `;
+
+            // Secondary Story Html
+            let secondaryHtml = '';
+            if (secondaryArticle) {
+                let secondaryText = '';
+                if (config.articleMode === 'full') secondaryText = extractExcerpt(secondaryArticle.content, 800); // Excerpted slightly on front page to prevent total overflow
+                else if (config.articleMode === 'long') secondaryText = extractExcerpt(secondaryArticle.content, 350);
+                else secondaryText = secondaryArticle.excerpt;
+
+                secondaryHtml = `
+                    <div class="flex-grow flex flex-col justify-end">
+                        <div class="mb-[1px] uppercase text-[3.5px] font-bold tracking-widest text-gray-500 font-sans">${secondaryArticle.section}</div>
+                        <h3 class="font-headline font-bold mb-[2px]" style="font-size: calc(9px * var(--title-multiplier)); line-height: 1.1;">${secondaryArticle.title}</h3>
+                        <p class="font-body text-justify" style="font-size: calc(var(--body-size) * 0.85); line-height: var(--line-height);">${secondaryText}</p>
+                        <p class="font-sans text-[4px] font-bold italic mt-[2px] text-right">Cont. Page 2 ➔</p>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="h-full flex flex-col" style="background-color: ${config.paperBg};">
+                    <!-- Masthead -->
+                    <div class="w-full mb-[3px] text-center pb-[2px] border-double-thick shrink-0">
+                        <div class="flex justify-between items-end text-[4px] font-bold uppercase tracking-widest font-sans mb-[1px]">
+                            <span>${config.location}</span>
+                            <span>${config.edition}</span>
+                        </div>
+                        <h1 class="font-masthead text-[26px] leading-none mb-[2px] tracking-tight">${config.name}</h1>
+                        <p class="font-headline italic text-[5.5px] text-gray-700 leading-none mb-[2px]">${config.tagline}</p>
+                        <div class="flex justify-between items-center text-[4px] font-bold uppercase font-sans border-single-thick py-[1.5px] mt-[2px]">
+                            <span>${config.issue}</span>
+                            <span>${config.date}</span>
+                        </div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="flex-grow flex flex-col overflow-hidden pb-1">
+                        ${leadHtml}
+                        ${secondaryHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function buildInnerArticlesHtml(config) {
+            let html = '';
+            
+            const sections = {};
+            articles.forEach(art => {
+                if (!sections[art.section]) sections[art.section] = [];
+                sections[art.section].push(art);
+            });
+
+            const imgClass = config.imgStyle === 'vintage' ? 'img-vintage' : 'img-color';
+
+            for (const [sectionName, sectionArticles] of Object.entries(sections)) {
+                
+                const headerHtml = config.headerStyle === 'solid' 
+                    ? `<h2 class="font-headline font-black text-[9px] uppercase tracking-widest bg-black text-white inline-block px-[3px] py-[1px]">${sectionName}</h2>`
+                    : `<h2 class="font-headline font-black text-[9px] uppercase tracking-widest text-black border-y-[1px] border-black inline-block py-[1px] w-full">${sectionName}</h2>`;
+
+                html += `
+                    <div class="mb-2 border-b-[1px] border-black pb-[2px] break-inside-avoid" style="break-inside: avoid; page-break-inside: avoid;">
+                        ${headerHtml}
+                    </div>
+                `;
+
+                sectionArticles.forEach(art => {
+                    const isLead = art === articles[0]; 
+                    
+                    let textHtml = '';
+                    if (config.articleMode === 'full') textHtml = art.content;
+                    else if (config.articleMode === 'long') textHtml = `<p>${extractExcerpt(art.content, 500)}</p>`;
+                    else textHtml = `<p>${art.excerpt}</p>`;
+
+                    let locationTag = !isLead ? `<span class="font-bold text-[5px] font-sans float-left mr-1 bg-gray-200 px-[2px] uppercase tracking-wider">${config.location.split(',')[0]}—</span> ` : '';
+
+                    if (locationTag && textHtml.startsWith('<p>')) {
+                        textHtml = textHtml.replace('<p>', `<p>${locationTag}`);
+                    } else if (locationTag) {
+                        textHtml = `<p>${locationTag}</p>` + textHtml;
+                    }
+
+                    html += `
+                        <div class="article border-b border-gray-300 pb-2">
+                            ${isLead ? `<div class="font-sans text-[4.5px] font-bold uppercase tracking-widest mb-[2px] italic">Continued from Front Page</div>` : ''}
+                            <h3 class="font-headline">${art.title}</h3>
+                            <div class="meta text-gray-600">
+                                <span>${art.author || 'Staff Writer'}</span>
+                                ${art.pubDate ? ` | <span>${new Date(art.pubDate).toLocaleDateString()}</span>` : ''}
+                            </div>
+                            ${art.image && !isLead ? `<img src="${art.image}" class="news-img ${imgClass}" alt="Article Image">` : ''}
+                            <div class="font-body text-justify">
+                                ${textHtml}
+                            </div>
+                            <div class="text-center text-[10px] mt-1 font-headline italic hidden last:block pb-1">❧</div>
+                        </div>
+                    `;
+                });
+            }
+
+            return html;
+        }
+
+        async function processAndRender() {
+            setLoading(true);
+            blankState.classList.add('hidden');
+            output.innerHTML = '';
+            printInstruction.classList.add('hidden');
+
+            try {
+                // Collect Config
+                const config = {
+                    name: document.getElementById('cfg-name').value || 'The Daily Echo',
+                    tagline: document.getElementById('cfg-tagline').value || 'All the news that fits.',
+                    location: document.getElementById('cfg-location').value || 'New York',
+                    issue: document.getElementById('cfg-issue').value || 'Vol 1.',
+                    edition: document.getElementById('cfg-edition').value || '',
+                    date: getTodayDate(),
+                    mode: document.getElementById('cfg-mode').value,
+                    paperBg: document.getElementById('cfg-paper').value === 'white' ? '#ffffff' : '#fcfbf8',
+                    headerStyle: document.getElementById('cfg-headers').value,
+                    imgStyle: document.getElementById('cfg-images').value,
+                    articleMode: document.getElementById('cfg-article-mode').value,
+                    maxSheets: parseInt(document.getElementById('cfg-max-sheets').value) || 0,
+                    fontSize: document.getElementById('cfg-font-size').value,
+                    titleScale: document.getElementById('cfg-title-scale').value,
+                    lineHeight: document.getElementById('cfg-line-height').value,
+                };
+
+                // Smart Caching: Only re-fetch if feed URLs/limits or article lengths have changed
+                const newFeedStateHash = JSON.stringify(state.feeds) + "_" + config.articleMode;
+                if (newFeedStateHash !== currentFeedStateHash || articles.length === 0) {
+                    await fetchAllFeeds(config);
+                    currentFeedStateHash = newFeedStateHash;
+                }
+
+                const innerHtml = buildInnerArticlesHtml(config);
+
+                // --- Measurement phase for perfectly aligning column flows ---
+                const contentWidthMm = 64.25;
+                const contentHeightMm = 87; 
+
+                let colGapMm = (config.mode === 'mode-minimal') ? 4 : 3;
+                let colWidthMm = (contentWidthMm - colGapMm) / 2;
+                
+                let shiftAdvanceMm = contentWidthMm + colGapMm; 
+
+                const measurerWrapper = document.createElement('div');
+                measurerWrapper.style.position = 'absolute';
+                measurerWrapper.style.top = '-9999px';
+                measurerWrapper.style.left = '-9999px';
+                measurerWrapper.style.height = contentHeightMm + 'mm';
+                measurerWrapper.style.visibility = 'hidden';
+
+                const measurer = document.createElement('div');
+                measurer.className = `multi-column-flow ${config.mode}`;
+                measurer.style.height = contentHeightMm + 'mm';
+                measurer.style.columnWidth = colWidthMm + 'mm';
+                measurer.style.columnGap = colGapMm + 'mm';
+
+                // Inject CSS Variables for accurate flow measurement
+                measurer.style.setProperty('--body-size', config.fontSize + 'pt');
+                measurer.style.setProperty('--title-multiplier', config.titleScale);
+                measurer.style.setProperty('--line-height', config.lineHeight);
+                
+                measurer.innerHTML = innerHtml;
+                measurerWrapper.appendChild(measurer);
+                document.body.appendChild(measurerWrapper);
+
+                // Wait for images to load before measuring
+                const images = measurer.querySelectorAll('img');
+                const imagePromises = Array.from(images).map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+                });
+                await Promise.all(imagePromises);
+
+                const scrollWidthPx = measurer.scrollWidth;
+                
+                // Get accurate pixel dimensions purely to calculate how many pages we need to spawn
+                const converter = document.getElementById('mm-converter');
+                converter.style.width = contentWidthMm + 'mm';
+                const contentWidthPx = converter.getBoundingClientRect().width;
+                
+                converter.style.width = colGapMm + 'mm';
+                const gapPx = converter.getBoundingClientRect().width;
+
+                const shiftAdvancePx = contentWidthPx + gapPx;
+                const innerPagesNeeded = Math.ceil((scrollWidthPx - 1) / shiftAdvancePx);
+
+                // --- Nested Signature Pagination Logic ---
+                let totalPages = innerPagesNeeded + 1; // +1 for the front page
+                
+                // Pad to nearest multiple of 8
+                while (totalPages % 8 !== 0) totalPages++;
+                let numSheets = totalPages / 8;
+
+                if (config.maxSheets > 0 && numSheets > config.maxSheets) {
+                    numSheets = config.maxSheets;
+                    totalPages = numSheets * 8;
+                }
+
+                const sheets = [];
+                for (let s = 0; s < numSheets; s++) {
+                    let p1 = (s * 4) + 1;
+                    let p2 = (s * 4) + 2;
+                    let p3 = (s * 4) + 3;
+                    let p4 = (s * 4) + 4;
+                    let p5 = totalPages - (s * 4) - 3;
+                    let p6 = totalPages - (s * 4) - 2;
+                    let p7 = totalPages - (s * 4) - 1;
+                    let p8 = totalPages - (s * 4);
+                    
+                    sheets.push([p5, p4, p3, p2, p6, p7, p8, p1]);
+                }
+
+                // Front Page HTML
+                const frontPageHtml = buildFrontPage(config);
+
+                // --- DOM Rendering ---
+                if (articles.length > 0) {
+                    printInstruction.classList.remove('hidden');
+                }
+
+                sheets.forEach((sheetPages, sheetIndex) => {
+                    const sheetEl = document.createElement('div');
+                    sheetEl.className = 'newspaper-sheet';
+
+                    // Inject CSS Variables into the sheet level so it cascades to inner elements
+                    sheetEl.style.setProperty('--body-size', config.fontSize + 'pt');
+                    sheetEl.style.setProperty('--title-multiplier', config.titleScale);
+                    sheetEl.style.setProperty('--line-height', config.lineHeight);
+
+                    sheetPages.forEach((pageNum, index) => {
+                        const slot = document.createElement('div');
+                        slot.className = 'page-slot';
+
+                        const rotator = document.createElement('div');
+                        rotator.className = 'rotator';
+                        if (index < 4) rotator.classList.add('rotated');
+
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'page-content-wrapper';
+                        wrapper.style.backgroundColor = config.paperBg; 
+
+                        if (pageNum === 1) {
+                            wrapper.innerHTML = frontPageHtml;
+                        } else if (pageNum <= innerPagesNeeded + 1 && articles.length > 0) {
+                            
+                            const flowContainer = document.createElement('div');
+                            flowContainer.style.cssText = `position: absolute; left: 0; width: ${contentWidthMm}mm; top: 4mm; height: ${contentHeightMm}mm; overflow: hidden !important;`;
+
+                            const flowClone = measurer.cloneNode(true);
+                            flowClone.style.width = '10000mm'; 
+                            flowClone.style.transform = `translateX(-${(pageNum - 2) * shiftAdvanceMm}mm)`;
+                            
+                            flowContainer.appendChild(flowClone);
+                            wrapper.appendChild(flowContainer);
+
+                            // Inner Header
+                            const innerHeader = document.createElement('div');
+                            innerHeader.className = 'absolute top-0 left-0 w-full flex justify-between font-sans text-[4.5px] font-bold uppercase tracking-widest border-b-[0.5px] border-black pb-[1px] z-10';
+                            innerHeader.style.backgroundColor = config.paperBg;
+                            innerHeader.innerHTML = `<span>${config.name}</span><span>${config.date}</span>`;
+                            wrapper.appendChild(innerHeader);
+                        } else {
+                            wrapper.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                                <span class="text-[6px] font-sans uppercase tracking-widest font-bold border-b border-gray-200 pb-[2px] mb-[2px]">Notes & Classifieds</span>
+                                <div class="w-full h-full" style="background-image: linear-gradient(#e5e7eb 1px, transparent 1px); background-size: 100% 4mm;"></div>
+                            </div>`;
+                        }
+
+                        // Page Footer
+                        if (pageNum > 1) {
+                            const pageLabel = document.createElement('div');
+                            pageLabel.className = 'absolute bottom-0 left-0 w-full text-center font-sans text-[4.5px] font-bold uppercase tracking-widest z-10 pt-[1px]';
+                            pageLabel.style.backgroundColor = config.paperBg;
+                            pageLabel.textContent = `- ${pageNum} -`;
+                            wrapper.appendChild(pageLabel);
+                        }
+
+                        rotator.appendChild(wrapper);
+                        slot.appendChild(rotator);
+                        sheetEl.appendChild(slot);
+                    });
+
+                    output.appendChild(sheetEl);
+                });
+
+                document.body.removeChild(measurerWrapper);
+
+                btnPrint.disabled = false;
+                btnPdf.disabled = false;
+
+            } catch (err) {
+                console.error(err);
+                if (articles.length === 0) {
+                    blankState.classList.remove('hidden');
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function downloadPDF() {
+            setLoading(true);
+            document.getElementById('txt-generate').textContent = "Generating PDF...";
+            document.body.classList.add('pdf-exporting');
+
+            // Wait for all actual generated images to load in the DOM
+            const outputImages = document.querySelectorAll('#output img');
+            await Promise.all(Array.from(outputImages).map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+            }));
+            
+            // Allow browser paint sequence to catch up after style toggles
+            await new Promise(resolve => setTimeout(resolve, 800)); 
+            
+            const element = document.getElementById('output');
+            
+            const opt = {
+                margin: 0,
+                filename: 'pocket-newspaper-export.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 1.5, useCORS: true, allowTaint: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                pagebreak: { mode: ['css'] }
+            };
+
+            try {
+                await html2pdf().set(opt).from(element).save();
+            } catch (error) {
+                console.error("PDF Error", error);
+                pushError("PDF creation failed. Try using Print -> Save as PDF.");
+            } finally {
+                document.body.classList.remove('pdf-exporting');
+                setLoading(false);
+            }
+        }
+
+        // --- Save / Load Project Logic ---
+        document.getElementById('save-json-btn').addEventListener('click', () => {
+            try {
+                const projectState = {
+                    app: "Newspaper Builder",
+                    version: "1.0",
+                    identity: {
+                        name: document.getElementById('cfg-name').value,
+                        tagline: document.getElementById('cfg-tagline').value,
+                        location: document.getElementById('cfg-location').value,
+                        issue: document.getElementById('cfg-issue').value,
+                        edition: document.getElementById('cfg-edition').value
+                    },
+                    feeds: state.feeds,
+                    settings: {
+                        articleMode: document.getElementById('cfg-article-mode').value,
+                        maxSheets: document.getElementById('cfg-max-sheets').value,
+                        mode: document.getElementById('cfg-mode').value,
+                        fontSize: document.getElementById('cfg-font-size').value,
+                        titleScale: document.getElementById('cfg-title-scale').value,
+                        lineHeight: document.getElementById('cfg-line-height').value,
+                        paperBg: document.getElementById('cfg-paper').value,
+                        headerStyle: document.getElementById('cfg-headers').value,
+                        imgStyle: document.getElementById('cfg-images').value
+                    }
+                };
+                
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectState, null, 2));
+                const downloadNode = document.createElement('a');
+                downloadNode.setAttribute("href", dataStr);
+                downloadNode.setAttribute("download", `newspaper-project-${Date.now()}.json`);
+                document.body.appendChild(downloadNode);
+                downloadNode.click();
+                downloadNode.remove();
+            } catch(e) {
+                pushError("Failed to save project.");
+                console.error(e);
+            }
+        });
+
+        document.getElementById('load-json-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const proj = JSON.parse(event.target.result);
+                    if(proj.app !== "Newspaper Builder") throw new Error("Invalid project file.");
+                    
+                    // Restore Identity
+                    if(proj.identity) {
+                        if(proj.identity.name !== undefined) document.getElementById('cfg-name').value = proj.identity.name;
+                        if(proj.identity.tagline !== undefined) document.getElementById('cfg-tagline').value = proj.identity.tagline;
+                        if(proj.identity.location !== undefined) document.getElementById('cfg-location').value = proj.identity.location;
+                        if(proj.identity.issue !== undefined) document.getElementById('cfg-issue').value = proj.identity.issue;
+                        if(proj.identity.edition !== undefined) document.getElementById('cfg-edition').value = proj.identity.edition;
+                    }
+                    
+                    // Restore Feeds
+                    if(proj.feeds && Array.isArray(proj.feeds)) {
+                        state.feeds = proj.feeds;
+                        renderFeeds();
+                    }
+
+                    // Restore Settings
+                    if(proj.settings) {
+                        const s = proj.settings;
+                        const safeSet = (id, val) => { if(val !== undefined) document.getElementById(id).value = val; };
+                        
+                        safeSet('cfg-article-mode', s.articleMode);
+                        safeSet('cfg-max-sheets', s.maxSheets);
+                        safeSet('cfg-mode', s.mode);
+                        safeSet('cfg-font-size', s.fontSize);
+                        safeSet('cfg-title-scale', s.titleScale);
+                        safeSet('cfg-line-height', s.lineHeight);
+                        safeSet('cfg-paper', s.paperBg);
+                        safeSet('cfg-headers', s.headerStyle);
+                        safeSet('cfg-images', s.imgStyle);
+
+                        // Update slider text displays
+                        if(s.fontSize) document.getElementById('cfg-font-size-val').textContent = s.fontSize + 'pt';
+                        if(s.titleScale) document.getElementById('cfg-title-scale-val').textContent = parseFloat(s.titleScale).toFixed(1) + 'x';
+                        if(s.lineHeight) document.getElementById('cfg-line-height-val').textContent = parseFloat(s.lineHeight).toFixed(2) + 'x';
+                    }
+
+                    // Clear cache to force a fresh re-render with the new parameters
+                    currentFeedStateHash = "";
+                    processAndRender();
+                    
+                } catch(err) {
+                    pushError("Failed to load project: " + err.message);
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; // Reset input to allow loading the same file again if needed
+        });
+
+        // Event Listeners
+        btnGenerate.addEventListener('click', processAndRender);
+        btnPrint.addEventListener('click', () => window.print());
+        btnPdf.addEventListener('click', downloadPDF);
+
+    </script>
+</body>
+</html>
