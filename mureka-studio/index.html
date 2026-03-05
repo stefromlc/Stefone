@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mureka Studio Pro - MP3 Metadata Manager</title>
+    
+    <!-- Tailwind CSS for Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons for UI -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Browser ID3 Writer for embedding metadata directly into MP3 -->
+    <script src="https://unpkg.com/browser-id3-writer@4.4.0/build/browser-id3-writer.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fbf8ea',
+                            100: '#f4ecd0',
+                            200: '#ebd6a6',
+                            300: '#e1ba72',
+                            400: '#d79b42',
+                            500: '#cf8128',
+                            600: '#c06821',
+                            700: '#a04f1e',
+                            800: '#83401f',
+                            900: '#6a351c',
+                        },
+                        dark: {
+                            900: '#0f1115',
+                            800: '#16191f',
+                            700: '#21252d',
+                            600: '#323742',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #323742; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4a5161; }
+        
+        body { background-color: #0f1115; color: #f3f4f6; }
+        
+        .glass-panel {
+            background: rgba(22, 25, 31, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .loader {
+            border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: #d79b42;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Hide file inputs */
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex font-sans selection:bg-brand-500 selection:text-white">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-dark-900/90 z-50 flex flex-col items-center justify-center hidden backdrop-blur-sm">
+        <div class="loader mb-4"></div>
+        <h2 id="loadingText" class="text-xl font-semibold text-brand-400">Processing...</h2>
+        <p class="text-gray-400 text-sm mt-2">This might take a moment for large files.</p>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- Sidebar: Project Management -->
+    <aside class="w-72 bg-dark-800 border-r border-dark-700 flex flex-col h-full flex-shrink-0 z-10 shadow-2xl">
+        <div class="p-5 border-b border-dark-700">
+            <h1 class="text-xl font-bold text-white flex items-center gap-2">
+                <i class="ph ph-waveform text-brand-400 text-2xl"></i>
+                Studio Pro
+            </h1>
+            <p class="text-xs text-gray-400 mt-1">Local MP3 Tag Editor</p>
+        </div>
+
+        <div class="p-4 flex gap-2">
+            <button onclick="app.createNewProject()" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white py-2 px-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20">
+                <i class="ph ph-plus-circle text-lg"></i> New Project
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-3 space-y-1" id="projectList">
+            <!-- Projects injected here -->
+        </div>
+
+        <div class="p-4 border-t border-dark-700 grid grid-cols-2 gap-2 bg-dark-900/50">
+            <button onclick="app.exportAllData()" class="flex items-center justify-center gap-1 bg-dark-700 hover:bg-dark-600 text-gray-300 py-2 rounded-md text-sm transition-colors border border-dark-600">
+                <i class="ph ph-export"></i> Export All
+            </button>
+            <label class="flex items-center justify-center gap-1 bg-dark-700 hover:bg-dark-600 text-gray-300 py-2 rounded-md text-sm transition-colors cursor-pointer border border-dark-600">
+                <i class="ph ph-import"></i> Import All
+                <input type="file" id="importFileInput" accept=".json" onchange="app.importAllData(event)">
+            </label>
+        </div>
+    </aside>
+
+    <!-- Main Content: Editor -->
+    <main class="flex-1 flex flex-col h-full bg-dark-900 relative">
+        <!-- Empty State -->
+        <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center text-gray-500 z-0">
+            <i class="ph ph-music-notes-simple text-6xl mb-4 opacity-50"></i>
+            <h2 class="text-xl font-medium text-gray-400">No Project Selected</h2>
+            <p class="mt-2 text-sm">Create a new project or select one from the sidebar.</p>
+        </div>
+
+        <!-- Editor View -->
+        <div id="editorView" class="h-full flex flex-col hidden relative z-10">
+            
+            <!-- Header -->
+            <header class="h-16 px-6 border-b border-dark-700 flex items-center justify-between bg-dark-800/80 backdrop-blur-md sticky top-0 z-20">
+                <div class="flex items-center gap-3">
+                    <input type="text" id="projName" class="bg-transparent text-xl font-bold text-white focus:outline-none focus:ring-0 border-b border-transparent focus:border-brand-500 px-1 py-0.5 transition-colors w-64" placeholder="Project Name" oninput="app.handleInput('name', this.value)">
+                    <span id="saveStatus" class="text-xs text-gray-500 flex items-center gap-1 opacity-0 transition-opacity">
+                        <i class="ph-fill ph-check-circle text-green-500"></i> Saved
+                    </span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="app.deleteCurrentProject()" class="text-gray-400 hover:text-red-400 p-2 rounded-lg hover:bg-red-400/10 transition-colors" title="Delete Project">
+                        <i class="ph ph-trash text-xl"></i>
+                    </button>
+                    <button onclick="app.downloadTaggedMp3()" class="bg-brand-500 hover:bg-brand-600 text-white py-2 px-4 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg shadow-brand-500/20">
+                        <i class="ph ph-download-simple text-lg"></i> Generate & Download MP3
+                    </button>
+                </div>
+            </header>
+
+            <!-- Scrollable Editor Content -->
+            <div class="flex-1 overflow-y-auto p-6 md:p-8">
+                <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    
+                    <!-- Left Column: Audio & Art -->
+                    <div class="lg:col-span-4 space-y-6">
+                        
+                        <!-- Audio File Upload -->
+                        <div class="glass-panel p-5 rounded-xl border border-dark-700">
+                            <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">Audio Source</h3>
+                            <label class="block w-full h-24 border-2 border-dashed border-dark-600 hover:border-brand-500 hover:bg-brand-500/5 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all group">
+                                <i class="ph ph-file-audio text-3xl text-gray-500 group-hover:text-brand-400 transition-colors mb-2"></i>
+                                <span class="text-sm font-medium text-gray-400 group-hover:text-gray-300" id="mp3FileName">Select MP3 File</span>
+                                <input type="file" id="mp3Input" accept="audio/mp3" onchange="app.handleAudioUpload(event)">
+                            </label>
+                            <audio id="audioPreview" controls class="w-full mt-3 hidden h-10 outline-none rounded-md"></audio>
+                        </div>
+
+                        <!-- Cover Art Upload -->
+                        <div class="glass-panel p-5 rounded-xl border border-dark-700">
+                            <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">Cover Art</h3>
+                            <label class="block w-full aspect-square bg-dark-800 border-2 border-dashed border-dark-600 hover:border-brand-500 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all relative overflow-hidden group">
+                                <div id="coverPlaceholder" class="flex flex-col items-center justify-center text-gray-500 group-hover:text-brand-400 transition-colors">
+                                    <i class="ph ph-image text-4xl mb-2"></i>
+                                    <span class="text-sm font-medium">Upload Image</span>
+                                    <span class="text-xs mt-1 opacity-70">JPG or PNG</span>
+                                </div>
+                                <img id="coverPreview" src="" alt="Cover Art" class="absolute inset-0 w-full h-full object-cover hidden shadow-inner">
+                                <div id="coverHoverOverlay" class="absolute inset-0 bg-black/60 hidden items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span class="text-white text-sm font-medium flex items-center gap-1"><i class="ph ph-arrows-clockwise"></i> Change Cover</span>
+                                </div>
+                                <input type="file" id="coverInput" accept="image/jpeg, image/png" onchange="app.handleCoverUpload(event)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Metadata Form -->
+                    <div class="lg:col-span-8 space-y-6">
+                        <div class="glass-panel p-6 rounded-xl border border-dark-700">
+                            <h3 class="text-sm font-semibold text-brand-400 uppercase tracking-wider mb-5 flex items-center gap-2">
+                                <i class="ph ph-tag"></i> ID3 Metadata
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <!-- Title -->
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Song Title</label>
+                                    <input type="text" id="meta_title" class="w-full bg-dark-800 border border-dark-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" placeholder="e.g. Midnight City" oninput="app.handleInput('title', this.value)">
+                                </div>
+                                
+                                <!-- Artist -->
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Artist(s)</label>
+                                    <input type="text" id="meta_artist" class="w-full bg-dark-800 border border-dark-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" placeholder="Main Artist, Feat. Artist" oninput="app.handleInput('artist', this.value)">
+                                </div>
+
+                                <!-- Album -->
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Album</label>
+                                    <input type="text" id="meta_album" class="w-full bg-dark-800 border border-dark-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" placeholder="Album Name" oninput="app.handleInput('album', this.value)">
+                                </div>
+
+                                <!-- Year -->
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Year</label>
+                                    <input type="number" id="meta_year" class="w-full bg-dark-800 border border-dark-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" placeholder="2026" oninput="app.handleInput('year', this.value)">
+                                </div>
+
+                                <!-- Genre -->
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-400 mb-1">Genre</label>
+                                    <input type="text" id="meta_genre" class="w-full bg-dark-800 border border-dark-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" placeholder="Synthwave, Pop, etc." oninput="app.handleInput('genre', this.value)">
+                                </div>
+                                
+                                <!-- Copyright & Ownership -->
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-xs font-medium text-gray-400 mb-1 flex justify-between">
+                                        <span>Copyright Info & Ownership Certificate</span>
+                                        <span class="text-gray-600 text-[10px]">(PDF embedded in MP3)</span>
+                                    </label>
+                                    <div class="flex flex-col sm:flex-row gap-3">
+                                        <input type="text" id="meta_copyright" class="flex-1 bg-dark-800 border border-dark-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" placeholder="© 2026 My Label (Text)" oninput="app.handleInput('copyright', this.value)">
+                                        
+                                        <label class="shrink-0 bg-dark-800 border border-dashed border-dark-500 hover:border-brand-500 hover:text-brand-400 rounded-lg px-4 py-2.5 text-sm text-gray-400 cursor-pointer transition-colors flex items-center justify-center gap-2 min-w-[200px]">
+                                            <i class="ph ph-file-pdf text-lg"></i> <span id="pdfFileName" class="truncate max-w-[150px]">Attach PDF</span>
+                                            <input type="file" id="pdfInput" accept="application/pdf" onchange="app.handlePdfUpload(event)" class="hidden">
+                                        </label>
+                                        <button id="downloadPdfBtn" onclick="app.downloadStoredPdf()" class="hidden bg-dark-800 border border-dark-600 text-brand-400 hover:bg-brand-400/10 px-3 rounded-lg transition-colors" title="Download Saved PDF">
+                                            <i class="ph ph-download-simple"></i>
+                                        </button>
+                                        <button id="removePdfBtn" onclick="app.removePdf()" class="hidden bg-dark-800 border border-dark-600 text-red-400 hover:bg-red-400/10 px-3 rounded-lg transition-colors" title="Remove PDF">
+                                            <i class="ph ph-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Lyrics -->
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-xs font-medium text-gray-400 mb-1 flex justify-between">
+                                        <span>Lyrics</span>
+                                        <span class="text-gray-600 text-[10px]">(Embedded inside MP3)</span>
+                                    </label>
+                                    <textarea id="meta_lyrics" rows="8" class="w-full bg-dark-800 border border-dark-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all resize-y font-mono text-sm leading-relaxed" placeholder="Enter lyrics here..." oninput="app.handleInput('lyrics', this.value)"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Application Logic -->
+    <script>
+        /**
+         * IndexedDB Wrapper for Local Storage Persistence
+         */
+        const DBManager = {
+            dbName: 'MurekaStudioDB',
+            version: 1,
+            storeName: 'projects',
+            db: null,
+
+            init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.version);
+                    
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName, { keyPath: 'id' });
+                        }
+                    };
+
+                    request.onsuccess = (e) => {
+                        this.db = e.target.result;
+                        resolve(this.db);
+                    };
+
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            },
+
+            async getAll() {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readonly');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            },
+
+            async save(project) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.put(project);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            },
+
+            async delete(id) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.delete(id);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            
+            async clearAll() {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.clear();
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+        };
+
+        /**
+         * Main Application Controller
+         */
+        const app = {
+            projects: [],
+            currentProject: null,
+            saveTimeout: null,
+            previewUrls: [],
+
+            async init() {
+                try {
+                    await DBManager.init();
+                    await this.loadProjects();
+                    console.log("App initialized.");
+                } catch (error) {
+                    this.showToast("Failed to initialize database", "error");
+                    console.error(error);
+                }
+            },
+
+            // Generate UUID v4
+            uuidv4() {
+                return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+                    (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+                );
+            },
+
+            async loadProjects() {
+                this.projects = await DBManager.getAll();
+                this.projects.sort((a, b) => b.updatedAt - a.updatedAt);
+                this.renderSidebar();
+                
+                // Keep current selection if valid
+                if (this.currentProject) {
+                    const exists = this.projects.find(p => p.id === this.currentProject.id);
+                    if (!exists) this.selectProject(null);
+                }
+            },
+
+            async createNewProject() {
+                const newProject = {
+                    id: this.uuidv4(),
+                    name: "Untitled Track",
+                    title: "",
+                    artist: "",
+                    album: "",
+                    year: new Date().getFullYear().toString(),
+                    genre: "",
+                    copyright: "",
+                    lyrics: "",
+                    mp3File: null,
+                    coverFile: null,
+                    pdfFile: null, // Added support for PDF certificate
+                    createdAt: Date.now(),
+                    updatedAt: Date.now()
+                };
+
+                await DBManager.save(newProject);
+                await this.loadProjects();
+                this.selectProject(newProject.id);
+                this.showToast("New project created", "success");
+            },
+
+            selectProject(id) {
+                if (!id) {
+                    this.currentProject = null;
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    document.getElementById('editorView').classList.add('hidden');
+                    this.renderSidebar();
+                    return;
+                }
+
+                this.currentProject = this.projects.find(p => p.id === id);
+                document.getElementById('emptyState').classList.add('hidden');
+                document.getElementById('editorView').classList.remove('hidden');
+                
+                this.renderEditor();
+                this.renderSidebar();
+            },
+
+            async deleteCurrentProject() {
+                if (!this.currentProject) return;
+                
+                if(confirm(`Are you sure you want to delete "${this.currentProject.name}"? This action cannot be undone.`)) {
+                    await DBManager.delete(this.currentProject.id);
+                    this.currentProject = null;
+                    await this.loadProjects();
+                    this.selectProject(null);
+                    this.showToast("Project deleted", "success");
+                }
+            },
+
+            // Auto-save handling
+            handleInput(field, value) {
+                if (!this.currentProject) return;
+                
+                this.currentProject[field] = value;
+                this.currentProject.updatedAt = Date.now();
+                
+                // Show unsaved/saving status visually
+                const saveStatus = document.getElementById('saveStatus');
+                saveStatus.innerHTML = '<i class="ph ph-spinner animate-spin text-brand-400"></i> Saving...';
+                saveStatus.style.opacity = '1';
+
+                clearTimeout(this.saveTimeout);
+                this.saveTimeout = setTimeout(async () => {
+                    await DBManager.save(this.currentProject);
+                    await this.loadProjects();
+                    
+                    saveStatus.innerHTML = '<i class="ph-fill ph-check-circle text-green-500"></i> Saved';
+                    setTimeout(() => saveStatus.style.opacity = '0', 2000);
+                }, 500); // Debounce save
+            },
+
+            async handleAudioUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (!file.type.includes('audio/mp3') && !file.type.includes('audio/mpeg') && !file.name.toLowerCase().endsWith('.mp3')) {
+                    this.showToast("Please select a valid MP3 file.", "error");
+                    return;
+                }
+
+                this.currentProject.mp3File = file;
+                this.currentProject.updatedAt = Date.now();
+                await DBManager.save(this.currentProject);
+                this.renderEditor();
+                this.showToast("Audio loaded", "success");
+            },
+
+            async handleCoverUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (!file.type.includes('image/jpeg') && !file.type.includes('image/png')) {
+                    this.showToast("Cover art must be JPG or PNG.", "error");
+                    return;
+                }
+
+                this.currentProject.coverFile = file;
+                this.currentProject.updatedAt = Date.now();
+                await DBManager.save(this.currentProject);
+                this.renderEditor();
+                this.showToast("Cover art updated", "success");
+            },
+
+            async handlePdfUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                    this.showToast("Please select a valid PDF document.", "error");
+                    return;
+                }
+
+                this.currentProject.pdfFile = file;
+                this.currentProject.updatedAt = Date.now();
+                await DBManager.save(this.currentProject);
+                this.renderEditor();
+                this.showToast("PDF Certificate attached", "success");
+            },
+
+            async downloadStoredPdf() {
+                if (!this.currentProject || !this.currentProject.pdfFile) {
+                    this.showToast("No PDF attached to this project.", "warning");
+                    return;
+                }
+
+                const file = this.currentProject.pdfFile;
+                const url = URL.createObjectURL(file);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name || `${this.currentProject.title || 'Certificate'}_Ownership.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                // Allow a tiny delay before revoking the URL to ensure download starts
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+                
+                this.showToast("Saved PDF downloaded successfully", "success");
+            },
+
+            async removePdf() {
+                if (!this.currentProject) return;
+                this.currentProject.pdfFile = null;
+                this.currentProject.updatedAt = Date.now();
+                await DBManager.save(this.currentProject);
+                this.renderEditor();
+                this.showToast("PDF removed", "info");
+            },
+
+            // --- UI Rendering ---
+
+            renderSidebar() {
+                const list = document.getElementById('projectList');
+                list.innerHTML = '';
+
+                this.projects.forEach(proj => {
+                    const isActive = this.currentProject && this.currentProject.id === proj.id;
+                    const date = new Date(proj.updatedAt).toLocaleDateString();
+                    
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left p-3 rounded-lg transition-colors border ${isActive ? 'bg-brand-500/10 border-brand-500/30 text-white' : 'hover:bg-dark-700 border-transparent text-gray-400 hover:text-gray-200'}`;
+                    btn.onclick = () => this.selectProject(proj.id);
+                    
+                    btn.innerHTML = `
+                        <div class="font-medium truncate ${isActive ? 'text-brand-400' : ''}">${this.escapeHTML(proj.name)}</div>
+                        <div class="text-xs mt-1 flex justify-between opacity-70">
+                            <span class="truncate pr-2">${this.escapeHTML(proj.artist || 'Unknown Artist')}</span>
+                            <span class="shrink-0">${date}</span>
+                        </div>
+                    `;
+                    list.appendChild(btn);
+                });
+            },
+
+            renderEditor() {
+                if (!this.currentProject) return;
+
+                const p = this.currentProject;
+
+                // Cleanup old object URLs to prevent memory leaks
+                this.previewUrls.forEach(url => URL.revokeObjectURL(url));
+                this.previewUrls = [];
+
+                // Bind text inputs
+                document.getElementById('projName').value = p.name || '';
+                document.getElementById('meta_title').value = p.title || '';
+                document.getElementById('meta_artist').value = p.artist || '';
+                document.getElementById('meta_album').value = p.album || '';
+                document.getElementById('meta_year').value = p.year || '';
+                document.getElementById('meta_genre').value = p.genre || '';
+                document.getElementById('meta_copyright').value = p.copyright || '';
+                document.getElementById('meta_lyrics').value = p.lyrics || '';
+
+                // Render Audio
+                const mp3NameEl = document.getElementById('mp3FileName');
+                const audioPreview = document.getElementById('audioPreview');
+                
+                if (p.mp3File) {
+                    mp3NameEl.textContent = p.mp3File.name || 'Audio Track Attached';
+                    mp3NameEl.classList.add('text-brand-400');
+                    const url = URL.createObjectURL(p.mp3File);
+                    this.previewUrls.push(url);
+                    audioPreview.src = url;
+                    audioPreview.classList.remove('hidden');
+                } else {
+                    mp3NameEl.textContent = 'Select MP3 File';
+                    mp3NameEl.classList.remove('text-brand-400');
+                    audioPreview.classList.add('hidden');
+                    audioPreview.src = '';
+                }
+
+                // Render Cover Art
+                const coverPreview = document.getElementById('coverPreview');
+                const coverPlaceholder = document.getElementById('coverPlaceholder');
+                const hoverOverlay = document.getElementById('coverHoverOverlay');
+
+                if (p.coverFile) {
+                    const url = URL.createObjectURL(p.coverFile);
+                    this.previewUrls.push(url);
+                    coverPreview.src = url;
+                    coverPreview.classList.remove('hidden');
+                    coverPlaceholder.classList.add('hidden');
+                    hoverOverlay.classList.remove('hidden');
+                    hoverOverlay.classList.add('flex');
+                } else {
+                    coverPreview.src = '';
+                    coverPreview.classList.add('hidden');
+                    coverPlaceholder.classList.remove('hidden');
+                    hoverOverlay.classList.add('hidden');
+                    hoverOverlay.classList.remove('flex');
+                }
+
+                // Render PDF state
+                const pdfNameEl = document.getElementById('pdfFileName');
+                const removePdfBtn = document.getElementById('removePdfBtn');
+                const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+                
+                if (p.pdfFile) {
+                    pdfNameEl.textContent = p.pdfFile.name;
+                    pdfNameEl.classList.add('text-brand-400');
+                    removePdfBtn.classList.remove('hidden');
+                    downloadPdfBtn.classList.remove('hidden');
+                } else {
+                    pdfNameEl.textContent = 'Attach PDF';
+                    pdfNameEl.classList.remove('text-brand-400');
+                    removePdfBtn.classList.add('hidden');
+                    downloadPdfBtn.classList.add('hidden');
+                }
+            },
+
+            // --- Core ID3 Generation Engine ---
+            
+            async downloadTaggedMp3() {
+                if (!this.currentProject) return;
+                if (!this.currentProject.mp3File) {
+                    this.showToast("Please upload an MP3 file first.", "warning");
+                    return;
+                }
+
+                this.setLoading(true, "Preparing library...");
+
+                // Robust check & dynamic fallback for the ID3 library
+                let WriterClass = window.browserID3Writer || window.ID3Writer;
+                if (!WriterClass) {
+                    try {
+                        // Attempt to load from an alternative CDN if the primary one failed or was blocked
+                        await new Promise((resolve, reject) => {
+                            const script = document.createElement('script');
+                            script.src = "https://cdnjs.cloudflare.com/ajax/libs/browser-id3-writer/4.4.0/browser-id3-writer.min.js";
+                            script.onload = resolve;
+                            script.onerror = reject;
+                            document.head.appendChild(script);
+                        });
+                        WriterClass = window.browserID3Writer || window.ID3Writer;
+                    } catch (e) {
+                        console.error("Library load failed:", e);
+                    }
+                }
+
+                if (!WriterClass) {
+                    this.setLoading(false);
+                    this.showToast("ID3 library blocked. Please check internet connection or disable adblockers.", "error");
+                    return;
+                }
+
+                this.setLoading(true, "Generating tagged MP3...");
+                
+                try {
+                    const p = this.currentProject;
+                    
+                    // Read MP3 as ArrayBuffer
+                    const mp3ArrayBuffer = await this.readFileAsArrayBuffer(p.mp3File);
+                    const writer = new WriterClass(mp3ArrayBuffer);
+
+                    // Map fields
+                    if (p.title) writer.setFrame('TIT2', p.title);
+                    if (p.artist) writer.setFrame('TPE1', p.artist.split(',').map(s=>s.trim())); // Array of artists
+                    if (p.album) writer.setFrame('TALB', p.album);
+                    if (p.year) writer.setFrame('TYER', parseInt(p.year) || new Date().getFullYear());
+                    if (p.genre) writer.setFrame('TCON', [p.genre]);
+                    if (p.copyright) writer.setFrame('TCOP', p.copyright); // Text copyright
+                    
+                    // Multi-line Lyrics
+                    if (p.lyrics) {
+                        writer.setFrame('USLT', {
+                            description: '',
+                            lyrics: p.lyrics,
+                            language: 'eng' // Default to english, requirement format
+                        });
+                    }
+
+                    // Cover Art
+                    if (p.coverFile) {
+                        const coverArrayBuffer = await this.readFileAsArrayBuffer(p.coverFile);
+                        const mimeType = p.coverFile.type;
+                        // ID3Writer expects type 3 for front cover
+                        writer.setFrame('APIC', {
+                            type: 3, 
+                            data: coverArrayBuffer,
+                            description: 'Front Cover',
+                            mimeType: mimeType === 'image/png' ? 'image/png' : 'image/jpeg'
+                        });
+                    }
+
+                    // Ownership Certificate (PDF) safely embedded as Base64 in a TXXX (User-defined text) frame
+                    if (p.pdfFile) {
+                        const pdfBase64 = await this.blobToBase64(p.pdfFile);
+                        writer.setFrame('TXXX', {
+                            description: 'MurekaOwnershipCertificate',
+                            value: pdfBase64
+                        });
+                    }
+
+                    // Write and build Blob
+                    writer.addTag();
+                    const taggedBlob = writer.getBlob();
+
+                    // Generate Filename
+                    const artistStr = p.artist ? ` - ${p.artist}` : '';
+                    const titleStr = p.title || 'Untitled';
+                    const filename = `${titleStr}${artistStr}.mp3`.replace(/[/\\?%*:|"<>]/g, '-'); // Sanitize
+
+                    // Trigger Download
+                    const url = URL.createObjectURL(taggedBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    this.showToast("MP3 Downloaded Successfully!", "success");
+
+                } catch (error) {
+                    console.error("Error generating ID3 tags:", error);
+                    this.showToast("Failed to generate MP3. See console.", "error");
+                } finally {
+                    this.setLoading(false);
+                }
+            },
+
+            // --- Export / Import System (Base64 encoding) ---
+
+            async exportAllData() {
+                if (this.projects.length === 0) {
+                    this.showToast("No projects to export.", "warning");
+                    return;
+                }
+
+                this.setLoading(true, "Packaging all projects...");
+                
+                try {
+                    const exportData = [];
+                    
+                    for (const proj of this.projects) {
+                        const serializableProj = { ...proj };
+                        
+                        // Convert blobs to base64 strings for JSON serialization
+                        if (proj.mp3File) {
+                            serializableProj.mp3File = await this.blobToBase64(proj.mp3File);
+                            serializableProj.mp3Mime = proj.mp3File.type;
+                            serializableProj.mp3Name = proj.mp3File.name;
+                        }
+                        
+                        if (proj.coverFile) {
+                            serializableProj.coverFile = await this.blobToBase64(proj.coverFile);
+                            serializableProj.coverMime = proj.coverFile.type;
+                            serializableProj.coverName = proj.coverFile.name;
+                        }
+
+                        if (proj.pdfFile) {
+                            serializableProj.pdfFile = await this.blobToBase64(proj.pdfFile);
+                            serializableProj.pdfMime = proj.pdfFile.type;
+                            serializableProj.pdfName = proj.pdfFile.name;
+                        }
+
+                        exportData.push(serializableProj);
+                    }
+
+                    const jsonStr = JSON.stringify({
+                        version: "1.0",
+                        timestamp: Date.now(),
+                        data: exportData
+                    });
+
+                    const blob = new Blob([jsonStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Mureka_Studio_Backup_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    this.showToast("Export complete!", "success");
+
+                } catch (err) {
+                    console.error("Export Error:", err);
+                    this.showToast("Error exporting data. Memory limit?", "error");
+                } finally {
+                    this.setLoading(false);
+                }
+            },
+
+            async importAllData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                event.target.value = ''; // Reset input
+                
+                this.setLoading(true, "Restoring projects from backup...");
+
+                try {
+                    const text = await this.readFileAsText(file);
+                    const parsed = JSON.parse(text);
+
+                    if (!parsed.data || !Array.isArray(parsed.data)) {
+                        throw new Error("Invalid backup file format");
+                    }
+
+                    if (confirm(`This will import ${parsed.data.length} projects. Existing projects will be kept. Proceed?`)) {
+                        
+                        for (const item of parsed.data) {
+                            // Reconstruct Blobs from Base64
+                            const newProj = { ...item };
+                            
+                            // Reconstruct MP3 File object
+                            if (item.mp3File) {
+                                const blob = await this.base64ToBlob(item.mp3File);
+                                newProj.mp3File = new File([blob], item.mp3Name || 'audio.mp3', { type: item.mp3Mime || 'audio/mp3' });
+                            }
+
+                            // Reconstruct Cover File object
+                            if (item.coverFile) {
+                                const blob = await this.base64ToBlob(item.coverFile);
+                                newProj.coverFile = new File([blob], item.coverName || 'cover.jpg', { type: item.coverMime || 'image/jpeg' });
+                            }
+
+                            // Reconstruct PDF File object
+                            if (item.pdfFile) {
+                                const blob = await this.base64ToBlob(item.pdfFile);
+                                newProj.pdfFile = new File([blob], item.pdfName || 'certificate.pdf', { type: item.pdfMime || 'application/pdf' });
+                            }
+
+                            // Assign new ID to avoid collisions, or keep old?
+                            // Let's keep old but update timestamp to merge
+                            newProj.updatedAt = Date.now();
+                            
+                            await DBManager.save(newProj);
+                        }
+
+                        await this.loadProjects();
+                        this.selectProject(null);
+                        this.showToast("Import successful!", "success");
+                    }
+
+                } catch (err) {
+                    console.error("Import Error:", err);
+                    this.showToast("Failed to import: " + err.message, "error");
+                } finally {
+                    this.setLoading(false);
+                }
+            },
+
+
+            // --- Helpers ---
+
+            readFileAsArrayBuffer(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.onerror = e => reject(e);
+                    reader.readAsArrayBuffer(file);
+                });
+            },
+
+            readFileAsText(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.onerror = e => reject(e);
+                    reader.readAsText(file);
+                });
+            },
+
+            blobToBase64(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.onerror = e => reject(e);
+                    reader.readAsDataURL(blob);
+                });
+            },
+
+            async base64ToBlob(base64Data) {
+                const response = await fetch(base64Data);
+                return await response.blob();
+            },
+
+            escapeHTML(str) {
+                if (!str) return '';
+                return str.replace(/[&<>'"]/g, 
+                    tag => ({
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        "'": '&#39;',
+                        '"': '&quot;'
+                    }[tag])
+                );
+            },
+
+            setLoading(show, text = "Loading...") {
+                const overlay = document.getElementById('loadingOverlay');
+                const textEl = document.getElementById('loadingText');
+                if (show) {
+                    textEl.textContent = text;
+                    overlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('hidden');
+                }
+            },
+
+            showToast(msg, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                
+                const colors = {
+                    success: 'bg-green-500/10 border-green-500/50 text-green-400',
+                    error: 'bg-red-500/10 border-red-500/50 text-red-400',
+                    warning: 'bg-yellow-500/10 border-yellow-500/50 text-yellow-400',
+                    info: 'bg-blue-500/10 border-blue-500/50 text-blue-400'
+                };
+                
+                const icons = {
+                    success: 'ph-check-circle',
+                    error: 'ph-warning-circle',
+                    warning: 'ph-warning',
+                    info: 'ph-info'
+                };
+
+                toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg backdrop-blur-md transition-all duration-300 transform translate-y-10 opacity-0 ${colors[type]}`;
+                toast.innerHTML = `<i class="ph ${icons[type]} text-xl"></i> <span class="text-sm font-medium">${msg}</span>`;
+                
+                container.appendChild(toast);
+                
+                // Animate in
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-y-10', 'opacity-0');
+                });
+
+                // Remove after 3s
+                setTimeout(() => {
+                    toast.classList.add('translate-y-10', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+        };
+
+        // Boot
+        window.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+    </script>
+</body>
+</html>

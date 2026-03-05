@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <!-- Primary Meta Tags -->
+<title>OSINT Dashboard – Live Conflict Intelligence Monitor</title>
+<meta name="title" content="OSINT Dashboard – Live Conflict Intelligence Monitor">
+<meta name="description" content="Monitor global conflict signals through a live OSINT dashboard. Track alerts, geospatial activity, escalation metrics, and curated intelligence feeds.">
+
+<!-- Open Graph / Social -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.stefone.com/osint/">
+<meta property="og:title" content="OSINT Dashboard – Live Conflict Intelligence Monitor">
+<meta name="keywords" content="OSINT dashboard, open source intelligence monitor, conflict tracker, war intelligence feed, military news dashboard">
+<meta property="og:description" content="Monitor global conflict signals through a live OSINT dashboard. Track alerts, geospatial activity, escalation metrics, and curated intelligence feeds.">
+<meta property="og:image" content="https://www.stefone.com/assets/thumbs/osint.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="OSINT conflict intelligence dashboard preview">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OSINT Dashboard – Live Conflict Intelligence Monitor">
+<meta name="twitter:description" content="Monitor global conflict signals through a live OSINT dashboard. Track alerts, geospatial activity, escalation metrics, and curated intelligence feeds.">
+<meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/osint.jpg">
+
+<!-- Theme Color -->
+<meta name="theme-color" content="#020617">
+
+<!-- SVG Favicon (coded, no image file) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+  <rect width='100' height='100' rx='18' fill='%23020617'/>
+  <circle cx='50' cy='50' r='30' fill='none' stroke='%23ef4444' stroke-width='6'/>
+  <circle cx='50' cy='50' r='6' fill='%23ef4444'/>
+  <line x1='50' y1='10' x2='50' y2='25' stroke='%23ef4444' stroke-width='4'/>
+  <line x1='50' y1='75' x2='50' y2='90' stroke='%23ef4444' stroke-width='4'/>
+  <line x1='10' y1='50' x2='25' y2='50' stroke='%23ef4444' stroke-width='4'/>
+  <line x1='75' y1='50' x2='90' y2='50' stroke='%23ef4444' stroke-width='4'/>
+</svg>">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- External Libraries -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+    <style>
+        /* Base / Theme Variables */
+        :root {
+            /* Default: Military Dark Theme */
+            --bg-base: #020617;        
+            --panel-bg: rgba(15, 23, 42, 0.65);       
+            --panel-bg-solid: #0f172a;
+            --panel-bg-hover: rgba(30, 41, 59, 0.8); 
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --panel-border-light: rgba(255, 255, 255, 0.15);   
+            --text-main: #94a3b8;      
+            --text-light: #f8fafc;     
+            --text-muted: #64748b;
+            
+            --status-blue: #3b82f6;
+            --status-blue-dim: rgba(59, 130, 246, 0.15);
+            --status-red: #ef4444;
+            --status-red-bg: rgba(239, 68, 68, 0.15);
+            --status-green: #10b981;
+            --status-amber: #f59e0b;
+            --status-amber-bg: rgba(245, 158, 11, 0.15);
+            --status-teal: #14b8a6;
+            --highlight-yellow: rgba(234, 179, 8, 0.25);
+            --highlight-yellow-text: #fde047;
+            
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+            
+            --map-bg: #040814;
+        }
+
+        /* Tactical Green Theme */
+        [data-theme="tactical-green"] {
+            --bg-base: #000000;        
+            --panel-bg: rgba(0, 20, 0, 0.65);       
+            --panel-bg-solid: #001400;
+            --panel-bg-hover: rgba(0, 40, 0, 0.8); 
+            --panel-border: rgba(0, 255, 0, 0.2);
+            --panel-border-light: rgba(0, 255, 0, 0.4);   
+            --text-main: #00cc00;      
+            --text-light: #00ff00;     
+            --text-muted: #005500;
+            
+            --status-blue: #00ff00;
+            --status-blue-dim: rgba(0, 255, 0, 0.15);
+            --status-red: #ff3333;
+            --status-red-bg: rgba(255, 51, 51, 0.15);
+            --status-green: #00ff00;
+            --status-amber: #ffcc00;
+            --status-amber-bg: rgba(255, 204, 0, 0.15);
+            --status-teal: #00ffaa;
+            --highlight-yellow: rgba(0, 255, 0, 0.3);
+            --highlight-yellow-text: #000;
+            
+            --map-bg: #000;
+        }
+
+        /* Newsroom Light Theme */
+        [data-theme="newsroom-light"] {
+            --bg-base: #f1f5f9;        
+            --panel-bg: rgba(255, 255, 255, 0.9);       
+            --panel-bg-solid: #ffffff;
+            --panel-bg-hover: rgba(241, 245, 249, 0.8); 
+            --panel-border: rgba(0, 0, 0, 0.1);
+            --panel-border-light: rgba(0, 0, 0, 0.05);   
+            --text-main: #475569;      
+            --text-light: #0f172a;     
+            --text-muted: #94a3b8;
+            
+            --status-blue: #2563eb;
+            --status-blue-dim: rgba(37, 99, 235, 0.1);
+            --status-red: #dc2626;
+            --status-red-bg: rgba(220, 38, 38, 0.1);
+            --status-green: #059669;
+            --status-amber: #d97706;
+            --status-amber-bg: rgba(217, 119, 6, 0.1);
+            --status-teal: #0d9488;
+            --highlight-yellow: rgba(250, 204, 21, 0.4);
+            --highlight-yellow-text: #854d0e;
+            
+            --map-bg: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 15% 50%, var(--status-blue-dim), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.04), transparent 25%),
+                radial-gradient(circle at 50% 100%, var(--status-red-bg), transparent 30%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 0 0 24px 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            font-size: 0.85rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Floating Command Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 24px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            border-top: 1px solid var(--panel-border-light);
+            margin: 16px 24px 24px 24px;
+            border-radius: 16px;
+            gap: 16px;
+            position: sticky;
+            top: 16px;
+            z-index: 2000;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.2);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 16px; flex: 1;}
+
+        .header-title {
+            color: var(--text-light); font-size: 1.05rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .btn-icon-only {
+            display: flex; align-items: center; justify-content: center;
+            background: var(--status-blue-dim); color: var(--status-blue);
+            border: 1px solid var(--panel-border); border-radius: 8px;
+            width: 36px; height: 36px; cursor: pointer;
+            transition: all 0.2s ease; text-decoration: none;
+        }
+        .btn-icon-only:hover { background: var(--status-blue); color: #fff; border-color: var(--status-blue);}
+
+        .status-indicator {
+            width: 8px; height: 8px; background-color: var(--status-green);
+            border-radius: 50%; box-shadow: 0 0 10px var(--status-green);
+        }
+
+        .global-search {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--bg-base); border: 1px solid var(--panel-border);
+            border-radius: 8px; padding: 8px 14px; width: 320px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .global-search:focus-within { 
+            border-color: var(--status-blue); 
+            box-shadow: 0 0 0 3px var(--status-blue-dim); 
+            background: var(--panel-bg-solid);
+            width: 360px;
+        }
+        .global-search input {
+            background: transparent; border: none; color: var(--text-light);
+            font-family: var(--font-sans); font-size: 0.85rem; width: 100%; outline: none;
+        }
+        .global-search input::placeholder { color: var(--text-muted); }
+
+        .header-right { display: flex; align-items: center; gap: 16px; }
+
+        .status-bar {
+            font-size: 0.75rem; font-family: var(--font-mono);
+            display: flex; align-items: center; gap: 16px; color: var(--text-muted);
+            background: var(--bg-base); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--panel-border);
+        }
+        .status-bar span { color: var(--text-light); font-weight: 600; }
+
+        .btn-action {
+            background: var(--bg-base); color: var(--text-light);
+            border: 1px solid var(--panel-border); padding: 8px 14px;
+            font-family: var(--font-sans); font-size: 0.8rem; cursor: pointer;
+            border-radius: 8px; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 6px; font-weight: 500;
+        }
+        .btn-action:hover { background: var(--panel-bg-hover); border-color: var(--status-blue); color: var(--status-blue);}
+        .btn-primary { background: var(--status-blue-dim); border-color: var(--status-blue); color: var(--status-blue); }
+        .btn-primary:hover { background: var(--status-blue); color: #fff; box-shadow: 0 0 15px var(--status-blue-dim); }
+
+        /* Advanced 12-Column Grid Layout */
+        .dashboard-grid {
+            display: grid; grid-template-columns: repeat(12, 1fr); 
+            grid-gap: 20px; max-width: 1800px; margin: 0 auto; padding: 0 24px;
+        }
+
+        .panel {
+            background-color: var(--panel-bg); backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px); border: 1px solid var(--panel-border);
+            border-top: 1px solid var(--panel-border-light); border-radius: 12px; 
+            padding: 20px; display: flex; flex-direction: column;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.15);
+        }
+
+        .panel-header {
+            color: var(--text-main); border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 12px; margin-bottom: 16px; font-size: 0.85rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .panel-header span:first-child { color: var(--text-light); display: flex; align-items: center; gap: 6px;}
+
+        /* Empty States */
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 12px; color: var(--text-muted); font-style: italic; font-size: 0.85rem; height: 100%;
+            text-align: center; padding: 24px;
+        }
+
+        /* --- Default Layout Assignments (Analyst Mode) --- */
+        .breaking-panel { grid-column: span 4; border-top: 2px solid var(--status-red); height: 420px; display: flex; flex-direction: column; background: linear-gradient(180deg, var(--status-red-bg) 0%, transparent 100%); }
+        .map-panel { grid-column: span 8; height: 420px; padding: 0; overflow: hidden; position: relative;}
+        
+        .middle-left-col { grid-column: span 4; display: flex; flex-direction: column; gap: 20px; }
+        .escalation-panel { height: auto; justify-content: center; }
+        .brief-panel { flex-grow: 1; height: 100%; min-height: 200px; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .metrics-wrapper { grid-column: span 8; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 480px; }
+        .metrics-panel { height: 100%; display: flex; flex-direction: column; }
+        
+        .timeline-panel { grid-column: span 3; height: 750px; overflow-y: auto; }
+        .feed-panel { grid-column: span 9; height: 750px; overflow-y: hidden; display: flex; flex-direction: column;}
+
+        /* --- Research Layout Adjustments --- */
+        [data-layout="research"] .feed-panel { grid-column: span 12; height: 650px; order: -2; }
+        [data-layout="research"] .breaking-panel { grid-column: span 12; height: auto; max-height: 300px; order: -1; }
+        [data-layout="research"] .breaking-content { flex-direction: row; overflow-x: auto; padding-bottom: 8px;}
+        [data-layout="research"] .alert-item { min-width: 300px; flex-shrink: 0; }
+        [data-layout="research"] .map-panel { grid-column: span 8; order: 1;}
+        [data-layout="research"] .middle-left-col { grid-column: span 4; order: 1;}
+        [data-layout="research"] .metrics-wrapper { grid-column: span 8; order: 2;}
+        [data-layout="research"] .timeline-panel { grid-column: span 4; height: 480px; order: 2;}
+
+        /* --- Map-Centric Layout Adjustments --- */
+        [data-layout="map-centric"] .map-panel { grid-column: span 12; height: 600px; order: -2;}
+        [data-layout="map-centric"] .breaking-panel { grid-column: span 4; order: -1;}
+        [data-layout="map-centric"] .feed-panel { grid-column: span 8; height: 600px; order: -1;}
+        [data-layout="map-centric"] .middle-left-col { grid-column: span 4; order: 1;}
+        [data-layout="map-centric"] .metrics-wrapper { grid-column: span 8; order: 1; height: auto;}
+        [data-layout="map-centric"] .timeline-panel { display: none; } /* Hide timeline for space */
+
+        /* Escalation Meter */
+        .escalation-panel { justify-content: space-between;}
+        .escalation-header-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;}
+        .escalation-score { font-size: 2.5rem; font-family: var(--font-mono); font-weight: 700; line-height: 1;}
+        .conflict-trend { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 600; font-family: var(--font-sans); padding-bottom: 4px;}
+        
+        .meter-container { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+        .meter-segments { display: flex; gap: 6px; height: 12px; width: 100%; }
+        .meter-segment { flex: 1; background: var(--bg-base); border: 1px solid var(--panel-border); border-radius: 4px; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .meter-labels { display: flex; justify-content: space-between; font-size: 0.65rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; font-weight: 600;}
+        
+        .level-low .meter-segment:nth-child(1) { background: var(--status-green); border-color: var(--status-green); box-shadow: 0 0 12px var(--status-green); }
+        .level-mod .meter-segment:nth-child(1), .level-mod .meter-segment:nth-child(2) { background: var(--status-amber); border-color: var(--status-amber); box-shadow: 0 0 12px var(--status-amber); }
+        .level-high .meter-segment:nth-child(1), .level-high .meter-segment:nth-child(2), .level-high .meter-segment:nth-child(3) { background: #ea580c; border-color: #ea580c; box-shadow: 0 0 12px #ea580c; }
+        .level-crit .meter-segment { background: var(--status-red); border-color: var(--status-red); box-shadow: 0 0 15px var(--status-red); }
+
+        /* Breaking Alerts */
+        .breaking-content { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 6px; flex-grow: 1; }
+        
+        .alert-item { 
+            padding: 14px; border: 1px solid var(--panel-border); 
+            background: var(--bg-base); border-radius: 8px; display: flex; gap: 14px; align-items: flex-start;
+            font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease;
+        }
+        .alert-item:hover { border-color: var(--status-red); background: var(--panel-bg-solid); transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+        
+        .alert-badge { 
+            font-family: var(--font-mono); font-weight: 700; font-size: 0.6rem; 
+            padding: 4px 8px; border-radius: 4px; letter-spacing: 0.5px;
+            border: 1px solid transparent; text-align: center; min-width: 70px;
+        }
+        .sev-3 .alert-badge { background: var(--status-red-bg); color: var(--status-red); border-color: rgba(239,68,68,0.3); }
+        .sev-2 .alert-badge { background: rgba(234, 88, 12, 0.15); color: #ea580c; border-color: rgba(234,88,12,0.3); }
+        .sev-1 .alert-badge { background: var(--status-amber-bg); color: var(--status-amber); border-color: rgba(245,158,11,0.3); }
+
+        .alert-item .alert-title { color: var(--text-light); font-weight: 500; line-height: 1.4; display: block; margin-bottom: 6px; transition: color 0.2s; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+        .alert-item:hover .alert-title { color: var(--status-blue); }
+
+        /* Timeline */
+        .timeline-panel { padding-right: 8px; }
+        .timeline-container { position: relative; padding-left: 24px; display: flex; flex-direction: column; gap: 24px; margin-left: 6px;}
+        .timeline-container::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 0; width: 2px; background: var(--panel-border); border-radius: 2px;}
+        
+        .timeline-item { position: relative; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; padding: 10px; border-radius: 8px; left: -10px; border: 1px solid transparent;}
+        .timeline-item:hover { background: var(--bg-base); border-color: var(--panel-border); transform: translateX(2px);}
+        .timeline-item::before { 
+            content: ''; position: absolute; left: -15px; top: 16px; 
+            width: 10px; height: 10px; border-radius: 50%; 
+            background: var(--text-muted); z-index: 2; border: 2px solid var(--panel-bg);
+            transition: all 0.2s;
+        }
+        .timeline-item:hover::before { background: var(--status-blue); border-color: var(--status-blue-dim); box-shadow: 0 0 10px var(--status-blue);}
+        .timeline-item.recent::before { background: var(--status-blue); box-shadow: 0 0 10px var(--status-blue); }
+        .timeline-time { color: var(--text-muted); font-size: 0.75rem; font-family: var(--font-mono); margin-bottom: 6px; display: block; font-weight: 500;}
+        .timeline-title { color: var(--text-light); line-height: 1.5; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;}
+        .timeline-item:hover .timeline-title { color: var(--status-blue); }
+
+        /* Brief */
+        .brief-list { list-style: none; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; padding-right: 8px;}
+        .brief-list li { position: relative; padding-left: 20px; font-size: 0.9rem; color: var(--text-light); line-height: 1.5; cursor: pointer; transition: color 0.2s;}
+        .brief-list li:hover { color: var(--status-blue); }
+        .brief-list li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.2s;}
+        .brief-list li:hover::before { background: var(--status-blue); box-shadow: 0 0 8px var(--status-blue);}
+
+        /* Map Integration */
+        .map-panel .panel-header { 
+            position: absolute; top: 16px; left: 16px; z-index: 1000; 
+            background: var(--panel-bg); backdrop-filter: blur(12px);
+            padding: 10px 16px; border: 1px solid var(--panel-border); margin: 0; 
+            border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        #map { width: 100%; height: 100%; background-color: var(--map-bg); z-index: 1; border-radius: 12px;}
+        
+        .leaflet-popup-content-wrapper { background: var(--panel-bg-solid); color: var(--text-light); border: 1px solid var(--panel-border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.4); padding: 0;}
+        .leaflet-popup-tip { background: var(--panel-bg-solid); border: 1px solid var(--panel-border); box-shadow: none;}
+        .leaflet-container a.leaflet-popup-close-button { color: var(--text-muted); top: 10px; right: 10px; transition: color 0.2s;}
+        .leaflet-container a.leaflet-popup-close-button:hover { color: var(--text-light); }
+        .leaflet-popup-content { margin: 16px; }
+        
+        .map-filter-btn {
+            background: var(--status-blue-dim); color: var(--status-blue); border: 1px solid transparent; padding: 6px 12px;
+            border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-top: 10px;
+            font-family: var(--font-sans); transition: all 0.2s; width: 100%;
+        }
+        .map-filter-btn:hover { background: var(--status-blue); color: #fff; box-shadow: 0 0 12px var(--status-blue-dim);}
+
+        /* Visual Metrics Lists */
+        .metrics-list { display: flex; flex-direction: column; gap: 14px; overflow-y: auto; height: 100%; padding-right: 8px; }
+        .metric-row { 
+            display: flex; align-items: center; gap: 14px; padding: 10px; border-radius: 8px; 
+            background: var(--bg-base); border: 1px solid var(--panel-border); transition: all 0.2s ease; cursor: pointer;
+        }
+        .metric-row:hover { border-color: var(--status-blue); background: var(--panel-bg-solid); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+        .metric-icon { 
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; 
+            background: var(--panel-border-light); border-radius: 6px; color: var(--text-light);
+            transition: all 0.2s;
+        }
+        .metric-row:hover .metric-icon { background: var(--status-blue); color: #fff;}
+        
+        .metric-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .metric-header-row { display: flex; justify-content: space-between; align-items: center; }
+        .metric-name { color: var(--text-light); font-weight: 500; font-size: 0.85rem; text-transform: capitalize; }
+        .metric-value { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--text-light); }
+        
+        .metric-bar-bg { width: 100%; height: 6px; background: var(--panel-border); border-radius: 3px; overflow: hidden;}
+        .metric-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fill-teal { background: var(--status-teal); box-shadow: 0 0 12px var(--status-teal); }
+        .fill-blue { background: var(--status-blue); box-shadow: 0 0 12px var(--status-blue); }
+
+        /* High-Density List Feed */
+        .feed-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap;}
+        .feed-controls select, .filter-btn { 
+            background: var(--bg-base); color: var(--text-light); 
+            border: 1px solid var(--panel-border); padding: 6px 12px; 
+            font-family: var(--font-sans); font-size: 0.8rem; border-radius: 6px;
+            outline: none; cursor: pointer; transition: all 0.2s; font-weight: 500;
+        }
+        .feed-controls select:hover, .filter-btn:hover { background: var(--panel-bg-solid); border-color: var(--status-blue);}
+        
+        select option { background-color: var(--panel-bg-solid); color: var(--text-light); font-weight: 500; }
+
+        .filter-btn { display: flex; align-items: center; gap: 6px; }
+        .filter-btn.active { background: var(--status-blue-dim); border-color: var(--status-blue); color: var(--status-blue); }
+
+        .feed-list-container { flex: 1; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column; gap: 14px; transition: all 0.3s; }
+        
+        .article-row { 
+            background: var(--bg-base); border: 1px solid var(--panel-border); 
+            padding: 16px; border-radius: 10px; display: flex; flex-direction: row; gap: 20px; 
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; align-items: center;
+        }
+        .article-row:hover { 
+            border-color: var(--status-blue); 
+            background: var(--panel-bg-solid); 
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+        
+        .article-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 6px; flex-shrink: 0; background: var(--panel-border); box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
+        
+        .article-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+        .article-title { font-size: 0.95rem; font-weight: 600; color: var(--text-light); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color 0.2s;}
+        .article-row:hover .article-title { color: var(--status-blue); }
+        .article-desc { font-size: 0.85rem; color: var(--text-main); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
+        
+        .article-meta-col { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 8px; min-width: 140px; flex-shrink: 0; border-left: 1px solid var(--panel-border); padding-left: 20px;}
+        .article-time { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); font-weight: 500;}
+        .article-source { font-size: 0.8rem; color: var(--text-light); font-weight: 600;}
+        
+        .kw-highlight { background: var(--highlight-yellow); color: var(--highlight-yellow-text); padding: 0 4px; border-radius: 4px; font-weight: 600; }
+        .tag-pill { background: var(--panel-border); font-size: 0.65rem; font-family: var(--font-mono); padding: 3px 8px; border-radius: 6px; color: var(--text-light); text-transform: lowercase; font-weight: 500;}
+        
+        .rel-score-badge { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; border: 1px solid transparent; padding: 3px 8px; border-radius: 6px;}
+        .imp-high { color: var(--status-red); background: var(--status-red-bg); border-color: rgba(239,68,68,0.3);}
+        .imp-med { color: var(--status-amber); background: var(--status-amber-bg); border-color: rgba(245,158,11,0.3);}
+        .imp-low { color: var(--status-blue); background: var(--status-blue-dim); border-color: rgba(59,130,246,0.3);}
+        
+        .action-row { display: flex; gap: 10px; align-items: center; margin-top: 6px;}
+        .btn-pin { background: var(--panel-border); border: 1px solid transparent; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; width: 28px; height: 28px; border-radius: 6px; }
+        .btn-pin:hover { color: var(--text-light); background: var(--panel-border-light); }
+        .btn-pin.pinned { color: var(--status-amber); background: var(--status-amber-bg); border-color: var(--status-amber); box-shadow: 0 0 12px var(--status-amber-bg);}
+        .btn-pin.pinned svg { fill: var(--status-amber); }
+
+        /* Headline Mode Styles */
+        .feed-list-container.headline-mode { gap: 8px; }
+        .feed-list-container.headline-mode .article-row { padding: 10px 14px; gap: 12px; border-radius: 6px; }
+        .feed-list-container.headline-mode .article-thumb,
+        .feed-list-container.headline-mode .article-desc,
+        .feed-list-container.headline-mode .action-row,
+        .feed-list-container.headline-mode .sentiment-dot { display: none; }
+        .feed-list-container.headline-mode .article-content { align-items: center; flex-direction: row; gap: 12px; overflow: hidden; }
+        .feed-list-container.headline-mode .article-title { margin: 0; white-space: nowrap; text-overflow: ellipsis; display: block; flex: 1; font-size: 0.9rem;}
+        .feed-list-container.headline-mode .article-meta-col { border-left: none; padding-left: 0; flex-direction: row; align-items: center; justify-content: flex-end; min-width: auto; gap: 12px;}
+        .feed-list-container.headline-mode .article-source { font-size: 0.75rem; }
+        .feed-list-container.headline-mode .article-time { font-size: 0.7rem; }
+
+        .load-more-btn { 
+            padding: 14px; text-align: center; background: var(--bg-base); border: 1px dashed var(--panel-border-light); 
+            color: var(--text-muted); cursor: pointer; border-radius: 8px; font-family: var(--font-sans); 
+            font-size: 0.9rem; font-weight: 500; transition: all 0.2s; width: 100%; margin-top: 8px;
+        }
+        .load-more-btn:hover { background: var(--panel-bg-solid); color: var(--text-light); border-style: solid; border-color: var(--status-blue);}
+
+        /* Modals Base */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px); padding: 24px;
+        }
+        .modal-container {
+            background: var(--panel-bg-solid); border: 1px solid var(--panel-border);
+            width: 100%; max-width: 750px; border-radius: 16px; padding: 0;
+            position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;
+        }
+        .modal-sticky-top {
+            position: sticky; top: 0; z-index: 10;
+            background: var(--panel-bg); backdrop-filter: blur(16px);
+            padding: 20px 30px; border-bottom: 1px solid var(--panel-border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-content-wrap { padding: 30px; display: flex; flex-direction: column; gap: 24px; }
+        .modal-close {
+            background: var(--panel-border); flex-shrink: 0; margin-left: 16px;
+            border: none; color: var(--text-light); cursor: pointer; 
+            width: 36px; height: 36px; border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .modal-close:hover { background: var(--status-red); color: #fff; }
+
+        /* Dossier Modal specifics */
+        .modal-meta { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 16px; align-items: center; flex: 1; flex-wrap: wrap;}
+        .modal-title { font-size: 1.6rem; color: var(--text-light); font-weight: 700; line-height: 1.3; }
+        .modal-image { width: 100%; max-height: 450px; object-fit: cover; border-radius: 10px; display: none; border: 1px solid var(--panel-border); }
+        .modal-desc { font-size: 1rem; color: var(--text-main); line-height: 1.7; padding: 20px; background: var(--bg-base); border-radius: 10px; border: 1px solid var(--panel-border); white-space: pre-wrap;}
+        .modal-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--panel-border); padding-top: 24px; margin-top: 12px;}
+        .modal-tags { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .modal-action { 
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--status-blue); color: #fff; padding: 12px 24px; 
+            border-radius: 8px; text-decoration: none; font-weight: 600; 
+            transition: all 0.2s; font-size: 0.95rem; border: none;
+        }
+        .modal-action:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 8px 20px var(--status-blue-dim); }
+
+        /* Settings Modal Specifics */
+        .settings-section { border-top: 1px solid var(--panel-border); padding-top: 24px; margin-top: 12px; display: flex; flex-direction: column; gap: 16px; }
+        .settings-section:first-child { border-top: none; padding-top: 0; margin-top: 0;}
+        .settings-section h3 { color: var(--text-light); font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 10px;}
+        
+        .feed-list-mgr { display: flex; flex-direction: column; gap: 10px; max-height: 240px; overflow-y: auto; padding-right: 8px;}
+        .feed-mgr-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-base); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--panel-border); font-size: 0.9rem;}
+        .feed-mgr-info { display: flex; flex-direction: column; gap: 4px; }
+        .feed-mgr-url { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
+        .btn-remove { background: var(--status-red-bg); color: var(--status-red); border: 1px solid transparent; border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;}
+        .btn-remove:hover { background: var(--status-red); color: #fff; }
+        
+        .add-feed-form { display: flex; gap: 12px; margin-top: 12px;}
+        .add-feed-form input { flex: 1; background: var(--bg-base); border: 1px solid var(--panel-border); padding: 10px 14px; border-radius: 8px; color: var(--text-light); font-family: var(--font-sans); outline: none; transition: border-color 0.2s;}
+        .add-feed-form input:focus { border-color: var(--status-blue); }
+        
+        .setting-row { display: flex; justify-content: space-between; align-items: center; background: var(--bg-base); padding: 16px; border-radius: 8px; border: 1px solid var(--panel-border);}
+        .setting-row select { background: var(--panel-bg-solid); color: var(--text-light); border: 1px solid var(--panel-border); padding: 8px 14px; border-radius: 6px; outline: none; cursor: pointer; font-weight: 500;}
+        
+        .data-mgr-actions { display: flex; gap: 16px; }
+
+        /* Dashboard/TV Mode Overlay */
+        .tv-overlay {
+            display: none; position: fixed; inset: 0; background: #000; z-index: 10000;
+            flex-direction: column; color: #fff; overflow: hidden;
+        }
+        .tv-bg-blur {
+            position: absolute; inset: 0; opacity: 0.25; filter: blur(60px) brightness(0.6);
+            background-size: cover; background-position: center; z-index: 1; transition: background-image 1.5s ease-in-out;
+        }
+        .tv-content {
+            position: relative; z-index: 2; display: flex; flex-direction: column;
+            justify-content: center; padding: 100px; flex-grow: 1; max-width: 1600px; margin: 0 auto; width: 100%;
+        }
+        .tv-header { position: absolute; top: 40px; left: 60px; z-index: 3; display: flex; align-items: center; gap: 20px; }
+        .tv-header-title { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 700; letter-spacing: 3px; color: var(--status-red); display: flex; align-items: center; gap: 14px; text-shadow: 0 0 20px rgba(239,68,68,0.5);}
+        .tv-pulse { width: 16px; height: 16px; background-color: var(--status-red); border-radius: 50%; box-shadow: 0 0 20px var(--status-red); animation: pulse-anim 1.5s infinite; }
+        
+        .tv-close { position: absolute; top: 40px; right: 60px; z-index: 3; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: var(--font-sans); font-weight: 500; transition: all 0.2s;}
+        .tv-close:hover { background: rgba(255,255,255,0.2); }
+
+        .tv-meta { font-family: var(--font-mono); font-size: 1.2rem; color: #ccc; margin-bottom: 30px; display: flex; gap: 30px; align-items: center; font-weight: 500;}
+        .tv-meta .source { color: #3b82f6; font-weight: 700; letter-spacing: 1px; }
+        .tv-title { font-size: 5.5rem; font-weight: 700; line-height: 1.1; margin-bottom: 40px; letter-spacing: -1.5px; text-shadow: 0 10px 30px rgba(0,0,0,0.8); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;}
+        .tv-desc { font-size: 1.8rem; color: #eee; line-height: 1.6; max-width: 1200px; opacity: 0.9; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 4px 15px rgba(0,0,0,0.8); font-weight: 400;}
+        
+        .tv-badges { display: flex; gap: 16px; margin-bottom: 40px; }
+        .tv-badge { font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; padding: 8px 20px; border-radius: 6px; letter-spacing: 1.5px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);}
+        
+        .tv-progress-container { position: absolute; bottom: 0; left: 0; right: 0; height: 8px; background: rgba(255,255,255,0.05); z-index: 3;}
+        .tv-progress-bar { height: 100%; background: #3b82f6; width: 0%; transition: width linear; box-shadow: 0 0 20px #3b82f6;}
+
+        @keyframes pulse-anim { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--panel-border-light); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box;}
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); border: 2px solid transparent; background-clip: padding-box;}
+
+        /* Loader */
+        .loader { display: none; border: 2px solid var(--panel-border-light); border-top: 2px solid var(--status-blue); border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Map Cluster Customization */
+        .mycluster { background: var(--panel-bg-solid); color: var(--text-light); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; border: 2px solid var(--status-red); box-shadow: 0 8px 16px rgba(0,0,0,0.5);}
+
+        /* Responsive Layouts */
+        @media (max-width: 1500px) {
+            .breaking-panel { grid-column: span 5; }
+            .map-panel { grid-column: span 7; }
+            .middle-left-col { grid-column: span 5; }
+            .metrics-wrapper { grid-column: span 7; }
+            .timeline-panel { grid-column: span 5; }
+            .feed-panel { grid-column: span 7; }
+        }
+        @media (max-width: 1100px) {
+            .breaking-panel { grid-column: span 12; height: 350px; }
+            .map-panel { grid-column: span 12; }
+            .middle-left-col { grid-column: span 12; flex-direction: row; height: 250px; }
+            .escalation-panel { flex: 1; height: 100%; }
+            .brief-panel { flex: 1; height: 100%; }
+            .metrics-wrapper { grid-column: span 12; height: auto; grid-template-columns: 1fr 1fr;}
+            .metrics-panel { height: 350px; }
+            .timeline-panel { grid-column: span 12; height: 400px; }
+            .feed-panel { grid-column: span 12; }
+        }
+        @media (max-width: 768px) {
+            header { flex-direction: column; align-items: stretch; border-radius: 12px; margin: 12px;}
+            .global-search { width: 100%; }
+            .header-right { justify-content: space-between; width: 100%; }
+            .status-bar { justify-content: space-between; width: 100%; border: none; padding: 0; background: transparent;}
+            .middle-left-col { flex-direction: column; height: auto; }
+            .metrics-wrapper { grid-template-columns: 1fr; }
+            .article-row { flex-direction: column; align-items: flex-start; gap: 12px;}
+            .article-meta-col { border-left: none; padding-left: 0; align-items: flex-start; width: 100%; border-top: 1px solid var(--panel-border); padding-top: 12px; flex-direction: row; justify-content: space-between;}
+            .tv-title { font-size: 3rem; }
+            .tv-desc { font-size: 1.2rem; }
+            .tv-content { padding: 40px; }
+            .modal-container { padding: 0; border-radius: 12px;}
+            .modal-sticky-top { padding: 16px 20px; }
+            .modal-content-wrap { padding: 20px; gap: 20px; }
+        }
+    </style>
+</head>
+<body data-theme="military-dark" data-layout="analyst">
+
+    <header>
+        <div class="header-left">
+            <a href="/projects/" class="btn-icon-only" title="Back to Projects">
+                <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+            </a>
+            <div class="header-title">
+                <div class="status-indicator"></div>
+                Intelligence Matrix
+            </div>
+            
+            <div class="global-search">
+                <i data-lucide="search" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                <input type="text" id="global-search-input" placeholder="Search targets, assets, or locations...">
+                <span class="shortcut-hint">/</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="status-bar">
+                <div>SYNC: <span id="last-sync">--:--:--</span></div>
+                <div class="loader" id="loader"></div>
+            </div>
+            <button class="btn-action btn-primary" onclick="openTvMode()" title="Enter Dashboard Mode">
+                <i data-lucide="monitor-play" style="width: 14px; height: 14px;"></i> Dashboard
+            </button>
+            <button class="btn-icon-only" onclick="openSettingsModal()" title="System Settings">
+                <i data-lucide="settings" style="width: 16px; height: 16px;"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="dashboard-grid" id="main-grid">
+        <!-- Breaking Alerts -->
+        <div class="panel breaking-panel">
+            <div class="panel-header">
+                <span><i data-lucide="alert-triangle" style="width: 14px; height: 14px; color: var(--status-red);"></i> Priority Intelligence</span>
+                <span id="breaking-count" style="color: var(--status-red); font-family: var(--font-mono);">0 DETECTED</span>
+            </div>
+            <div class="breaking-content" id="breaking-container">
+                <div class="empty-state">
+                    <i data-lucide="shield-check" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+                    <span>Awaiting payload. Status normal.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conflict Map -->
+        <div class="panel map-panel">
+            <div class="panel-header">
+                <span><i data-lucide="map" style="width: 14px; height: 14px;"></i> Geospatial Distribution</span>
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <div class="middle-left-col">
+            <!-- Escalation Meter -->
+            <div class="panel escalation-panel">
+                <div class="panel-header">
+                    <span><i data-lucide="bar-chart-2" style="width: 14px; height: 14px;"></i> Conflict Intensity</span>
+                </div>
+                <div class="escalation-header-row">
+                    <div class="escalation-score" id="escalation-score">LOW</div>
+                    <div class="conflict-trend" id="conflict-trend" title="Intensity trend compared to previous 12 hours">
+                        <i data-lucide="minus" style="width: 16px; height: 16px;"></i> Stable
+                    </div>
+                </div>
+                <div class="meter-container">
+                    <div class="meter-labels">
+                        <span>LOW</span><span>MOD</span><span>HIGH</span><span>CRIT</span>
+                    </div>
+                    <div class="meter-segments" id="meter-segments">
+                        <div class="meter-segment"></div>
+                        <div class="meter-segment"></div>
+                        <div class="meter-segment"></div>
+                        <div class="meter-segment"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Brief -->
+            <div class="panel brief-panel">
+                <div class="panel-header">
+                    <span><i data-lucide="file-text" style="width: 14px; height: 14px;"></i> Executive Summary (24H)</span>
+                </div>
+                <ul class="brief-list" id="brief-container">
+                    <div class="empty-state" style="padding:0;">
+                        <span>Compiling briefing...</span>
+                    </div>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Metrics Wrapper -->
+        <div class="metrics-wrapper">
+            <!-- Equipment Tracker -->
+            <div class="panel metrics-panel">
+                <div class="panel-header">
+                    <span><i data-lucide="crosshair" style="width: 14px; height: 14px;"></i> Asset Signatures</span>
+                </div>
+                <div class="metrics-list" id="equipment-list">
+                    <div class="empty-state">
+                        <i data-lucide="loader" style="width: 24px; height: 24px; opacity: 0.5; animation: spin 1s linear infinite;"></i>
+                        <span>Scanning for asset signatures...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keyword Trends -->
+            <div class="panel metrics-panel">
+                <div class="panel-header">
+                    <span><i data-lucide="activity" style="width: 14px; height: 14px;"></i> Strategic Vectors</span>
+                </div>
+                <div class="metrics-list" id="trend-list">
+                    <div class="empty-state">
+                        <i data-lucide="loader" style="width: 24px; height: 24px; opacity: 0.5; animation: spin 1s linear infinite;"></i>
+                        <span>Analyzing strategic vectors...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Timeline -->
+        <div class="panel timeline-panel">
+            <div class="panel-header">
+                <span><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Op Timeline</span>
+            </div>
+            <div class="timeline-container" id="timeline-container">
+                <div class="empty-state">
+                    <i data-lucide="clock" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+                    <span>Initializing...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Feed -->
+        <div class="panel feed-panel">
+            <div class="panel-header">
+                <span><i data-lucide="list" style="width: 14px; height: 14px;"></i> Raw Intelligence Stream</span>
+                <div class="feed-controls">
+                    <button class="filter-btn" id="btn-headline-mode" title="Toggle Headline Mode">
+                        <i data-lucide="menu" style="width: 14px; height: 14px;"></i>
+                    </button>
+                    <button class="filter-btn" id="btn-toggle-pinned" title="Show Pinned Intelligence Only">
+                        <i data-lucide="pin" style="width: 14px; height: 14px;"></i> Pinned
+                    </button>
+                    <select id="source-filter"><option value="all">All Sources</option></select>
+                    <select id="sort-filter">
+                        <option value="newest">Sort: Newest</option>
+                        <option value="importance">Sort: Importance</option>
+                        <option value="severity">Sort: Severity Level</option>
+                        <option value="oldest">Sort: Oldest</option>
+                    </select>
+                </div>
+            </div>
+            <div class="feed-list-container" id="feed-container">
+                <!-- Rows injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- 1. Intelligence Dossier Modal -->
+    <div class="modal-overlay" id="article-modal" onclick="if(event.target===this) closeModal()">
+        <div class="modal-container">
+            <div class="modal-sticky-top">
+                <div class="modal-meta" id="modal-meta"></div>
+                <button class="modal-close" onclick="closeModal()"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+            </div>
+            <div class="modal-content-wrap">
+                <div class="modal-title" id="modal-title"></div>
+                <img class="modal-image" id="modal-image" src="" alt="Dossier Image">
+                <div class="modal-desc" id="modal-desc"></div>
+                <div class="modal-footer">
+                    <div class="modal-tags" id="modal-tags"></div>
+                    <a href="#" target="_blank" class="modal-action" id="modal-link">
+                        Source Origin <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Settings Modal -->
+    <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this) closeSettingsModal()">
+        <div class="modal-container">
+            <div class="modal-sticky-top">
+                <h2 style="color: var(--text-light); font-size: 1.4rem; margin: 0;">System Settings</h2>
+                <button class="modal-close" onclick="closeSettingsModal()"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+            </div>
+            
+            <div class="modal-content-wrap" style="padding-top: 10px;">
+                
+                <div class="settings-section">
+                    <h3><i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Data Presentation</h3>
+                    
+                    <div class="setting-row">
+                        <span style="color: var(--text-main);">UI Theme</span>
+                        <select id="settings-theme" onchange="saveSettings()">
+                            <option value="military-dark">Military Dark</option>
+                            <option value="tactical-green">Tactical Green</option>
+                            <option value="newsroom-light">Newsroom Light</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-row">
+                        <span style="color: var(--text-main);">Dashboard Layout</span>
+                        <select id="settings-layout" onchange="saveSettings()">
+                            <option value="analyst">Analyst Balanced</option>
+                            <option value="research">Research Feed-Heavy</option>
+                            <option value="map-centric">Command Map-Centric</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3><i data-lucide="rss" style="width: 16px; height: 16px;"></i> Active Intelligence Feeds</h3>
+                    <div class="feed-list-mgr" id="settings-feed-list">
+                        <!-- Feeds populated here -->
+                    </div>
+                    <div class="add-feed-form">
+                        <input type="text" id="new-feed-name" placeholder="Feed Name (e.g. CIA News)">
+                        <input type="url" id="new-feed-url" placeholder="RSS/Atom URL">
+                        <button class="btn-action btn-primary" onclick="addCustomFeed()">Add Feed</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3><i data-lucide="monitor" style="width: 16px; height: 16px;"></i> Dashboard Mode Preferences</h3>
+                    <div class="setting-row">
+                        <span style="color: var(--text-main);">Article Cycle Duration</span>
+                        <select id="settings-cycle-speed" onchange="saveSettings()">
+                            <option value="5">5 Seconds</option>
+                            <option value="10">10 Seconds</option>
+                            <option value="15">15 Seconds</option>
+                            <option value="30">30 Seconds</option>
+                            <option value="60">1 Minute</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3><i data-lucide="hard-drive-download" style="width: 16px; height: 16px;"></i> Data Management</h3>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 8px;">Export your feeds, pins, and settings to transfer to another device.</p>
+                    <div class="data-mgr-actions">
+                        <button class="btn-action" onclick="exportDataJSON()"><i data-lucide="download" style="width: 14px; height: 14px;"></i> Export Configuration</button>
+                        <label class="btn-action" style="cursor: pointer;">
+                            <i data-lucide="upload" style="width: 14px; height: 14px;"></i> Import Configuration
+                            <input type="file" accept=".json" style="display: none;" onchange="importDataJSON(event)">
+                        </label>
+                    </div>
+                </div>
+                
+                <button class="btn-action btn-primary" style="margin-top: 10px; align-self: flex-end;" onclick="closeSettingsModalAndReload()">Save & Reload System</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Dashboard / TV Mode Overlay -->
+    <div class="tv-overlay" id="tv-mode">
+        <div class="tv-bg-blur" id="tv-bg"></div>
+        <button class="tv-close" onclick="closeTvMode()">ESC to Exit</button>
+        
+        <div class="tv-header">
+            <div class="tv-pulse"></div>
+            <div class="tv-header-title">OSINT LIVE FEED</div>
+        </div>
+
+        <div class="tv-content">
+            <div class="tv-badges" id="tv-badges"></div>
+            <div class="tv-meta">
+                <span class="source" id="tv-source">--</span>
+                <span id="tv-time">--</span>
+            </div>
+            <h1 class="tv-title" id="tv-title">Loading Intelligence...</h1>
+            <p class="tv-desc" id="tv-desc"></p>
+        </div>
+
+        <div class="tv-progress-container">
+            <div class="tv-progress-bar" id="tv-progress"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Initialize Icons ---
+        lucide.createIcons();
+
+        // --- Core Defaults ---
+        const DEFAULT_FEEDS = [
+            { url: 'https://defence-blog.com/feed/', name: 'Defence Blog' },
+            { url: 'https://www.gov.uk/government/organisations/ministry-of-defence.atom', name: 'UK MOD' },
+            { url: 'https://www.navalnews.com/feed/', name: 'Naval News' },
+            { url: 'https://breakingdefense.com/feed/', name: 'Breaking Defense' },
+            { url: 'https://www.iswresearch.org/feeds/posts/default', name: 'ISW' },
+            { url: 'https://www.defensenews.com/arc/outboundfeeds/rss/', name: 'Defense News' }
+        ];
+
+        // --- State Management ---
+        let activeFeeds = JSON.parse(localStorage.getItem('osint_feeds')) || DEFAULT_FEEDS;
+        let appSettings = JSON.parse(localStorage.getItem('osint_settings')) || { cycleSpeed: 10, theme: 'military-dark', layout: 'analyst', headlineMode: false };
+        let pinnedArticles = new Set(JSON.parse(localStorage.getItem('osint_pinned') || '[]'));
+        
+        let allArticles = [];
+        let map, markerClusterGroup, tileLayer;
+        let isFetching = false;
+        let searchQuery = '';
+        let showPinnedOnly = false;
+        let feedDisplayLimit = 30;
+        let autoRefreshInterval;
+        const REFRESH_INTERVAL_MINUTES = 15;
+
+        // Dashboard/TV Mode State
+        let tvIntervalId = null;
+        let tvArticles = [];
+        let tvCurrentIndex = 0;
+        let tvIsActive = false;
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+
+        // --- Dictionaries ---
+        const SEVERITY_LEVELS = {
+            3: ['nuclear', 'ballistic missile', 'hypersonic', 'strategic strike', 'invasion'],
+            2: ['attack', 'missile', 'airstrike', 'drone strike', 'explosion', 'offensive', 'counteroffensive'],
+            1: ['deployment', 'troop movement', 'military buildup', 'interception', 'launch', 'sanctions']
+        };
+
+        const KEYWORDS_EQUIPMENT = ['drone', 'uav', 'missile', 'artillery', 'tank', 'fighter jet', 'f-16', 'air defence', 'patriot system', 'rocket system', 'himars', 'naval vessel', 'submarine', 'warship'];
+        const KEYWORDS_TRENDS = ['nato', 'defence aid', 'military support', 'training mission', 'security cooperation', 'sanctions', 'military exercise', 'arms package', 'mobilization', 'troop movement', 'military buildup', 'border incursion', 'intercepted', 'downed aircraft', 'strategic strike', 'nuclear', 'ballistic missile', 'hypersonic', 'military escalation'];
+        const ALL_HIGHLIGHT_WORDS = [...KEYWORDS_EQUIPMENT, ...KEYWORDS_TRENDS, ...SEVERITY_LEVELS[3], ...SEVERITY_LEVELS[2], ...SEVERITY_LEVELS[1]];
+
+        const KEYWORDS_SENTIMENT = {
+            negative: ['attack', 'strike', 'explosion', 'casualties', 'destruction', 'killed', 'wounded', 'crisis'],
+            positive: ['agreement', 'support', 'aid', 'ceasefire', 'package', 'assistance', 'intercepted']
+        };
+
+        const LOCATIONS_DB = {
+            "Ukraine": [49.0, 31.0], "Kyiv": [50.4501, 30.5234], "Kharkiv": [50.0, 36.23], "Odesa": [46.48, 30.73],
+            "Russia": [60.0, 90.0], "Moscow": [55.7558, 37.6173], "St Petersburg": [59.93, 30.31], "Kursk": [51.73, 36.19],
+            "Crimea": [45.3453, 34.0996], "Sevastopol": [44.61, 33.52],
+            "Black Sea": [43.4130, 34.2268], "Azov Sea": [46.0, 36.5],
+            "UK": [54.0, -2.0], "London": [51.5074, -0.1278],
+            "NATO": [50.879, 4.331], "Poland": [52.0, 19.0], "Warsaw": [52.22, 21.01],
+            "Romania": [45.9, 24.9], "Belarus": [53.9, 27.5], "Minsk": [53.9, 27.56],
+            "Middle East": [29.0, 42.0], "Red Sea": [20.0, 38.0], "Israel": [31.0, 35.0], "Iran": [32.0, 53.0],
+            "Taiwan": [23.6978, 120.9605], "China": [35.8617, 104.1954], "South China Sea": [12.0, 113.0]
+        };
+
+        function getIconForKeyword(keyword) {
+            const lower = keyword.toLowerCase();
+            if (['drone', 'uav', 'fighter jet', 'f-16'].includes(lower)) return 'plane';
+            if (['missile', 'rocket system', 'himars', 'ballistic missile', 'hypersonic'].includes(lower)) return 'rocket';
+            if (['artillery'].includes(lower)) return 'target';
+            if (['tank'].includes(lower)) return 'shield-half';
+            if (['air defence', 'patriot system'].includes(lower)) return 'shield-alert';
+            if (['naval vessel', 'submarine', 'warship'].includes(lower)) return 'ship';
+            if (['nato'].includes(lower)) return 'globe';
+            if (['defence aid', 'military support', 'arms package'].includes(lower)) return 'package';
+            if (['training mission', 'military exercise'].includes(lower)) return 'swords';
+            if (['security cooperation'].includes(lower)) return 'handshake';
+            if (['sanctions'].includes(lower)) return 'ban';
+            if (['mobilization', 'troop movement', 'military buildup'].includes(lower)) return 'users';
+            if (['border incursion'].includes(lower)) return 'map-pin';
+            if (['intercepted', 'downed aircraft'].includes(lower)) return 'crosshair';
+            if (['strategic strike', 'nuclear'].includes(lower)) return 'radiation';
+            if (['military escalation'].includes(lower)) return 'trending-up';
+            return 'activity'; 
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            applyThemeAndLayout();
+            initMap();
+            
+            // Search Debouncing & Hotkey
+            const searchInput = document.getElementById('global-search-input');
+            if (searchInput) {
+                let searchTimeout;
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        searchQuery = e.target.value.toLowerCase();
+                        feedDisplayLimit = 30; 
+                        renderLiveFeed();
+                    }, 300);
+                });
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && document.activeElement !== searchInput && !tvIsActive) {
+                    e.preventDefault();
+                    if (searchInput) searchInput.focus();
+                } else if (e.key === 'Escape') {
+                    closeModal();
+                    closeSettingsModal();
+                    if (tvIsActive) closeTvMode();
+                    if (searchInput && document.activeElement === searchInput) searchInput.blur();
+                }
+            });
+            
+            const sourceFilter = document.getElementById('source-filter');
+            if (sourceFilter) {
+                sourceFilter.addEventListener('change', () => { feedDisplayLimit = 30; renderLiveFeed(); });
+            }
+            
+            const sortFilter = document.getElementById('sort-filter');
+            if (sortFilter) {
+                sortFilter.addEventListener('change', () => { feedDisplayLimit = 30; renderLiveFeed(); });
+            }
+
+            const btnTogglePinned = document.getElementById('btn-toggle-pinned');
+            if (btnTogglePinned) {
+                btnTogglePinned.addEventListener('click', () => {
+                    showPinnedOnly = !showPinnedOnly;
+                    btnTogglePinned.classList.toggle('active');
+                    feedDisplayLimit = 30;
+                    renderLiveFeed();
+                });
+            }
+
+            const btnHeadlineMode = document.getElementById('btn-headline-mode');
+            if (btnHeadlineMode) {
+                if (appSettings.headlineMode) btnHeadlineMode.classList.add('active');
+                btnHeadlineMode.addEventListener('click', () => {
+                    appSettings.headlineMode = !appSettings.headlineMode;
+                    btnHeadlineMode.classList.toggle('active');
+                    localStorage.setItem('osint_settings', JSON.stringify(appSettings));
+                    renderLiveFeed();
+                });
+            }
+
+            const btnRefresh = document.getElementById('btn-refresh');
+            if (btnRefresh) {
+                btnRefresh.addEventListener('click', () => fetchData(true));
+            }
+            
+            loadCache();
+            fetchData();
+            
+            // Auto refresh mechanism
+            let countdown = REFRESH_INTERVAL_MINUTES * 60;
+            setInterval(() => {
+                if (countdown <= 0) {
+                    fetchData();
+                    countdown = REFRESH_INTERVAL_MINUTES * 60;
+                } else {
+                    countdown--;
+                }
+                const countdownEl = document.getElementById('countdown');
+                if (countdownEl) {
+                    const m = Math.floor(countdown / 60).toString().padStart(2, '0');
+                    const s = (countdown % 60).toString().padStart(2, '0');
+                    countdownEl.innerText = `${m}:${s}`;
+                }
+            }, 1000);
+        });
+
+        // --- Intelligence Pinning ---
+        function togglePin(e, id) {
+            e.stopPropagation(); 
+            if (pinnedArticles.has(id)) {
+                pinnedArticles.delete(id);
+            } else {
+                pinnedArticles.add(id);
+            }
+            localStorage.setItem('osint_pinned', JSON.stringify([...pinnedArticles]));
+            renderLiveFeed(); 
+        }
+
+        // --- Settings & Data Management ---
+        function applyThemeAndLayout() {
+            document.body.dataset.theme = appSettings.theme || 'military-dark';
+            document.body.dataset.layout = appSettings.layout || 'analyst';
+            
+            // Update map tiles based on theme
+            if (map) {
+                if (tileLayer) map.removeLayer(tileLayer);
+                const tileUrl = appSettings.theme === 'newsroom-light' 
+                    ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+                    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+                
+                tileLayer = L.tileLayer(tileUrl, { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 10 }).addTo(map);
+            }
+        }
+
+        function openSettingsModal() {
+            renderSettingsFeeds();
+            const cycleSpeedSelect = document.getElementById('settings-cycle-speed');
+            if (cycleSpeedSelect) cycleSpeedSelect.value = appSettings.cycleSpeed || 10;
+            
+            const themeSelect = document.getElementById('settings-theme');
+            if (themeSelect) themeSelect.value = appSettings.theme || 'military-dark';
+
+            const layoutSelect = document.getElementById('settings-layout');
+            if (layoutSelect) layoutSelect.value = appSettings.layout || 'analyst';
+
+            const settingsModal = document.getElementById('settings-modal');
+            if (settingsModal) {
+                settingsModal.style.display = 'flex';
+                const modalContainer = settingsModal.querySelector('.modal-container');
+                if (modalContainer) modalContainer.scrollTop = 0;
+            }
+        }
+
+        function closeSettingsModal() {
+            const settingsModal = document.getElementById('settings-modal');
+            if (settingsModal) settingsModal.style.display = 'none';
+        }
+        
+        function closeSettingsModalAndReload() {
+            saveSettings();
+            applyThemeAndLayout(); // Apply visually without full reload
+            closeSettingsModal();
+            // Force refetch to apply feed changes cleanly
+            allArticles = [];
+            fetchData(true);
+        }
+
+        function saveSettings() {
+            const cycleSpeedSelect = document.getElementById('settings-cycle-speed');
+            const themeSelect = document.getElementById('settings-theme');
+            const layoutSelect = document.getElementById('settings-layout');
+            
+            appSettings.cycleSpeed = cycleSpeedSelect ? parseInt(cycleSpeedSelect.value) || 10 : 10;
+            appSettings.theme = themeSelect ? themeSelect.value : 'military-dark';
+            appSettings.layout = layoutSelect ? layoutSelect.value : 'analyst';
+            
+            localStorage.setItem('osint_settings', JSON.stringify(appSettings));
+            localStorage.setItem('osint_feeds', JSON.stringify(activeFeeds));
+        }
+
+        function renderSettingsFeeds() {
+            const list = document.getElementById('settings-feed-list');
+            if (!list) return;
+            list.innerHTML = '';
+            activeFeeds.forEach((feed, index) => {
+                list.innerHTML += `
+                    <div class="feed-mgr-item">
+                        <div class="feed-mgr-info">
+                            <strong>${feed.name}</strong>
+                            <span class="feed-mgr-url">${feed.url}</span>
+                        </div>
+                        <button class="btn-remove" onclick="removeFeed(${index})" title="Remove Feed"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        function removeFeed(index) {
+            activeFeeds.splice(index, 1);
+            saveSettings();
+            renderSettingsFeeds();
+        }
+
+        function addCustomFeed() {
+            const nameInput = document.getElementById('new-feed-name');
+            const urlInput = document.getElementById('new-feed-url');
+            if (urlInput && urlInput.value) {
+                let name = nameInput ? nameInput.value.trim() : '';
+                if (!name) {
+                    try { name = new URL(urlInput.value).hostname.replace('www.', ''); } 
+                    catch { name = 'Custom Feed'; }
+                }
+                activeFeeds.push({ name, url: urlInput.value.trim() });
+                saveSettings();
+                if (nameInput) nameInput.value = '';
+                if (urlInput) urlInput.value = '';
+                renderSettingsFeeds();
+            }
+        }
+
+        function exportDataJSON() {
+            const exportData = {
+                version: "1.1",
+                timestamp: new Date().toISOString(),
+                feeds: activeFeeds,
+                settings: appSettings,
+                pinned: [...pinnedArticles]
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `osint_config_${new Date().getTime()}.json`);
+            dlAnchorElem.click();
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.feeds) activeFeeds = data.feeds;
+                    if (data.settings) appSettings = data.settings;
+                    if (data.pinned) pinnedArticles = new Set(data.pinned);
+                    
+                    saveSettings();
+                    localStorage.setItem('osint_pinned', JSON.stringify([...pinnedArticles]));
+                    
+                    alert("Configuration imported successfully. The system will now reload.");
+                    location.reload();
+                } catch (error) {
+                    alert("Error parsing configuration file. Ensure it is a valid JSON export.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- Dashboard / TV Mode Logic ---
+        function openTvMode() {
+            tvIsActive = true;
+            const tvModeEl = document.getElementById('tv-mode');
+            if (tvModeEl) tvModeEl.style.display = 'flex';
+            try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } catch(e){}
+            
+            tvArticles = allArticles.filter(a => a.importance > 5 || a.severity > 0)
+                                    .sort((a,b) => b.pubDate - a.pubDate)
+                                    .slice(0, 50);
+            
+            if(tvArticles.length === 0) tvArticles = allArticles.slice(0, 50); 
+            if(tvArticles.length === 0) return; 
+
+            tvCurrentIndex = 0;
+            renderTvArticle();
+            
+            clearInterval(tvIntervalId);
+            tvIntervalId = setInterval(() => {
+                tvCurrentIndex = (tvCurrentIndex + 1) % tvArticles.length;
+                renderTvArticle();
+            }, (appSettings.cycleSpeed || 10) * 1000);
+        }
+
+        function closeTvMode() {
+            tvIsActive = false;
+            const tvModeEl = document.getElementById('tv-mode');
+            if (tvModeEl) tvModeEl.style.display = 'none';
+            clearInterval(tvIntervalId);
+            try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e){}
+        }
+
+        function renderTvArticle() {
+            if(!tvArticles[tvCurrentIndex]) return;
+            const a = tvArticles[tvCurrentIndex];
+            
+            const tvTitle = document.getElementById('tv-title');
+            if (tvTitle) tvTitle.innerText = a.title;
+            
+            let displayDesc = a.description;
+            if(displayDesc.length > 300) displayDesc = displayDesc.substring(0, 300) + '...';
+            const tvDesc = document.getElementById('tv-desc');
+            if (tvDesc) tvDesc.innerText = displayDesc;
+            
+            const tvSource = document.getElementById('tv-source');
+            if (tvSource) tvSource.innerText = a.source;
+            
+            const tvTime = document.getElementById('tv-time');
+            if (tvTime) tvTime.innerText = a.pubDate.toLocaleString();
+            
+            const bgEl = document.getElementById('tv-bg');
+            if (bgEl) {
+                if (a.imageUrl) {
+                    bgEl.style.backgroundImage = `url('${a.imageUrl}')`;
+                } else {
+                    bgEl.style.backgroundImage = `none`;
+                }
+            }
+
+            // Badges
+            const badgesContainer = document.getElementById('tv-badges');
+            if (badgesContainer) {
+                badgesContainer.innerHTML = '';
+                if (a.severity === 3) badgesContainer.innerHTML += `<div class="tv-badge" style="background: var(--status-red); color: #fff;">CRITICAL ALERT</div>`;
+                else if (a.severity === 2) badgesContainer.innerHTML += `<div class="tv-badge" style="background: #ea580c; color: #fff;">MAJOR EVENT</div>`;
+                badgesContainer.innerHTML += `<div class="tv-badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">IMP: ${a.importance}/10</div>`;
+            }
+
+            // Reset and animate progress bar
+            const bar = document.getElementById('tv-progress');
+            if (bar) {
+                bar.style.transition = 'none';
+                bar.style.width = '0%';
+                void bar.offsetWidth;
+                bar.style.transition = `width ${appSettings.cycleSpeed || 10}s linear`;
+                bar.style.width = '100%';
+            }
+        }
+
+
+        // --- Standard Modals ---
+        function openModal(articleId) {
+            const article = allArticles.find(a => a.id === articleId);
+            if (!article) return;
+            
+            const modalMeta = document.getElementById('modal-meta');
+            if (modalMeta) {
+                modalMeta.innerHTML = `
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <span style="color:var(--text-light); font-weight:500;">${article.source}</span>
+                        <span>•</span>
+                        <span>${article.pubDate.toLocaleString()}</span>
+                    </div>
+                    <span class="rel-score-badge imp-${article.importance > 7 ? 'high' : (article.importance > 4 ? 'med' : 'low')}" title="Importance Score">IMP: ${article.importance}/10</span>
+                `;
+            }
+            
+            const modalTitle = document.getElementById('modal-title');
+            if (modalTitle) modalTitle.innerText = article.title;
+            
+            let descHtml = article.description || 'No detailed payload available.';
+            descHtml = applyHighlighting(descHtml);
+            
+            const modalDesc = document.getElementById('modal-desc');
+            if (modalDesc) modalDesc.innerHTML = descHtml;
+            
+            const modalLink = document.getElementById('modal-link');
+            if (modalLink) modalLink.href = article.link;
+            
+            const tagsContainer = document.getElementById('modal-tags');
+            if (tagsContainer) {
+                tagsContainer.innerHTML = article.tags.map(t => `<span class="tag-pill">${t}</span>`).join('');
+            }
+
+            const img = document.getElementById('modal-image');
+            if (img) {
+                if (article.imageUrl) {
+                    img.src = article.imageUrl;
+                    img.style.display = 'block';
+                } else {
+                    img.style.display = 'none';
+                }
+            }
+            
+            const articleModal = document.getElementById('article-modal');
+            if (articleModal) {
+                articleModal.style.display = 'flex';
+                const modalContainer = articleModal.querySelector('.modal-container');
+                if (modalContainer) modalContainer.scrollTop = 0;
+            }
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            const articleModal = document.getElementById('article-modal');
+            if (articleModal) articleModal.style.display = 'none';
+        }
+
+        // --- Local Caching ---
+        function loadCache() {
+            const cached = localStorage.getItem('osint_cache');
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    allArticles = parsed.map(a => ({...a, pubDate: new Date(a.pubDate)}));
+                    analyzeData();
+                    renderAll();
+                } catch(e) {}
+            }
+        }
+
+        function saveCache() {
+            const toSave = allArticles.slice(0, 250);
+            localStorage.setItem('osint_cache', JSON.stringify(toSave));
+        }
+
+        // --- Deduplication Logic ---
+        function calculateSimilarity(str1, str2) {
+            const words1 = new Set(str1.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/));
+            const words2 = new Set(str2.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/));
+            const intersection = new Set([...words1].filter(x => words2.has(x)));
+            const union = new Set([...words1, ...words2]);
+            return intersection.size / (union.size || 1);
+        }
+
+        function isDuplicate(newArt, existingArticles) {
+            return existingArticles.some(ex => {
+                if (ex.link && newArt.link && ex.link === newArt.link) return true;
+                const titleSim = calculateSimilarity(ex.title, newArt.title);
+                if (titleSim > 0.8) return true;
+                return false;
+            });
+        }
+
+        // --- Data Fetching & Parsing ---
+        async function fetchData(manual = false) {
+            if (isFetching) return;
+            isFetching = true;
+            
+            const loader = document.getElementById('loader');
+            if (loader) loader.style.display = 'block';
+            
+            let fetchedArticles = [];
+            
+            for (let feed of activeFeeds) {
+                try {
+                    const rss2jsonUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&api_key=`;
+                    const response = await fetch(rss2jsonUrl);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const data = await response.json();
+                    if (data.status === 'ok') {
+                        data.items.forEach(item => {
+                            fetchedArticles.push(processRawArticle(item, feed.name));
+                        });
+                    } else throw new Error(data.message);
+                } catch (error) {
+                    try {
+                        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(feed.url)}`;
+                        const proxyResponse = await fetch(proxyUrl);
+                        if (!proxyResponse.ok) throw new Error(`Fallback HTTP ${proxyResponse.status}`);
+                        
+                        const xmlText = await proxyResponse.text();
+                        const parser = new DOMParser();
+                        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+                        const items = xmlDoc.querySelectorAll('item, entry');
+                        
+                        items.forEach(item => {
+                            const titleNode = item.querySelector('title');
+                            const title = titleNode ? titleNode.textContent.trim() : '';
+                            
+                            let link = '';
+                            const linkNode = item.querySelector('link');
+                            if (linkNode) {
+                                link = linkNode.textContent || linkNode.getAttribute('href') || '';
+                            }
+                            
+                            const dateNode = item.querySelector('pubDate, updated, published');
+                            const pubDateStr = dateNode ? dateNode.textContent : new Date().toISOString();
+                            
+                            const descNode = item.querySelector('description, summary, content');
+                            const rawDesc = descNode ? descNode.textContent : '';
+                            
+                            fetchedArticles.push(processRawArticle({title, link, pubDate: pubDateStr, description: rawDesc}, feed.name, true));
+                        });
+                    } catch (fallbackError) {
+                        console.error(`Feed failure ${feed.name}:`, fallbackError);
+                    }
+                }
+            }
+
+            let merged = manual ? [] : [...allArticles];
+            fetchedArticles.forEach(art => {
+                if (!isDuplicate(art, merged)) merged.push(art);
+            });
+
+            allArticles = merged.sort((a, b) => b.pubDate - a.pubDate).slice(0, 500);
+            analyzeData();
+            renderAll();
+            saveCache();
+
+            if (loader) loader.style.display = 'none';
+            const lastSync = document.getElementById('last-sync');
+            if (lastSync) lastSync.innerText = new Date().toLocaleTimeString();
+            isFetching = false;
+        }
+
+        function processRawArticle(data, sourceName, isRawXML = false) {
+            const title = (data.title || '').trim();
+            const link = data.link || '';
+            const pubDate = new Date(data.pubDate || new Date().toISOString());
+            
+            let imageUrl = '';
+            let rawContentStr = data.description || data.content || '';
+            
+            if (!isRawXML) {
+                if (data.thumbnail) imageUrl = data.thumbnail;
+                else if (data.enclosure && data.enclosure.link && data.enclosure.type && data.enclosure.type.startsWith('image/')) {
+                    imageUrl = data.enclosure.link;
+                }
+            }
+            if (!imageUrl && rawContentStr) {
+                const imgMatch = rawContentStr.match(/<img[^>]+src="([^">]+)"/i);
+                if (imgMatch) imageUrl = imgMatch[1];
+            }
+
+            const textDesc = stripHtml(rawContentStr).trim();
+            
+            return { 
+                id: generateId(), title, link, pubDate, description: textDesc, source: sourceName, 
+                severity: 0, sentiment: 'neutral', imageUrl, tags: [], relevanceScore: 0, importance: 1
+            };
+        }
+
+        function stripHtml(html) {
+            let tmp = document.createElement("DIV");
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || "";
+        }
+
+        // --- Analysis Logic ---
+        function analyzeData() {
+            allArticles.forEach(article => {
+                const fullText = (article.title + " " + article.description).toLowerCase();
+                
+                article.severity = 0;
+                for (let lvl = 3; lvl >= 1; lvl--) {
+                    if (SEVERITY_LEVELS[lvl].some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(fullText))) {
+                        article.severity = lvl; break;
+                    }
+                }
+                article.isBreaking = article.severity > 0;
+
+                let sentimentScore = 0;
+                KEYWORDS_SENTIMENT.negative.forEach(w => { if (fullText.includes(w)) sentimentScore--; });
+                KEYWORDS_SENTIMENT.positive.forEach(w => { if (fullText.includes(w)) sentimentScore++; });
+                article.sentiment = sentimentScore < 0 ? 'negative' : (sentimentScore > 0 ? 'positive' : 'neutral');
+
+                const foundTags = new Set();
+                ALL_HIGHLIGHT_WORDS.forEach(kw => {
+                    if (new RegExp(`\\b${kw}\\b`, 'i').test(fullText)) foundTags.add(kw.toLowerCase());
+                });
+                Object.keys(LOCATIONS_DB).forEach(loc => {
+                    if (new RegExp(`\\b${loc}\\b`, 'i').test(fullText)) foundTags.add(loc.toLowerCase());
+                });
+                article.tags = Array.from(foundTags).slice(0, 3);
+
+                // Base Relevance Score 0-100
+                let score = (article.severity * 25) + (foundTags.size * 5) + (Math.abs(sentimentScore) * 2);
+                article.relevanceScore = Math.min(100, score);
+                
+                // Convert to Importance Score 1-10
+                article.importance = Math.min(10, Math.max(1, Math.ceil(article.relevanceScore / 10)));
+            });
+        }
+
+        function countKeywords(keywordsArray, onlyRecent = true) {
+            const counts = {};
+            keywordsArray.forEach(kw => counts[kw] = 0);
+            const twentyFourHoursAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
+
+            allArticles.forEach(article => {
+                if (onlyRecent && article.pubDate < twentyFourHoursAgo) return;
+                const fullText = (article.title + " " + article.description).toLowerCase();
+                keywordsArray.forEach(kw => {
+                    const matches = fullText.match(new RegExp(`\\b${kw}\\b`, 'gi'));
+                    if (matches) counts[kw] += matches.length;
+                });
+            });
+
+            return Object.entries(counts).filter(([_, count]) => count > 0).sort((a, b) => b[1] - a[1]);
+        }
+
+        function applyHighlighting(text) {
+            let highlighted = text;
+            ALL_HIGHLIGHT_WORDS.forEach(kw => {
+                const regex = new RegExp(`\\b(${kw})\\b`, 'gi');
+                highlighted = highlighted.replace(regex, '<span class="kw-highlight">$&</span>');
+            });
+            return highlighted;
+        }
+
+        // --- Render Functions ---
+        function renderAll() {
+            renderFilters();
+            renderBreaking();
+            renderEscalationMeter();
+            renderTimeline();
+            renderBrief();
+            renderLiveFeed();
+            updateMetricsUI();
+            updateMap();
+        }
+
+        function renderFilters() {
+            const filter = document.getElementById('source-filter');
+            if (!filter) return;
+            const currentVal = filter.value;
+            const sources = [...new Set(allArticles.map(a => a.source))];
+            
+            filter.innerHTML = '<option value="all">All Sources</option>';
+            sources.forEach(src => {
+                filter.innerHTML += `<option value="${src}">${src}</option>`;
+            });
+            filter.value = currentVal; 
+        }
+
+        function renderLiveFeed() {
+            const container = document.getElementById('feed-container');
+            const filterSelect = document.getElementById('source-filter');
+            const sortSelect = document.getElementById('sort-filter');
+            
+            if (!container) return;
+            
+            if (appSettings.headlineMode) {
+                container.classList.add('headline-mode');
+            } else {
+                container.classList.remove('headline-mode');
+            }
+
+            const filterVal = filterSelect ? filterSelect.value : 'all';
+            const sortVal = sortSelect ? sortSelect.value : 'newest';
+            container.innerHTML = '';
+
+            let filtered = [...allArticles];
+
+            if (filterVal !== 'all') filtered = filtered.filter(a => a.source === filterVal);
+            if (showPinnedOnly) filtered = filtered.filter(a => pinnedArticles.has(a.id));
+            if (searchQuery) {
+                filtered = filtered.filter(a => 
+                    a.title.toLowerCase().includes(searchQuery) || 
+                    a.description.toLowerCase().includes(searchQuery) ||
+                    a.tags.some(t => t.includes(searchQuery))
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i data-lucide="search-x" style="width: 32px; height: 32px; opacity: 0.5;"></i>
+                        <span>No intelligence records match the current filters.</span>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            // Apply Sorting
+            if (sortVal === 'newest') {
+                filtered.sort((a, b) => b.pubDate - a.pubDate);
+            } else if (sortVal === 'oldest') {
+                filtered.sort((a, b) => a.pubDate - b.pubDate);
+            } else if (sortVal === 'importance') {
+                filtered.sort((a, b) => b.importance - a.importance || b.pubDate - a.pubDate);
+            } else if (sortVal === 'severity') {
+                filtered.sort((a, b) => b.severity - a.severity || b.pubDate - a.pubDate);
+            }
+
+            const toRender = filtered.slice(0, feedDisplayLimit);
+
+            toRender.forEach(article => {
+                const timeStr = article.pubDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const dateStr = article.pubDate.toLocaleDateString([], {month: 'short', day: 'numeric'});
+                
+                let badges = '';
+                if (article.severity === 3) badges += '<span class="alert-badge" style="color:var(--status-red); border:1px solid rgba(239,68,68,0.3); margin-left:8px;">CRIT</span>';
+                else if (article.severity === 2) badges += '<span class="alert-badge" style="color:#ea580c; border:1px solid rgba(234,88,12,0.3); margin-left:8px;">MAJ</span>';
+                else if (article.severity === 1) badges += '<span class="alert-badge" style="color:var(--status-amber); border:1px solid rgba(245,158,11,0.3); margin-left:8px;">ALRT</span>';
+
+                const sentimentClass = `sent-${article.sentiment}`;
+                const isPinned = pinnedArticles.has(article.id);
+                const pinClass = isPinned ? 'pinned' : '';
+                
+                const row = document.createElement('div');
+                row.className = 'article-row';
+                row.onclick = () => openModal(article.id);
+                
+                let imageHTML = '';
+                if (article.imageUrl) {
+                    imageHTML = `<img src="${article.imageUrl}" class="article-thumb" onerror="this.style.display='none'">`;
+                }
+
+                const tagsHTML = article.tags.map(t => `<span class="tag-pill">${t}</span>`).join('');
+                
+                let displayDesc = article.description;
+                if (displayDesc.length > 200) displayDesc = displayDesc.substring(0, 200) + '...';
+                displayDesc = applyHighlighting(displayDesc);
+                
+                let impClass = 'imp-low';
+                if(article.importance > 7) impClass = 'imp-high';
+                else if(article.importance > 4) impClass = 'imp-med';
+
+                row.innerHTML = `
+                    ${imageHTML}
+                    <div class="article-content">
+                        <div class="article-title">${article.title} ${badges}</div>
+                        <div class="article-desc">${displayDesc}</div>
+                        <div class="action-row">
+                            ${tagsHTML}
+                        </div>
+                    </div>
+                    <div class="article-meta-col">
+                        <span class="article-source"><span class="sentiment-dot ${sentimentClass}" title="${article.sentiment}"></span>${article.source}</span>
+                        <span class="article-time">${dateStr} ${timeStr}</span>
+                        <div style="display:flex; gap: 8px; align-items:center; margin-top: 4px;">
+                            <span class="rel-score-badge ${impClass}" title="Importance Score">IMP: ${article.importance}/10</span>
+                            <button class="btn-pin ${pinClass}" onclick="togglePin(event, '${article.id}')" title="Pin Intelligence">
+                                <i data-lucide="pin" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            if (filtered.length > feedDisplayLimit) {
+                const btn = document.createElement('button');
+                btn.className = 'load-more-btn';
+                btn.innerText = `Fetch Additional Records (${filtered.length - feedDisplayLimit})`;
+                btn.onclick = () => { feedDisplayLimit += 30; renderLiveFeed(); };
+                container.appendChild(btn);
+            }
+
+            lucide.createIcons();
+        }
+
+        function renderBreaking() {
+            const container = document.getElementById('breaking-container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const breakingArticles = allArticles.filter(a => a.isBreaking)
+                .sort((a, b) => b.severity - a.severity || b.pubDate - a.pubDate);
+            
+            const breakingCount = document.getElementById('breaking-count');
+            if (breakingCount) breakingCount.innerText = `${breakingArticles.length} DETECTED`;
+
+            if (breakingArticles.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="padding: 10px; flex-direction: row;">
+                        <i data-lucide="shield-check" style="width: 16px; height: 16px; opacity: 0.5;"></i>
+                        <span>Awaiting payload. Status normal.</span>
+                    </div>`;
+                return;
+            }
+
+            breakingArticles.slice(0, 10).forEach(article => {
+                const div = document.createElement('div');
+                div.className = `alert-item sev-${article.severity}`;
+                div.onclick = () => openModal(article.id);
+                
+                let tag = article.severity === 3 ? 'CRITICAL' : (article.severity === 2 ? 'MAJOR' : 'ALERT');
+                
+                div.innerHTML = `
+                    <div class="alert-badge">${tag}</div>
+                    <div style="flex-grow:1; display:flex; flex-direction:column;">
+                        <span class="alert-title">${article.title}</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">
+                            ${article.pubDate.toLocaleTimeString()} / ${article.source}
+                        </span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderEscalationMeter() {
+            const twelveHoursAgo = new Date(new Date().getTime() - (12 * 60 * 60 * 1000));
+            const twentyFourHoursAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
+            
+            let recentScore = 0;
+            let pastScore = 0;
+            
+            allArticles.forEach(a => {
+                let s = 0;
+                if (a.severity === 3) s = 5;
+                if (a.severity === 2) s = 3;
+                if (a.severity === 1) s = 1;
+                
+                if (a.pubDate >= twelveHoursAgo) {
+                    recentScore += s;
+                } else if (a.pubDate >= twentyFourHoursAgo && a.pubDate < twelveHoursAgo) {
+                    pastScore += s;
+                }
+            });
+
+            const totalScore = recentScore + pastScore; // Total 24h score for meter
+
+            const label = document.getElementById('escalation-score');
+            const segments = document.getElementById('meter-segments');
+            const trendEl = document.getElementById('conflict-trend');
+            
+            if (segments) segments.className = 'meter-segments';
+
+            if (label && segments) {
+                if (totalScore < 10) {
+                    label.innerText = `LOW`; label.style.color = 'var(--status-green)';
+                    segments.classList.add('level-low');
+                } else if (totalScore < 30) {
+                    label.innerText = `MODERATE`; label.style.color = 'var(--status-amber)';
+                    segments.classList.add('level-mod');
+                } else if (totalScore < 60) {
+                    label.innerText = `HIGH`; label.style.color = '#ea580c';
+                    segments.classList.add('level-high');
+                } else {
+                    label.innerText = `CRITICAL`; label.style.color = 'var(--status-red)';
+                    segments.classList.add('level-crit');
+                }
+            }
+            
+            if(trendEl) {
+                if (recentScore > pastScore + 2) {
+                    trendEl.innerHTML = `<i data-lucide="trending-up" style="width: 16px; height: 16px; color: var(--status-red);"></i> <span style="color: var(--status-red);">Increasing</span>`;
+                } else if (recentScore < pastScore - 2) {
+                    trendEl.innerHTML = `<i data-lucide="trending-down" style="width: 16px; height: 16px; color: var(--status-green);"></i> <span style="color: var(--status-green);">Decreasing</span>`;
+                } else {
+                    trendEl.innerHTML = `<i data-lucide="minus" style="width: 16px; height: 16px; color: var(--status-amber);"></i> <span style="color: var(--status-amber);">Stable</span>`;
+                }
+                lucide.createIcons();
+            }
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timeline-container');
+            if (!container) return;
+            container.innerHTML = '';
+            const recent = allArticles.slice(0, 15);
+            
+            if(recent.length === 0) {
+                 container.innerHTML = `<div class="empty-state"><i data-lucide="clock" style="width: 24px; height: 24px; opacity: 0.5;"></i><span>No timeline data.</span></div>`;
+                 return;
+            }
+
+            recent.forEach((a, index) => {
+                const item = document.createElement('div');
+                item.className = `timeline-item ${index === 0 ? 'recent' : ''}`;
+                item.onclick = () => openModal(a.id);
+                item.innerHTML = `
+                    <span class="timeline-time">${a.pubDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${a.source}</span>
+                    <span class="timeline-title">${a.title}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function renderBrief() {
+            const container = document.getElementById('brief-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const twentyFourHoursAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
+            const recentBreaking = allArticles.filter(a => a.isBreaking && a.pubDate > twentyFourHoursAgo).slice(0, 6);
+            const toShow = recentBreaking.length >= 3 ? recentBreaking : allArticles.slice(0, 6);
+
+            if (toShow.length === 0) {
+                container.innerHTML = '<li style="color:var(--text-muted); list-style:none; padding-left:0;">No data logged in past 24h.</li>';
+                return;
+            }
+            toShow.forEach(article => {
+                const li = document.createElement('li');
+                li.innerText = article.title;
+                li.onclick = () => openModal(article.id);
+                container.appendChild(li);
+            });
+        }
+
+        // --- Map & Geospatial ---
+        function initMap() {
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer) return;
+            
+            map = L.map('map', {zoomControl: false}).setView([48.0, 31.0], 3); 
+            L.control.zoom({position: 'bottomright'}).addTo(map);
+            
+            const tileUrl = appSettings.theme === 'newsroom-light' 
+                ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+            tileLayer = L.tileLayer(tileUrl, { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 10 }).addTo(map);
+
+            markerClusterGroup = L.markerClusterGroup({
+                chunkedLoading: true,
+                maxClusterRadius: 35,
+                iconCreateFunction: function (cluster) {
+                    const count = cluster.getChildCount();
+                    let bg = 'var(--panel-bg-solid)';
+                    let border = 'var(--status-amber)';
+                    if(count > 5) { border = '#ea580c'; }
+                    if(count > 10) { border = 'var(--status-red)'; bg = 'rgba(239, 68, 68, 0.2)'; }
+                    
+                    return L.divIcon({ 
+                        html: `<div class="mycluster" style="background:${bg}; border-color:${border};">${count}</div>`, 
+                        className: '', iconSize: L.point(32, 32) 
+                    });
+                }
+            });
+            map.addLayer(markerClusterGroup);
+        }
+
+        function filterFeedByLocation(loc) {
+            const searchInput = document.getElementById('global-search-input');
+            if (searchInput) searchInput.value = loc;
+            searchQuery = loc.toLowerCase();
+            feedDisplayLimit = 30;
+            renderLiveFeed();
+            const feedContainer = document.getElementById('feed-container');
+            if (feedContainer) feedContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function filterFeedByKeyword(keyword) {
+            const searchInput = document.getElementById('global-search-input');
+            if (searchInput) searchInput.value = keyword;
+            searchQuery = keyword.toLowerCase();
+            feedDisplayLimit = 30;
+            renderLiveFeed();
+            const feedContainer = document.getElementById('feed-container');
+            if (feedContainer) feedContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        let mapUpdateTimeout;
+        function updateMap() {
+            if (!markerClusterGroup) return;
+            clearTimeout(mapUpdateTimeout);
+            mapUpdateTimeout = setTimeout(() => {
+                markerClusterGroup.clearLayers();
+
+                const locationMentions = {};
+                const twentyFourHoursAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
+
+                allArticles.forEach(article => {
+                    if (article.pubDate < twentyFourHoursAgo) return;
+                    const titleWords = article.title.match(/[A-Z][a-z]+/g) || [];
+                    
+                    Object.keys(LOCATIONS_DB).forEach(loc => {
+                        const regex = new RegExp(`\\b${loc}\\b`, 'i');
+                        if (regex.test(article.title) || regex.test(article.description) || titleWords.includes(loc)) {
+                            if (!locationMentions[loc]) locationMentions[loc] = [];
+                            if(!locationMentions[loc].includes(article)) locationMentions[loc].push(article);
+                        }
+                    });
+                });
+
+                const redIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: "<div style='background-color:var(--status-red); width:8px; height:8px; border-radius:2px; box-shadow: 0 0 6px var(--status-red);'></div>",
+                    iconSize: [8, 8], iconAnchor: [4, 4]
+                });
+
+                Object.keys(locationMentions).forEach(loc => {
+                    const coords = LOCATIONS_DB[loc];
+                    const articles = locationMentions[loc];
+                    
+                    articles.forEach(a => {
+                        const jitterLat = coords[0] + (Math.random() - 0.5) * 0.5;
+                        const jitterLng = coords[1] + (Math.random() - 0.5) * 0.5;
+                        
+                        const marker = L.marker([jitterLat, jitterLng], {icon: redIcon});
+                        const popupContent = `
+                            <div style="font-family: var(--font-sans); padding: 4px;">
+                                <strong style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--panel-border); margin-bottom:8px; padding-bottom:6px; font-size:0.9rem;">
+                                    ${loc}
+                                    <span style="font-size:0.65rem; color:var(--text-muted); font-weight:normal; font-family: var(--font-mono);">IMP: ${a.importance}</span>
+                                </strong>
+                                <div style="font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">
+                                    <a href="javascript:void(0)" onclick="openModal('${a.id}')" style="color:var(--status-blue); text-decoration:none;">${a.title}</a>
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); display:flex; justify-content:space-between; align-items:center;">
+                                    ${a.source}
+                                    <button class="map-filter-btn" onclick="filterFeedByLocation('${loc}')">Isolate Feed</button>
+                                </div>
+                            </div>`;
+                        marker.bindPopup(popupContent);
+                        markerClusterGroup.addLayer(marker);
+                    });
+                });
+            }, 500);
+        }
+
+        // --- Visual Metrics ---
+        function updateMetricsUI() {
+            const eqData = countKeywords(KEYWORDS_EQUIPMENT).slice(0, 8);
+            const eqContainer = document.getElementById('equipment-list');
+            
+            if (eqContainer) {
+                if (eqData.length === 0) {
+                    eqContainer.innerHTML = '<div class="empty-state"><i data-lucide="crosshair" style="width: 24px; height: 24px; opacity: 0.5;"></i><span>No asset signatures detected.</span></div>';
+                } else {
+                    eqContainer.innerHTML = '';
+                    const maxEq = Math.max(...eqData.map(d => d[1]));
+                    
+                    eqData.forEach(([keyword, count]) => {
+                        const iconName = getIconForKeyword(keyword);
+                        const widthPercent = (count / maxEq) * 100;
+                        
+                        eqContainer.innerHTML += `
+                            <div class="metric-row" onclick="filterFeedByKeyword('${keyword}')" title="Filter feed by ${keyword}">
+                                <div class="metric-icon"><i data-lucide="${iconName}"></i></div>
+                                <div class="metric-info">
+                                    <div class="metric-header-row">
+                                        <span class="metric-name">${keyword}</span>
+                                        <span class="metric-value">${count}</span>
+                                    </div>
+                                    <div class="metric-bar-bg">
+                                        <div class="metric-bar-fill fill-teal" style="width: ${widthPercent}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            }
+
+            const trData = countKeywords(KEYWORDS_TRENDS).slice(0, 8);
+            const trContainer = document.getElementById('trend-list');
+            
+            if (trContainer) {
+                if (trData.length === 0) {
+                    trContainer.innerHTML = '<div class="empty-state"><i data-lucide="activity" style="width: 24px; height: 24px; opacity: 0.5;"></i><span>No strategic vectors detected.</span></div>';
+                } else {
+                    trContainer.innerHTML = '';
+                    const maxTr = Math.max(...trData.map(d => d[1]));
+                    
+                    trData.forEach(([keyword, count]) => {
+                        const iconName = getIconForKeyword(keyword);
+                        const widthPercent = (count / maxTr) * 100;
+                        
+                        trContainer.innerHTML += `
+                            <div class="metric-row" onclick="filterFeedByKeyword('${keyword}')" title="Filter feed by ${keyword}">
+                                <div class="metric-icon"><i data-lucide="${iconName}"></i></div>
+                                <div class="metric-info">
+                                    <div class="metric-header-row">
+                                        <span class="metric-name">${keyword}</span>
+                                        <span class="metric-value">${count}</span>
+                                    </div>
+                                    <div class="metric-bar-bg">
+                                        <div class="metric-bar-fill fill-blue" style="width: ${widthPercent}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            }
+
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

@@ -1,5 +1,21 @@
 [
   {
+    "title": "Osint",
+    "slug": "osint",
+    "description": "Monitor global conflict signals through a live OSINT intelligence dashboard. Track breaking alerts, geospatial activity, escalation metrics, and curated RSS feeds in a high-density command interface with search, filtering, and real-time updates.",
+    "thumbnail": "assets/thumbs/osint.jpg",
+    "tags": [
+      "Military",
+      "News",
+      "War"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-03-05",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "Zine Maker",
     "slug": "zine-maker",
     "description": "Create and customize your own printable 8-page pocket zines in minutes. Import from Wiki, RSS, Markdown, or build page-by-page with full control over fonts, layouts, images, and print-ready formatting. Fold, cut, and share your story.",
