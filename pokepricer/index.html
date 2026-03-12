@@ -3,11 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PokéPricer Pro - Market Analytics & Vault</title>
+    <!-- Primary Meta Tags -->
+<title>PokePricer – Pokémon Card Market Analysis Tool</title>
+<meta name="title" content="PokePricer – Pokémon Card Market Analysis Tool">
+<meta name="description" content="Turn eBay sold listings into Pokémon card market intelligence. Analyze price velocity, remove outliers, and spot profitable sniping opportunities.">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.stefone.com/pokepricer/">
+<meta property="og:title" content="PokePricer – Pokémon Card Market Analysis Tool">
+<meta property="og:description" content="Turn eBay sold listings into Pokémon card market intelligence. Analyze price velocity, remove outliers, and spot profitable sniping opportunities.">
+<meta property="og:image" content="https://www.stefone.com/assets/thumbs/pokepricer.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="PokePricer Pokémon card market intelligence dashboard">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PokePricer – Pokémon Card Market Analysis Tool">
+<meta name="twitter:description" content="Turn eBay sold listings into Pokémon card market intelligence. Analyze price velocity, remove outliers, and spot profitable sniping opportunities.">
+<meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/pokepricer.jpg">
+
+<!-- Theme Color -->
+<meta name="theme-color" content="#facc15">
+
+<meta name="keywords" content="pokemon card price checker, pokemon card value tool, ebay pokemon card prices, pokemon card market tracker, tcg card price analysis">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%23ffffff' stroke='%23222224' stroke-width='4'/><path d='M 2 32 A 30 30 0 0 1 62 32 Z' fill='%23ee1515' stroke='%23222224' stroke-width='4'/><line x1='2' y1='32' x2='62' y2='32' stroke='%23222224' stroke-width='6'/><circle cx='32' cy='32' r='10' fill='%23ffffff' stroke='%23222224' stroke-width='4'/><circle cx='32' cy='32' r='4' fill='%23ffffff' stroke='%23222224' stroke-width='2'/></svg>" type="image/svg+xml"> 
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Nunito', sans-serif;
@@ -116,6 +142,9 @@
     <nav class="bg-red-600/95 backdrop-blur-md text-white shadow-xl p-4 sticky top-0 z-50 border-b-8 border-red-800/50">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3 text-4xl font-black tracking-tighter italic">
+                <a href="/projects/" class="text-white/80 hover:text-white text-sm flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/10 transition-colors not-italic font-bold tracking-normal mr-2">
+                    <i class="fa-solid fa-chevron-left"></i> Back to Projects
+                </a>
                 <img src="https://pngimg.com/d/pokeball_PNG7.png" alt="Pokeball" class="w-12 h-12 pokeball-logo">
                 PokéPricer <span class="text-yellow-400 not-italic ml-1">PRO</span>
             </div>
@@ -223,9 +252,9 @@
                         <h3 class="font-black text-slate-700 uppercase tracking-wider text-xs flex items-center gap-2">
                             <i class="fa-solid fa-sliders text-blue-500"></i> Market Refinement
                         </h3>
-                        <label class="flex items-center gap-2 cursor-pointer group" title="Removes items > 2.5x or < 0.3x median price">
+                        <label class="flex items-center gap-2 cursor-pointer group" title="Removes items outside IQR fences (Statistically Sound)">
                             <input type="checkbox" id="outlierToggle" class="form-checkbox w-3 h-3 text-blue-500 rounded border-slate-300 focus:ring-blue-500" checked>
-                            <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-blue-500 transition-colors">Hide Outliers</span>
+                            <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-blue-500 transition-colors">Hide Outliers (IQR)</span>
                         </label>
                     </div>
                     
@@ -311,14 +340,18 @@
                                     <div class="gauge-body"></div>
                                     <div id="liquidityGauge" class="gauge-fill" style="transform: rotate(0deg);"></div>
                                 </div>
-                                <p class="text-sm font-black text-slate-800" id="liquidityScoreValue">--</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-black text-slate-800" id="liquidityScoreValue">--</p>
+                                </div>
+                                <!-- Market Sentiment Indicator -->
+                                <div id="marketSentimentBadge" class="mt-2 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border bg-slate-200 text-slate-600 border-slate-300 transition-colors">NEUTRAL</div>
                             </div>
                             <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 flex flex-col items-center justify-center text-center relative group">
                                 <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Est. Profit</p>
                                 <p class="text-2xl font-black text-emerald-700" id="profitDisplay">£0.00</p>
                                 <p class="text-[8px] font-bold text-emerald-600/60 uppercase">Net Margin</p>
                                 <!-- Tooltip for Fee Breakdown -->
-                                <div class="absolute bottom-full mb-2 hidden group-hover:block w-48 bg-slate-800 text-white text-[10px] p-2 rounded-lg shadow-xl z-50 text-left">
+                                <div class="absolute bottom-full mb-2 hidden group-hover:block w-56 bg-slate-800 text-white text-[10px] p-2 rounded-lg shadow-xl z-50 text-left">
                                     <p class="font-bold border-b border-slate-600 pb-1 mb-1">Fee Breakdown</p>
                                     <div id="detailedFeeBreakdown"></div>
                                 </div>
@@ -416,9 +449,15 @@
                             <input type="number" id="fixedFeeInput" step="0.01" class="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold">
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Avg Shipping / Materials</label>
-                        <input type="number" id="shipCostInput" step="0.01" class="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold">
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Avg Shipping</label>
+                            <input type="number" id="shipCostInput" step="0.01" class="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Materials</label>
+                            <input type="number" id="packCostInput" step="0.01" class="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold">
+                        </div>
                     </div>
                 </div>
                 <button id="saveSettingsBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-black p-4 rounded-2xl shadow-lg transition-all uppercase tracking-widest text-sm">Update Logic</button>
@@ -440,7 +479,7 @@
         const state = {
             region: 'uk',
             offerPercent: 80,
-            feeSettings: JSON.parse(localStorage.getItem('pokePricerFees')) || { sellerType: 'private', feePercent: 0, fixedFee: 0, shipCost: 1.50 },
+            feeSettings: JSON.parse(localStorage.getItem('pokePricerFees')) || { sellerType: 'private', feePercent: 0, fixedFee: 0, shipCost: 1.50, packCost: 0.20 },
             vault: JSON.parse(localStorage.getItem('pokePricerVault')) || [],
             rawScrapedItems: [],
             currentFilteredItems: [],
@@ -458,6 +497,7 @@
             feePercentInput: document.getElementById('feePercentInput'),
             fixedFeeInput: document.getElementById('fixedFeeInput'),
             shipCostInput: document.getElementById('shipCostInput'),
+            packCostInput: document.getElementById('packCostInput'),
             searchForm: document.getElementById('searchForm'),
             searchInput: document.getElementById('searchInput'),
             manualHtmlInput: document.getElementById('manualHtmlInput'),
@@ -489,6 +529,7 @@
             vaultTotalValue: document.getElementById('vaultTotalValue'),
             liquidityScoreValue: document.getElementById('liquidityScoreValue'),
             liquidityGauge: document.getElementById('liquidityGauge'),
+            marketSentimentBadge: document.getElementById('marketSentimentBadge'),
             toast: document.getElementById('toastNotification'),
             toastMsg: document.getElementById('toastMsg')
         };
@@ -518,6 +559,7 @@
             if (els.feePercentInput) els.feePercentInput.value = state.feeSettings.feePercent;
             if (els.fixedFeeInput) els.fixedFeeInput.value = state.feeSettings.fixedFee;
             if (els.shipCostInput) els.shipCostInput.value = state.feeSettings.shipCost;
+            if (els.packCostInput) els.packCostInput.value = state.feeSettings.packCost !== undefined ? state.feeSettings.packCost : 0.20;
 
             attachListeners();
             renderVault();
@@ -547,7 +589,8 @@
                         sellerType: els.sellerTypeInput.value,
                         feePercent: parseFloat(els.feePercentInput.value) || 0,
                         fixedFee: parseFloat(els.fixedFeeInput.value) || 0,
-                        shipCost: parseFloat(els.shipCostInput.value) || 0
+                        shipCost: parseFloat(els.shipCostInput.value) || 0,
+                        packCost: parseFloat(els.packCostInput.value) || 0
                     };
                     localStorage.setItem('pokePricerFees', JSON.stringify(state.feeSettings));
                     els.settingsModal.classList.add('hidden');
@@ -785,16 +828,27 @@
                 return hasInclusions && !hasExclusions;
             });
 
-            // 2. Outlier Rejection Logic (Feature Enhancement)
+            // 2. Outlier Rejection Logic (IQR Feature Update)
             const hideOutliers = els.outlierToggle.checked;
             if (hideOutliers && filtered.length > 3) {
-                const initialPrices = filtered.map(i => i.price);
-                const initialMedian = getMedian(initialPrices);
-                // Filter out items that are suspiciously cheap (< 30% of median) or overly expensive (> 2.5x median)
-                filtered = filtered.filter(item => item.price >= (initialMedian * 0.3) && item.price <= (initialMedian * 2.5));
+                const sortedPrices = filtered.map(i => i.price).sort((a, b) => a - b);
+                
+                // Using standard Median-based splitting for exact Quartile tracking
+                const midPoint = Math.floor(sortedPrices.length / 2);
+                const lowerHalf = sortedPrices.slice(0, midPoint);
+                const upperHalf = sortedPrices.length % 2 === 0 ? sortedPrices.slice(midPoint) : sortedPrices.slice(midPoint + 1);
+                
+                const q1 = getMedian(lowerHalf);
+                const q3 = getMedian(upperHalf);
+                const iqr = q3 - q1;
+                
+                const lowerFence = q1 - 1.5 * iqr;
+                const upperFence = q3 + 1.5 * iqr;
+
+                filtered = filtered.filter(item => item.price >= lowerFence && item.price <= upperFence);
             }
 
-            // 3. Sorting Logic (Feature Enhancement)
+            // 3. Sorting Logic
             const sortMode = els.sortSelect.value;
             filtered.sort((a, b) => {
                 if (sortMode === 'dateDesc') return b.soldDate - a.soldDate;
@@ -820,12 +874,15 @@
             const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
             const median = getMedian(prices);
             
+            // Financial Calculation Update
             const f = state.feeSettings;
+            const packCost = f.packCost !== undefined ? f.packCost : 0.20;
             const ebayFees = (avg * (f.feePercent / 100)) + f.fixedFee;
-            const totalFees = ebayFees + f.shipCost;
-            const net = Math.max(0, avg - totalFees);
-            const offer = net * (state.offerPercent / 100);
-            const profit = net - offer;
+            const totalFees = ebayFees + f.shipCost + packCost;
+            
+            const net = Math.max(0, avg - totalFees); // Net Take-home
+            const offer = net * (state.offerPercent / 100); // Buying Offer Target
+            const profit = net - offer; // Net Profit Calculation Update
 
             const liquidity = calculateLiquidity(filtered);
 
@@ -834,19 +891,51 @@
             els.medianDisplay.innerText = `${cur}${median.toFixed(2)}`;
             els.offerDisplay.innerText = `${cur}${offer.toFixed(2)}`;
             els.profitDisplay.innerText = `${cur}${profit.toFixed(2)}`;
-            els.feeBreakdownStr.innerText = `${cur}${avg.toFixed(2)} Avg - Fees - ${cur}${f.shipCost.toFixed(2)} Ship = ${cur}${net.toFixed(2)} Net Take-Home`;
+            els.feeBreakdownStr.innerText = `${cur}${avg.toFixed(2)} Avg - Fees - ${cur}${f.shipCost.toFixed(2)} Ship - ${cur}${packCost.toFixed(2)} Mat = ${cur}${net.toFixed(2)} Take-Home`;
             
-            // Detailed fee breakdown tooltip
+            // Detailed fee breakdown tooltip update
             els.detailedFeeBreakdown.innerHTML = `
                 <div class="flex justify-between mb-1"><span>Platform (${f.feePercent}%):</span> <span>${cur}${ebayFees.toFixed(2)}</span></div>
-                <div class="flex justify-between mb-1"><span>Est. Shipping:</span> <span>${cur}${f.shipCost.toFixed(2)}</span></div>
-                <div class="flex justify-between font-black mt-2 pt-1 border-t border-slate-600"><span>Net Item Value:</span> <span class="text-emerald-400">${cur}${net.toFixed(2)}</span></div>
+                <div class="flex justify-between mb-1"><span>Fixed Fee:</span> <span>${cur}${f.fixedFee.toFixed(2)}</span></div>
+                <div class="flex justify-between mb-1"><span>Shipping:</span> <span>${cur}${f.shipCost.toFixed(2)}</span></div>
+                <div class="flex justify-between mb-1"><span>Materials:</span> <span>${cur}${packCost.toFixed(2)}</span></div>
+                <div class="flex justify-between font-black mt-2 pt-1 border-t border-slate-600"><span>Net Take-Home:</span> <span class="text-emerald-400">${cur}${net.toFixed(2)}</span></div>
             `;
 
             els.liquidityScoreValue.innerText = `${liquidity}/100`;
             els.liquidityGauge.style.transform = `rotate(${(liquidity / 100) * 180}deg)`;
 
-            // --- FEATURE 4: Generate Market Links in Advanced Analytics ---
+            // Market Intelligence: Sentiment Indicator Update
+            let sentimentClass = "bg-slate-200 text-slate-600 border-slate-300";
+            let sentimentText = "NEUTRAL";
+            
+            if (filtered.length >= 10) {
+                // Ensure array is strictly sorted by date descending for accurate recent sales
+                const timeSorted = [...filtered].sort((a, b) => b.soldDate - a.soldDate);
+                const recent5 = timeSorted.slice(0, 5).map(i => i.price);
+                const prev5 = timeSorted.slice(5, 10).map(i => i.price);
+                
+                const recentMedian = getMedian(recent5);
+                const prevMedian = getMedian(prev5);
+                
+                if (prevMedian > 0) {
+                    const trend = ((recentMedian - prevMedian) / prevMedian) * 100;
+                    if (trend > 3 && liquidity > 60) {
+                        sentimentText = "STRONG BUY";
+                        sentimentClass = "bg-green-100 text-green-700 border-green-200";
+                    } else if (trend < -3 && liquidity < 40) {
+                        sentimentText = "WAIT/WATCH";
+                        sentimentClass = "bg-yellow-100 text-yellow-700 border-yellow-200";
+                    }
+                }
+            }
+            
+            if (els.marketSentimentBadge) {
+                els.marketSentimentBadge.className = `mt-2 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border ${sentimentClass}`;
+                els.marketSentimentBadge.innerText = sentimentText;
+            }
+
+            // Market Links 
             const searchTerm = generateSnapshotName(filtered);
             const tcgLink = `https://www.tcgplayer.com/search/product/all?q=${encodeURIComponent(searchTerm)}`;
             const cmLink = `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${encodeURIComponent(searchTerm)}`;
@@ -865,7 +954,6 @@
             updateChart(filtered);
 
             els.scrapedList.innerHTML = filtered.map(i => {
-                // FEATURE 5: Sniper Gauge
                 const isSnipeTarget = i.price <= (median * 0.70);
                 const snipeClass = isSnipeTarget ? 'snipe-target' : '';
                 const snipeBadge = isSnipeTarget ? `<span class="bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest ml-2 align-middle shadow-sm animate-pulse"><i class="fa-solid fa-crosshairs"></i> Snipe Target</span>` : '';
@@ -873,7 +961,7 @@
                 return `
                     <div class=\"bg-white p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-4 card-hover animate-pop group ${snipeClass}\" onclick=\"window.open('${i.link}', '_blank')\">
                         <div class=\"flex items-center gap-4 min-w-0 flex-1\">
-                            <!-- FEATURE 1: Holographic Card Effects -->
+                            <!-- Holographic Card Effects -->
                             <div class=\"w-12 h-16 shrink-0 bg-slate-50 rounded-lg overflow-hidden flex items-center justify-center border border-slate-100 group-hover:border-blue-300 transition-colors card-holographic\">
                                 <img src=\"${i.imageUrl || 'https://pngimg.com/d/pokeball_PNG7.png'}\" class=\"w-full h-full object-cover\" onerror=\"this.src='https://pngimg.com/d/pokeball_PNG7.png'\">
                             </div>
@@ -899,7 +987,7 @@
             const sorted = [...data].sort((a, b) => a.soldDate - b.soldDate);
             const labels = sorted.map(i => i.displayDate.split(',').slice(1, 2).join('').trim() || i.displayDate);
             const points = sorted.map(i => i.price);
-            const titles = sorted.map(i => i.title); // Feature Enhancement: Tooltip Context
+            const titles = sorted.map(i => i.title);
 
             const ctx = document.getElementById('trendChart').getContext('2d');
             const cur = regions[state.region].currency;
@@ -907,7 +995,7 @@
             if (trendChartInstance) {
                 trendChartInstance.data.labels = labels;
                 trendChartInstance.data.datasets[0].data = points;
-                trendChartInstance.data.datasets[0].titles = titles; // Store custom array in dataset
+                trendChartInstance.data.datasets[0].titles = titles; 
                 trendChartInstance.update();
             } else {
                 trendChartInstance = new Chart(ctx, {
@@ -917,7 +1005,7 @@
                         datasets: [{
                             label: 'Sold Price',
                             data: points,
-                            titles: titles, // Custom property for tooltip
+                            titles: titles, 
                             borderColor: '#8b5cf6',
                             backgroundColor: 'rgba(139, 92, 246, 0.1)',
                             tension: 0.4,
@@ -936,7 +1024,7 @@
                         },
                         plugins: { 
                             legend: { display: false },
-                            tooltip: { // Improved Tooltips
+                            tooltip: { 
                                 callbacks: {
                                     title: function(context) {
                                         return context[0].label;
@@ -978,10 +1066,8 @@
 
             const avg = els.avgDisplay.innerText;
             
-            // Generate snapshot name using the new shared function
             const generatedName = generateSnapshotName(state.currentFilteredItems);
 
-            // FEATURE 3: Snapshot Thumbnail (grab image from the first filtered item)
             const thumbnailImage = state.currentFilteredItems[0] ? state.currentFilteredItems[0].imageUrl : '';
 
             const entry = {
@@ -1059,7 +1145,6 @@
                 return;
             }
 
-            // Restore state items and convert date strings back to actual Date objects
             state.rawScrapedItems = entry.rawItems.map(item => ({
                 ...item,
                 soldDate: new Date(item.soldDate)
@@ -1067,16 +1152,13 @@
             state.currentSearch = entry.name;
             els.searchInput.value = entry.name === "Custom Filter Snapshot" ? "" : entry.name;
 
-            // Restore suggestions and inputs
             generateSmartSuggestions();
             els.filterInput.value = entry.includeFilters || '';
             els.excludeInput.value = entry.excludeFilters || '';
 
-            // Hide the empty state message and manual input
             els.emptyStateMsg.classList.add('hidden');
             els.manualHtmlInput.value = '';
 
-            // Close the vault drawer to show the dashboard
             els.vaultDrawer.classList.add('hidden');
             showToast(`Loaded Snapshot: ${entry.name}`);
 
@@ -1110,14 +1192,12 @@
                         let addedCount = 0;
                         
                         importedVault.forEach(item => {
-                            // Only add if it doesn't exist and has the required structure
                             if (!currentIds.has(item.id) && item.id && item.price) {
                                 state.vault.push(item);
                                 addedCount++;
                             }
                         });
                         
-                        // Sort by newest first
                         state.vault.sort((a, b) => b.id - a.id);
                         localStorage.setItem('pokePricerVault', JSON.stringify(state.vault));
                         renderVault();
@@ -1130,7 +1210,7 @@
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; // Reset input to allow re-uploading the same file if needed
+            event.target.value = ''; 
         };
 
         window.deleteVaultItem = function(id) {
@@ -1186,21 +1266,19 @@
         };
 
         function initExtensionBridge() {
-    window.addEventListener('message', (event) => {
-        // 1. Accept the data
-        if (event.data && event.data.type === 'POKEPRICER_SOURCE_DATA') {
-            els.manualHtmlInput.value = event.data.html;
-            performAnalysis(event.data.html);
-            
-            // 2. Tell the bookmarklet we got it
-            if (event.source) {
-                event.source.postMessage('POKEPRICER_READY', event.origin);
-            }
+            window.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'POKEPRICER_SOURCE_DATA') {
+                    els.manualHtmlInput.value = event.data.html;
+                    performAnalysis(event.data.html);
+                    
+                    if (event.source) {
+                        event.source.postMessage('POKEPRICER_READY', event.origin);
+                    }
+                }
+            });
         }
-    });
-}
 
-            init();
+        init();
 
     </script>
 </body>
