@@ -1,5 +1,21 @@
 [
   {
+    "title": "PokePricer",
+    "slug": "pokepricer",
+    "description": "Transform raw eBay sold listings into professional market intelligence for Pokémon cards. Analyze price velocity, filter outliers with statistical precision, and identify high-margin \"snipe\" targets with real-time profit calculators and a digital research vault.",
+    "thumbnail": "assets/thumbs/pokepricer.jpg",
+    "tags": [
+      "Pokemon",
+      "Tools",
+      "eBay"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-03-12",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "Osint",
     "slug": "osint",
     "description": "Monitor global conflict signals through a live OSINT intelligence dashboard. Track breaking alerts, geospatial activity, escalation metrics, and curated RSS feeds in a high-density command interface with search, filtering, and real-time updates.",
