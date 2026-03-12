@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokéPricer Pro - Market Analytics & Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-image: url('https://wallup.net/wp-content/uploads/2016/05/24/143432-nature-Pokemon.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #ef4444; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #dc2626; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .pokeball-logo {
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .pokeball-logo:hover { transform: rotate(360deg) scale(1.1); }
+
+        .btn-poke { transition: all 0.2s ease; }
+        .btn-poke:active { transform: scale(0.96); }
+
+        .card-hover { transition: all 0.2s ease; cursor: pointer; }
+        .card-hover:hover {
+            transform: translateX(4px);
+            background: white;
+            border-color: #3b82f6;
+        }
+
+        /* Holographic effect for thumbnails */
+        .card-holographic {
+            position: relative;
+        }
+        .card-holographic::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -150%; width: 50%; height: 100%;
+            background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.7) 25%, rgba(255, 255, 255, 0.7) 30%, transparent 35%);
+            transform: skewX(-20deg);
+            transition: left 0.6s ease;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .group:hover .card-holographic::after {
+            left: 200%;
+        }
+
+        /* Sniper gauge pulsing border */
+        .snipe-target {
+            border-color: #ef4444 !important;
+            animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+        }
+
+        #manualHtmlInput { resize: none; }
+        
+        .animate-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .vault-item:hover .vault-actions { opacity: 1; }
+        
+        .gauge-container {
+            position: relative;
+            width: 100px;
+            height: 50px;
+            overflow: hidden;
+        }
+        .gauge-body {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            position: absolute;
+            top: 0; left: 0;
+            clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+        }
+        .gauge-fill {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(to right, #ef4444, #f59e0b, #10b981);
+            position: absolute;
+            top: 0; left: 0;
+            clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+            transform-origin: center center;
+            transition: transform 1s ease-out;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-red-600/95 backdrop-blur-md text-white shadow-xl p-4 sticky top-0 z-50 border-b-8 border-red-800/50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3 text-4xl font-black tracking-tighter italic">
+                <img src="https://pngimg.com/d/pokeball_PNG7.png" alt="Pokeball" class="w-12 h-12 pokeball-logo">
+                PokéPricer <span class="text-yellow-400 not-italic ml-1">PRO</span>
+            </div>
+            
+            <div class="flex items-center gap-3 bg-black/20 p-2 rounded-2xl border border-white/10">
+                <button id="vaultToggleBtn" class="bg-white/10 hover:bg-white/20 px-3 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-vault text-yellow-300"></i> THE VAULT
+                </button>
+                <div class="w-px h-6 bg-white/10"></div>
+                <button id="settingsBtn" class="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-colors" title="Fee Settings">
+                    <i class="fa-solid fa-gears text-lg text-yellow-300"></i>
+                </button>
+                <div class="w-px h-6 bg-white/10"></div>
+                <div class="flex items-center gap-2 px-1">
+                    <span class="text-[10px] font-black uppercase text-red-100">Region</span>
+                    <select id="region" class="bg-transparent text-white font-bold outline-none cursor-pointer hover:text-yellow-300 transition-colors">
+                        <option value="uk" class="text-slate-800">UK (£)</option>
+                        <option value="us" class="text-slate-800">USA ($)</option>
+                    </select>
+                </div>
+                <div class="w-px h-6 bg-white/10"></div>
+                <div class="flex items-center gap-2 px-1">
+                    <span class="text-[10px] font-black uppercase text-red-100">Offer</span>
+                    <div class="flex items-center">
+                        <input type="number" id="offerPercent" value="80" min="1" max="100" class="w-12 bg-transparent text-white font-black outline-none text-center">
+                        <span class="font-black text-xs">%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl w-full mx-auto p-4 flex-1 flex flex-col gap-6 my-4">
+        
+        <!-- VAULT DRAWER -->
+        <section id="vaultDrawer" class="hidden glass-panel rounded-3xl p-6 shadow-2xl border-2 border-yellow-400/30 animate-pop">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-xl font-black text-slate-700 flex items-center gap-3 italic uppercase tracking-tighter">
+                        <i class="fa-solid fa-vault text-yellow-500"></i> The Vault <span class="text-xs font-normal text-slate-400 not-italic">(Saved Watches)</span>
+                    </h2>
+                    <div class="bg-green-100 text-green-800 border border-green-200 px-3 py-1 rounded-full text-xs font-black flex items-center gap-2 shadow-inner">
+                        <span>Total Portfolio Value:</span> <span id="vaultTotalValue">£0.00</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="exportVault()" class="text-xs bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-xl font-black uppercase hover:bg-blue-100 transition-colors flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-download"></i> Export JSON
+                    </button>
+                    <label class="text-xs bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1.5 rounded-xl font-black uppercase hover:bg-emerald-100 transition-colors flex items-center gap-2 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-upload"></i> Import JSON
+                        <input type="file" id="importVaultInput" accept=".json" class="hidden" onchange="window.importVault(event)">
+                    </label>
+                    <div class="w-px h-6 bg-slate-200 mx-2"></div>
+                    <button onclick="clearVault()" class="text-[10px] font-black text-slate-400 hover:text-red-600 uppercase transition-colors px-2 py-1 rounded hover:bg-red-50">Clear All</button>
+                </div>
+            </div>
+            <div id="vaultContent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Vault items injected here -->
+            </div>
+        </section>
+
+        <!-- TOP SECTION -->
+        <section class="glass-panel rounded-3xl p-6 shadow-2xl z-30">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                    <h2 class="text-sm font-black text-blue-700 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-search"></i> 1. Search Sold Listings
+                    </h2>
+                    <form id="searchForm" class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="searchInput" placeholder="e.g. Charizard 4/102 PSA 9" class="flex-1 p-4 border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500 font-bold shadow-sm text-lg transition-all">
+                        <button type="submit" class="btn-poke bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black text-lg shadow-lg flex items-center justify-center gap-3 whitespace-nowrap">
+                            Open eBay <i class="fa-solid fa-external-link text-sm"></i>
+                        </button>
+                    </form>
+                    <div id="suggestionsWrapper" class="hidden animate-pop">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Smart Filters</p>
+                        <div id="suggestedFilters" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h2 class="text-sm font-black text-emerald-700 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-code"></i> 2. Analyze Page Source
+                    </h2>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <textarea id="manualHtmlInput" rows="1" class="flex-1 p-4 border-2 border-slate-200 rounded-2xl text-xs focus:outline-none focus:border-emerald-500 text-slate-500 font-mono bg-white/50 transition-all" placeholder="Paste source code here..."></textarea>
+                        <button id="parseManualBtn" type="button" class="btn-poke bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-lg shadow-lg flex items-center justify-center gap-3 whitespace-nowrap">
+                            <i class="fa-solid fa-bolt"></i> Analyze
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DASHBOARD SECTION -->
+        <div class="grid lg:grid-cols-12 gap-6 flex-1 items-start">
+            
+            <!-- LEFT COLUMN: Summary & Refinement -->
+            <div class="lg:col-span-4 flex flex-col gap-6 sticky top-28">
+                
+                <!-- Persistent Controls -->
+                <div class="glass-panel rounded-3xl p-6 shadow-xl space-y-5">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <h3 class="font-black text-slate-700 uppercase tracking-wider text-xs flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-blue-500"></i> Market Refinement
+                        </h3>
+                        <label class="flex items-center gap-2 cursor-pointer group" title="Removes items > 2.5x or < 0.3x median price">
+                            <input type="checkbox" id="outlierToggle" class="form-checkbox w-3 h-3 text-blue-500 rounded border-slate-300 focus:ring-blue-500" checked>
+                            <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-blue-500 transition-colors">Hide Outliers</span>
+                        </label>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5 ml-1">
+                                <label class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Inclusion Keywords:</label>
+                                <button onclick="document.getElementById('filterInput').value=''; renderFilteredResults();" class="text-[9px] font-bold text-slate-300 hover:text-red-500 uppercase">Clear</button>
+                            </div>
+                            <input type="text" id="filterInput" placeholder="e.g. Holo, Shadowless" class="w-full bg-slate-50 p-3 rounded-xl border-2 border-slate-100 focus:border-blue-400 outline-none text-xs font-bold transition-all">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5 ml-1">
+                                <label class="text-[10px] font-black text-red-400 uppercase tracking-widest">Negative Keywords:</label>
+                                <button onclick="document.getElementById('excludeInput').value=''; renderFilteredResults();" class="text-[9px] font-bold text-slate-300 hover:text-red-500 uppercase">Clear</button>
+                            </div>
+                            <input type="text" id="excludeInput" placeholder="e.g. PSA, CGC, Graded" class="w-full bg-slate-50 p-3 rounded-xl border-2 border-slate-100 focus:border-red-400 outline-none text-xs font-bold text-red-600 transition-all">
+                            
+                            <!-- Quick Exclude Filters -->
+                            <div class="mt-3 space-y-2">
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Smart Bundles (Excludes Multiple)</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button onclick="window.setExclude('Graded, PSA, CGC, BGS, ACE, PCA')" class="bg-red-600 hover:bg-red-700 text-white shadow-md px-2 py-1.5 rounded-lg text-[10px] font-black transition-colors flex items-center gap-1"><i class="fa-solid fa-ban"></i> No Graded</button>
+                                        <button onclick="window.setExclude('Lot, Bundle, Bulk, Collection')" class="bg-red-600 hover:bg-red-700 text-white shadow-md px-2 py-1.5 rounded-lg text-[10px] font-black transition-colors flex items-center gap-1"><i class="fa-solid fa-ban"></i> No Lots</button>
+                                        <button onclick="window.setExclude('1st Edition, First Edition')" class="bg-red-600 hover:bg-red-700 text-white shadow-md px-2 py-1.5 rounded-lg text-[10px] font-black transition-colors flex items-center gap-1"><i class="fa-solid fa-ban"></i> No 1st Ed</button>
+                                        <button onclick="window.setExclude('Japanese, JPN, JP')" class="bg-red-600 hover:bg-red-700 text-white shadow-md px-2 py-1.5 rounded-lg text-[10px] font-black transition-colors flex items-center gap-1"><i class="fa-solid fa-ban"></i> No Japanese</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Single Tags</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button onclick="window.setExclude('Proxy')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2 py-1 rounded-lg text-[10px] font-black transition-colors">Proxy</button>
+                                        <button onclick="window.setExclude('Sealed')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2 py-1 rounded-lg text-[10px] font-black transition-colors">Sealed</button>
+                                        <button onclick="window.setExclude('Jumbo')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2 py-1 rounded-lg text-[10px] font-black transition-colors">Jumbo</button>
+                                        <button onclick="window.setExclude('Oversized')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2 py-1 rounded-lg text-[10px] font-black transition-colors">Oversized</button>
+                                        <button onclick="window.setExclude('Korean')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2 py-1 rounded-lg text-[10px] font-black transition-colors">Korean</button>
+                                    </div>
+                                </div>
+                                <!-- Condition Exclusions -->
+                                <div>
+                                    <p class="text-[9px] font-black text-purple-400 uppercase tracking-widest mb-1 mt-2">Condition Exclusions</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button onclick="window.setExclude('LP, MP, HP, Damaged, Creased, Played, Poor')" class="bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200 px-2 py-1 rounded-lg text-[10px] font-black transition-colors"><i class="fa-solid fa-star"></i> Only Near Mint</button>
+                                        <button onclick="window.setExclude('HP, Damaged, Creased, Poor')" class="bg-purple-50 hover:bg-purple-100 text-purple-600 border border-purple-200 px-2 py-1 rounded-lg text-[10px] font-black transition-colors"><i class="fa-solid fa-heart-crack"></i> Exclude Damaged</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Valuation Stats -->
+                <div id="valuationSummary" class="hidden glass-panel rounded-3xl p-6 shadow-xl border-l-8 border-l-blue-400 animate-pop">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="font-black text-slate-700 uppercase tracking-wider text-xs flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-blue-500"></i> Advanced Analytics
+                        </h3>
+                        <span id="itemCountBadge" class="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-0.5 rounded-full">0 Items</span>
+                    </div>
+
+                    <!-- Market Links -->
+                    <div id="marketLinksArea" class="flex gap-2 mb-4"></div>
+                    
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-white/80 p-3 rounded-2xl border border-slate-100 text-center shadow-inner relative group">
+                                <p class="text-[9px] font-black text-slate-400 uppercase mb-0.5">Mean (Avg)</p>
+                                <p class="text-lg font-black text-slate-800" id="avgPriceDisplay">£0.00</p>
+                            </div>
+                            <div class="bg-white/80 p-3 rounded-2xl border border-slate-100 text-center shadow-inner">
+                                <p class="text-[9px] font-black text-slate-400 uppercase mb-0.5">Median</p>
+                                <p class="text-lg font-black text-slate-800" id="medianPriceDisplay">£0.00</p>
+                            </div>
+                        </div>
+
+                        <!-- Flipping Score & Profit -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col items-center justify-center text-center">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Liquidity</p>
+                                <div class="gauge-container mb-1">
+                                    <div class="gauge-body"></div>
+                                    <div id="liquidityGauge" class="gauge-fill" style="transform: rotate(0deg);"></div>
+                                </div>
+                                <p class="text-sm font-black text-slate-800" id="liquidityScoreValue">--</p>
+                            </div>
+                            <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 flex flex-col items-center justify-center text-center relative group">
+                                <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Est. Profit</p>
+                                <p class="text-2xl font-black text-emerald-700" id="profitDisplay">£0.00</p>
+                                <p class="text-[8px] font-bold text-emerald-600/60 uppercase">Net Margin</p>
+                                <!-- Tooltip for Fee Breakdown -->
+                                <div class="absolute bottom-full mb-2 hidden group-hover:block w-48 bg-slate-800 text-white text-[10px] p-2 rounded-lg shadow-xl z-50 text-left">
+                                    <p class="font-bold border-b border-slate-600 pb-1 mb-1">Fee Breakdown</p>
+                                    <div id="detailedFeeBreakdown"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 p-6 rounded-3xl text-white shadow-lg text-center">
+                            <p class="text-[11px] font-black text-yellow-900 uppercase tracking-widest mb-1 opacity-70">Buying Offer Target (<span id="targetPercentDisplay">80</span>%)</p>
+                            <p class="text-5xl font-black drop-shadow-md" id="offerPriceDisplay">£0.00</p>
+                            <p class="mt-4 text-[9px] font-bold text-yellow-900/60 uppercase tracking-wider leading-tight border-t border-white/20 pt-3" id="feeBreakdownStr"></p>
+                        </div>
+
+                        <button id="saveToVaultBtn" class="w-full bg-slate-800 hover:bg-black text-white p-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus-circle"></i> Save Snapshot to Vault
+                        </button>
+                    </div>
+                </div>
+
+                <div id="valuationPlaceholder" class="glass-panel rounded-3xl p-8 shadow-xl text-center text-slate-400">
+                    <i class="fa-solid fa-calculator text-4xl mb-4 opacity-20"></i>
+                    <p class="text-xs font-black uppercase tracking-widest">Awaiting Analysis</p>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="lg:col-span-8 flex flex-col gap-6">
+                <!-- Trend Chart Section -->
+                <section id="chartSection" class="hidden glass-panel rounded-3xl p-6 shadow-xl animate-pop">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="font-black text-sm text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                            <i class="fa-solid fa-chart-area text-purple-500"></i> Market Price Velocity
+                        </h2>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </section>
+
+                <section class="glass-panel rounded-3xl flex flex-col shadow-xl h-[60vh] overflow-hidden">
+                    <div class="p-4 bg-white/50 border-b border-slate-200 flex justify-between items-center">
+                        <h2 class="font-black text-xl text-slate-700 flex items-center gap-3">
+                            <i class="fa-solid fa-list-ul text-red-500"></i> Discovery Feed
+                        </h2>
+                        <!-- Sorting Selection -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Sort:</span>
+                            <select id="sortSelect" class="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold rounded-lg px-2 py-1 outline-none cursor-pointer shadow-sm hover:border-blue-400 transition-colors">
+                                <option value="dateDesc">Newest First</option>
+                                <option value="dateAsc">Oldest First</option>
+                                <option value="priceDesc">Price: High to Low</option>
+                                <option value="priceAsc">Price: Low to High</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="searchResultsArea" class="flex-1 overflow-y-auto p-4 space-y-3 bg-white/10">
+                        <div id="emptyStateMsg" class="h-full flex flex-col items-center justify-center text-center p-10 opacity-70">
+                            <img src="https://static.wikia.nocookie.net/pokemon/images/9/95/Kanto_Pok%C3%A9mon.png" class="w-full max-w-[200px] drop-shadow-2xl mb-8 opacity-40">
+                            <div class="space-y-3">
+                                <h3 class="text-xl font-black text-slate-500 uppercase tracking-tighter">Research Laboratory</h3>
+                                <p class="text-xs font-bold text-slate-400 max-w-xs mx-auto italic">Analyzing sold listings creates the valuation. Paste eBay source code to start.</p>
+                            </div>
+                        </div>
+                        <div id="scrapedItemsList" class="space-y-3 pb-8"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex justify-center items-center z-[100] p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border-b-8 border-red-600 animate-pop">
+            <div class="p-6 bg-red-600 text-white flex justify-between items-center">
+                <h2 class="font-black text-2xl italic tracking-tighter">Business Intelligence</h2>
+                <button id="closeSettingsBtn" class="text-white/60 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            <div class="p-8 space-y-6">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Selling Plan</label>
+                        <select id="sellerTypeInput" class="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold bg-slate-50 outline-none focus:border-red-500">
+                            <option value="private">Private (UK 0% Promo)</option>
+                            <option value="business">Business (Avg 10.9% + 30p)</option>
+                            <option value="custom">Custom Configuration</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">eBay Fee %</label>
+                            <input type="number" id="feePercentInput" step="0.1" class="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Fixed Fee</label>
+                            <input type="number" id="fixedFeeInput" step="0.01" class="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Avg Shipping / Materials</label>
+                        <input type="number" id="shipCostInput" step="0.01" class="w-full p-4 border-2 border-slate-100 rounded-2xl font-bold">
+                    </div>
+                </div>
+                <button id="saveSettingsBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-black p-4 rounded-2xl shadow-lg transition-all uppercase tracking-widest text-sm">Update Logic</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toastNotification" class="fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-[200] flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toastMsg" class="text-xs font-bold uppercase tracking-widest">Action Successful</span>
+    </div>
+
+    <script>
+        const regions = { uk: { domain: 'ebay.co.uk', currency: '£' }, us: { domain: 'ebay.com', currency: '$' } };
+        
+        let trendChartInstance = null;
+
+        const state = {
+            region: 'uk',
+            offerPercent: 80,
+            feeSettings: JSON.parse(localStorage.getItem('pokePricerFees')) || { sellerType: 'private', feePercent: 0, fixedFee: 0, shipCost: 1.50 },
+            vault: JSON.parse(localStorage.getItem('pokePricerVault')) || [],
+            rawScrapedItems: [],
+            currentFilteredItems: [],
+            currentSearch: ''
+        };
+
+        const els = {
+            regionSelect: document.getElementById('region'),
+            offerInput: document.getElementById('offerPercent'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            settingsModal: document.getElementById('settingsModal'),
+            closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+            saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+            sellerTypeInput: document.getElementById('sellerTypeInput'),
+            feePercentInput: document.getElementById('feePercentInput'),
+            fixedFeeInput: document.getElementById('fixedFeeInput'),
+            shipCostInput: document.getElementById('shipCostInput'),
+            searchForm: document.getElementById('searchForm'),
+            searchInput: document.getElementById('searchInput'),
+            manualHtmlInput: document.getElementById('manualHtmlInput'),
+            parseManualBtn: document.getElementById('parseManualBtn'),
+            filterInput: document.getElementById('filterInput'),
+            excludeInput: document.getElementById('excludeInput'),
+            outlierToggle: document.getElementById('outlierToggle'),
+            sortSelect: document.getElementById('sortSelect'),
+            suggestedFilters: document.getElementById('suggestedFilters'),
+            suggestionsWrapper: document.getElementById('suggestionsWrapper'),
+            summaryDiv: document.getElementById('valuationSummary'),
+            summaryPlaceholder: document.getElementById('valuationPlaceholder'),
+            marketLinksArea: document.getElementById('marketLinksArea'),
+            avgDisplay: document.getElementById('avgPriceDisplay'),
+            medianDisplay: document.getElementById('medianPriceDisplay'),
+            offerDisplay: document.getElementById('offerPriceDisplay'),
+            profitDisplay: document.getElementById('profitDisplay'),
+            detailedFeeBreakdown: document.getElementById('detailedFeeBreakdown'),
+            targetPercentDisplay: document.getElementById('targetPercentDisplay'),
+            itemCountBadge: document.getElementById('itemCountBadge'),
+            feeBreakdownStr: document.getElementById('feeBreakdownStr'),
+            scrapedList: document.getElementById('scrapedItemsList'),
+            emptyStateMsg: document.getElementById('emptyStateMsg'),
+            chartSection: document.getElementById('chartSection'),
+            saveToVaultBtn: document.getElementById('saveToVaultBtn'),
+            vaultDrawer: document.getElementById('vaultDrawer'),
+            vaultContent: document.getElementById('vaultContent'),
+            vaultToggleBtn: document.getElementById('vaultToggleBtn'),
+            vaultTotalValue: document.getElementById('vaultTotalValue'),
+            liquidityScoreValue: document.getElementById('liquidityScoreValue'),
+            liquidityGauge: document.getElementById('liquidityGauge'),
+            toast: document.getElementById('toastNotification'),
+            toastMsg: document.getElementById('toastMsg')
+        };
+
+        function showToast(msg) {
+            els.toastMsg.innerText = msg;
+            els.toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                els.toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function init() {
+            const savedRegion = localStorage.getItem('pokePricerRegion');
+            const savedPercent = localStorage.getItem('pokePricerPercent');
+            
+            if (savedRegion && els.regionSelect) { 
+                state.region = savedRegion; 
+                els.regionSelect.value = savedRegion; 
+            }
+            if (savedPercent && els.offerInput) { 
+                state.offerPercent = parseInt(savedPercent); 
+                els.offerInput.value = savedPercent; 
+            }
+
+            if (els.sellerTypeInput) els.sellerTypeInput.value = state.feeSettings.sellerType || 'private';
+            if (els.feePercentInput) els.feePercentInput.value = state.feeSettings.feePercent;
+            if (els.fixedFeeInput) els.fixedFeeInput.value = state.feeSettings.fixedFee;
+            if (els.shipCostInput) els.shipCostInput.value = state.feeSettings.shipCost;
+
+            attachListeners();
+            renderVault();
+            initExtensionBridge();
+        }
+
+        function attachListeners() {
+            if (els.settingsBtn) els.settingsBtn.addEventListener('click', () => els.settingsModal.classList.remove('hidden'));
+            if (els.closeSettingsBtn) els.closeSettingsBtn.addEventListener('click', () => els.settingsModal.classList.add('hidden'));
+            if (els.vaultToggleBtn) els.vaultToggleBtn.addEventListener('click', () => els.vaultDrawer.classList.toggle('hidden'));
+
+            if (els.sellerTypeInput) {
+                els.sellerTypeInput.addEventListener('change', (e) => {
+                    if (e.target.value === 'private') { 
+                        els.feePercentInput.value = 0; 
+                        els.fixedFeeInput.value = 0.00; 
+                    } else if (e.target.value === 'business') { 
+                        els.feePercentInput.value = 10.9; 
+                        els.fixedFeeInput.value = 0.30; 
+                    }
+                });
+            }
+
+            if (els.saveSettingsBtn) {
+                els.saveSettingsBtn.addEventListener('click', () => {
+                    state.feeSettings = {
+                        sellerType: els.sellerTypeInput.value,
+                        feePercent: parseFloat(els.feePercentInput.value) || 0,
+                        fixedFee: parseFloat(els.fixedFeeInput.value) || 0,
+                        shipCost: parseFloat(els.shipCostInput.value) || 0
+                    };
+                    localStorage.setItem('pokePricerFees', JSON.stringify(state.feeSettings));
+                    els.settingsModal.classList.add('hidden');
+                    if (state.rawScrapedItems.length > 0) renderFilteredResults();
+                });
+            }
+
+            if (els.regionSelect) {
+                els.regionSelect.addEventListener('change', (e) => {
+                    state.region = e.target.value;
+                    localStorage.setItem('pokePricerRegion', state.region);
+                    renderVault(); // update currency symbol in vault total
+                    if (state.rawScrapedItems.length > 0) renderFilteredResults();
+                });
+            }
+
+            if (els.offerInput) {
+                els.offerInput.addEventListener('input', (e) => {
+                    state.offerPercent = parseInt(e.target.value) || 0;
+                    localStorage.setItem('pokePricerPercent', state.offerPercent);
+                    els.targetPercentDisplay.innerText = state.offerPercent;
+                    if (state.rawScrapedItems.length > 0) renderFilteredResults();
+                });
+            }
+
+            if (els.searchForm) {
+                els.searchForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    state.currentSearch = els.searchInput.value.trim();
+                    if (state.currentSearch) {
+                        const domain = regions[state.region].domain;
+                        window.open(`https://www.${domain}/sch/i.html?_nkw=${encodeURIComponent(state.currentSearch)}&_sacat=0&_from=R40&LH_PrefLoc=1&rt=nc&LH_Sold=1&LH_Complete=1`, '_blank');
+                    }
+                });
+            }
+
+            if (els.filterInput) els.filterInput.addEventListener('input', () => renderFilteredResults());
+            if (els.excludeInput) els.excludeInput.addEventListener('input', () => renderFilteredResults());
+            if (els.outlierToggle) els.outlierToggle.addEventListener('change', () => renderFilteredResults());
+            if (els.sortSelect) els.sortSelect.addEventListener('change', () => renderFilteredResults());
+
+            if (els.parseManualBtn) {
+                els.parseManualBtn.addEventListener('click', () => {
+                    const html = els.manualHtmlInput.value.trim();
+                    if (!html) return;
+                    performAnalysis(html);
+                });
+            }
+
+            if (els.saveToVaultBtn) els.saveToVaultBtn.addEventListener('click', () => addToVault());
+        }
+
+        function performAnalysis(html) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const items = extractItemsFromDoc(doc);
+                
+                if (items.length === 0) {
+                    alert("No sold listings detected. Ensure you are on the eBay 'Sold' results page and copied the entire source code.");
+                    return;
+                }
+
+                els.emptyStateMsg.classList.add('hidden');
+                els.manualHtmlInput.value = '';
+                showToast(`Analyzed ${items.length} Sold Listings`);
+                processResults(items);
+            } catch (err) {
+                alert("Parsing error. The source code might be incomplete.");
+            }
+        }
+
+        function extractItemsFromDoc(doc) {
+            const items = [];
+            const itemNodes = doc.querySelectorAll('.s-item, .s-card, [data-testid=\"s-item\"], .x-vi-evo-cvip-container');
+            
+            itemNodes.forEach(node => {
+                const titleNode = node.querySelector('.s-item__title, .s-card__title, h3, .x-item-condensed-card__title');
+                const priceNode = node.querySelector('.s-item__price, .s-card__price, .s-item__price span, .x-item-condensed-card__price');
+                const linkNode = node.querySelector('.s-item__link, .s-card__link, a, .ux-action');
+                const imgNode = node.querySelector('.s-item__image-img, .s-item__image img, img, .ux-image img');
+                
+                const dateNode = node.querySelector('.x-item-condensed-card__date, .s-item__title--tag, .s-item__caption, .POSITIVE, .s-item__listing-status');
+
+                if (titleNode && priceNode) {
+                    let title = titleNode.textContent.trim().replace(/Opens in a new window or tab|New Listing|Sold/gi, '').trim();
+                    if (!title || title.toLowerCase().includes('shop on ebay')) return;
+
+                    let priceText = priceNode.textContent.trim();
+                    const priceMatch = priceText.match(/[\d,]+\.\d{2}/);
+                    
+                    if (priceMatch) {
+                        const price = parseFloat(priceMatch[0].replace(/,/g, ''));
+                        const id = 'pk_' + Math.random().toString(36).substr(2, 9);
+                        let link = linkNode ? (linkNode.getAttribute('href') || '#').split('?')[0] : '#';
+                        let imageUrl = imgNode ? (imgNode.getAttribute('data-src') || imgNode.getAttribute('src')) : '';
+                        
+                        let dateStrRaw = dateNode ? dateNode.textContent.trim() : '';
+                        let cleanDisplayDate = dateStrRaw.replace(/Sold\s+|Ended\s+|on\s+/gi, '').trim();
+                        
+                        let soldDateObj = null;
+                        if (cleanDisplayDate) {
+                            const dateOnlyPart = cleanDisplayDate.split(',').slice(0, 3).join(',');
+                            soldDateObj = new Date(dateOnlyPart);
+                        }
+                        
+                        if (!soldDateObj || isNaN(soldDateObj.getTime())) soldDateObj = new Date(); 
+
+                        items.push({ 
+                            id, 
+                            title, 
+                            price, 
+                            priceText, 
+                            link, 
+                            imageUrl, 
+                            soldDate: soldDateObj, 
+                            displayDate: cleanDisplayDate || soldDateObj.toLocaleDateString() 
+                        });
+                    }
+                }
+            });
+            return items;
+        }
+
+        function processResults(items) {
+            state.rawScrapedItems = items;
+            els.filterInput.value = ''; 
+            els.excludeInput.value = '';
+            
+            generateSmartSuggestions();
+            renderFilteredResults();
+        }
+
+        function generateSmartSuggestions() {
+            if (!state.rawScrapedItems || state.rawScrapedItems.length === 0) return;
+            els.suggestionsWrapper.classList.remove('hidden');
+            
+            const stopWords = new Set(['pokemon', 'card', 'cards', 'tcg', 'holo', 'mint', 'nm', 'near', 'psa', 'promo', 'sealed', 'rare', 'ultra', 'secret', 'full', 'alternate', 'alt', 'graded', 'bundle', 'lot', 'edition', '1st', 'japanese', 'english']);
+            const wordCounts = {};
+            state.rawScrapedItems.forEach(item => {
+                item.title.toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).forEach(word => {
+                    if (word.length > 2 && !stopWords.has(word)) wordCounts[word] = (wordCounts[word] || 0) + 1;
+                });
+            });
+
+            const topWords = Object.keys(wordCounts).sort((a, b) => wordCounts[b] - wordCounts[a]).slice(0, 12);
+            els.suggestedFilters.innerHTML = topWords.map(w => `<button onclick=\"window.setFilter('${w}')\" class=\"bg-white hover:bg-blue-50 text-blue-700 px-3 py-1 rounded-xl capitalize border border-slate-200 text-[10px] font-black shadow-sm\">+ ${w}</button>`).join('');
+        }
+
+        function getMedian(values) {
+            if (values.length === 0) return 0;
+            const sorted = [...values].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+        }
+
+        function calculateLiquidity(items) {
+            if (items.length < 2) return 0;
+            const now = new Date();
+            const last48h = items.filter(i => (now - i.soldDate) < (48 * 60 * 60 * 1000)).length;
+            const score = Math.min(100, (last48h / Math.max(1, items.length / 10)) * 25);
+            return Math.round(score);
+        }
+
+        // Shared helper function to generate the common identifier text
+        function generateSnapshotName(items) {
+            const stopWords = new Set(['pokemon', 'card', 'cards', 'tcg', 'holo', 'mint', 'nm', 'near', 'psa', 'promo', 'sealed', 'rare', 'ultra', 'secret', 'full', 'alternate', 'alt', 'graded', 'bundle', 'lot', 'edition', '1st', 'japanese', 'english', 'with', 'the', 'and', 'for', 'of', 'in', 'gem', 'cgc', 'bgs', 'ace']);
+            const wordCounts = {};
+            const numberCounts = {}; // Track xxx/xxx formats
+            
+            items.forEach(item => {
+                item.title.split(/\s+/).forEach(word => {
+                    // Check for xxx/xxx number format first (must contain / and at least one digit)
+                    let cleanNum = word.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '');
+                    if (cleanNum.includes('/') && /\d/.test(cleanNum)) {
+                        numberCounts[cleanNum.toUpperCase()] = (numberCounts[cleanNum.toUpperCase()] || 0) + 1;
+                        return; // Skip adding to normal words
+                    }
+
+                    // Normal word processing
+                    let w = word.toLowerCase().replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi, '');
+                    // Exclude stopwords, words length < 3, purely numeric strings, and things with slashes
+                    if (w.length > 2 && !stopWords.has(w) && !w.includes('/')) {
+                        wordCounts[w] = (wordCounts[w] || 0) + 1;
+                    }
+                });
+            });
+            
+            const sortedWords = Object.keys(wordCounts).sort((a, b) => wordCounts[b] - wordCounts[a]);
+            const sortedNumbers = Object.keys(numberCounts).sort((a, b) => numberCounts[b] - numberCounts[a]);
+            
+            let generatedName = "Snapshot";
+            if (sortedWords.length > 0) {
+                // Capitalize the top word
+                generatedName = sortedWords[0].charAt(0).toUpperCase() + sortedWords[0].slice(1).toLowerCase();
+            }
+
+            // Append the most common card number if found
+            if (sortedNumbers.length > 0) {
+                if (generatedName === "Snapshot") {
+                    generatedName = sortedNumbers[0];
+                } else {
+                    generatedName += " " + sortedNumbers[0];
+                }
+            }
+
+            // Fallback to the current search query if "Snapshot" was generated
+            if (generatedName === "Snapshot" && state.currentSearch) {
+                generatedName = state.currentSearch;
+            }
+
+            return generatedName;
+        }
+
+        window.copyItemInfo = function(title, price, link) {
+            const textToCopy = `${title}\nSold For: ${price}\nLink: ${link}`;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast("Listing Copied to Clipboard!");
+            }).catch(err => {
+                console.error("Failed to copy", err);
+            });
+        };
+
+        function renderFilteredResults() {
+            const includeStr = els.filterInput.value.toLowerCase().trim();
+            const excludeStr = els.excludeInput.value.toLowerCase().trim();
+            const includeTerms = includeStr ? includeStr.split(/[\s,]+/) : [];
+            const excludeTerms = excludeStr ? excludeStr.split(/[\s,]+/) : [];
+
+            // 1. Initial filter based on keywords
+            let filtered = state.rawScrapedItems.filter(item => {
+                const title = item.title.toLowerCase();
+                const hasInclusions = includeTerms.every(t => title.includes(t));
+                const hasExclusions = excludeTerms.some(t => t.length > 0 && title.includes(t));
+                return hasInclusions && !hasExclusions;
+            });
+
+            // 2. Outlier Rejection Logic (Feature Enhancement)
+            const hideOutliers = els.outlierToggle.checked;
+            if (hideOutliers && filtered.length > 3) {
+                const initialPrices = filtered.map(i => i.price);
+                const initialMedian = getMedian(initialPrices);
+                // Filter out items that are suspiciously cheap (< 30% of median) or overly expensive (> 2.5x median)
+                filtered = filtered.filter(item => item.price >= (initialMedian * 0.3) && item.price <= (initialMedian * 2.5));
+            }
+
+            // 3. Sorting Logic (Feature Enhancement)
+            const sortMode = els.sortSelect.value;
+            filtered.sort((a, b) => {
+                if (sortMode === 'dateDesc') return b.soldDate - a.soldDate;
+                if (sortMode === 'dateAsc') return a.soldDate - b.soldDate;
+                if (sortMode === 'priceDesc') return b.price - a.price;
+                if (sortMode === 'priceAsc') return a.price - b.price;
+                return 0; // Default
+            });
+
+            // Update state with currently filtered items so The Vault can process them
+            state.currentFilteredItems = filtered;
+
+            if (filtered.length === 0) {
+                els.summaryDiv.classList.add('hidden');
+                els.chartSection.classList.add('hidden');
+                els.summaryPlaceholder.classList.remove('hidden');
+                els.scrapedList.innerHTML = `<div class=\"p-10 text-center opacity-40 italic font-black text-sm\">No matches for current filters</div>`;
+                return;
+            }
+
+            const cur = regions[state.region].currency;
+            const prices = filtered.map(i => i.price);
+            const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+            const median = getMedian(prices);
+            
+            const f = state.feeSettings;
+            const ebayFees = (avg * (f.feePercent / 100)) + f.fixedFee;
+            const totalFees = ebayFees + f.shipCost;
+            const net = Math.max(0, avg - totalFees);
+            const offer = net * (state.offerPercent / 100);
+            const profit = net - offer;
+
+            const liquidity = calculateLiquidity(filtered);
+
+            els.itemCountBadge.innerText = `${filtered.length} Items`;
+            els.avgDisplay.innerText = `${cur}${avg.toFixed(2)}`;
+            els.medianDisplay.innerText = `${cur}${median.toFixed(2)}`;
+            els.offerDisplay.innerText = `${cur}${offer.toFixed(2)}`;
+            els.profitDisplay.innerText = `${cur}${profit.toFixed(2)}`;
+            els.feeBreakdownStr.innerText = `${cur}${avg.toFixed(2)} Avg - Fees - ${cur}${f.shipCost.toFixed(2)} Ship = ${cur}${net.toFixed(2)} Net Take-Home`;
+            
+            // Detailed fee breakdown tooltip
+            els.detailedFeeBreakdown.innerHTML = `
+                <div class="flex justify-between mb-1"><span>Platform (${f.feePercent}%):</span> <span>${cur}${ebayFees.toFixed(2)}</span></div>
+                <div class="flex justify-between mb-1"><span>Est. Shipping:</span> <span>${cur}${f.shipCost.toFixed(2)}</span></div>
+                <div class="flex justify-between font-black mt-2 pt-1 border-t border-slate-600"><span>Net Item Value:</span> <span class="text-emerald-400">${cur}${net.toFixed(2)}</span></div>
+            `;
+
+            els.liquidityScoreValue.innerText = `${liquidity}/100`;
+            els.liquidityGauge.style.transform = `rotate(${(liquidity / 100) * 180}deg)`;
+
+            // --- FEATURE 4: Generate Market Links in Advanced Analytics ---
+            const searchTerm = generateSnapshotName(filtered);
+            const tcgLink = `https://www.tcgplayer.com/search/product/all?q=${encodeURIComponent(searchTerm)}`;
+            const cmLink = `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${encodeURIComponent(searchTerm)}`;
+
+            if (els.marketLinksArea) {
+                els.marketLinksArea.innerHTML = `
+                    <a href="${tcgLink}" target="_blank" class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 p-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-center transition-colors border border-indigo-200 shadow-sm flex items-center justify-center gap-2"><i class="fa-solid fa-search"></i> TCGPlayer</a>
+                    <a href="${cmLink}" target="_blank" class="flex-1 bg-sky-50 hover:bg-sky-100 text-sky-700 p-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-center transition-colors border border-sky-200 shadow-sm flex items-center justify-center gap-2"><i class="fa-solid fa-search"></i> Cardmarket</a>
+                `;
+            }
+
+            els.summaryDiv.classList.remove('hidden');
+            els.summaryPlaceholder.classList.add('hidden');
+            els.chartSection.classList.remove('hidden');
+
+            updateChart(filtered);
+
+            els.scrapedList.innerHTML = filtered.map(i => {
+                // FEATURE 5: Sniper Gauge
+                const isSnipeTarget = i.price <= (median * 0.70);
+                const snipeClass = isSnipeTarget ? 'snipe-target' : '';
+                const snipeBadge = isSnipeTarget ? `<span class="bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest ml-2 align-middle shadow-sm animate-pulse"><i class="fa-solid fa-crosshairs"></i> Snipe Target</span>` : '';
+                
+                return `
+                    <div class=\"bg-white p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-4 card-hover animate-pop group ${snipeClass}\" onclick=\"window.open('${i.link}', '_blank')\">
+                        <div class=\"flex items-center gap-4 min-w-0 flex-1\">
+                            <!-- FEATURE 1: Holographic Card Effects -->
+                            <div class=\"w-12 h-16 shrink-0 bg-slate-50 rounded-lg overflow-hidden flex items-center justify-center border border-slate-100 group-hover:border-blue-300 transition-colors card-holographic\">
+                                <img src=\"${i.imageUrl || 'https://pngimg.com/d/pokeball_PNG7.png'}\" class=\"w-full h-full object-cover\" onerror=\"this.src='https://pngimg.com/d/pokeball_PNG7.png'\">
+                            </div>
+                            <div class=\"min-w-0 flex-1\">
+                                <p class=\"text-xs font-black text-slate-700 leading-tight mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors\">${i.title}${snipeBadge}</p>
+                                <div class=\"flex items-center gap-2 mt-1\">
+                                    <span class=\"text-[9px] font-black text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded uppercase tracking-widest\">${i.displayDate}</span>
+                                    <button onclick=\"event.stopPropagation(); copyItemInfo('${i.title.replace(/'/g, "\\'")}', '${i.priceText}', '${i.link}')\" class=\"text-[9px] font-black text-slate-400 bg-slate-50 hover:bg-slate-200 hover:text-slate-700 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 shadow-sm opacity-0 group-hover:opacity-100\"><i class="fa-regular fa-copy"></i> Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class=\"text-right flex flex-col items-end shrink-0\" onclick=\"event.stopPropagation()\">
+                            <span class=\"font-black text-base text-slate-800\">${i.priceText}</span>
+                            <button onclick=\"excludeItem('${i.id}')\" class=\"text-[9px] font-black text-red-300 hover:text-red-500 mt-1\">Remove</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateChart(data) {
+            // Sort strictly by date for charting purposes regardless of list sort
+            const sorted = [...data].sort((a, b) => a.soldDate - b.soldDate);
+            const labels = sorted.map(i => i.displayDate.split(',').slice(1, 2).join('').trim() || i.displayDate);
+            const points = sorted.map(i => i.price);
+            const titles = sorted.map(i => i.title); // Feature Enhancement: Tooltip Context
+
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            const cur = regions[state.region].currency;
+
+            if (trendChartInstance) {
+                trendChartInstance.data.labels = labels;
+                trendChartInstance.data.datasets[0].data = points;
+                trendChartInstance.data.datasets[0].titles = titles; // Store custom array in dataset
+                trendChartInstance.update();
+            } else {
+                trendChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Sold Price',
+                            data: points,
+                            titles: titles, // Custom property for tooltip
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#fff',
+                            pointBorderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index',
+                        },
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: { // Improved Tooltips
+                                callbacks: {
+                                    title: function(context) {
+                                        return context[0].label;
+                                    },
+                                    label: function(context) {
+                                        const index = context.dataIndex;
+                                        const title = context.dataset.titles[index];
+                                        const shortTitle = title.length > 35 ? title.substring(0, 35) + '...' : title;
+                                        return `${cur}${context.raw.toFixed(2)} - ${shortTitle}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: false,
+                                grid: { color: 'rgba(0,0,0,0.03)' },
+                                ticks: { font: { size: 10, weight: '900' }, callback: function(val) { return cur + val; } }
+                            },
+                            x: { 
+                                grid: { display: false },
+                                ticks: { font: { size: 8, weight: '700' }, maxRotation: 45 }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function addToVault() {
+            if(state.rawScrapedItems.length === 0) {
+                alert("You need to analyze a search before saving it to the Vault.");
+                return;
+            }
+            if(!state.currentFilteredItems || state.currentFilteredItems.length === 0) {
+                alert("No items left after filtering. Nothing to save.");
+                return;
+            }
+
+            const avg = els.avgDisplay.innerText;
+            
+            // Generate snapshot name using the new shared function
+            const generatedName = generateSnapshotName(state.currentFilteredItems);
+
+            // FEATURE 3: Snapshot Thumbnail (grab image from the first filtered item)
+            const thumbnailImage = state.currentFilteredItems[0] ? state.currentFilteredItems[0].imageUrl : '';
+
+            const entry = {
+                id: Date.now(),
+                name: generatedName,
+                price: avg,
+                date: new Date().toLocaleDateString(),
+                count: els.itemCountBadge.innerText,
+                rawItems: state.rawScrapedItems,
+                includeFilters: els.filterInput.value,
+                excludeFilters: els.excludeInput.value,
+                thumbnail: thumbnailImage
+            };
+
+            state.vault.unshift(entry);
+            localStorage.setItem('pokePricerVault', JSON.stringify(state.vault));
+            renderVault();
+            showToast("Saved to Vault");
+            els.vaultDrawer.classList.remove('hidden');
+        }
+
+        function renderVault() {
+            const cur = regions[state.region].currency;
+            
+            // Calculate Total Portfolio Value
+            let totalValue = state.vault.reduce((sum, item) => {
+                const numericPrice = parseFloat(item.price.replace(/[^0-9.]/g, ''));
+                return sum + (isNaN(numericPrice) ? 0 : numericPrice);
+            }, 0);
+            
+            if (els.vaultTotalValue) els.vaultTotalValue.innerText = `${cur}${totalValue.toFixed(2)}`;
+
+            if (state.vault.length === 0) {
+                els.vaultContent.innerHTML = `<p class=\"col-span-full text-center text-slate-400 py-4 font-black text-xs uppercase italic\">Vault is empty</p>`;
+                return;
+            }
+            els.vaultContent.innerHTML = state.vault.map(v => `
+                <div onclick=\"window.loadVaultItem(${v.id})\" class=\"bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative vault-item transition-all hover:border-yellow-400 cursor-pointer group flex flex-col justify-between\">
+                    
+                    <div class=\"flex items-center gap-3 mb-3\">
+                        <div class="w-10 h-10 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0 group-hover:border-yellow-400 transition-colors flex items-center justify-center">
+                            <img src="${v.thumbnail || 'https://pngimg.com/d/pokeball_PNG7.png'}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class=\"flex justify-between items-start\">
+                                <p class=\"text-xs font-black text-slate-700 uppercase tracking-tighter truncate group-hover:text-blue-600 transition-colors pr-2\">${v.name}</p>
+                                <span class=\"text-[8px] font-black text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded uppercase shrink-0\">${v.date}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class=\"flex items-end justify-between mt-auto\">
+                        <p class=\"text-xl font-black text-slate-800 leading-none\">${v.price}</p>
+                        <p class=\"text-[9px] font-bold text-slate-400 uppercase\">${v.count}</p>
+                    </div>
+
+                    <div class=\"absolute inset-0 bg-blue-500/5 backdrop-blur-[1px] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center\">
+                        <span class=\"bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest shadow-lg\"><i class="fa-solid fa-folder-open"></i> Load Snapshot</span>
+                    </div>
+                    <div class=\"vault-actions opacity-0 absolute top-2 right-2 flex gap-1 transition-opacity z-10\">
+                        <button onclick=\"event.stopPropagation(); deleteVaultItem(${v.id})\" class=\"bg-red-50 text-red-500 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] hover:bg-red-500 hover:text-white transition-colors shadow-sm\">
+                            <i class=\"fa-solid fa-trash\"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.loadVaultItem = function(id) {
+            const entry = state.vault.find(v => v.id === id);
+            if (!entry) return;
+
+            if (!entry.rawItems || entry.rawItems.length === 0) {
+                alert("This snapshot is from an older version and does not contain raw data. Please delete it and save a new snapshot.");
+                return;
+            }
+
+            // Restore state items and convert date strings back to actual Date objects
+            state.rawScrapedItems = entry.rawItems.map(item => ({
+                ...item,
+                soldDate: new Date(item.soldDate)
+            }));
+            state.currentSearch = entry.name;
+            els.searchInput.value = entry.name === "Custom Filter Snapshot" ? "" : entry.name;
+
+            // Restore suggestions and inputs
+            generateSmartSuggestions();
+            els.filterInput.value = entry.includeFilters || '';
+            els.excludeInput.value = entry.excludeFilters || '';
+
+            // Hide the empty state message and manual input
+            els.emptyStateMsg.classList.add('hidden');
+            els.manualHtmlInput.value = '';
+
+            // Close the vault drawer to show the dashboard
+            els.vaultDrawer.classList.add('hidden');
+            showToast(`Loaded Snapshot: ${entry.name}`);
+
+            renderFilteredResults();
+        };
+
+        window.exportVault = function() {
+            if (state.vault.length === 0) {
+                alert("Your Vault is empty. Nothing to export.");
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.vault));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "pokepricer_vault_" + Date.now() + ".json");
+            document.body.appendChild(downloadAnchorNode); 
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        };
+
+        window.importVault = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedVault = JSON.parse(e.target.result);
+                    if (Array.isArray(importedVault)) {
+                        const currentIds = new Set(state.vault.map(v => v.id));
+                        let addedCount = 0;
+                        
+                        importedVault.forEach(item => {
+                            // Only add if it doesn't exist and has the required structure
+                            if (!currentIds.has(item.id) && item.id && item.price) {
+                                state.vault.push(item);
+                                addedCount++;
+                            }
+                        });
+                        
+                        // Sort by newest first
+                        state.vault.sort((a, b) => b.id - a.id);
+                        localStorage.setItem('pokePricerVault', JSON.stringify(state.vault));
+                        renderVault();
+                        showToast(`Imported ${addedCount} Vault Items!`);
+                    } else {
+                        alert("Invalid Vault file format. Must be a JSON array.");
+                    }
+                } catch (err) {
+                    alert("Error parsing JSON file. The file might be corrupted.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input to allow re-uploading the same file if needed
+        };
+
+        window.deleteVaultItem = function(id) {
+            state.vault = state.vault.filter(v => v.id !== id);
+            localStorage.setItem('pokePricerVault', JSON.stringify(state.vault));
+            renderVault();
+            showToast("Item Removed From Vault");
+        };
+
+        window.clearVault = function() {
+            if(confirm("Are you sure you want to delete all saved items from the Vault?")) {
+                state.vault = [];
+                localStorage.removeItem('pokePricerVault');
+                renderVault();
+                showToast("Vault Cleared");
+            }
+        };
+
+        window.setFilter = function(term) {
+            const current = els.filterInput.value.trim();
+            const terms = current ? current.toLowerCase().split(/\s+/) : [];
+            if (!terms.includes(term.toLowerCase())) {
+                els.filterInput.value = current ? `${current} ${term}` : term;
+                renderFilteredResults();
+            }
+        };
+
+        window.setExclude = function(newTermsString) {
+            const current = els.excludeInput.value.trim();
+            const existingTerms = current ? current.toLowerCase().split(/,\s*/) : [];
+            const newTerms = newTermsString.split(',').map(t => t.trim());
+            
+            let added = false;
+            let finalString = current;
+
+            newTerms.forEach(term => {
+                if (!existingTerms.includes(term.toLowerCase())) {
+                    existingTerms.push(term.toLowerCase());
+                    finalString = finalString ? `${finalString}, ${term}` : term;
+                    added = true;
+                }
+            });
+            
+            if (added) {
+                els.excludeInput.value = finalString;
+                renderFilteredResults();
+            }
+        };
+
+        window.excludeItem = function(id) {
+            state.rawScrapedItems = state.rawScrapedItems.filter(i => i.id !== id);
+            renderFilteredResults();
+        };
+
+        function initExtensionBridge() {
+    window.addEventListener('message', (event) => {
+        // 1. Accept the data
+        if (event.data && event.data.type === 'POKEPRICER_SOURCE_DATA') {
+            els.manualHtmlInput.value = event.data.html;
+            performAnalysis(event.data.html);
+            
+            // 2. Tell the bookmarklet we got it
+            if (event.source) {
+                event.source.postMessage('POKEPRICER_READY', event.origin);
+            }
+        }
+    });
+}
+
+        window.onload = function() {
+            init();
+        }
+    </script>
+</body>
+</html>
