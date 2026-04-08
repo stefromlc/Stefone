@@ -1,0 +1,2808 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pitch-Data Pro - Advanced Premier League football analytics, algorithmic backtesting, and AI match predictions.">
+    <meta name="keywords" content="EPL, Premier League, Football Analytics, Betting Algorithms, Backtesting, Poisson Distribution, Match Predictions">
+    <meta name="author" content="Pitch-Data Pro">
+    <title>Pitch-Data Pro - Advanced</title>
+    <!-- Professional Code-Based SVG Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231C1C1E'/><path d='M20 70 L40 50 L60 60 L80 30' stroke='%230A84FF' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='80' cy='30' r='6' fill='%2330D158'/></svg>" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        apple: {
+                            bg: '#000000',
+                            card: 'rgba(28, 28, 30, 0.6)',
+                            cardHover: 'rgba(44, 44, 46, 0.8)',
+                            border: 'rgba(255, 255, 255, 0.08)',
+                            text: '#F5F5F7',
+                            textMuted: '#86868B',
+                            blue: '#0A84FF',
+                            green: '#30D158',
+                            red: '#FF453A',
+                            orange: '#FF9F0A',
+                            purple: '#BF5AF2'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #000; color: #F5F5F7; overflow-x: hidden; }
+        
+        select option {
+            background-color: #1C1C1E; 
+            color: #F5F5F7;            
+        }
+        
+        .glass-panel {
+            background: rgba(28, 28, 30, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+        }
+        .glass-nav {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .apple-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            transition: all 0.2s ease;
+            color: white;
+        }
+        .apple-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #0A84FF;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.15);
+        }
+        .apple-btn {
+            background: #0A84FF;
+            color: white;
+            border-radius: 999px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .apple-btn:hover:not(:disabled) { background: #0071E3; transform: scale(0.98); }
+        .apple-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.2); border-radius: 10px; }
+        .hidden { display: none !important; }
+        .nav-btn { color: #86868B; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .nav-btn.active { color: #F5F5F7; font-weight: 600; background: rgba(255,255,255,0.1); border-radius: 999px; }
+        
+        .progress-bar-bg { background-color: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; height: 6px; }
+        .progress-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease-in-out; }
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            background: #0A84FF;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(10,132,255,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Global Modal Overlay -->
+    <div id="globalModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="glass-panel w-full max-w-4xl max-h-[85vh] flex flex-col relative overflow-hidden transform scale-95 transition-transform duration-300" id="globalModalContentBox">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+                <h2 id="modalTitle" class="text-2xl font-bold text-white">Modal Title</h2>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-apple-textMuted hover:text-white hover:bg-white/20 transition-all">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div id="modalBody" class="p-6 overflow-y-auto custom-scrollbar flex-1">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Blurred Navigation -->
+    <nav class="glass-nav sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="#" class="nav-btn px-3 py-1.5 text-sm flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 hover:text-white transition-all mr-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        Projects
+                    </a>
+                    
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-apple-blue to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                    </div>
+                    <span class="font-bold tracking-tight text-lg hidden sm:block">Pitch-Data Pro</span>
+                </div>
+                
+                <div id="mainNav" class="hidden flex space-x-1 sm:space-x-2 items-center bg-white/5 p-1 rounded-full border border-white/10 overflow-x-auto custom-scrollbar">
+                    <button onclick="switchMainTab('dashboard')" id="nav-dashboard" class="nav-btn active px-3 sm:px-4 py-1.5 text-sm flex items-center gap-2 whitespace-nowrap">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> <span class="hidden md:inline">Dashboard</span>
+                    </button>
+                    <button onclick="switchMainTab('strategy')" id="nav-strategy" class="nav-btn px-3 sm:px-4 py-1.5 text-sm flex items-center gap-2 whitespace-nowrap">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> <span class="hidden md:inline">Builder</span>
+                    </button>
+                    <button onclick="switchMainTab('auto')" id="nav-auto" class="nav-btn px-3 sm:px-4 py-1.5 text-sm flex items-center gap-2 whitespace-nowrap">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> <span class="hidden md:inline">Auto-Find</span>
+                    </button>
+                    <button onclick="switchMainTab('predictor')" id="nav-predictor" class="nav-btn px-3 sm:px-4 py-1.5 text-sm flex items-center gap-2 whitespace-nowrap">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg> <span class="hidden md:inline">Predictor</span>
+                    </button>
+                    <button onclick="switchMainTab('accumulator')" id="nav-accumulator" class="nav-btn px-3 sm:px-4 py-1.5 text-sm flex items-center gap-2 whitespace-nowrap">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg> <span class="hidden md:inline">Accumulator</span>
+                    </button>
+                    <button onclick="switchMainTab('insights')" id="nav-insights" class="nav-btn px-3 sm:px-4 py-1.5 text-sm flex items-center gap-2 whitespace-nowrap">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg> <span class="hidden md:inline">Insights</span>
+                    </button>
+                    <button onclick="switchMainTab('data')" id="nav-data" class="nav-btn px-3 sm:px-4 py-1.5 text-sm flex items-center gap-2 whitespace-nowrap">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> <span class="hidden md:inline">Data Log</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <span id="dataStatus" class="hidden text-apple-green text-xs font-semibold px-3 py-1 bg-apple-green/10 rounded-full border border-apple-green/20">0 Matches</span>
+                    
+                    <button id="clearDataBtn" onclick="confirmClearData()" class="hidden bg-apple-red/10 text-apple-red border border-apple-red/20 hover:bg-apple-red hover:text-white px-3 py-1.5 text-sm font-semibold rounded-full transition-all flex items-center gap-1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <span class="hidden sm:inline">Clear</span>
+                    </button>
+
+                    <label class="cursor-pointer bg-white text-black px-4 py-1.5 text-sm font-semibold rounded-full hover:bg-gray-200 transition-all flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <span class="hidden sm:inline">Upload</span>
+                        <input type="file" multiple accept=".csv" class="hidden" onchange="handleFileUpload(event)">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        
+        <!-- UPLOAD VIEW -->
+        <div id="view-upload" class="flex flex-col items-center justify-center py-20 mt-4 transition-all duration-500 transform scale-100 opacity-100">
+            <div class="glass-panel p-8 sm:p-12 flex flex-col items-center text-center w-full max-w-3xl mx-auto shadow-2xl relative overflow-hidden">
+                
+                <!-- Loading Overlay -->
+                <div id="loadingOverlay" class="hidden absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center z-50">
+                    <div class="w-12 h-12 border-4 border-apple-blue border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <h3 class="text-xl font-bold text-white" id="loadingText">Fetching data...</h3>
+                </div>
+
+                <div class="w-16 h-16 bg-apple-blue/10 rounded-full flex items-center justify-center mb-6 border border-apple-blue/20">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                </div>
+                <h2 class="text-3xl font-bold tracking-tight mb-3">Select Dataset</h2>
+                <p class="text-apple-textMuted mb-4 text-base">
+                    Upload your own E0.csv files. Our engine instantly merges, sorts, and pre-calculates advanced metrics.
+                </p>
+                <div class="mb-8 bg-apple-blue/10 border border-apple-blue/20 rounded-xl px-4 py-3 inline-flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span class="text-xs text-apple-textMuted">Historical datasets can be downloaded from <a href="https://www.football-data.co.uk/englandm.php" target="_blank" rel="noopener noreferrer" class="text-apple-blue hover:underline font-medium">football-data.co.uk</a></span>
+                </div>
+
+                <label class="cursor-pointer apple-btn px-8 py-3.5 text-base sm:text-lg shadow-lg shadow-blue-500/20 flex items-center gap-2 mt-4">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Browse Custom CSV
+                    <input type="file" multiple accept=".csv" class="hidden" onchange="handleFileUpload(event)">
+                </label>
+            </div>
+        </div>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="main-view hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight mb-1">Overview</h1>
+                    <p class="text-apple-textMuted text-sm">High-level statistics and team performance matrix.</p>
+                </div>
+                <div class="w-full sm:w-auto">
+                    <select id="dashboardFilter" onchange="buildDashboard()" class="w-full apple-input px-4 py-2.5 text-sm font-medium cursor-pointer shadow-lg shadow-black/20">
+                        <option value="all">Data Range: All Matches</option>
+                        <option value="10">Data Range: Last 10 Matches (Form)</option>
+                        <option value="5">Data Range: Last 5 Matches (Form)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Top KPI Strip -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="glass-panel p-5 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                    <p class="text-apple-textMuted text-xs font-semibold uppercase tracking-wider mb-2 relative z-10">Matches</p>
+                    <p id="db-matches" class="text-3xl font-black text-white relative z-10">0</p>
+                </div>
+                <div class="glass-panel p-5 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                    <p class="text-apple-textMuted text-xs font-semibold uppercase tracking-wider mb-2 relative z-10">Avg Goals</p>
+                    <p id="db-avg-goals" class="text-3xl font-black text-white relative z-10">0.00</p>
+                </div>
+                <div class="glass-panel p-5 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-apple-green/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                    <p class="text-apple-textMuted text-xs font-semibold uppercase tracking-wider mb-2 relative z-10">BTTS Rate</p>
+                    <p id="db-btts" class="text-3xl font-black text-apple-green relative z-10">0%</p>
+                </div>
+                <div class="glass-panel p-5 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-apple-purple/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                    <p class="text-apple-textMuted text-xs font-semibold uppercase tracking-wider mb-2 relative z-10">Over 2.5</p>
+                    <p id="db-o25-rate" class="text-3xl font-black text-apple-purple relative z-10">0%</p>
+                </div>
+                <div class="glass-panel p-5 flex flex-col justify-between relative overflow-hidden group col-span-2 md:col-span-1">
+                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-apple-blue/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                    <p class="text-apple-textMuted text-xs font-semibold uppercase tracking-wider mb-2 relative z-10">Clean Sheets</p>
+                    <p id="db-cs-rate" class="text-3xl font-black text-apple-blue relative z-10">0%</p>
+                </div>
+            </div>
+
+            <!-- Visualizations Row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 1X2 Match Outcomes -->
+                <div class="glass-panel p-6 flex flex-col h-full">
+                    <h3 class="text-white font-semibold mb-1">Match Outcomes</h3>
+                    <p class="text-[10px] text-apple-textMuted mb-4 uppercase tracking-wider">1X2 Distribution</p>
+                    <div class="flex-1 relative w-full flex justify-center min-h-[160px]"><canvas id="resultPieChart"></canvas></div>
+                    <div class="flex justify-between w-full mt-4 text-sm bg-white/5 rounded-xl p-3">
+                        <div class="text-center"><span class="text-apple-blue font-bold text-lg" id="db-home-win">0%</span><br><span class="text-[10px] text-apple-textMuted uppercase font-semibold">Home</span></div>
+                        <div class="text-center"><span class="text-white font-bold text-lg" id="db-draw-rate">0%</span><br><span class="text-[10px] text-apple-textMuted uppercase font-semibold">Draw</span></div>
+                        <div class="text-center"><span class="text-apple-orange font-bold text-lg" id="db-away-win">0%</span><br><span class="text-[10px] text-apple-textMuted uppercase font-semibold">Away</span></div>
+                    </div>
+                </div>
+
+                <!-- Goal Timings & Location -->
+                <div class="glass-panel p-6 flex flex-col justify-center h-full">
+                    <h3 class="text-white font-semibold mb-1">Goal Analytics</h3>
+                    <p class="text-[10px] text-apple-textMuted mb-6 uppercase tracking-wider">Where & When goals occur</p>
+                    <div class="space-y-8 flex-1 flex flex-col justify-center">
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-apple-textMuted font-medium flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-apple-blue"></div> Home Goals</span>
+                                <span class="text-apple-textMuted font-medium flex items-center gap-2">Away Goals <div class="w-2 h-2 rounded-full bg-apple-orange"></div></span>
+                            </div>
+                            <div class="progress-bar-bg flex w-full h-2.5">
+                                <div id="dist-home" class="progress-bar-fill bg-apple-blue" style="width: 50%"></div>
+                                <div id="dist-away" class="progress-bar-fill bg-apple-orange" style="width: 50%"></div>
+                            </div>
+                            <div class="flex justify-between text-sm mt-1.5">
+                                <span id="dist-home-pct" class="text-white font-bold">50%</span>
+                                <span id="dist-away-pct" class="text-white font-bold">50%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-apple-textMuted font-medium flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-purple-500"></div> 1st Half</span>
+                                <span class="text-apple-textMuted font-medium flex items-center gap-2">2nd Half <div class="w-2 h-2 rounded-full bg-apple-green"></div></span>
+                            </div>
+                            <div class="progress-bar-bg flex w-full h-2.5">
+                                <div id="dist-1h" class="progress-bar-fill bg-purple-500" style="width: 50%"></div>
+                                <div id="dist-2h" class="progress-bar-fill bg-apple-green" style="width: 50%"></div>
+                            </div>
+                            <div class="flex justify-between text-sm mt-1.5">
+                                <span id="dist-1h-pct" class="text-white font-bold">50%</span>
+                                <span id="dist-2h-pct" class="text-white font-bold">50%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Frequent Scorelines -->
+                <div class="glass-panel p-6 flex flex-col h-full">
+                    <h3 class="text-white font-semibold mb-1">Common Scorelines</h3>
+                    <p class="text-[10px] text-apple-textMuted mb-6 uppercase tracking-wider">Top 5 Full-Time Results</p>
+                    <div id="scorelinesList" class="flex-1 flex flex-col justify-center space-y-4">
+                        <!-- JS Injected -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Extremes -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Top Attackers -->
+                <div class="glass-panel p-0 flex flex-col overflow-hidden border-t-2 border-t-apple-green">
+                    <div class="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-white">Most Lethal Attacks</h3>
+                            <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mt-0.5">Sorted by Avg Goals For (GF)</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-apple-green/10 flex items-center justify-center text-apple-green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg></div>
+                    </div>
+                    <div class="p-4 flex-1">
+                        <div id="topAttackList" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- Top Defenders -->
+                <div class="glass-panel p-0 flex flex-col overflow-hidden border-t-2 border-t-apple-blue">
+                    <div class="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-white">Iron Defenses</h3>
+                            <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mt-0.5">Sorted by Avg Goals Against (GA)</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-apple-blue/10 flex items-center justify-center text-apple-blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+                    </div>
+                    <div class="p-4 flex-1">
+                        <div id="topDefenseList" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Matrix Table -->
+            <div class="glass-panel p-0 overflow-hidden flex flex-col">
+                <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+                    <div>
+                        <h3 class="font-bold text-white">Master Analytics Matrix</h3>
+                        <p class="text-xs text-apple-textMuted mt-1">Complete team breakdown sorted by Win %. Click a team for drill-down.</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <div class="overflow-y-auto custom-scrollbar max-h-96">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-[#1C1C1E] text-apple-textMuted sticky top-0 z-10 shadow-md select-none">
+                                <tr>
+                                    <th onclick="sortTeamMatrix('name')" class="px-6 py-4 font-medium uppercase text-[11px] tracking-wider cursor-pointer hover:text-white group">Team <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortTeamMatrix('p')" class="px-6 py-4 font-medium uppercase text-[11px] tracking-wider cursor-pointer hover:text-white group">Pld <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortTeamMatrix('winPct')" class="px-6 py-4 font-medium uppercase text-[11px] tracking-wider cursor-pointer hover:text-white group">Win % <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortTeamMatrix('avgGf')" class="px-6 py-4 font-medium uppercase text-[11px] tracking-wider cursor-pointer hover:text-white group">Avg GF <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortTeamMatrix('avgGa')" class="px-6 py-4 font-medium uppercase text-[11px] tracking-wider cursor-pointer hover:text-white group">Avg GA <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortTeamMatrix('gd')" class="px-6 py-4 font-medium uppercase text-[11px] tracking-wider cursor-pointer hover:text-white group">Avg GD <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortTeamMatrix('bttsPct')" class="px-6 py-4 font-medium uppercase text-[11px] tracking-wider cursor-pointer hover:text-white group">BTTS % <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortTeamMatrix('roi')" class="px-6 py-4 font-medium uppercase text-[11px] tracking-wider cursor-pointer hover:text-white group text-right">Blind Back ROI <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="teamMatrixBody" class="divide-y divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STRATEGY BUILDER VIEW -->
+        <div id="view-strategy" class="main-view hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left: Builder -->
+            <div class="lg:col-span-4">
+                <div class="glass-panel p-6 sticky top-24">
+                    <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20v-4"></path></svg>
+                        Algorithm Builder
+                    </h2>
+                    <p class="text-xs text-apple-orange font-medium mb-6 flex items-center gap-1">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        Strict Mode: Only uses actual Bet365 odds from your dataset to calculate ROI.
+                    </p>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-apple-textMuted mb-2">Target Market</label>
+                        <select id="targetSelect" class="w-full apple-input px-4 py-3 text-white appearance-none cursor-pointer font-medium relative">
+                            <option value="Home">Home Win (B365H)</option>
+                            <option value="Away">Away Win (B365A)</option>
+                            <option value="Draw">Draw (B365D)</option>
+                            <option value="Over2.5">Over 2.5 Goals (B365>2.5)</option>
+                            <option value="Under2.5">Under 2.5 Goals (B365<2.5)</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between items-end">
+                            <label class="block text-sm font-medium text-apple-textMuted">Trigger Conditions (AND)</label>
+                        </div>
+                        <div id="conditionsList" class="space-y-3"></div>
+                        <button onclick="addCondition()" class="w-full py-3 rounded-xl border border-dashed border-apple-textMuted/40 text-apple-textMuted hover:text-white hover:border-white transition-all text-sm font-medium flex items-center justify-center gap-2">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add Logic Rule
+                        </button>
+                    </div>
+
+                    <button onclick="executeBacktest()" class="w-full apple-btn py-3.5 shadow-lg shadow-blue-500/20 text-base mb-6">
+                        Simulate Algorithm
+                    </button>
+                    
+                    <!-- NEW: Strategy Library -->
+                    <div class="border-t border-white/10 pt-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-sm font-bold text-white">Saved Strategies</h3>
+                            <button onclick="saveStrategy()" class="text-[10px] font-bold bg-apple-blue/20 text-apple-blue px-3 py-1 rounded-full hover:bg-apple-blue/30 transition-colors uppercase tracking-wider">Save Current</button>
+                        </div>
+                        <div id="strategyLibraryList" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                            <!-- JS populated -->
+                            <p class="text-xs text-apple-textMuted py-2 text-center">No saved strategies found.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Results -->
+            <div class="lg:col-span-8">
+                <div id="resultsEmpty" class="glass-panel h-[600px] flex flex-col items-center justify-center">
+                    <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-4 text-apple-textMuted">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    </div>
+                    <h3 class="text-xl font-bold">Awaiting Simulation</h3>
+                    <p class="text-apple-textMuted mt-2 text-sm">Configure your algorithm on the left and run.</p>
+                </div>
+
+                <div id="resultsDashboard" class="hidden space-y-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="glass-panel p-4 text-center">
+                            <p class="text-xs text-apple-textMuted uppercase font-semibold tracking-wider mb-1">Total Valid Bets</p>
+                            <p id="kpiTotal" class="text-2xl font-bold">0</p>
+                        </div>
+                        <div class="glass-panel p-4 text-center">
+                            <p class="text-xs text-apple-textMuted uppercase font-semibold tracking-wider mb-1">Hit Rate</p>
+                            <p id="kpiWinRate" class="text-2xl font-bold">0%</p>
+                            <p id="kpiWL" class="text-[10px] text-apple-textMuted mt-1">0W - 0L</p>
+                        </div>
+                        <div class="glass-panel p-4 text-center">
+                            <p class="text-xs text-apple-textMuted uppercase font-semibold tracking-wider mb-1">Net Units</p>
+                            <p id="kpiPnL" class="text-2xl font-bold">0.00</p>
+                        </div>
+                        <div class="glass-panel p-4 text-center">
+                            <p class="text-xs text-apple-textMuted uppercase font-semibold tracking-wider mb-1">ROI</p>
+                            <p id="kpiROI" class="text-2xl font-bold">0.00%</p>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold text-white">Equity Curve</h3>
+                        </div>
+                        <div class="h-64 relative w-full"><canvas id="pnlChartCanvas"></canvas></div>
+                    </div>
+                    <div class="glass-panel p-0 overflow-hidden flex flex-col">
+                        <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/5">
+                            <h3 class="font-semibold text-white text-sm">Execution Log</h3>
+                            <button onclick="exportTradeLog()" class="text-xs text-apple-blue hover:underline flex items-center gap-1">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                Export CSV
+                            </button>
+                        </div>
+                        <div class="h-64 overflow-y-auto custom-scrollbar">
+                            <table class="w-full text-left text-sm whitespace-nowrap">
+                                <thead class="sticky top-0 bg-[#1C1C1E] text-apple-textMuted z-10 shadow-md">
+                                    <tr>
+                                        <th class="px-4 py-3 font-medium">Date</th>
+                                        <th class="px-4 py-3 font-medium">Fixture</th>
+                                        <th class="px-4 py-3 font-medium">Target</th>
+                                        <th class="px-4 py-3 font-medium">B365 Odds</th>
+                                        <th class="px-4 py-3 font-medium">Result</th>
+                                        <th class="px-4 py-3 font-medium text-right">PnL</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tradesTableBody" class="divide-y divide-white/5"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MATCH PREDICTOR VIEW -->
+        <div id="view-predictor" class="main-view hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">AI Match Predictor</h1>
+                    <p class="text-apple-textMuted text-sm mt-1">Run a deep Poisson distribution analysis based on historical form and contextual "What-If" swings.</p>
+                </div>
+            </div>
+
+            <!-- Selection Bar -->
+            <div class="glass-panel p-6 flex flex-col gap-4 bg-gradient-to-r from-apple-card to-blue-900/10">
+                <div class="flex flex-col md:flex-row w-full gap-4 items-end">
+                    <div class="w-full md:w-1/3">
+                        <label class="block text-xs font-medium text-apple-textMuted mb-1">Home Team</label>
+                        <div class="flex items-center gap-2">
+                            <select id="predTeamA" class="w-full apple-input px-4 py-3 text-sm text-white appearance-none cursor-pointer font-medium"></select>
+                            <button onclick="openTeamModal(document.getElementById('predTeamA').value)" class="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-apple-blue transition-colors flex-shrink-0 border border-white/5 hover:border-apple-blue/50" title="Team Drill-down">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-center font-bold text-apple-textMuted w-full md:w-auto pb-3">VS</div>
+                    <div class="w-full md:w-1/3">
+                        <label class="block text-xs font-medium text-apple-textMuted mb-1">Away Team</label>
+                        <div class="flex items-center gap-2">
+                            <select id="predTeamB" class="w-full apple-input px-4 py-3 text-sm text-white appearance-none cursor-pointer font-medium"></select>
+                            <button onclick="openTeamModal(document.getElementById('predTeamB').value)" class="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-apple-blue transition-colors flex-shrink-0 border border-white/5 hover:border-apple-blue/50" title="Team Drill-down">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/4">
+                        <button onclick="runPrediction()" class="w-full apple-btn py-3 text-sm shadow-lg">Run Analysis</button>
+                    </div>
+                </div>
+                
+                <!-- NEW: Context & What-If Swings -->
+                <div class="w-full border-t border-white/10 pt-4 flex flex-col lg:flex-row gap-6 items-end">
+                    <div class="w-full lg:w-1/3">
+                        <label class="block text-xs font-medium text-apple-textMuted mb-1">Assigned Referee (Optional)</label>
+                        <select id="predReferee" class="w-full apple-input px-3 py-2 text-sm text-white appearance-none cursor-pointer" onchange="runPrediction()">
+                            <option value="">Unknown / Any Referee</option>
+                        </select>
+                        <div id="predRefFlags" class="mt-2 flex flex-wrap gap-1 min-h-[20px]"></div>
+                    </div>
+                    <div class="w-full lg:w-1/3">
+                        <label class="block text-xs font-medium text-apple-textMuted mb-1">Home Offensive Swing: <span id="offSwingVal" class="text-white font-bold">0%</span></label>
+                        <input type="range" id="offSwing" min="-20" max="20" value="0" class="w-full" oninput="document.getElementById('offSwingVal').innerText = (this.value>0?'+':'')+this.value + '%'; runPrediction();">
+                    </div>
+                    <div class="w-full lg:w-1/3">
+                        <label class="block text-xs font-medium text-apple-textMuted mb-1">Away Offensive Swing: <span id="defSwingVal" class="text-white font-bold">0%</span></label>
+                        <input type="range" id="defSwing" min="-20" max="20" value="0" class="w-full" oninput="document.getElementById('defSwingVal').innerText = (this.value>0?'+':'')+this.value + '%'; runPrediction();">
+                    </div>
+                </div>
+
+                <!-- Optional Market Value Checker -->
+                <div class="w-full border-t border-white/10 pt-4 flex flex-col md:flex-row gap-4 items-center">
+                    <div class="w-full md:w-auto flex items-center gap-2">
+                        <span class="text-xs text-apple-textMuted font-medium whitespace-nowrap">Bookmaker Odds (Optional Edge Finder):</span>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <input type="number" step="0.01" id="predOddsH" placeholder="Home Odds (e.g. 2.10)" class="apple-input px-3 py-1.5 text-xs text-white w-full" oninput="runPrediction()">
+                        <input type="number" step="0.01" id="predOddsD" placeholder="Draw Odds" class="apple-input px-3 py-1.5 text-xs text-white w-full" oninput="runPrediction()">
+                        <input type="number" step="0.01" id="predOddsA" placeholder="Away Odds" class="apple-input px-3 py-1.5 text-xs text-white w-full" oninput="runPrediction()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predictor Output Container -->
+            <div id="predictorOutput" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Left Col: xG & 1X2 Probabilities -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="glass-panel p-6 flex flex-col items-center justify-center relative overflow-hidden">
+                        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-apple-blue via-black to-black"></div>
+                        <h3 class="text-sm font-bold text-apple-textMuted uppercase tracking-widest mb-6 relative z-10">Advanced xG Model</h3>
+                        
+                        <div class="flex w-full items-center justify-between relative z-10 mb-4">
+                            <div class="text-center w-1/3">
+                                <p id="xgHomeName" class="text-xs text-apple-textMuted truncate mb-1 cursor-pointer hover:text-apple-blue transition-colors" onclick="openTeamModal(this.innerText)">Home</p>
+                                <p id="xgHomeVal" class="text-4xl font-bold text-apple-blue transition-all duration-300">0.00</p>
+                            </div>
+                            <div class="text-center w-1/3 text-apple-textMuted font-medium text-sm">xG</div>
+                            <div class="text-center w-1/3">
+                                <p id="xgAwayName" class="text-xs text-apple-textMuted truncate mb-1 cursor-pointer hover:text-apple-orange transition-colors" onclick="openTeamModal(this.innerText)">Away</p>
+                                <p id="xgAwayVal" class="text-4xl font-bold text-apple-orange transition-all duration-300">0.00</p>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full relative z-10 mt-4 border-t border-white/5 pt-4">
+                            <p class="text-xs font-bold text-white mb-2 text-center">xG Composition Breakdown</p>
+                            <div class="flex justify-between text-[11px] text-apple-textMuted mb-1">
+                                <span id="xgBreakdownBase">Historical Goals (35%): 0.00 v 0.00</span>
+                            </div>
+                            <div class="flex justify-between text-[11px] text-apple-textMuted mb-1">
+                                <span id="xgBreakdownShots">Underlying Shots (35%): 0.00 v 0.00</span>
+                            </div>
+                            <div class="flex justify-between text-[11px] text-apple-textMuted mb-1">
+                                <span id="xgBreakdownForm">Recent Form (20%): 0.00 v 0.00</span>
+                            </div>
+                            <div class="flex justify-between text-[11px] text-apple-textMuted">
+                                <span id="xgBreakdownH2H">Historical H2H (10%): 0.00 v 0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Underlying Match Dynamics -->
+                        <div class="w-full relative z-10 mt-6 border-t border-white/5 pt-4">
+                            <p class="text-[10px] font-bold text-apple-textMuted uppercase tracking-wider mb-3 text-center">Match Dynamics (Home Avg vs Away Avg)</p>
+                            
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-[10px] text-apple-textMuted mb-1">
+                                        <span>SoT Created</span>
+                                        <span>SoT Conceded</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm font-medium">
+                                        <span id="dynHomeSoT" class="text-apple-blue">0.0</span>
+                                        <div class="h-px bg-white/10 flex-1 mx-3"></div>
+                                        <span id="dynAwaySoTCon" class="text-apple-orange">0.0</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[10px] text-apple-textMuted mb-1">
+                                        <span>SoT Conceded</span>
+                                        <span>SoT Created</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm font-medium">
+                                        <span id="dynHomeSoTCon" class="text-apple-blue">0.0</span>
+                                        <div class="h-px bg-white/10 flex-1 mx-3"></div>
+                                        <span id="dynAwaySoT" class="text-apple-orange">0.0</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[10px] text-apple-textMuted mb-1">
+                                        <span>Home Corners</span>
+                                        <span>Away Corners</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm font-medium">
+                                        <span id="dynHomeCorners" class="text-white">0.0</span>
+                                        <div class="h-px bg-white/10 flex-1 mx-3"></div>
+                                        <span id="dynAwayCorners" class="text-white">0.0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="glass-panel p-6">
+                        <h3 class="text-sm font-bold text-white mb-6">1X2 Match Probabilities & Fair Odds</h3>
+                        <div class="space-y-5">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2 items-center">
+                                    <span class="font-medium text-white flex flex-wrap items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full bg-apple-blue"></div> Home Win 
+                                        <span id="edgeHome"></span>
+                                        <span id="kellyHome"></span>
+                                    </span>
+                                    <span class="flex items-center gap-3">
+                                        <span id="fairHome" class="text-xs font-bold text-apple-textMuted bg-white/5 px-2 py-0.5 rounded">Odds: 1.00</span>
+                                        <span id="probHome" class="font-bold text-apple-blue w-12 text-right">0%</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar-bg flex w-full"><div id="probBarHome" class="progress-bar-fill bg-apple-blue" style="width: 0%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2 items-center">
+                                    <span class="font-medium text-white flex flex-wrap items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full bg-apple-textMuted"></div> Draw 
+                                        <span id="edgeDraw"></span>
+                                        <span id="kellyDraw"></span>
+                                    </span>
+                                    <span class="flex items-center gap-3">
+                                        <span id="fairDraw" class="text-xs font-bold text-apple-textMuted bg-white/5 px-2 py-0.5 rounded">Odds: 1.00</span>
+                                        <span id="probDraw" class="font-bold text-white w-12 text-right">0%</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar-bg flex w-full"><div id="probBarDraw" class="progress-bar-fill bg-white/40" style="width: 0%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2 items-center">
+                                    <span class="font-medium text-white flex flex-wrap items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full bg-apple-orange"></div> Away Win 
+                                        <span id="edgeAway"></span>
+                                        <span id="kellyAway"></span>
+                                    </span>
+                                    <span class="flex items-center gap-3">
+                                        <span id="fairAway" class="text-xs font-bold text-apple-textMuted bg-white/5 px-2 py-0.5 rounded">Odds: 1.00</span>
+                                        <span id="probAway" class="font-bold text-apple-orange w-12 text-right">0%</span>
+                                    </span>
+                                </div>
+                                <div class="progress-bar-bg flex w-full"><div id="probBarAway" class="progress-bar-fill bg-apple-orange" style="width: 0%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Col: Scorelines & Goal Markets & Verdict -->
+                <div class="lg:col-span-7 flex flex-col gap-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <!-- Goal Markets -->
+                        <div class="glass-panel p-6">
+                            <h3 class="text-sm font-bold text-white mb-4">Goal Markets</h3>
+                            <div class="space-y-4">
+                                <div class="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-apple-textMuted">Over 2.5 Goals</span>
+                                        <span id="fairO25" class="text-[10px] text-apple-textMuted mt-1">Fair Odds: 1.00</span>
+                                    </div>
+                                    <span id="probO25" class="text-xl font-bold text-apple-purple">0%</span>
+                                </div>
+                                <div class="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-apple-textMuted">Both Teams Score</span>
+                                        <span id="fairBTTS" class="text-[10px] text-apple-textMuted mt-1">Fair Odds: 1.00</span>
+                                    </div>
+                                    <span id="probBTTS" class="text-xl font-bold text-apple-green">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Top Scorelines -->
+                        <div class="glass-panel p-6">
+                            <h3 class="text-sm font-bold text-white mb-4">Most Likely Scorelines</h3>
+                            <div id="predScorelines" class="space-y-2">
+                                <!-- JS Populated -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- H2H Radar Comparison View -->
+                    <div class="glass-panel p-6 relative overflow-hidden flex-1 flex flex-col">
+                        <div class="absolute inset-0 opacity-5 bg-gradient-to-tr from-apple-blue to-apple-orange"></div>
+                        <h3 class="text-sm font-bold text-white mb-4 relative z-10 flex items-center gap-2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            H2H Radar Battle View
+                        </h3>
+                        <div class="relative w-full flex-1 min-h-[250px] z-10">
+                            <canvas id="radarChartCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Verdict -->
+                    <div class="glass-panel p-6 border border-apple-blue/20 bg-gradient-to-br from-apple-card to-apple-blue/5 flex flex-col justify-center relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 opacity-5 text-apple-blue">
+                            <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <h3 class="text-xs font-bold text-apple-blue uppercase tracking-widest mb-2 relative z-10">Algorithmic Verdict</h3>
+                        <p id="predVerdict" class="text-lg md:text-xl font-semibold text-white leading-relaxed relative z-10">
+                            Analyzing match data...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACCUMULATOR BUILDER VIEW -->
+        <div id="view-accumulator" class="main-view hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">AI Accumulator Builder</h1>
+                    <p class="text-apple-textMuted text-sm mt-1">Add your upcoming fixtures, and our engine will build the highest-value accumulator.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left: Add Matches -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="glass-panel p-6">
+                        <h3 class="font-bold text-white mb-4">Add Match to Slip</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-apple-textMuted mb-1">Home Team</label>
+                                <div class="flex items-center gap-2">
+                                    <select id="accTeamA" class="w-full apple-input px-3 py-2.5 text-sm text-white appearance-none cursor-pointer font-medium"></select>
+                                    <button onclick="openTeamModal(document.getElementById('accTeamA').value)" class="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-apple-blue transition-colors flex-shrink-0 border border-white/5 hover:border-apple-blue/50" title="Team Drill-down">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-apple-textMuted mb-1">Away Team</label>
+                                <div class="flex items-center gap-2">
+                                    <select id="accTeamB" class="w-full apple-input px-3 py-2.5 text-sm text-white appearance-none cursor-pointer font-medium"></select>
+                                    <button onclick="openTeamModal(document.getElementById('accTeamB').value)" class="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-apple-blue transition-colors flex-shrink-0 border border-white/5 hover:border-apple-blue/50" title="Team Drill-down">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <button onclick="addAccaMatch()" class="w-full apple-btn py-2.5 text-sm mt-2">Add Fixture</button>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-panel p-0 overflow-hidden flex flex-col max-h-[400px]">
+                        <div class="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                            <h3 class="font-semibold text-white text-sm">Selected Fixtures</h3>
+                            <span id="accaMatchCount" class="text-xs text-apple-blue font-bold">0 added</span>
+                        </div>
+                        <div class="overflow-y-auto custom-scrollbar p-4 flex-1">
+                            <div id="accaMatchList" class="space-y-2">
+                                <p class="text-sm text-apple-textMuted text-center py-4">No fixtures added yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: The Slip -->
+                <div class="lg:col-span-7">
+                    <div class="glass-panel p-6 h-full flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-apple-purple"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                AI Optimal Slip
+                            </h3>
+                            <button onclick="generateAccumulator()" class="bg-apple-purple hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-bold transition-all shadow-lg shadow-purple-500/20">
+                                Generate Picks
+                            </button>
+                        </div>
+
+                        <div id="accaSlipContent" class="flex-1 flex flex-col justify-center items-center">
+                            <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-4 text-apple-textMuted">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </div>
+                            <h3 class="font-bold text-white mb-1">Awaiting Generation</h3>
+                            <p class="text-apple-textMuted text-sm text-center max-w-sm">Add matches on the left, then click Generate to let the AI pick the highest value outcomes for your accumulator.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AUTO DISCOVER VIEW -->
+        <div id="view-auto" class="main-view hidden space-y-6">
+            <div class="glass-panel p-8 bg-gradient-to-br from-apple-card to-blue-900/10 border-blue-500/20">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <h2 class="text-3xl font-bold tracking-tight mb-2">Discovery Engine</h2>
+                        <p class="text-apple-textMuted text-sm max-w-xl">
+                            The Discovery Engine runs thousands of permutations across predefined logical angles in milliseconds to find inefficient markets in your dataset.
+                        </p>
+                    </div>
+                    <button onclick="runAutoDiscover()" class="apple-btn px-8 py-3 flex items-center gap-2 flex-shrink-0">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> 
+                        Scan Dataset
+                    </button>
+                </div>
+            </div>
+            
+            <div class="glass-panel overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-white/5 text-apple-textMuted">
+                            <tr>
+                                <th class="px-6 py-4 font-medium">Strategy Hypothesis</th>
+                                <th class="px-6 py-4 font-medium">Market</th>
+                                <th class="px-6 py-4 font-medium text-center">N</th>
+                                <th class="px-6 py-4 font-medium">Hit Rate</th>
+                                <th class="px-6 py-4 font-medium">Net Units</th>
+                                <th class="px-6 py-4 font-medium text-right">ROI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="autoTableBody" class="divide-y divide-white/5">
+                            <tr><td colspan="6" class="p-12 text-center text-apple-textMuted">Initiate scan to populate algorithms.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- INSIGHTS VIEW -->
+        <div id="view-insights" class="main-view hidden space-y-6">
+            <h1 class="text-3xl font-bold tracking-tight mb-2">Market & Ref Insights</h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Market Efficiency Table -->
+                <div class="glass-panel flex flex-col h-[450px]">
+                    <div class="p-6 border-b border-white/5">
+                        <h3 class="font-bold text-white flex items-center gap-2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-apple-blue"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20v-4"></path></svg>
+                            Odds Efficiency
+                        </h3>
+                        <p class="text-xs text-apple-textMuted mt-1">Bookmaker probability vs actual reality.</p>
+                    </div>
+                    <div class="overflow-y-auto custom-scrollbar flex-1 p-0">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-white/5 text-apple-textMuted sticky top-0 backdrop-blur-md z-10 select-none">
+                                <tr>
+                                    <th onclick="sortEfficiency('label')" class="px-4 py-3 font-medium cursor-pointer hover:text-white group">Bracket <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortEfficiency('matches')" class="px-4 py-3 font-medium cursor-pointer hover:text-white group">N <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortEfficiency('avgImplied')" class="px-4 py-3 font-medium cursor-pointer hover:text-white group">Impl <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortEfficiency('actual')" class="px-4 py-3 font-medium cursor-pointer hover:text-white group">Act <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortEfficiency('edge')" class="px-4 py-3 font-medium cursor-pointer hover:text-white group text-right">Edge <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="efficiencyTableBody" class="divide-y divide-white/5 text-white"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Referee Strictness -->
+                <div class="glass-panel flex flex-col h-[450px]">
+                    <div class="p-6 border-b border-white/5">
+                        <h3 class="font-bold text-white flex items-center gap-2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-apple-orange"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><line x1="21" y1="15" x2="16" y2="15"></line><line x1="21" y1="10" x2="16" y2="10"></line></svg>
+                            Referees <span class="text-xs font-normal text-apple-textMuted">(Click row to drill down)</span>
+                        </h3>
+                        <p class="text-xs text-apple-textMuted mt-1">Identify refs with high cards or home bias.</p>
+                    </div>
+                    <div class="overflow-y-auto custom-scrollbar flex-1 p-0">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-white/5 text-apple-textMuted sticky top-0 backdrop-blur-md z-10 select-none">
+                                <tr>
+                                    <th onclick="sortReferees('name')" class="px-4 py-3 font-medium cursor-pointer hover:text-white group">Referee <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortReferees('games')" class="px-4 py-3 font-medium text-center cursor-pointer hover:text-white group">Gms <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortReferees('hwPct')" class="px-4 py-3 font-medium text-center cursor-pointer hover:text-white group">H Win% <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                    <th onclick="sortReferees('cpG')" class="px-4 py-3 font-medium text-center cursor-pointer hover:text-white group">Card/G <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="refereeTableBody" class="divide-y divide-white/5 text-white"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RAW DATA LOG VIEW -->
+        <div id="view-data" class="main-view hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">Raw Data Log</h1>
+                    <p class="text-apple-textMuted text-sm mt-1">Search and filter your compiled dataset.</p>
+                </div>
+                <div class="relative w-full md:w-64">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-apple-textMuted">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </div>
+                    <input type="text" id="dataSearchInput" placeholder="Search teams, ref, date..." onkeyup="filterDataLog()" class="w-full apple-input pl-10 pr-4 py-2 text-sm text-white">
+                </div>
+            </div>
+
+            <div class="glass-panel p-0 overflow-hidden flex flex-col h-[700px]">
+                <div class="overflow-y-auto custom-scrollbar flex-1">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-[#1C1C1E] text-apple-textMuted sticky top-0 z-10 border-b border-white/10 select-none">
+                            <tr>
+                                <th onclick="sortDataLog('_parsedDate')" class="px-4 py-3 font-medium cursor-pointer hover:text-white transition-colors group">Date <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                <th onclick="sortDataLog('HomeTeam')" class="px-4 py-3 font-medium cursor-pointer hover:text-white transition-colors group">Home Team <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                <th onclick="sortDataLog('AwayTeam')" class="px-4 py-3 font-medium cursor-pointer hover:text-white transition-colors group">Away Team <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                <th onclick="sortDataLog('FTHG')" class="px-4 py-3 font-medium cursor-pointer hover:text-white transition-colors group text-center">Score (HT) <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                <th class="px-4 py-3 font-medium text-center">B365 1X2</th>
+                                <th class="px-4 py-3 font-medium text-center">B365 O/U 2.5</th>
+                                <th onclick="sortDataLog('Referee')" class="px-4 py-3 font-medium cursor-pointer hover:text-white transition-colors group">Referee <span class="text-xs opacity-0 group-hover:opacity-100 ml-1">↕</span></th>
+                                <th class="px-4 py-3 font-medium text-center">BTTS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataLogBody" class="divide-y divide-white/5 text-white">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-3 border-t border-white/5 bg-white/5 text-xs text-apple-textMuted text-center" id="dataLogCount">
+                    Showing top 200 results
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // GLOBALS
+        let mergedData = [];
+        let filteredData = []; 
+        let headersList = [];
+        let conditions = [];
+        let currentTradeLog = []; 
+        let teamNamesList = [];
+        let accaMatches = []; 
+        let currentSort = { col: '_parsedDate', asc: false }; 
+        
+        let teamMatrixData = [];
+        let currentMatrixSort = { col: 'winPct', asc: false };
+        let efficiencyData = [];
+        let currentEffSort = { col: 'edge', asc: false };
+        let refereeData = [];
+        let currentRefSort = { col: 'games', asc: false };
+        
+        let globalAvgCards = 0;
+        let globalHomeWinPct = 0;
+        let globalAvgGF = 0;
+        let globalAvg2H = 0;
+        let globalAvgPPG = 1.37;
+
+        let charts = { pnl: null, pie: null, teamTrend: null, radar: null, teamModalRadar: null };
+
+        // --- NEW: Kelly Criterion Module ---
+        const calculateKelly = (modelProb, bookieOdds, fraction = 0.25) => {
+            if (!bookieOdds || isNaN(bookieOdds)) return null;
+            const b = bookieOdds - 1;
+            if (b <= 0) return 0;
+            // f* = fraction * [ (p(b + 1) - 1) / b ]  -- note: b+1 is just decimalOdds
+            const f = fraction * (((modelProb * bookieOdds) - 1) / b);
+            return f;
+        };
+
+        const renderKelly = (elementId, f) => {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (f === null || f === undefined) { 
+                el.innerHTML = ''; 
+                return; 
+            }
+            if (f <= 0) {
+                el.innerHTML = `<span class="bg-white/5 text-apple-textMuted px-2 py-0.5 rounded text-[10px] uppercase tracking-wider ml-1 border border-white/5">No Value</span>`;
+            } else {
+                const pct = (f * 100).toFixed(2);
+                el.innerHTML = `<span class="bg-apple-blue/20 text-apple-blue border border-apple-blue/30 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ml-1">Stake: ${pct}%</span>`;
+            }
+        };
+
+        // --- 0. UI HELPERS (Modals & Resets) ---
+        const openModal = (title, htmlContent) => {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerHTML = htmlContent;
+            const modal = document.getElementById('globalModal');
+            const contentBox = document.getElementById('globalModalContentBox');
+            modal.classList.remove('hidden');
+            void modal.offsetWidth; 
+            modal.classList.remove('opacity-0');
+            contentBox.classList.remove('scale-95');
+        };
+
+        const closeModal = () => {
+            const modal = document.getElementById('globalModal');
+            const contentBox = document.getElementById('globalModalContentBox');
+            modal.classList.add('opacity-0');
+            contentBox.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        };
+
+        document.getElementById('globalModal').addEventListener('click', (e) => {
+            if(e.target === document.getElementById('globalModal')) closeModal();
+        });
+
+        window.confirmClearData = () => {
+            const html = `
+                <div class="text-center py-4">
+                    <div class="w-16 h-16 bg-apple-red/10 text-apple-red rounded-full flex items-center justify-center mx-auto mb-4 border border-apple-red/20">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </div>
+                    <p class="text-white mb-6 text-base">Are you sure you want to clear all datasets and predictions?</p>
+                    <div class="flex justify-center gap-4">
+                        <button onclick="closeModal()" class="px-6 py-2 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors font-medium">Cancel</button>
+                        <button onclick="executeClearData()" class="px-6 py-2 rounded-full bg-apple-red text-white hover:bg-red-600 transition-colors font-bold shadow-lg shadow-red-500/20">Clear Data</button>
+                    </div>
+                </div>
+            `;
+            openModal("Clear Data", html);
+        };
+
+        window.executeClearData = () => {
+            closeModal();
+            // Clear all data arrays
+            mergedData = [];
+            filteredData = [];
+            headersList = [];
+            conditions = [];
+            currentTradeLog = [];
+            teamNamesList = [];
+            accaMatches = [];
+            teamMatrixData = [];
+            efficiencyData = [];
+            refereeData = [];
+
+            // Destroy existing charts to prevent artifacting
+            Object.values(charts).forEach(c => { if(c) c.destroy(); });
+
+            // Reset Top Navigation UI
+            document.getElementById('dataStatus').classList.add('hidden');
+            document.getElementById('clearDataBtn').classList.add('hidden');
+            document.getElementById('mainNav').classList.add('hidden');
+            
+            // Revert back to the Upload View
+            document.querySelectorAll('.main-view').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-upload').classList.remove('hidden');
+
+            // Reset dynamic table bodies and dynamic lists
+            document.getElementById('dataLogBody').innerHTML = '';
+            document.getElementById('teamMatrixBody').innerHTML = '';
+            document.getElementById('conditionsList').innerHTML = '';
+            document.getElementById('autoTableBody').innerHTML = '<tr><td colspan="6" class="p-12 text-center text-apple-textMuted">Initiate scan to populate algorithms.</td></tr>';
+            
+            // Hide algorithm results panel
+            document.getElementById('resultsDashboard').classList.add('hidden');
+            document.getElementById('resultsEmpty').classList.remove('hidden');
+            
+            // Reset Predictor UI
+            document.getElementById('predictorOutput').classList.add('hidden');
+            document.getElementById('predTeamA').innerHTML = '';
+            document.getElementById('predTeamB').innerHTML = '';
+            document.getElementById('predReferee').innerHTML = '<option value="">Unknown / Any Referee</option>';
+            document.getElementById('accTeamA').innerHTML = '';
+            document.getElementById('accTeamB').innerHTML = '';
+
+            // Reset Accumulator UI
+            document.getElementById('accaMatchCount').innerText = '0 added';
+            document.getElementById('accaMatchList').innerHTML = '<p class="text-sm text-apple-textMuted text-center py-4">No fixtures added yet.</p>';
+            document.getElementById('accaSlipContent').classList.add('justify-center', 'items-center');
+            document.getElementById('accaSlipContent').classList.remove('justify-start', 'items-start');
+            document.getElementById('accaSlipContent').innerHTML = `
+                <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-4 text-apple-textMuted">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <h3 class="font-bold text-white mb-1">Awaiting Generation</h3>
+                <p class="text-apple-textMuted text-sm text-center max-w-sm">Add matches on the left, then click Generate to let the AI pick the highest value outcomes for your accumulator.</p>
+            `;
+        };
+
+        // --- 1. DATA PARSING & PRE-PROCESSING ---
+        const parseDate = (dateStr) => {
+            if (!dateStr) return new Date(0);
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return new Date(0);
+            let [d, m, y] = parts;
+            if (y.length === 2) y = parseInt(y, 10) > 50 ? '19' + y : '20' + y;
+            return new Date(`${y}-${m}-${d}`);
+        };
+
+        const parseCSV = (text) => {
+            const lines = text.split('\n').filter(l => l.trim() !== '');
+            if (lines.length < 2) return [];
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim());
+                if (values.length >= headers.length) {
+                    const row = {};
+                    headers.forEach((h, index) => {
+                        let val = values[index] ? values[index].trim() : '';
+                        if (!['Date', 'HomeTeam', 'AwayTeam', 'FTR', 'HTR', 'Referee'].includes(h) && val !== '') {
+                            const num = parseFloat(val);
+                            if (!isNaN(num)) val = num;
+                        }
+                        row[h] = val;
+                    });
+                    row._parsedDate = parseDate(row.Date);
+                    data.push(row);
+                }
+            }
+            return data;
+        };
+
+        window.handleFileUpload = (event) => {
+            const files = Array.from(event.target.files);
+            if (!files.length) return;
+            
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if(loadingOverlay) loadingOverlay.classList.remove('hidden');
+
+            let processed = 0;
+            let allParsedData = [...mergedData]; 
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    allParsedData = allParsedData.concat(parseCSV(e.target.result));
+                    processed++;
+                    if (processed === files.length) {
+                        processDatasets(allParsedData);
+                        if(loadingOverlay) loadingOverlay.classList.add('hidden');
+                    }
+                };
+                reader.readAsText(file);
+            });
+        };
+
+        const processDatasets = (allData) => {
+            allData.sort((a, b) => b._parsedDate - a._parsedDate); 
+            
+            const teamTracker = {};
+            const chronologicalData = [...allData].reverse(); 
+
+            chronologicalData.forEach(match => {
+                const home = match.HomeTeam;
+                const away = match.AwayTeam;
+                
+                if(!teamTracker[home]) teamTracker[home] = { wStreak: 0, lStreak: 0 };
+                if(!teamTracker[away]) teamTracker[away] = { wStreak: 0, lStreak: 0 };
+
+                match.HomeWinStreak = teamTracker[home].wStreak;
+                match.HomeLossStreak = teamTracker[home].lStreak;
+                match.AwayWinStreak = teamTracker[away].wStreak;
+                match.AwayLossStreak = teamTracker[away].lStreak;
+                
+                match.HomeAttackIntensity = match.HST && match.HS ? parseFloat((match.HST / match.HS).toFixed(2)) : 0;
+                match.AwayAttackIntensity = match.AST && match.AS ? parseFloat((match.AST / match.AS).toFixed(2)) : 0;
+
+                match.H2HG = (match.FTHG !== undefined && match.HTHG !== undefined) ? match.FTHG - match.HTHG : 0;
+                match.A2HG = (match.FTAG !== undefined && match.HTAG !== undefined) ? match.FTAG - match.HTAG : 0;
+                match.Total2HGoals = match.H2HG + match.A2HG;
+
+                if(match.FTR === 'H') {
+                    teamTracker[home].wStreak++; teamTracker[home].lStreak = 0;
+                    teamTracker[away].lStreak++; teamTracker[away].wStreak = 0;
+                } else if (match.FTR === 'A') {
+                    teamTracker[away].wStreak++; teamTracker[away].lStreak = 0;
+                    teamTracker[home].lStreak++; teamTracker[home].wStreak = 0;
+                } else {
+                    teamTracker[home].wStreak = 0; teamTracker[home].lStreak = 0;
+                    teamTracker[away].wStreak = 0; teamTracker[away].lStreak = 0;
+                }
+            });
+
+            mergedData = chronologicalData.reverse();
+            filteredData = [...mergedData]; 
+
+            // Calculate Global Averages
+            const played = mergedData.filter(m => m.FTR === 'H' || m.FTR === 'A' || m.FTR === 'D');
+            let tCards = 0, hWins = 0, tGF = 0, t2H = 0, tPts = 0;
+            played.forEach(m => {
+                tCards += (m.HY||0) + (m.AY||0) + (m.HR||0)*2 + (m.AR||0)*2;
+                if(m.FTR === 'H') { hWins++; tPts += 3; } 
+                else if(m.FTR === 'A') { tPts += 3; }
+                else tPts += 2; 
+                tGF += (m.FTHG||0) + (m.FTAG||0);
+                t2H += ((m.FTHG||0) - (m.HTHG||0)) + ((m.FTAG||0) - (m.HTAG||0));
+            });
+            const games2 = played.length * 2;
+            globalAvgCards = tCards / (played.length || 1);
+            globalHomeWinPct = played.length ? (hWins / played.length) * 100 : 0;
+            globalAvgGF = games2 ? tGF / games2 : 0; 
+            globalAvg2H = games2 ? t2H / games2 : 0;
+            globalAvgPPG = games2 ? tPts / games2 : 1.37;
+
+            const uniqueHeaders = new Set();
+            const teamsSet = new Set();
+            const refsSet = new Set();
+            
+            mergedData.forEach(row => {
+                Object.keys(row).forEach(key => { if(key !== '_parsedDate') uniqueHeaders.add(key); });
+                if(row.HomeTeam) teamsSet.add(row.HomeTeam);
+                if(row.AwayTeam) teamsSet.add(row.AwayTeam);
+                if(row.Referee) refsSet.add(row.Referee);
+            });
+
+            headersList = Array.from(uniqueHeaders).sort();
+            teamNamesList = Array.from(teamsSet).sort();
+            
+            // Populate Predictor and Accumulator dropdowns
+            let opts = '';
+            teamNamesList.forEach(t => opts += `<option value="${t}">${t}</option>`);
+            document.getElementById('predTeamA').innerHTML = opts;
+            document.getElementById('accTeamA').innerHTML = opts;
+            if(teamNamesList.length > 1) {
+                document.getElementById('predTeamB').innerHTML = opts;
+                document.getElementById('predTeamB').selectedIndex = 1;
+                document.getElementById('accTeamB').innerHTML = opts;
+                document.getElementById('accTeamB').selectedIndex = 1;
+            }
+
+            // Populate Referee dropdowns
+            let refOpts = '<option value="">Unknown / Any Referee</option>';
+            Array.from(refsSet).sort().forEach(r => refOpts += `<option value="${r}">${r}</option>`);
+            document.getElementById('predReferee').innerHTML = refOpts;
+
+            document.getElementById('view-upload').classList.add('hidden');
+            document.getElementById('mainNav').classList.remove('hidden');
+            
+            // Show data status and clear button
+            document.getElementById('dataStatus').classList.remove('hidden');
+            document.getElementById('dataStatus').innerText = `${mergedData.length.toLocaleString()} Matches`;
+            document.getElementById('clearDataBtn').classList.remove('hidden');
+            
+            renderConditions();
+            renderStrategies();
+            buildDashboard();
+            buildInsights();
+            renderDataLog(filteredData);
+            switchMainTab('dashboard');
+        };
+
+        // --- 2. NAVIGATION ---
+        window.switchMainTab = (tabId) => {
+            document.querySelectorAll('.main-view').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if(activeBtn) activeBtn.classList.add('active');
+        };
+
+        // --- 3. DASHBOARD BUILDER ---
+        window.buildDashboard = () => {
+            if(mergedData.length === 0) return;
+            
+            let tGoals = 0, homeGoals = 0, awayGoals = 0;
+            let firstHalfGoals = 0, secondHalfGoals = 0;
+            let hWins = 0, aWins = 0, draws = 0, bttsCount = 0, cleanSheetCount = 0, o25Count = 0;
+            
+            const teams = {};
+            const scorelinesMap = {};
+
+            // Determine Data Source
+            let playedData = mergedData.filter(m => m.FTR === 'H' || m.FTR === 'A' || m.FTR === 'D');
+            const filterVal = document.getElementById('dashboardFilter') ? document.getElementById('dashboardFilter').value : 'all';
+
+            // Filter for recent form if required
+            if (filterVal !== 'all') {
+                const limit = parseInt(filterVal);
+                const formMatches = new Set();
+                teamNamesList.forEach(team => {
+                    const tMatches = playedData.filter(m => m.HomeTeam === team || m.AwayTeam === team).slice(0, limit);
+                    tMatches.forEach(m => formMatches.add(m));
+                });
+                playedData = Array.from(formMatches);
+                playedData.sort((a, b) => b._parsedDate - a._parsedDate);
+            }
+
+            playedData.forEach(m => {
+                const hg = m.FTHG || 0, ag = m.FTAG || 0;
+                const h1h = m.HTHG || 0, a1h = m.HTAG || 0;
+
+                tGoals += (hg + ag);
+                homeGoals += hg;
+                awayGoals += ag;
+                firstHalfGoals += (h1h + a1h);
+                secondHalfGoals += m.Total2HGoals || 0;
+
+                if(m.FTR === 'H') hWins++; else if(m.FTR === 'A') aWins++; else draws++;
+                if(hg > 0 && ag > 0) bttsCount++;
+                if(hg === 0 || ag === 0) cleanSheetCount++;
+                if((hg+ag) > 2.5) o25Count++;
+
+                const scoreStr = `${hg}-${ag}`;
+                scorelinesMap[scoreStr] = (scorelinesMap[scoreStr] || 0) + 1;
+
+                if(!teams[m.HomeTeam]) teams[m.HomeTeam] = { p:0, w:0, gf:0, ga:0, btts:0, o25:0, backProfit:0 };
+                if(!teams[m.AwayTeam]) teams[m.AwayTeam] = { p:0, w:0, gf:0, ga:0, btts:0, o25:0, backProfit:0 };
+                
+                teams[m.HomeTeam].p++; teams[m.AwayTeam].p++;
+                teams[m.HomeTeam].gf += hg; teams[m.AwayTeam].gf += ag;
+                teams[m.HomeTeam].ga += ag; teams[m.AwayTeam].ga += hg;
+
+                if(m.FTR === 'H') { teams[m.HomeTeam].w++; teams[m.HomeTeam].backProfit += ((m.B365H||1)-1); teams[m.AwayTeam].backProfit -= 1; }
+                if(m.FTR === 'A') { teams[m.AwayTeam].w++; teams[m.AwayTeam].backProfit += ((m.B365A||1)-1); teams[m.HomeTeam].backProfit -= 1; }
+                if(m.FTR === 'D') { teams[m.HomeTeam].backProfit -= 1; teams[m.AwayTeam].backProfit -= 1; }
+                if(hg>0 && ag>0) { teams[m.HomeTeam].btts++; teams[m.AwayTeam].btts++; }
+                if((hg+ag)>2.5) { teams[m.HomeTeam].o25++; teams[m.AwayTeam].o25++; }
+            });
+
+            const totalM = playedData.length;
+            document.getElementById('db-matches').innerText = totalM.toLocaleString();
+            document.getElementById('db-avg-goals').innerText = totalM > 0 ? (tGoals / totalM).toFixed(2) : '0.00';
+            document.getElementById('db-cs-rate').innerText = totalM > 0 ? ((cleanSheetCount / totalM) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('db-btts').innerText = totalM > 0 ? ((bttsCount / totalM) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('db-o25-rate').innerText = totalM > 0 ? ((o25Count / totalM) * 100).toFixed(1) + '%' : '0%';
+            
+            // 1X2 specific formatting
+            document.getElementById('db-home-win').innerText = totalM > 0 ? ((hWins / totalM) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('db-draw-rate').innerText = totalM > 0 ? ((draws / totalM) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('db-away-win').innerText = totalM > 0 ? ((aWins / totalM) * 100).toFixed(1) + '%' : '0%';
+
+            if (tGoals > 0) {
+                document.getElementById('dist-home').style.width = `${(homeGoals / tGoals) * 100}%`;
+                document.getElementById('dist-away').style.width = `${(awayGoals / tGoals) * 100}%`;
+                document.getElementById('dist-home-pct').innerText = `${((homeGoals / tGoals) * 100).toFixed(1)}%`;
+                document.getElementById('dist-away-pct').innerText = `${((awayGoals / tGoals) * 100).toFixed(1)}%`;
+
+                document.getElementById('dist-1h').style.width = `${(firstHalfGoals / tGoals) * 100}%`;
+                document.getElementById('dist-2h').style.width = `${(secondHalfGoals / tGoals) * 100}%`;
+                document.getElementById('dist-1h-pct').innerText = `${((firstHalfGoals / tGoals) * 100).toFixed(1)}%`;
+                document.getElementById('dist-2h-pct').innerText = `${((secondHalfGoals / tGoals) * 100).toFixed(1)}%`;
+            }
+
+            // Top Scorelines Logic
+            const sortedScorelines = Object.entries(scorelinesMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            let scoreHtml = '';
+            const maxScoreCount = sortedScorelines[0] ? sortedScorelines[0][1] : 1;
+            sortedScorelines.forEach(score => {
+                const [scoreStr, count] = score;
+                const widthPct = (count / maxScoreCount) * 100;
+                scoreHtml += `
+                    <div>
+                        <div class="flex justify-between text-sm mb-1.5">
+                            <span class="text-white font-bold tracking-widest bg-white/10 px-2 py-0.5 rounded">${scoreStr}</span>
+                            <span class="text-apple-textMuted">${count} games <span class="opacity-50 ml-1 text-xs">(${((count/totalM)*100).toFixed(1)}%)</span></span>
+                        </div>
+                        <div class="progress-bar-bg flex w-full h-1.5"><div class="progress-bar-fill bg-white/30" style="width: ${widthPct}%"></div></div>
+                    </div>
+                `;
+            });
+            document.getElementById('scorelinesList').innerHTML = scoreHtml;
+
+            const minGames = filterVal === 'all' ? 5 : 1; 
+            const teamArray = Object.entries(teams).filter(t => t[1].p >= minGames).map(t => {
+                return { name: t[0], p: t[1].p, avgGf: t[1].gf/t[1].p, avgGa: t[1].ga/t[1].p };
+            });
+
+            const topAttacks = [...teamArray].sort((a,b) => b.avgGf - a.avgGf).slice(0, 5);
+            const topDefenses = [...teamArray].sort((a,b) => a.avgGa - b.avgGa).slice(0, 5);
+
+            let attackHtml = '';
+            topAttacks.forEach((t, i) => {
+                attackHtml += `<div class="flex justify-between items-center text-sm py-1 border-b border-white/5 last:border-0"><span class="flex items-center gap-3"><span class="text-apple-textMuted text-xs w-4 font-bold">${i+1}.</span> <span class="font-medium text-white cursor-pointer hover:text-apple-blue transition-colors" onclick="openTeamModal('${t.name.replace(/'/g, "\\'")}')">${t.name}</span></span><span class="text-apple-green font-bold bg-apple-green/10 px-2 py-0.5 rounded">${t.avgGf.toFixed(2)}</span></div>`;
+            });
+            document.getElementById('topAttackList').innerHTML = attackHtml;
+
+            let defenseHtml = '';
+            topDefenses.forEach((t, i) => {
+                defenseHtml += `<div class="flex justify-between items-center text-sm py-1 border-b border-white/5 last:border-0"><span class="flex items-center gap-3"><span class="text-apple-textMuted text-xs w-4 font-bold">${i+1}.</span> <span class="font-medium text-white cursor-pointer hover:text-apple-blue transition-colors" onclick="openTeamModal('${t.name.replace(/'/g, "\\'")}')">${t.name}</span></span><span class="text-apple-blue font-bold bg-apple-blue/10 px-2 py-0.5 rounded">${t.avgGa.toFixed(2)}</span></div>`;
+            });
+            document.getElementById('topDefenseList').innerHTML = defenseHtml;
+
+            if(charts.pie) charts.pie.destroy();
+            charts.pie = new Chart(document.getElementById('resultPieChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Home', 'Draw', 'Away'],
+                    datasets: [{ 
+                        data: [hWins, draws, aWins], 
+                        backgroundColor: ['#0A84FF', '#86868B', '#FF9F0A'], 
+                        borderWidth: 0, cutout: '75%' 
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip:{bodyFont:{family:'Inter'}} } }
+            });
+
+            teamMatrixData = Object.entries(teams).map(t => {
+                const [name, d] = t;
+                return {
+                    name,
+                    p: d.p,
+                    winPct: d.p > 0 ? (d.w/d.p)*100 : 0,
+                    avgGf: d.p > 0 ? d.gf/d.p : 0,
+                    avgGa: d.p > 0 ? d.ga/d.p : 0,
+                    gd: d.p > 0 ? (d.gf/d.p) - (d.ga/d.p) : 0,
+                    bttsPct: d.p > 0 ? (d.btts/d.p)*100 : 0,
+                    roi: d.p > 0 ? (d.backProfit/d.p)*100 : 0,
+                    backProfit: d.backProfit
+                };
+            });
+            applyMatrixSort();
+        };
+
+        window.sortTeamMatrix = (col) => {
+            if (currentMatrixSort.col === col) {
+                currentMatrixSort.asc = !currentMatrixSort.asc;
+            } else {
+                currentMatrixSort.col = col;
+                currentMatrixSort.asc = false;
+            }
+            applyMatrixSort();
+        };
+
+        const applyMatrixSort = () => {
+            const col = currentMatrixSort.col;
+            const asc = currentMatrixSort.asc ? 1 : -1;
+            
+            teamMatrixData.sort((a, b) => {
+                let valA = a[col], valB = b[col];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return -1 * asc;
+                if (valA > valB) return 1 * asc;
+                return 0;
+            });
+            renderTeamMatrix();
+        };
+
+        const renderTeamMatrix = () => {
+            let matrixHtml = '';
+            teamMatrixData.forEach(d => {
+                const gdColor = d.gd > 0 ? 'text-apple-green' : (d.gd < 0 ? 'text-apple-red' : 'text-apple-textMuted');
+                
+                matrixHtml += `
+                    <tr class="hover:bg-white/[0.04] transition-colors group cursor-default">
+                        <td class="px-6 py-3 font-semibold text-white group-hover:text-apple-blue transition-colors cursor-pointer" onclick="openTeamModal('${d.name.replace(/'/g, "\\'")}')">
+                            ${d.name} <span class="opacity-0 group-hover:opacity-100 text-xs ml-1 inline-block transition-opacity">↗</span>
+                        </td>
+                        <td class="px-6 py-3 text-apple-textMuted">${d.p}</td>
+                        <td class="px-6 py-3 font-medium">${d.winPct.toFixed(1)}%</td>
+                        <td class="px-6 py-3">${d.avgGf.toFixed(2)}</td>
+                        <td class="px-6 py-3">${d.avgGa.toFixed(2)}</td>
+                        <td class="px-6 py-3 font-bold ${gdColor}">${d.gd > 0 ? '+' : ''}${d.gd.toFixed(2)}</td>
+                        <td class="px-6 py-3 text-apple-textMuted">${d.bttsPct.toFixed(1)}%</td>
+                        <td class="px-6 py-3 font-bold text-right ${d.backProfit>0 ? 'text-apple-green bg-apple-green/5' : 'text-apple-red bg-apple-red/5'}">${d.backProfit>0?'+':''}${d.roi.toFixed(1)}%</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('teamMatrixBody').innerHTML = matrixHtml;
+        };
+
+        // --- 4. ENGINE: STRATEGY BUILDER & BACKTEST LOGIC ---
+        window.saveStrategy = () => {
+            const name = prompt("Enter a name for this strategy:");
+            if(!name) return;
+            const target = document.getElementById('targetSelect').value;
+            const strats = JSON.parse(localStorage.getItem('pitchDataStrategies') || '[]');
+            strats.push({ id: Date.now(), name, target, conditions: [...conditions] });
+            localStorage.setItem('pitchDataStrategies', JSON.stringify(strats));
+            renderStrategies();
+        };
+
+        window.loadStrategy = (id) => {
+            const strats = JSON.parse(localStorage.getItem('pitchDataStrategies') || '[]');
+            const strat = strats.find(s => s.id === id);
+            if(strat) {
+                document.getElementById('targetSelect').value = strat.target;
+                conditions = [...strat.conditions];
+                renderConditions();
+            }
+        };
+
+        window.deleteStrategy = (id) => {
+            let strats = JSON.parse(localStorage.getItem('pitchDataStrategies') || '[]');
+            strats = strats.filter(s => s.id !== id);
+            localStorage.setItem('pitchDataStrategies', JSON.stringify(strats));
+            renderStrategies();
+        };
+
+        const renderStrategies = () => {
+            const container = document.getElementById('strategyLibraryList');
+            const strats = JSON.parse(localStorage.getItem('pitchDataStrategies') || '[]');
+            if(strats.length === 0) {
+                container.innerHTML = '<p class="text-xs text-apple-textMuted text-center py-2">No strategies saved.</p>';
+                return;
+            }
+            let html = '';
+            strats.forEach(s => {
+                html += `
+                    <div class="flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/5 group">
+                        <div class="flex flex-col cursor-pointer flex-1" onclick="loadStrategy(${s.id})">
+                            <span class="text-sm font-medium text-white group-hover:text-apple-blue transition-colors">${s.name}</span>
+                            <span class="text-[10px] text-apple-textMuted">Target: ${s.target} | Logic Rules: ${s.conditions.length}</span>
+                        </div>
+                        <button onclick="deleteStrategy(${s.id})" class="text-apple-textMuted hover:text-apple-red p-2 transition-colors">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        };
+
+        const getStrictOdds = (match, colName) => {
+            if (match[colName] && !isNaN(match[colName])) return parseFloat(match[colName]);
+            return null; 
+        };
+
+        const evaluateBacktest = (data, target, conds) => {
+            let currentPnL = 0, wins = 0, losses = 0, totalStaked = 0;
+            const trades = [];
+
+            data.forEach(match => {
+                let conditionMet = true; 
+                for (const cond of conds) {
+                    if (!cond.field || !cond.operator || cond.value === '') continue;
+                    let matchVal = match[cond.field];
+                    if (matchVal === undefined || matchVal === '') { conditionMet = false; break; }
+                    
+                    let compVal = cond.value;
+                    if (typeof matchVal === 'number' && !isNaN(parseFloat(compVal))) {
+                        compVal = parseFloat(compVal);
+                        switch (cond.operator) {
+                            case '>': conditionMet = matchVal > compVal; break;
+                            case '<': conditionMet = matchVal < compVal; break;
+                            case '>=': conditionMet = matchVal >= compVal; break;
+                            case '<=': conditionMet = matchVal <= compVal; break;
+                            case '==': conditionMet = matchVal == compVal; break;
+                            case '!=': conditionMet = matchVal != compVal; break;
+                        }
+                    } else {
+                        let mStr = String(matchVal).toLowerCase(), cStr = String(compVal).toLowerCase();
+                        conditionMet = cond.operator === '!=' ? mStr !== cStr : mStr === cStr;
+                    }
+                    if (!conditionMet) break;
+                }
+
+                if (conditionMet) {
+                    let odds = null, won = false;
+                    const hg = match.FTHG || 0, ag = match.FTAG || 0;
+
+                    if (target === 'Home') { odds = getStrictOdds(match, 'B365H'); won = match.FTR === 'H'; }
+                    else if (target === 'Away') { odds = getStrictOdds(match, 'B365A'); won = match.FTR === 'A'; }
+                    else if (target === 'Draw') { odds = getStrictOdds(match, 'B365D'); won = match.FTR === 'D'; }
+                    else if (target === 'Over2.5') { odds = getStrictOdds(match, 'B365>2.5'); won = (hg + ag) > 2.5; }
+                    else if (target === 'Under2.5') { odds = getStrictOdds(match, 'B365<2.5'); won = (hg + ag) < 2.5; }
+
+                    if (odds && odds > 1.01) {
+                        totalStaked += 1;
+                        let profit = won ? (1 * odds) - 1 : -1;
+                        if(won) wins++; else losses++;
+                        currentPnL += profit;
+                        trades.push({
+                            date: match.Date, home: match.HomeTeam, away: match.AwayTeam, target, odds: odds.toFixed(2),
+                            result: won ? 'WIN' : 'LOSS', profit, cumulativePnL: currentPnL
+                        });
+                    }
+                }
+            });
+
+            return { trades, totalTrades: wins + losses, wins, losses, profit: currentPnL, roi: totalStaked > 0 ? (currentPnL / totalStaked) * 100 : 0 };
+        };
+
+        window.addCondition = () => { conditions.push({ field: '', operator: '==', value: '' }); renderConditions(); };
+        window.removeCondition = (idx) => { conditions.splice(idx, 1); renderConditions(); };
+        window.updateCondition = (idx, key, el) => { conditions[idx][key] = el.value; };
+
+        const renderConditions = () => {
+            const container = document.getElementById('conditionsList');
+            if(conditions.length === 0) {
+                container.innerHTML = `<div class="p-4 rounded-xl border border-dashed border-white/10 text-sm text-apple-textMuted text-center">No logic filters applied. Simulates every match.</div>`;
+                return;
+            }
+            let html = '';
+            conditions.forEach((cond, i) => {
+                let opts = '<option value="">Select variable...</option>';
+                headersList.forEach(h => { opts += `<option value="${h}" ${cond.field === h ? 'selected' : ''}>${h}</option>`; });
+                html += `
+                    <div class="flex gap-2 relative bg-white/5 p-2 rounded-xl border border-white/5">
+                        <select onchange="updateCondition(${i}, 'field', this)" class="w-[40%] bg-transparent text-xs text-white border-none outline-none px-2 cursor-pointer">${opts}</select>
+                        <select onchange="updateCondition(${i}, 'operator', this)" class="w-[20%] bg-transparent text-xs text-white border-l border-white/10 outline-none px-2 cursor-pointer text-center">
+                            <option value="==" ${cond.operator === '==' ? 'selected' : ''}>==</option><option value="!=" ${cond.operator === '!=' ? 'selected' : ''}>!=</option>
+                            <option value=">" ${cond.operator === '>' ? 'selected' : ''}>&gt;</option><option value="<" ${cond.operator === '<' ? 'selected' : ''}>&lt;</option>
+                            <option value=">=" ${cond.operator === '>=' ? 'selected' : ''}>&gt;=</option><option value="<=" ${cond.operator === '<=' ? 'selected' : ''}>&lt;=</option>
+                        </select>
+                        <input type="text" placeholder="Value" value="${cond.value}" onchange="updateCondition(${i}, 'value', this)" class="w-[30%] bg-transparent text-xs text-white border-l border-white/10 outline-none px-2"/>
+                        <button onclick="removeCondition(${i})" class="w-[10%] text-apple-red hover:text-white flex items-center justify-center transition-colors">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>`;
+            });
+            container.innerHTML = html;
+        };
+
+        window.executeBacktest = () => {
+            if(mergedData.length === 0) return;
+            const target = document.getElementById('targetSelect').value;
+            const res = evaluateBacktest(mergedData, target, conditions);
+            
+            document.getElementById('resultsEmpty').classList.add('hidden');
+            document.getElementById('resultsDashboard').classList.remove('hidden');
+
+            document.getElementById('kpiTotal').innerText = res.totalTrades.toLocaleString();
+            document.getElementById('kpiWinRate').innerText = res.totalTrades > 0 ? ((res.wins / res.totalTrades) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('kpiWinRate').className = `text-2xl font-bold ${res.wins/res.totalTrades > 0.5 ? 'text-apple-green' : 'text-white'}`;
+            document.getElementById('kpiWL').innerText = `${res.wins}W - ${res.losses}L`;
+            
+            document.getElementById('kpiPnL').innerText = (res.profit>0?'+':'') + res.profit.toFixed(2);
+            document.getElementById('kpiPnL').className = `text-2xl font-bold ${res.profit>0?'text-apple-green': res.profit<0?'text-apple-red':'text-white'}`;
+            
+            document.getElementById('kpiROI').innerText = (res.roi>0?'+':'') + res.roi.toFixed(2) + '%';
+            document.getElementById('kpiROI').className = `text-2xl font-bold ${res.roi>0?'text-apple-green': res.roi<0?'text-apple-red':'text-white'}`;
+
+            currentTradeLog = res.trades; 
+
+            if(charts.pnl) charts.pnl.destroy();
+            const ctx = document.getElementById('pnlChartCanvas').getContext('2d');
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, res.profit >= 0 ? 'rgba(48, 209, 88, 0.4)' : 'rgba(255, 69, 58, 0.4)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            charts.pnl = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: res.trades.map(t => t.date),
+                    datasets: [{ 
+                        label: 'Cumulative Units', 
+                        data: res.trades.map(t => t.cumulativePnL), 
+                        borderColor: res.profit >= 0 ? '#30D158' : '#FF453A', 
+                        backgroundColor: gradient,
+                        fill: true,
+                        borderWidth: 2, pointRadius: 0, tension: 0.4 
+                    }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { x: {display: false}, y: {grid:{color:'rgba(255,255,255,0.05)'}, border:{display:false}, ticks:{color:'#86868B', font:{family:'Inter'}}} }, 
+                    plugins: {legend: {display:false}, tooltip:{mode:'index', intersect:false, backgroundColor:'rgba(0,0,0,0.8)', titleFont:{family:'Inter'}, bodyFont:{family:'Inter'}, padding:10, cornerRadius:8, borderColor:'rgba(255,255,255,0.1)', borderWidth:1}} 
+                }
+            });
+
+            let tbody = '';
+            res.trades.slice().reverse().forEach(t => {
+                tbody += `<tr class="hover:bg-white/[0.02] transition-colors">
+                    <td class="px-4 py-2 text-apple-textMuted">${t.date}</td>
+                    <td class="px-4 py-2 font-medium"><span class="cursor-pointer hover:text-apple-blue transition-colors" onclick="openTeamModal('${t.home.replace(/'/g, "\\'")}')">${t.home}</span> v <span class="cursor-pointer hover:text-apple-blue transition-colors" onclick="openTeamModal('${t.away.replace(/'/g, "\\'")}')">${t.away}</span></td>
+                    <td class="px-4 py-2 text-xs text-apple-textMuted">${t.target}</td>
+                    <td class="px-4 py-2">${t.odds}</td><td class="px-4 py-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${t.result==='WIN'?'bg-apple-green/20 text-apple-green':'bg-apple-red/20 text-apple-red'}">${t.result}</span></td>
+                    <td class="px-4 py-2 text-right font-medium ${t.profit>0?'text-apple-green':'text-apple-red'}">${(t.profit>0?'+':'')+t.profit.toFixed(2)}</td>
+                </tr>`;
+            });
+            document.getElementById('tradesTableBody').innerHTML = tbody;
+        };
+
+        window.exportTradeLog = () => {
+            if(!currentTradeLog || currentTradeLog.length === 0) return openModal("No Data", "<p class='text-white mb-4'>No trades to export.</p><button onclick='closeModal()' class='apple-btn px-6 py-2'>OK</button>");
+            let csvContent = "data:text/csv;charset=utf-8,Date,Fixture,Target,Odds,Result,Profit,CumulativePnL\n";
+            currentTradeLog.forEach(row => {
+                csvContent += `${row.date},${row.home} v ${row.away},${row.target},${row.odds},${row.result},${row.profit},${row.cumulativePnL}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "pitch_data_pro_tradelog.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+
+        // --- 5. PREDICTOR ENGINE (REUSABLE) ---
+        const poisson = (k, lambda) => {
+            let p = Math.exp(-lambda);
+            for(let i=1; i<=k; i++) p *= lambda / i;
+            return p;
+        };
+
+        const calculatePrediction = (teamA, teamB) => {
+            // ONLY use historical played matches for calculations
+            const playedData = mergedData.filter(m => m.FTR === 'H' || m.FTR === 'A' || m.FTR === 'D');
+            
+            // 1. Base League Stats
+            let totalHomeGoals = 0, totalAwayGoals = 0;
+            let totalHomeSoT = 0, totalAwaySoT = 0;
+            let totalHomeCorners = 0, totalAwayCorners = 0;
+
+            playedData.forEach(m => { 
+                totalHomeGoals += (m.FTHG||0); totalAwayGoals += (m.FTAG||0); 
+                totalHomeSoT += (m.HST||0); totalAwaySoT += (m.AST||0);
+                totalHomeCorners += (m.HC||0); totalAwayCorners += (m.AC||0);
+            });
+            
+            const len = playedData.length || 1;
+            const avgLeagueHomeGF = totalHomeGoals / len;
+            const avgLeagueAwayGF = totalAwayGoals / len;
+            const avgLeagueHomeSoT = (totalHomeSoT / len) || 1;
+            const avgLeagueAwaySoT = (totalAwaySoT / len) || 1;
+            const avgLeagueHomeCorners = (totalHomeCorners / len) || 1;
+
+            // 2. Base Home/Away Subsets
+            const aHome = playedData.filter(m => m.HomeTeam === teamA);
+            const bAway = playedData.filter(m => m.AwayTeam === teamB);
+
+            // Goals
+            const aAvgHomeGF = (aHome.reduce((s, m) => s + (m.FTHG||0), 0) / (aHome.length||1)) || avgLeagueHomeGF;
+            const aAvgHomeGA = (aHome.reduce((s, m) => s + (m.FTAG||0), 0) / (aHome.length||1)) || avgLeagueAwayGF;
+            const bAvgAwayGF = (bAway.reduce((s, m) => s + (m.FTAG||0), 0) / (bAway.length||1)) || avgLeagueAwayGF;
+            const bAvgAwayGA = (bAway.reduce((s, m) => s + (m.FTHG||0), 0) / (bAway.length||1)) || avgLeagueHomeGF;
+
+            // Shots on Target (SoT)
+            const aAvgHST = (aHome.reduce((s, m) => s + (m.HST||0), 0) / (aHome.length||1)) || avgLeagueHomeSoT;
+            const aAvgAST_Conceded = (aHome.reduce((s, m) => s + (m.AST||0), 0) / (aHome.length||1)) || avgLeagueAwaySoT;
+            const aAvgHC = (aHome.reduce((s, m) => s + (m.HC||0), 0) / (aHome.length||1)) || 0;
+
+            const bAvgAST = (bAway.reduce((s, m) => s + (m.AST||0), 0) / (bAway.length||1)) || avgLeagueAwaySoT;
+            const bAvgHST_Conceded = (bAway.reduce((s, m) => s + (m.HST||0), 0) / (bAway.length||1)) || avgLeagueHomeSoT;
+            const bAvgAC = (bAway.reduce((s, m) => s + (m.AC||0), 0) / (bAway.length||1)) || 0;
+
+            // --- RADAR CHART METRICS COMPUTATIONS ---
+            // Discipline
+            let aCards = 0, bCards = 0;
+            aHome.forEach(m => aCards += (m.HY||0) + (m.HR||0)*2);
+            bAway.forEach(m => bCards += (m.AY||0) + (m.AR||0)*2);
+            const aAvgCards = aCards / (aHome.length||1);
+            const bAvgCards = bCards / (bAway.length||1);
+
+            // Form PPG
+            const aRecent = playedData.filter(m => m.HomeTeam === teamA || m.AwayTeam === teamA).slice(0, 5);
+            const bRecent = playedData.filter(m => m.HomeTeam === teamB || m.AwayTeam === teamB).slice(0, 5);
+            
+            let aFormPts = 0, bFormPts = 0;
+            aRecent.forEach(m => {
+                const isH = m.HomeTeam === teamA;
+                const gf = isH ? m.FTHG : m.FTAG;
+                const ga = isH ? m.FTAG : m.FTHG;
+                if (gf > ga) aFormPts += 3;
+                else if (gf === ga) aFormPts += 1;
+            });
+            bRecent.forEach(m => {
+                const isH = m.HomeTeam === teamB;
+                const gf = isH ? m.FTHG : m.FTAG;
+                const ga = isH ? m.FTAG : m.FTHG;
+                if (gf > ga) bFormPts += 3;
+                else if (gf === ga) bFormPts += 1;
+            });
+            const aFormPPG = aFormPts / (aRecent.length||1);
+            const bFormPPG = bFormPts / (bRecent.length||1);
+
+            // 2H Surge
+            let a2HGoals = 0, b2HGoals = 0;
+            aHome.forEach(m => a2HGoals += (m.FTHG - (m.HTHG||0)));
+            bAway.forEach(m => b2HGoals += (m.FTAG - (m.HTAG||0)));
+            const aAvg2H = a2HGoals / (aHome.length||1);
+            const bAvg2H = b2HGoals / (bAway.length||1);
+
+            // Attack Intensity (HST / HS)
+            let aShots = 0, aSoT = 0, bShots = 0, bSoT = 0;
+            aHome.forEach(m => { aShots += m.HS||0; aSoT += m.HST||0; });
+            bAway.forEach(m => { bShots += m.AS||0; bSoT += m.AST||0; });
+            const aAtkInt = aShots > 0 ? aSoT / aShots : 0;
+            const bAtkInt = bShots > 0 ? bSoT / bShots : 0;
+
+            // Radar Normalizations (Scale 0-100)
+            const normA_Atk = Math.min(100, aAtkInt * 200);
+            const normB_Atk = Math.min(100, bAtkInt * 200);
+            const normA_Def = Math.max(0, 100 - (aAvgHomeGA * 33.3));
+            const normB_Def = Math.max(0, 100 - (bAvgAwayGA * 33.3));
+            const normA_Cor = Math.min(100, aAvgHC * 10);
+            const normB_Cor = Math.min(100, bAvgAC * 10);
+            const normA_Dis = Math.max(0, 100 - (aAvgCards * 20));
+            const normB_Dis = Math.max(0, 100 - (bAvgCards * 20));
+            const normA_Form = (aFormPPG / 3) * 100;
+            const normB_Form = (bFormPPG / 3) * 100;
+            const normA_2H = Math.min(100, aAvg2H * 50);
+            const normB_2H = Math.min(100, bAvg2H * 50);
+
+            const radarA = [normA_Atk, normA_Def, normA_Cor, normA_Dis, normA_Form, normA_2H];
+            const radarB = [normB_Atk, normB_Def, normB_Cor, normB_Dis, normB_Form, normB_2H];
+
+            // --- XG PREDICTION MODEL ---
+
+            // XG COMPONENT 1: Base Goals
+            const aAttackStrength = aAvgHomeGF / avgLeagueHomeGF;
+            const bDefenseWeakness = bAvgAwayGA / avgLeagueHomeGF;
+            const baseXG_Home = aAttackStrength * bDefenseWeakness * avgLeagueHomeGF;
+
+            const bAttackStrength = bAvgAwayGF / avgLeagueAwayGF;
+            const aDefenseWeakness = aAvgHomeGA / avgLeagueAwayGF;
+            const baseXG_Away = bAttackStrength * aDefenseWeakness * avgLeagueAwayGF;
+
+            // XG COMPONENT 2: Underlying Shots (How dangerous are they creating vs conceding SoT)
+            const aShotThreat = aAvgHST / avgLeagueHomeSoT;
+            const bShotFragility = bAvgHST_Conceded / avgLeagueHomeSoT;
+            const shotXG_Home = aShotThreat * bShotFragility * avgLeagueHomeGF; // Translate shot dominance to expected goals
+
+            const bShotThreat = bAvgAST / avgLeagueAwaySoT;
+            const aShotFragility = aAvgAST_Conceded / avgLeagueAwaySoT;
+            const shotXG_Away = bShotThreat * aShotFragility * avgLeagueAwayGF;
+
+            // XG COMPONENT 3: Recent Form Modifier (Last 5)
+            let aFormGF = 0, aFormGA = 0, bFormGF = 0, bFormGA = 0;
+            aRecent.forEach(m => { aFormGF += (m.HomeTeam===teamA?m.FTHG:m.FTAG); aFormGA += (m.HomeTeam===teamA?m.FTAG:m.FTHG); });
+            bRecent.forEach(m => { bFormGF += (m.HomeTeam===teamB?m.FTHG:m.FTAG); bFormGA += (m.HomeTeam===teamB?m.FTAG:m.FTHG); });
+            
+            const formXG_Home = ((aFormGF / (aRecent.length||1)) + (bFormGA / (bRecent.length||1))) / 2;
+            const formXG_Away = ((bFormGF / (bRecent.length||1)) + (aFormGA / (aRecent.length||1))) / 2;
+
+            // XG COMPONENT 4: H2H Modifier
+            const h2h = playedData.filter(m => (m.HomeTeam === teamA && m.AwayTeam === teamB) || (m.HomeTeam === teamB && m.AwayTeam === teamA));
+            let h2hXG_Home = baseXG_Home, h2hXG_Away = baseXG_Away;
+            
+            if (h2h.length >= 2) {
+                let aScoredH2H = 0, bScoredH2H = 0;
+                h2h.forEach(m => { aScoredH2H += (m.HomeTeam===teamA?m.FTHG:m.FTAG); bScoredH2H += (m.HomeTeam===teamB?m.FTHG:m.FTAG); });
+                h2hXG_Home = aScoredH2H / h2h.length;
+                h2hXG_Away = bScoredH2H / h2h.length;
+            }
+
+            // Blended Final xG
+            let xG_Home = (baseXG_Home * 0.35) + (shotXG_Home * 0.35) + (formXG_Home * 0.20) + (h2hXG_Home * 0.10);
+            let xG_Away = (baseXG_Away * 0.35) + (shotXG_Away * 0.35) + (formXG_Away * 0.20) + (h2hXG_Away * 0.10);
+
+            // --- WHAT-IF CONTEXTUAL SWINGS ---
+            const homeOffSwing = parseFloat(document.getElementById('offSwing')?.value || 0) / 100;
+            const awayOffSwing = parseFloat(document.getElementById('defSwing')?.value || 0) / 100;
+
+            xG_Home = xG_Home * (1 + homeOffSwing);
+            xG_Away = xG_Away * (1 + awayOffSwing);
+
+            xG_Home = Math.max(0.1, xG_Home);
+            xG_Away = Math.max(0.1, xG_Away);
+
+            let homeProb = 0, drawProb = 0, awayProb = 0, over25Prob = 0, under25Prob = 0, bttsProb = 0;
+            const scorelines = [];
+
+            for(let h=0; h<=6; h++) {
+                for(let a=0; a<=6; a++) {
+                    const prob = poisson(h, xG_Home) * poisson(a, xG_Away);
+                    scorelines.push({h, a, prob});
+                    
+                    if(h > a) homeProb += prob;
+                    else if(a > h) awayProb += prob;
+                    else drawProb += prob;
+
+                    if((h+a) > 2.5) over25Prob += prob;
+                    else under25Prob += prob;
+                    
+                    if(h > 0 && a > 0) bttsProb += prob;
+                }
+            }
+            
+            scorelines.sort((x, y) => y.prob - x.prob);
+
+            return {
+                xG_Home, xG_Away, 
+                baseXG_Home, baseXG_Away, shotXG_Home, shotXG_Away, formXG_Home, formXG_Away, h2hXG_Home, h2hXG_Away,
+                aAvgHST, aAvgAST_Conceded, aAvgHC, bAvgAST, bAvgHST_Conceded, bAvgAC,
+                homeProb, drawProb, awayProb, over25Prob, under25Prob, bttsProb, scorelines,
+                radarA, radarB
+            };
+        };
+
+        window.runPrediction = () => {
+            const teamA = document.getElementById('predTeamA').value;
+            const teamB = document.getElementById('predTeamB').value;
+
+            if(teamA === teamB || !teamA || !teamB) return;
+
+            const res = calculatePrediction(teamA, teamB);
+
+            // Ref Flags Logic
+            let flagsHtml = '';
+            const refName = document.getElementById('predReferee').value;
+            if (refName) {
+                const rData = refereeData.find(r => r.name === refName);
+                if (rData && globalAvgCards > 0) {
+                    const strictIndex = rData.cpG / globalAvgCards;
+                    if (strictIndex > 1.2) {
+                        flagsHtml += `<span class="bg-apple-red/20 text-apple-red px-2 py-0.5 rounded text-[10px] uppercase font-bold mr-2 tracking-wider flex items-center"><span class="mr-1">🚩</span> High Card Risk (${rData.cpG.toFixed(1)}/g)</span>`;
+                    }
+                    if (rData.hwPct > globalHomeWinPct + 10) {
+                        flagsHtml += `<span class="bg-apple-blue/20 text-apple-blue px-2 py-0.5 rounded text-[10px] uppercase font-bold mr-2 tracking-wider flex items-center"><span class="mr-1">🏠</span> Home Bias (${rData.hwPct.toFixed(1)}%)</span>`;
+                    }
+                    if (flagsHtml === '') {
+                        flagsHtml = `<span class="bg-white/10 text-white px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Balanced Official</span>`;
+                    }
+                }
+            }
+            document.getElementById('predRefFlags').innerHTML = flagsHtml;
+
+            // UI Update
+            document.getElementById('predictorOutput').classList.remove('hidden');
+            
+            document.getElementById('xgHomeName').innerText = teamA;
+            document.getElementById('xgHomeVal').innerText = res.xG_Home.toFixed(2);
+            document.getElementById('xgAwayName').innerText = teamB;
+            document.getElementById('xgAwayVal').innerText = res.xG_Away.toFixed(2);
+
+            // Breakdown
+            document.getElementById('xgBreakdownBase').innerText = `Historical Goals (35%): ${res.baseXG_Home.toFixed(2)} v ${res.baseXG_Away.toFixed(2)}`;
+            document.getElementById('xgBreakdownShots').innerText = `Underlying Shots (35%): ${res.shotXG_Home.toFixed(2)} v ${res.shotXG_Away.toFixed(2)}`;
+            document.getElementById('xgBreakdownForm').innerText = `Recent Form (20%): ${res.formXG_Home.toFixed(2)} v ${res.formXG_Away.toFixed(2)}`;
+            document.getElementById('xgBreakdownH2H').innerText = `Historical H2H (10%): ${res.h2hXG_Home.toFixed(2)} v ${res.h2hXG_Away.toFixed(2)}`;
+
+            // Dynamics
+            document.getElementById('dynHomeSoT').innerText = res.aAvgHST.toFixed(1);
+            document.getElementById('dynAwaySoTCon').innerText = res.bAvgHST_Conceded.toFixed(1);
+            
+            document.getElementById('dynHomeSoTCon').innerText = res.aAvgAST_Conceded.toFixed(1);
+            document.getElementById('dynAwaySoT').innerText = res.bAvgAST.toFixed(1);
+            
+            document.getElementById('dynHomeCorners').innerText = res.aAvgHC.toFixed(1);
+            document.getElementById('dynAwayCorners').innerText = res.bAvgAC.toFixed(1);
+
+            const toPct = val => (val * 100).toFixed(1) + '%';
+            const toFair = val => val > 0 ? (1 / val).toFixed(2) : '-';
+            
+            document.getElementById('probHome').innerText = toPct(res.homeProb);
+            document.getElementById('probBarHome').style.width = toPct(res.homeProb);
+            document.getElementById('fairHome').innerText = `Odds: ${toFair(res.homeProb)}`;
+            
+            document.getElementById('probDraw').innerText = toPct(res.drawProb);
+            document.getElementById('probBarDraw').style.width = toPct(res.drawProb);
+            document.getElementById('fairDraw').innerText = `Odds: ${toFair(res.drawProb)}`;
+            
+            document.getElementById('probAway').innerText = toPct(res.awayProb);
+            document.getElementById('probBarAway').style.width = toPct(res.awayProb);
+            document.getElementById('fairAway').innerText = `Odds: ${toFair(res.awayProb)}`;
+
+            document.getElementById('probO25').innerText = toPct(res.over25Prob);
+            document.getElementById('fairO25').innerText = `Fair Odds: ${toFair(res.over25Prob)}`;
+            
+            document.getElementById('probBTTS').innerText = toPct(res.bttsProb);
+            document.getElementById('fairBTTS').innerText = `Fair Odds: ${toFair(res.bttsProb)}`;
+
+            // Market Value Overlay (Edge Finder) & Fractional Kelly Recommendation
+            const predOddsH = parseFloat(document.getElementById('predOddsH').value);
+            const predOddsD = parseFloat(document.getElementById('predOddsD').value);
+            const predOddsA = parseFloat(document.getElementById('predOddsA').value);
+
+            const calculateEdge = (modelProb, odds) => {
+                if (!odds || isNaN(odds)) return null;
+                const implied = 1 / odds;
+                return (modelProb - implied) * 100;
+            };
+
+            const renderEdge = (elementId, edge) => {
+                const el = document.getElementById(elementId);
+                if (edge === null) { el.innerHTML = ''; return; }
+                if (edge > 5) {
+                    el.innerHTML = `<span class="bg-apple-green/20 text-apple-green px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ml-2">Value Detected</span>`;
+                } else if (edge < -5) {
+                    el.innerHTML = `<span class="bg-apple-red/20 text-apple-red px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ml-2">Poor Value</span>`;
+                } else {
+                    el.innerHTML = `<span class="bg-white/10 text-apple-textMuted px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ml-2">Fair Price</span>`;
+                }
+            };
+
+            renderEdge('edgeHome', calculateEdge(res.homeProb, predOddsH));
+            renderEdge('edgeDraw', calculateEdge(res.drawProb, predOddsD));
+            renderEdge('edgeAway', calculateEdge(res.awayProb, predOddsA));
+
+            // Execute Kelly
+            renderKelly('kellyHome', calculateKelly(res.homeProb, predOddsH));
+            renderKelly('kellyDraw', calculateKelly(res.drawProb, predOddsD));
+            renderKelly('kellyAway', calculateKelly(res.awayProb, predOddsA));
+
+            // Top Scorelines
+            let scoreHtml = '';
+            res.scorelines.slice(0, 3).forEach((sl, idx) => {
+                const isFirst = idx === 0;
+                scoreHtml += `
+                    <div class="bg-white/5 p-3 rounded-xl border ${isFirst ? 'border-apple-blue/50 bg-apple-blue/10' : 'border-white/5'} flex justify-between items-center">
+                        <span class="text-lg font-bold text-white tracking-widest">${sl.h} - ${sl.a}</span>
+                        <span class="text-sm font-medium ${isFirst ? 'text-apple-blue' : 'text-apple-textMuted'}">${toPct(sl.prob)}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('predScorelines').innerHTML = scoreHtml;
+
+            // Render Radar Chart
+            if(charts.radar) charts.radar.destroy();
+            const ctxRadar = document.getElementById('radarChartCanvas').getContext('2d');
+            charts.radar = new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: ['Attack Intensity', 'Defensive Iron', 'Corner Frequency', 'Discipline', 'Recent Form', '2nd Half Surge'],
+                    datasets: [
+                        {
+                            label: teamA,
+                            data: res.radarA,
+                            backgroundColor: 'rgba(10, 132, 255, 0.4)',
+                            borderColor: 'rgba(10, 132, 255, 1)',
+                            pointBackgroundColor: 'rgba(10, 132, 255, 1)',
+                            borderWidth: 2,
+                            fill: true
+                        },
+                        {
+                            label: teamB,
+                            data: res.radarB,
+                            backgroundColor: 'rgba(255, 159, 10, 0.4)',
+                            borderColor: 'rgba(255, 159, 10, 1)',
+                            pointBackgroundColor: 'rgba(255, 159, 10, 1)',
+                            borderWidth: 2,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 100,
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: '#F5F5F7', font: { family: 'Inter', size: 10, weight: 600 } },
+                            ticks: { display: false, maxTicksLimit: 5 }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#F5F5F7', font: {family: 'Inter'} } },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleFont: {family:'Inter'}, bodyFont: {family:'Inter'}, cornerRadius: 8 }
+                    }
+                }
+            });
+
+            // Generate Verdict
+            let verdict = "";
+            const safeTeamA = teamA.replace(/'/g, "\\'");
+            const safeTeamB = teamB.replace(/'/g, "\\'");
+
+            if (res.homeProb > 0.60) verdict = `Strong indicators for a <b class="text-apple-blue cursor-pointer hover:underline transition-all" onclick="openTeamModal('${safeTeamA}')">${teamA} Win</b> (${toPct(res.homeProb)}).`;
+            else if (res.awayProb > 0.50) verdict = `Value heavily favors an <b class="text-apple-orange cursor-pointer hover:underline transition-all" onclick="openTeamModal('${safeTeamB}')">${teamB} Away Win</b> (${toPct(res.awayProb)}).`;
+            else if (res.homeProb > res.awayProb && res.homeProb < 0.50) verdict = `Tight match favoring <b class="text-apple-blue cursor-pointer hover:underline transition-all" onclick="openTeamModal('${safeTeamA}')">${teamA}</b> slightly, but high draw risk.`;
+            else verdict = `Incredibly tight match. <b class="text-white">Draw or Double Chance</b> recommended.`;
+
+            if (res.over25Prob > 0.65) verdict += ` Expect a high scoring game (<b class="text-apple-purple">Over 2.5 Goals</b>).`;
+            else if (res.over25Prob < 0.40) verdict += ` Model strongly points to a low-event, <b class="text-apple-textMuted">Under 2.5 Goals</b> game.`;
+
+            document.getElementById('predVerdict').innerHTML = verdict;
+        };
+
+        // --- NEW: ACCUMULATOR BUILDER ---
+        window.addAccaMatch = () => {
+            const teamA = document.getElementById('accTeamA').value;
+            const teamB = document.getElementById('accTeamB').value;
+            if(teamA === teamB) return openModal("Invalid Selection", "<p class='text-white mb-4'>Select different teams.</p><button onclick='closeModal()' class='apple-btn px-6 py-2'>OK</button>");
+            
+            accaMatches.push({ id: Date.now(), home: teamA, away: teamB });
+            renderAccaList();
+        };
+
+        window.removeAccaMatch = (id) => {
+            accaMatches = accaMatches.filter(m => m.id !== id);
+            renderAccaList();
+        };
+
+        const renderAccaList = () => {
+            const container = document.getElementById('accaMatchList');
+            document.getElementById('accaMatchCount').innerText = `${accaMatches.length} added`;
+            
+            if(accaMatches.length === 0) {
+                container.innerHTML = `<p class="text-sm text-apple-textMuted text-center py-4">No fixtures added yet.</p>`;
+                document.getElementById('accaSlipContent').innerHTML = `
+                    <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-4 text-apple-textMuted">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <h3 class="font-bold text-white mb-1">Awaiting Generation</h3>
+                    <p class="text-apple-textMuted text-sm text-center max-w-sm">Add matches on the left, then click Generate to let the AI pick the highest EV outcomes for your accumulator.</p>
+                `;
+                return;
+            }
+
+            let html = '';
+            accaMatches.forEach(m => {
+                html += `
+                    <div class="bg-white/5 border border-white/5 p-3 rounded-lg flex justify-between items-center group">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-white cursor-pointer hover:text-apple-blue transition-colors" onclick="openTeamModal('${m.home.replace(/'/g, "\\'")}')">${m.home}</span>
+                            <span class="text-xs text-apple-textMuted font-bold">vs</span>
+                            <span class="text-sm font-medium text-white cursor-pointer hover:text-apple-blue transition-colors" onclick="openTeamModal('${m.away.replace(/'/g, "\\'")}')">${m.away}</span>
+                        </div>
+                        <button onclick="removeAccaMatch(${m.id})" class="text-apple-textMuted hover:text-apple-red transition-colors p-2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        };
+
+        window.generateAccumulator = () => {
+            if(accaMatches.length === 0) return openModal("Missing Fixtures", "<p class='text-white mb-4'>Add fixtures to the slip first.</p><button onclick='closeModal()' class='apple-btn px-6 py-2'>OK</button>");
+            
+            let totalOdds = 1;
+            let slipHtml = `<div class="w-full space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">`;
+            
+            accaMatches.forEach((match, idx) => {
+                const res = calculatePrediction(match.home, match.away);
+                
+                const markets = [
+                    { name: `${match.home} Win`, prob: res.homeProb, color: 'text-apple-blue' },
+                    { name: `Draw`, prob: res.drawProb, color: 'text-white' },
+                    { name: `${match.away} Win`, prob: res.awayProb, color: 'text-apple-orange' },
+                    { name: `Over 2.5 Goals`, prob: res.over25Prob, color: 'text-apple-purple' },
+                    { name: `Under 2.5 Goals`, prob: res.under25Prob, color: 'text-apple-textMuted' },
+                    { name: `BTTS - Yes`, prob: res.bttsProb, color: 'text-apple-green' }
+                ];
+                
+                markets.sort((a,b) => b.prob - a.prob);
+                const bestPick = markets[0];
+                const fairOdds = 1 / bestPick.prob;
+                totalOdds *= fairOdds;
+
+                slipHtml += `
+                    <div class="bg-[#1C1C1E] border border-white/10 rounded-xl p-4 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-apple-purple opacity-50"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs text-apple-textMuted font-medium uppercase tracking-wider">Leg ${idx+1}</span>
+                            <span class="text-xs font-bold bg-white/10 px-2 py-0.5 rounded text-white">${fairOdds.toFixed(2)}</span>
+                        </div>
+                        <p class="text-sm text-apple-textMuted mb-1">${match.home} vs ${match.away}</p>
+                        <div class="flex justify-between items-center">
+                            <p class="text-lg font-bold ${bestPick.color}">${bestPick.name}</p>
+                            <p class="text-sm font-medium ${bestPick.prob > 0.6 ? 'text-apple-green' : 'text-apple-orange'}">${(bestPick.prob*100).toFixed(0)}% Conf.</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            slipHtml += `</div>
+                <div class="w-full mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
+                    <div class="flex flex-col">
+                        <span class="text-sm text-apple-textMuted font-medium">Accumulator Type</span>
+                        <span class="text-lg font-bold text-white">${accaMatches.length}-Fold</span>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <span class="text-sm text-apple-textMuted font-medium">True Combined Odds</span>
+                        <span class="text-3xl font-black text-apple-purple">${totalOdds.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('accaSlipContent').innerHTML = slipHtml;
+            document.getElementById('accaSlipContent').classList.remove('justify-center', 'items-center');
+            document.getElementById('accaSlipContent').classList.add('justify-start', 'items-start');
+        };
+
+        // --- 6. AUTO DISCOVER ENGINE ---
+        window.runAutoDiscover = () => {
+            if(mergedData.length === 0) return;
+            const tb = document.getElementById('autoTableBody');
+            tb.innerHTML = '<tr><td colspan="6" class="p-12 text-center text-apple-blue font-medium animate-pulse">Running permutation scans...</td></tr>';
+            
+            const scenarios = [
+                { name: "Heavy Home Favorites", explanation: "Betting on the home team when they are expected to win easily (odds below 1.4).", target: "Home", conds: [{field:"B365H", operator:"<=", value:1.4}] },
+                { name: "Fade Heavy Home Favorites", explanation: "Betting AGAINST the home team even when they are heavily favored to win (looking for massive upsets).", target: "Away", conds: [{field:"B365H", operator:"<=", value:1.4}] },
+                { name: "Home Momentum", explanation: "Betting on the home team if they have won their last 2 or more games in a row.", target: "Home", conds: [{field:"HomeWinStreak", operator:">=", value:2}] },
+                { name: "Away Momentum", explanation: "Betting on the away team if they are currently on a winning streak.", target: "Away", conds: [{field:"AwayWinStreak", operator:">=", value:2}] },
+                { name: "Fade Home Collapse", explanation: "Betting against the home team if they have lost their last 2 or more games.", target: "Away", conds: [{field:"HomeLossStreak", operator:">=", value:2}] },
+                { name: "Over 2.5 on High Line", explanation: "Betting that there will be 3 or more goals when the bookies already expect a high-scoring game.", target: "Over2.5", conds: [{field:"B365>2.5", operator:"<", value:1.6}] },
+                { name: "Under 2.5 on Low Line", explanation: "Betting that there will be 2 or fewer goals when the bookies expect a tight game.", target: "Under2.5", conds: [{field:"B365<2.5", operator:"<", value:1.6}] },
+                { name: "Draw Hunting", explanation: "Betting on a tie when the match is incredibly close to call and the odds are perfectly balanced.", target: "Draw", conds: [{field:"B365H", operator:">=", value:2.5}, {field:"B365H", operator:"<=", value:2.7}] }
+            ];
+
+            setTimeout(() => {
+                const results = [];
+                scenarios.forEach(s => {
+                    const res = evaluateBacktest(mergedData, s.target, s.conds);
+                    if(res.totalTrades > 5) results.push({...s, ...res});
+                });
+                results.sort((a, b) => b.profit - a.profit);
+
+                let html = '';
+                results.forEach((r, i) => {
+                    html += `
+                        <tr class="hover:bg-white/[0.02] transition-colors border-l-2 ${i<2 ? 'border-apple-green' : 'border-transparent'}">
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-white">${r.name}</div>
+                                <div class="text-[11px] text-apple-textMuted mt-1 leading-relaxed whitespace-normal max-w-sm">${r.explanation}</div>
+                            </td>
+                            <td class="px-6 py-4"><span class="px-2 py-1 bg-white/10 rounded-md text-[10px] uppercase font-bold text-apple-textMuted">${r.target}</span></td>
+                            <td class="px-6 py-4 text-center">${r.totalTrades}</td>
+                            <td class="px-6 py-4 font-medium">${((r.wins/r.totalTrades)*100).toFixed(1)}%</td>
+                            <td class="px-6 py-4 font-bold ${r.profit>0?'text-apple-green':'text-apple-red'}">${(r.profit>0?'+':'')+r.profit.toFixed(2)}</td>
+                            <td class="px-6 py-4 text-right font-medium ${r.roi>0?'text-apple-green':'text-apple-red'}">${(r.roi>0?'+':'')+r.roi.toFixed(2)}%</td>
+                        </tr>
+                    `;
+                });
+                document.getElementById('autoTableBody').innerHTML = html;
+            }, 300); 
+        };
+
+        // --- 7. INSIGHTS ENGINE (Efficiency & Refs) ---
+        const buildInsights = () => {
+            if(mergedData.length === 0) return;
+            
+            // Odds Efficiency
+            let brackets = [
+                {label: "Heavy Fav (< 1.50)", min:1.01, max:1.49, matches:0, impliedSum:0, actualWins:0},
+                {label: "Favorite (1.50 - 1.99)", min:1.50, max:1.99, matches:0, impliedSum:0, actualWins:0},
+                {label: "Even (2.00 - 2.99)", min:2.00, max:2.99, matches:0, impliedSum:0, actualWins:0},
+                {label: "Underdog (3.00+)", min:3.00, max:999, matches:0, impliedSum:0, actualWins:0}
+            ];
+
+            const refs = {};
+
+            mergedData.forEach(m => {
+                let hOdds = m.B365H || m.AvgH;
+                if(hOdds) {
+                    let implied = 1 / hOdds;
+                    let isWin = (m.FTR === 'H');
+                    brackets.forEach(b => {
+                        if(hOdds >= b.min && hOdds <= b.max) { b.matches++; b.impliedSum += implied; if(isWin) b.actualWins++; }
+                    });
+                }
+
+                const ref = m.Referee;
+                if(ref) {
+                    if(!refs[ref]) refs[ref] = { games:0, hWins:0, cards:0 };
+                    refs[ref].games++;
+                    if(m.FTR === 'H') refs[ref].hWins++;
+                    refs[ref].cards += (m.HY||0) + (m.AY||0) + (m.HR||0) + (m.AR||0);
+                }
+            });
+
+            efficiencyData = brackets.filter(b => b.matches > 0).map(b => {
+                let avgImplied = (b.impliedSum / b.matches) * 100;
+                let actual = (b.actualWins / b.matches) * 100;
+                let edge = actual - avgImplied;
+                return { label: b.label, matches: b.matches, avgImplied, actual, edge };
+            });
+            applyEfficiencySort();
+
+            refereeData = Object.entries(refs).filter(r => r[1].games > 5).map(r => {
+                const [name, d] = r;
+                return {
+                    name,
+                    games: d.games,
+                    hwPct: (d.hWins/d.games)*100,
+                    cpG: d.cards/d.games
+                };
+            });
+            applyRefereeSort();
+        };
+
+        window.sortEfficiency = (col) => {
+            if (currentEffSort.col === col) currentEffSort.asc = !currentEffSort.asc;
+            else { currentEffSort.col = col; currentEffSort.asc = false; }
+            applyEfficiencySort();
+        };
+
+        const applyEfficiencySort = () => {
+            const col = currentEffSort.col;
+            const asc = currentEffSort.asc ? 1 : -1;
+            efficiencyData.sort((a, b) => {
+                let valA = a[col], valB = b[col];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return -1 * asc;
+                if (valA > valB) return 1 * asc;
+                return 0;
+            });
+            renderEfficiency();
+        };
+
+        const renderEfficiency = () => {
+            let effHtml = '';
+            efficiencyData.forEach(d => {
+                effHtml += `
+                    <tr class="hover:bg-white/[0.02]">
+                        <td class="px-4 py-3 font-medium">${d.label}</td>
+                        <td class="px-4 py-3 text-apple-textMuted">${d.matches}</td>
+                        <td class="px-4 py-3">${d.avgImplied.toFixed(1)}%</td>
+                        <td class="px-4 py-3">${d.actual.toFixed(1)}%</td>
+                        <td class="px-4 py-3 text-right font-medium ${d.edge>0?'text-apple-green':'text-apple-red'}">${(d.edge>0?'+':'')+d.edge.toFixed(1)}%</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('efficiencyTableBody').innerHTML = effHtml;
+        };
+
+        window.sortReferees = (col) => {
+            if (currentRefSort.col === col) currentRefSort.asc = !currentRefSort.asc;
+            else { currentRefSort.col = col; currentRefSort.asc = false; }
+            applyRefereeSort();
+        };
+
+        const applyRefereeSort = () => {
+            const col = currentRefSort.col;
+            const asc = currentRefSort.asc ? 1 : -1;
+            refereeData.sort((a, b) => {
+                let valA = a[col], valB = b[col];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return -1 * asc;
+                if (valA > valB) return 1 * asc;
+                return 0;
+            });
+            renderReferees();
+        };
+
+        const renderReferees = () => {
+            let refHtml = '';
+            refereeData.forEach(d => {
+                const safeName = d.name.replace(/'/g, "\\'");
+                let flags = '';
+                if (globalAvgCards > 0) {
+                    const strictIndex = d.cpG / globalAvgCards;
+                    if (strictIndex > 1.2) flags += '<span title="High Card Risk">🚩</span> ';
+                    if (d.hwPct > globalHomeWinPct + 10) flags += '<span title="Home Bias">🏠</span>';
+                }
+
+                refHtml += `
+                    <tr class="hover:bg-white/10 cursor-pointer transition-colors" onclick="openRefereeModal('${safeName}')">
+                        <td class="px-4 py-3 font-medium text-apple-blue hover:underline">${d.name} <span class="ml-2">${flags}</span></td>
+                        <td class="px-4 py-3 text-center text-apple-textMuted">${d.games}</td>
+                        <td class="px-4 py-3 text-center ${d.hwPct>55?'text-apple-orange font-bold':''}">${d.hwPct.toFixed(1)}%</td>
+                        <td class="px-4 py-3 text-center ${d.cpG>4.5?'text-apple-red font-bold':''}">${d.cpG.toFixed(1)}</td>
+                    </tr>`;
+            });
+            document.getElementById('refereeTableBody').innerHTML = refHtml;
+        };
+
+        window.openRefereeModal = (refName) => {
+            const playedData = mergedData.filter(m => m.FTR === 'H' || m.FTR === 'D' || m.FTR === 'A');
+            const refMatches = playedData.filter(m => m.Referee === refName);
+            if(!refMatches.length) return;
+
+            let html = `
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-[#1C1C1E] text-apple-textMuted sticky top-0">
+                        <tr>
+                            <th class="px-4 py-2 font-medium">Date</th>
+                            <th class="px-4 py-2 font-medium">Home</th>
+                            <th class="px-4 py-2 font-medium">Away</th>
+                            <th class="px-4 py-2 font-medium text-center">Score</th>
+                            <th class="px-4 py-2 font-medium text-center">Cards (H-A)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+            `;
+
+            let tCards = 0;
+            let hWins = 0;
+            refMatches.forEach(m => {
+                const hg = m.FTHG||0, ag = m.FTAG||0;
+                if(m.FTR === 'H') hWins++;
+                const hY = m.HY||0, aY = m.AY||0, hR = m.HR||0, aR = m.AR||0;
+                tCards += (hY + aY + hR + aR);
+                const cardStr = `${hY+(hR*2)} - ${aY+(aR*2)}`; 
+                
+                html += `
+                    <tr class="hover:bg-white/[0.02]">
+                        <td class="px-4 py-2 text-apple-textMuted">${m.Date}</td>
+                        <td class="px-4 py-2 font-medium cursor-pointer hover:text-apple-blue transition-colors ${hg>ag?'text-apple-green':''}" onclick="openTeamModal('${m.HomeTeam.replace(/'/g, "\\'")}')">${m.HomeTeam}</td>
+                        <td class="px-4 py-2 font-medium cursor-pointer hover:text-apple-blue transition-colors ${ag>hg?'text-apple-green':''}" onclick="openTeamModal('${m.AwayTeam.replace(/'/g, "\\'")}')">${m.AwayTeam}</td>
+                        <td class="px-4 py-2 text-center font-bold">${hg} - ${ag}</td>
+                        <td class="px-4 py-2 text-center text-apple-orange font-medium">${cardStr}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            
+            const refHwPct = (hWins / refMatches.length) * 100;
+            const refCpG = tCards / refMatches.length;
+
+            let personaTags = '';
+            if (refHwPct > globalHomeWinPct + 10) personaTags += `<span class="bg-apple-blue/20 text-apple-blue px-2 py-1 rounded text-xs font-bold mr-2">🏠 Home Lean</span>`;
+            if (refCpG > globalAvgCards + 1.5) personaTags += `<span class="bg-apple-red/20 text-apple-red px-2 py-1 rounded text-xs font-bold mr-2">🚩 Strict / Trigger-Happy</span>`;
+            if (personaTags === '') personaTags = `<span class="bg-white/10 text-white px-2 py-1 rounded text-xs font-bold">Balanced / Neutral</span>`;
+            
+            const summary = `
+                <div class="mb-4">
+                    <p class="text-xs text-apple-textMuted uppercase tracking-wider font-bold mb-2">Referee Persona</p>
+                    <div class="flex items-center mb-4">${personaTags}</div>
+                    <div class="flex gap-6 text-sm text-apple-textMuted bg-white/5 p-4 rounded-xl border border-white/5">
+                        <div class="flex flex-col"><span>Matches</span><b class="text-white text-lg">${refMatches.length}</b></div>
+                        <div class="flex flex-col"><span>Home Win %</span><b class="${refHwPct > globalHomeWinPct + 10 ? 'text-apple-blue' : 'text-white'} text-lg">${refHwPct.toFixed(1)}%</b> <span class="text-[10px]">(Avg: ${globalHomeWinPct.toFixed(1)}%)</span></div>
+                        <div class="flex flex-col"><span>Cards/Game</span><b class="${refCpG > globalAvgCards + 1.5 ? 'text-apple-red' : 'text-apple-orange'} text-lg">${refCpG.toFixed(1)}</b> <span class="text-[10px]">(Avg: ${globalAvgCards.toFixed(1)})</span></div>
+                    </div>
+                </div>
+            `;
+
+            openModal(`Referee Drill-down: ${refName}`, summary + html);
+        };
+
+        window.openTeamModal = (teamName) => {
+            if(!teamName) return;
+            const matches = mergedData.filter(m => m.HomeTeam === teamName || m.AwayTeam === teamName);
+            if(!matches.length) return;
+
+            let hGames = 0, hWins = 0, hPts = 0, hCS = 0, hOddsSum = 0, hOddsCnt = 0;
+            let aGames = 0, aWins = 0, aPts = 0, aCS = 0, aOddsSum = 0, aOddsCnt = 0;
+
+            let leadCount = 0, leadWins = 0, trailCount = 0, trailPts = 0;
+            let tCards = 0, t2H = 0, tGF = 0, tGA = 0;
+
+            matches.forEach(m => {
+                if (m.FTR === undefined || m.FTR === '') return; // Skip unplayed
+
+                const isHome = m.HomeTeam === teamName;
+                const hg = m.FTHG||0, ag = m.FTAG||0;
+                
+                // Track raw goals and events
+                if(isHome) {
+                    tCards += (m.HY||0) + (m.HR||0)*2;
+                    t2H += (hg - (m.HTHG||0));
+                    tGF += hg;
+                    tGA += ag;
+                } else {
+                    tCards += (m.AY||0) + (m.AR||0)*2;
+                    t2H += (ag - (m.HTAG||0));
+                    tGF += ag;
+                    tGA += hg;
+                }
+
+                // Standard W/D/L
+                if (isHome) {
+                    hGames++;
+                    if (hg > ag) { hWins++; hPts += 3; }
+                    else if (hg === ag) { hPts += 1; }
+                    if (ag === 0) hCS++;
+                    if (m.B365H && !isNaN(m.B365H)) { hOddsSum += parseFloat(m.B365H); hOddsCnt++; }
+                } else {
+                    aGames++;
+                    if (ag > hg) { aWins++; aPts += 3; }
+                    else if (ag === hg) { aPts += 1; }
+                    if (hg === 0) aCS++;
+                    if (m.B365A && !isNaN(m.B365A)) { aOddsSum += parseFloat(m.B365A); aOddsCnt++; }
+                }
+
+                // Goal Path Logic
+                if(m.HTR && m.FTR) {
+                    if((isHome && m.HTR === 'H') || (!isHome && m.HTR === 'A')) {
+                        leadCount++;
+                        if((isHome && m.FTR === 'H') || (!isHome && m.FTR === 'A')) leadWins++;
+                    }
+                    if((isHome && m.HTR === 'A') || (!isHome && m.HTR === 'H')) {
+                        trailCount++;
+                        if((isHome && m.FTR === 'H') || (!isHome && m.FTR === 'A')) trailPts += 3;
+                        else if(m.FTR === 'D') trailPts += 1;
+                    }
+                }
+            });
+
+            // Normalizations vs League Average for Radar
+            const tTotalGames = hGames + aGames;
+            const tPPG = tTotalGames ? ((hPts + aPts) / tTotalGames) : 0;
+            const tGFPG = tTotalGames ? (tGF / tTotalGames) : 0;
+            const tGAPG = tTotalGames ? (tGA / tTotalGames) : 0;
+            const tCPG = tTotalGames ? (tCards / tTotalGames) : 0;
+            const t2HPG = tTotalGames ? (t2H / tTotalGames) : 0;
+
+            const rAtk = globalAvgGF ? Math.min(100, (tGFPG / globalAvgGF) * 50) : 50;
+            const rDef = globalAvgGF ? Math.max(0, 100 - (tGAPG / globalAvgGF) * 50) : 50; 
+            const rDis = globalAvgCards ? Math.max(0, 100 - (tCPG / (globalAvgCards/2)) * 50) : 50;
+            const rForm = globalAvgPPG ? Math.min(100, (tPPG / globalAvgPPG) * 50) : 50;
+            const r2H = globalAvg2H ? Math.min(100, (t2HPG / globalAvg2H) * 50) : 50;
+
+            const hPPG = hGames ? (hPts/hGames).toFixed(2) : '0.00';
+            const hWinPct = hGames ? ((hWins/hGames)*100).toFixed(1) : '0.0';
+            const hCSPct = hGames ? ((hCS/hGames)*100).toFixed(1) : '0.0';
+            const hAvgOdds = hOddsCnt ? (hOddsSum/hOddsCnt).toFixed(2) : '-';
+
+            const aPPG = aGames ? (aPts/aGames).toFixed(2) : '0.00';
+            const aWinPct = aGames ? ((aWins/aGames)*100).toFixed(1) : '0.0';
+            const aCSPct = aGames ? ((aCS/aGames)*100).toFixed(1) : '0.0';
+            const aAvgOdds = aOddsCnt ? (aOddsSum/aOddsCnt).toFixed(2) : '-';
+
+            const leadRetPct = leadCount ? ((leadWins / leadCount) * 100).toFixed(1) : '0.0';
+            const recoveryPct = trailCount ? ((trailPts / (trailCount * 3)) * 100).toFixed(1) : '0.0';
+
+            const recentMatches = matches.filter(m => m.FTR && m.FTR !== '').slice(0, 10).reverse();
+            const trendLabels = [];
+            const trendGF = [];
+            const trendGA = [];
+            
+            let matchLogHtml = '';
+            
+            matches.forEach(m => {
+                const isHome = m.HomeTeam === teamName;
+                const opp = isHome ? m.AwayTeam : m.HomeTeam;
+                const gf = isHome ? m.FTHG : m.FTAG;
+                const ga = isHome ? m.FTAG : m.FTHG;
+                let resObj = { text: 'D', color: 'text-apple-textMuted bg-white/10' };
+                if (gf > ga) resObj = { text: 'W', color: 'text-apple-green bg-apple-green/20' };
+                if (gf < ga) resObj = { text: 'L', color: 'text-apple-red bg-apple-red/20' };
+
+                matchLogHtml += `
+                    <tr class="hover:bg-white/[0.02]">
+                        <td class="px-4 py-2 text-apple-textMuted">${m.Date || ''}</td>
+                        <td class="px-4 py-2 text-xs font-medium cursor-pointer hover:text-apple-blue transition-colors" onclick="openTeamModal('${opp.replace(/'/g, "\\'")}')">${isHome ? '(H)' : '(A)'} vs ${opp}</td>
+                        <td class="px-4 py-2 text-center font-bold">${gf !== undefined ? gf : '-'} - ${ga !== undefined ? ga : '-'}</td>
+                        <td class="px-4 py-2 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${m.FTR !== undefined && m.FTR !== '' ? resObj.color : 'text-apple-textMuted bg-white/5'}">${m.FTR !== undefined && m.FTR !== '' ? resObj.text : '-'}</span></td>
+                    </tr>
+                `;
+            });
+
+            recentMatches.forEach(m => {
+                const isHome = m.HomeTeam === teamName;
+                trendLabels.push(m.Date ? m.Date.substring(0, 5) : '-');
+                trendGF.push(isHome ? m.FTHG : m.FTAG);
+                trendGA.push(isHome ? m.FTAG : m.FTHG);
+            });
+
+            const html = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gradient-to-tr from-white/5 to-apple-blue/5 rounded-xl p-4 border border-apple-blue/20">
+                        <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mb-2 font-bold flex items-center gap-2">Radar Profile vs League</p>
+                        <div class="h-48 relative w-full"><canvas id="teamModalRadarCanvas"></canvas></div>
+                    </div>
+                    <div class="bg-gradient-to-tr from-white/5 to-apple-orange/5 rounded-xl p-4 border border-apple-orange/20 flex flex-col justify-center">
+                        <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mb-6 font-bold flex items-center gap-2">Goal Path Analytics</p>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-apple-textMuted font-medium">Lead Retention <span class="text-[10px] opacity-70">(Win when leading HT)</span></span>
+                                    <span class="font-bold text-apple-green">${leadRetPct}%</span>
+                                </div>
+                                <div class="progress-bar-bg flex w-full"><div class="progress-bar-fill bg-apple-green" style="width: ${leadRetPct}%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-apple-textMuted font-medium">Recovery Rate <span class="text-[10px] opacity-70">(Pts gained trailing HT)</span></span>
+                                    <span class="font-bold text-apple-orange">${recoveryPct}%</span>
+                                </div>
+                                <div class="progress-bar-bg flex w-full"><div class="progress-bar-fill bg-apple-orange" style="width: ${recoveryPct}%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white/5 rounded-xl p-4 border border-white/5">
+                        <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mb-2 font-bold flex items-center gap-2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg> Home Performance</p>
+                        <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">PPG</span><span class="font-bold text-white">${hPPG}</span></div>
+                        <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">Win Rate</span><span class="font-bold text-apple-blue">${hWinPct}%</span></div>
+                        <div class="flex justify-between items-center text-sm"><span class="text-apple-textMuted">Clean Sheets</span><span class="font-bold text-apple-green">${hCSPct}%</span></div>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-4 border border-white/5">
+                        <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mb-2 font-bold flex items-center gap-2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M16.2 7.8l-2 6.3-6.4 2.1 2-6.3z"></path></svg> Away Performance</p>
+                        <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">PPG</span><span class="font-bold text-white">${aPPG}</span></div>
+                        <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">Win Rate</span><span class="font-bold text-apple-blue">${aWinPct}%</span></div>
+                        <div class="flex justify-between items-center text-sm"><span class="text-apple-textMuted">Clean Sheets</span><span class="font-bold text-apple-green">${aCSPct}%</span></div>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-4 border border-white/5">
+                        <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mb-2 font-bold flex items-center gap-2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Market Tendencies</p>
+                        <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">Avg Home Odds</span><span class="font-bold text-apple-orange">${hAvgOdds}</span></div>
+                        <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">Avg Away Odds</span><span class="font-bold text-apple-orange">${aAvgOdds}</span></div>
+                        <div class="text-xs text-apple-textMuted mt-2 italic">${hAvgOdds !== '-' && hAvgOdds < 2.0 ? 'Typically priced as home favorites.' : 'Often priced as home underdogs.'}</div>
+                    </div>
+                </div>
+
+                <div class="mb-6 bg-white/5 rounded-xl p-4 border border-white/5">
+                    <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mb-2 font-bold">Form Trend (Last 10 Matches: GF vs GA)</p>
+                    <div class="h-40 relative w-full"><canvas id="teamTrendChartCanvas"></canvas></div>
+                </div>
+
+                <div class="bg-white/5 rounded-xl border border-white/5 overflow-hidden flex flex-col max-h-[300px]">
+                    <div class="p-3 border-b border-white/5 bg-black/20">
+                        <p class="text-[10px] text-apple-textMuted uppercase tracking-wider font-bold">Raw Match Log</p>
+                    </div>
+                    <div class="overflow-y-auto custom-scrollbar">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-[#1C1C1E] text-apple-textMuted sticky top-0 shadow-md">
+                                <tr>
+                                    <th class="px-4 py-2 font-medium">Date</th>
+                                    <th class="px-4 py-2 font-medium">Fixture</th>
+                                    <th class="px-4 py-2 font-medium text-center">Score</th>
+                                    <th class="px-4 py-2 font-medium text-center">Res</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                ${matchLogHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            openModal(`Team Profile: ${teamName}`, html);
+
+            setTimeout(() => {
+                // Team Trend Chart
+                if(charts.teamTrend) charts.teamTrend.destroy();
+                const ctxTrend = document.getElementById('teamTrendChartCanvas').getContext('2d');
+                charts.teamTrend = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: trendLabels,
+                        datasets: [
+                            { 
+                                label: 'Goals For (GF)', 
+                                data: trendGF, 
+                                borderColor: '#30D158', 
+                                backgroundColor: 'rgba(48, 209, 88, 0.1)',
+                                borderWidth: 2, tension: 0.3, fill: true
+                            },
+                            { 
+                                label: 'Goals Against (GA)', 
+                                data: trendGA, 
+                                borderColor: '#FF453A', 
+                                backgroundColor: 'rgba(255, 69, 58, 0.1)',
+                                borderWidth: 2, tension: 0.3, fill: true
+                            }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        scales: { 
+                            x: { ticks: {color:'#86868B', font:{family:'Inter'}, maxRotation: 0} }, 
+                            y: { beginAtZero: true, grid:{color:'rgba(255,255,255,0.05)'}, border:{display:false}, ticks:{color:'#86868B', stepSize: 1} } 
+                        }, 
+                        plugins: {
+                            legend: { display: true, position: 'top', labels: { color: '#86868B', boxWidth: 10, usePointStyle: true, font: {family: 'Inter'} } }, 
+                            tooltip: { mode: 'index', intersect: false, backgroundColor: 'rgba(0,0,0,0.8)', titleFont: {family:'Inter'}, bodyFont: {family:'Inter'}, padding: 10, cornerRadius: 8 }
+                        } 
+                    }
+                });
+
+                // Team Radar Chart
+                if(charts.teamModalRadar) charts.teamModalRadar.destroy();
+                const ctxRadar = document.getElementById('teamModalRadarCanvas').getContext('2d');
+                charts.teamModalRadar = new Chart(ctxRadar, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Attack (GF)', 'Defense (Inv GA)', 'Discipline', 'Form (PPG)', '2H Surge'],
+                        datasets: [
+                            {
+                                label: teamName,
+                                data: [rAtk, rDef, rDis, rForm, r2H],
+                                backgroundColor: 'rgba(10, 132, 255, 0.4)',
+                                borderColor: 'rgba(10, 132, 255, 1)',
+                                pointBackgroundColor: 'rgba(10, 132, 255, 1)',
+                                borderWidth: 2,
+                                fill: true
+                            },
+                            {
+                                label: 'League Average',
+                                data: [50, 50, 50, 50, 50],
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                                borderDash: [5, 5],
+                                borderWidth: 1,
+                                pointRadius: 0,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                min: 0,
+                                max: 100,
+                                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                pointLabels: { color: '#86868B', font: { family: 'Inter', size: 9, weight: 600 } },
+                                ticks: { display: false, maxTicksLimit: 5 }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleFont: {family:'Inter'}, bodyFont: {family:'Inter'}, cornerRadius: 8 }
+                        }
+                    }
+                });
+
+            }, 50);
+        };
+
+        // --- 8. RAW DATA LOG VIEW ---
+        const renderDataLog = (dataArray) => {
+            const tbody = document.getElementById('dataLogBody');
+            let html = '';
+            
+            const maxRender = 200;
+            const slice = dataArray.slice(0, maxRender);
+
+            slice.forEach(m => {
+                const hg = m.FTHG!==undefined?m.FTHG:'-', ag = m.FTAG!==undefined?m.FTAG:'-', htH = m.HTHG!==undefined?m.HTHG:'-', htA = m.HTAG!==undefined?m.HTAG:'-';
+                const o25 = (hg !== '-' && ag !== '-' && hg+ag > 2.5) ? '<span class="text-apple-green font-bold">Y</span>' : '<span class="text-apple-textMuted">N</span>';
+                const btts = (hg !== '-' && ag !== '-' && hg>0 && ag>0) ? '<span class="text-apple-green font-bold">Y</span>' : '<span class="text-apple-textMuted">N</span>';
+                
+                const odds1X2 = `${m.B365H||'-'} / ${m.B365D||'-'} / ${m.B365A||'-'}`;
+                const oddsOU = `${m['B365>2.5']||'-'} / ${m['B365<2.5']||'-'}`;
+
+                html += `
+                    <tr class="hover:bg-white/[0.02]">
+                        <td class="px-4 py-2 text-apple-textMuted">${m.Date || ''}</td>
+                        <td class="px-4 py-2 font-medium cursor-pointer hover:text-apple-blue transition-colors ${m.FTR==='H'?'text-white':'text-apple-textMuted'}" onclick="openTeamModal('${(m.HomeTeam||'').replace(/'/g, "\\'")}')">${m.HomeTeam || ''}</td>
+                        <td class="px-4 py-2 font-medium cursor-pointer hover:text-apple-blue transition-colors ${m.FTR==='A'?'text-white':'text-apple-textMuted'}" onclick="openTeamModal('${(m.AwayTeam||'').replace(/'/g, "\\'")}')">${m.AwayTeam || ''}</td>
+                        <td class="px-4 py-2 text-center font-bold">${hg}-${ag} <span class="text-[10px] text-apple-textMuted font-normal ml-1">(${htH}-${htA})</span></td>
+                        <td class="px-4 py-2 text-center text-xs font-medium text-apple-textMuted tracking-wider">${odds1X2}</td>
+                        <td class="px-4 py-2 text-center text-xs font-medium text-apple-textMuted tracking-wider">${oddsOU}</td>
+                        <td class="px-4 py-2 text-xs text-apple-textMuted">${m.Referee || ''}</td>
+                        <td class="px-4 py-2 text-center">${btts}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+            
+            document.getElementById('dataLogCount').innerText = `Showing ${slice.length} of ${dataArray.length} results`;
+        };
+
+        window.filterDataLog = () => {
+            const term = document.getElementById('dataSearchInput').value.toLowerCase();
+            if(!term) {
+                filteredData = [...mergedData];
+                if(currentSort.col) applySort();
+                else renderDataLog(filteredData);
+                return;
+            }
+
+            filteredData = mergedData.filter(m => {
+                return (
+                    (m.HomeTeam && m.HomeTeam.toLowerCase().includes(term)) ||
+                    (m.AwayTeam && m.AwayTeam.toLowerCase().includes(term)) ||
+                    (m.Referee && m.Referee.toLowerCase().includes(term)) ||
+                    (m.Date && m.Date.includes(term))
+                );
+            });
+            
+            if(currentSort.col) applySort();
+            else renderDataLog(filteredData);
+        };
+
+        window.sortDataLog = (col) => {
+            if (currentSort.col === col) {
+                currentSort.asc = !currentSort.asc;
+            } else {
+                currentSort.col = col;
+                currentSort.asc = true;
+            }
+            applySort();
+        };
+
+        const applySort = () => {
+            const col = currentSort.col;
+            const asc = currentSort.asc ? 1 : -1;
+            
+            filteredData.sort((a, b) => {
+                let valA = a[col];
+                let valB = b[col];
+
+                if(valA === undefined || valA === null) valA = '';
+                if(valB === undefined || valB === null) valB = '';
+
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+
+                if (valA < valB) return -1 * asc;
+                if (valA > valB) return 1 * asc;
+                return 0;
+            });
+            
+            renderDataLog(filteredData);
+        };
+
+    </script>
+</body>
+</html>

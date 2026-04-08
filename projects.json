@@ -1,5 +1,24 @@
 [
   {
+    "title": "Pitch-Data Pro",
+    "slug": "pitch-data-pro",
+    "description": "Analyze football data like a pro! Upload datasets from football-data.co.uk or your own files, build betting algorithms, and backtest strategies. Generate stat-powered match predictions, insights, and performance tracking.",
+    "thumbnail": "assets/thumbs/pitch-data-pro.jpg",
+    "tags": [
+      "AI Tools",
+      "Analyze",
+      "Data",
+      "Football",
+      "Prediction",
+      "Tools"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-04-08",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "PokePricer",
     "slug": "pokepricer",
     "description": "Transform raw eBay sold listings into professional market intelligence for Pokémon cards. Analyze price velocity, filter outliers with statistical precision, and identify high-margin \"snipe\" targets with real-time profit calculators and a digital research vault.",
