@@ -405,6 +405,8 @@
                             <option value="Draw">Draw (B365D)</option>
                             <option value="Over2.5">Over 2.5 Goals (B365>2.5)</option>
                             <option value="Under2.5">Under 2.5 Goals (B365<2.5)</option>
+                            <option value="Over1.5">Over 1.5 Goals</option>
+                            <option value="Over3.5">Over 3.5 Goals</option>
                         </select>
                     </div>
 
@@ -448,7 +450,7 @@
                 </div>
 
                 <div id="resultsDashboard" class="hidden space-y-6">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div class="glass-panel p-4 text-center">
                             <p class="text-xs text-apple-textMuted uppercase font-semibold tracking-wider mb-1">Total Valid Bets</p>
                             <p id="kpiTotal" class="text-2xl font-bold">0</p>
@@ -467,6 +469,21 @@
                             <p id="kpiROI" class="text-2xl font-bold">0.00%</p>
                         </div>
                     </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="glass-panel p-4 text-center">
+                            <p class="text-xs text-apple-textMuted uppercase font-semibold tracking-wider mb-1">Max Drawdown</p>
+                            <p id="kpiDrawdown" class="text-xl font-bold text-apple-red">0.00</p>
+                        </div>
+                        <div class="glass-panel p-4 text-center">
+                            <p class="text-xs text-apple-textMuted uppercase font-semibold tracking-wider mb-1">Longest Win Streak</p>
+                            <p id="kpiWinStreak" class="text-xl font-bold text-apple-green">0</p>
+                        </div>
+                        <div class="glass-panel p-4 text-center">
+                            <p class="text-xs text-apple-textMuted uppercase font-semibold tracking-wider mb-1">Longest Loss Streak</p>
+                            <p id="kpiLossStreak" class="text-xl font-bold text-apple-red">0</p>
+                        </div>
+                    </div>
+
                     <div class="glass-panel p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-semibold text-white">Equity Curve</h3>
@@ -559,7 +576,7 @@
                 <!-- Optional Market Value Checker -->
                 <div class="w-full border-t border-white/10 pt-4 flex flex-col md:flex-row gap-4 items-center">
                     <div class="w-full md:w-auto flex items-center gap-2">
-                        <span class="text-xs text-apple-textMuted font-medium whitespace-nowrap">Bookmaker Odds (Optional Edge Finder):</span>
+                        <span class="text-xs text-apple-textMuted font-medium whitespace-nowrap">Value Betting Engine Odds (Edge Finder):</span>
                     </div>
                     <div class="flex gap-2 w-full md:w-auto">
                         <input type="number" step="0.01" id="predOddsH" placeholder="Home Odds (e.g. 2.10)" class="apple-input px-3 py-1.5 text-xs text-white w-full" oninput="runPrediction()">
@@ -652,10 +669,9 @@
                         <h3 class="text-sm font-bold text-white mb-6">1X2 Match Probabilities & Fair Odds</h3>
                         <div class="space-y-5">
                             <div>
-                                <div class="flex justify-between text-sm mb-2 items-center">
+                                <div class="flex justify-between text-sm items-center">
                                     <span class="font-medium text-white flex flex-wrap items-center gap-2">
                                         <div class="w-2 h-2 rounded-full bg-apple-blue"></div> Home Win 
-                                        <span id="edgeHome"></span>
                                         <span id="kellyHome"></span>
                                     </span>
                                     <span class="flex items-center gap-3">
@@ -663,13 +679,13 @@
                                         <span id="probHome" class="font-bold text-apple-blue w-12 text-right">0%</span>
                                     </span>
                                 </div>
+                                <div id="edgeHome" class="mb-2"></div>
                                 <div class="progress-bar-bg flex w-full"><div id="probBarHome" class="progress-bar-fill bg-apple-blue" style="width: 0%"></div></div>
                             </div>
                             <div>
-                                <div class="flex justify-between text-sm mb-2 items-center">
+                                <div class="flex justify-between text-sm items-center">
                                     <span class="font-medium text-white flex flex-wrap items-center gap-2">
                                         <div class="w-2 h-2 rounded-full bg-apple-textMuted"></div> Draw 
-                                        <span id="edgeDraw"></span>
                                         <span id="kellyDraw"></span>
                                     </span>
                                     <span class="flex items-center gap-3">
@@ -677,13 +693,13 @@
                                         <span id="probDraw" class="font-bold text-white w-12 text-right">0%</span>
                                     </span>
                                 </div>
+                                <div id="edgeDraw" class="mb-2"></div>
                                 <div class="progress-bar-bg flex w-full"><div id="probBarDraw" class="progress-bar-fill bg-white/40" style="width: 0%"></div></div>
                             </div>
                             <div>
-                                <div class="flex justify-between text-sm mb-2 items-center">
+                                <div class="flex justify-between text-sm items-center">
                                     <span class="font-medium text-white flex flex-wrap items-center gap-2">
                                         <div class="w-2 h-2 rounded-full bg-apple-orange"></div> Away Win 
-                                        <span id="edgeAway"></span>
                                         <span id="kellyAway"></span>
                                     </span>
                                     <span class="flex items-center gap-3">
@@ -691,6 +707,7 @@
                                         <span id="probAway" class="font-bold text-apple-orange w-12 text-right">0%</span>
                                     </span>
                                 </div>
+                                <div id="edgeAway" class="mb-2"></div>
                                 <div class="progress-bar-bg flex w-full"><div id="probBarAway" class="progress-bar-fill bg-apple-orange" style="width: 0%"></div></div>
                             </div>
                         </div>
@@ -706,10 +723,24 @@
                             <div class="space-y-4">
                                 <div class="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center">
                                     <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-apple-textMuted">Over 1.5 Goals</span>
+                                        <span id="fairO15" class="text-[10px] text-apple-textMuted mt-1">Fair Odds: 1.00</span>
+                                    </div>
+                                    <span id="probO15" class="text-xl font-bold text-blue-400">0%</span>
+                                </div>
+                                <div class="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center">
+                                    <div class="flex flex-col">
                                         <span class="text-sm font-medium text-apple-textMuted">Over 2.5 Goals</span>
                                         <span id="fairO25" class="text-[10px] text-apple-textMuted mt-1">Fair Odds: 1.00</span>
                                     </div>
                                     <span id="probO25" class="text-xl font-bold text-apple-purple">0%</span>
+                                </div>
+                                <div class="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-apple-textMuted">Over 3.5 Goals</span>
+                                        <span id="fairO35" class="text-[10px] text-apple-textMuted mt-1">Fair Odds: 1.00</span>
+                                    </div>
+                                    <span id="probO35" class="text-xl font-bold text-pink-500">0%</span>
                                 </div>
                                 <div class="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center">
                                     <div class="flex flex-col">
@@ -723,8 +754,15 @@
                         <!-- Top Scorelines -->
                         <div class="glass-panel p-6">
                             <h3 class="text-sm font-bold text-white mb-4">Most Likely Scorelines</h3>
-                            <div id="predScorelines" class="space-y-2">
+                            <div id="predScorelines" class="space-y-2 mb-4">
                                 <!-- JS Populated -->
+                            </div>
+                            <h3 class="text-sm font-bold text-white mb-2 pt-2 border-t border-white/5">Score Matrix (%)</h3>
+                            <div class="overflow-x-auto custom-scrollbar">
+                                <table class="w-full text-center text-[10px]">
+                                    <thead id="poissonMatrixHead"></thead>
+                                    <tbody id="poissonMatrixBody"></tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -1549,6 +1587,9 @@
 
         const evaluateBacktest = (data, target, conds) => {
             let currentPnL = 0, wins = 0, losses = 0, totalStaked = 0;
+            let peakPnL = 0, maxDrawdown = 0;
+            let currentWinStreak = 0, maxWinStreak = 0;
+            let currentLossStreak = 0, maxLossStreak = 0;
             const trades = [];
 
             data.forEach(match => {
@@ -1585,12 +1626,38 @@
                     else if (target === 'Draw') { odds = getStrictOdds(match, 'B365D'); won = match.FTR === 'D'; }
                     else if (target === 'Over2.5') { odds = getStrictOdds(match, 'B365>2.5'); won = (hg + ag) > 2.5; }
                     else if (target === 'Under2.5') { odds = getStrictOdds(match, 'B365<2.5'); won = (hg + ag) < 2.5; }
+                    else if (target === 'Over1.5') { 
+                        // Fallback generic check if odds don't exist
+                        odds = getStrictOdds(match, 'B365>1.5') || (match['BbAv>1.5'] ? getStrictOdds(match, 'BbAv>1.5') : null); 
+                        won = (hg + ag) > 1.5; 
+                    }
+                    else if (target === 'Over3.5') { 
+                        odds = getStrictOdds(match, 'B365>3.5') || (match['BbAv>3.5'] ? getStrictOdds(match, 'BbAv>3.5') : null); 
+                        won = (hg + ag) > 3.5; 
+                    }
 
+                    // Only backtest if we can source accurate odds
                     if (odds && odds > 1.01) {
                         totalStaked += 1;
                         let profit = won ? (1 * odds) - 1 : -1;
-                        if(won) wins++; else losses++;
+                        
+                        if(won) {
+                            wins++;
+                            currentWinStreak++;
+                            currentLossStreak = 0;
+                            if(currentWinStreak > maxWinStreak) maxWinStreak = currentWinStreak;
+                        } else {
+                            losses++;
+                            currentLossStreak++;
+                            currentWinStreak = 0;
+                            if(currentLossStreak > maxLossStreak) maxLossStreak = currentLossStreak;
+                        }
+                        
                         currentPnL += profit;
+                        if(currentPnL > peakPnL) peakPnL = currentPnL;
+                        let drawdown = peakPnL - currentPnL;
+                        if(drawdown > maxDrawdown) maxDrawdown = drawdown;
+
                         trades.push({
                             date: match.Date, home: match.HomeTeam, away: match.AwayTeam, target, odds: odds.toFixed(2),
                             result: won ? 'WIN' : 'LOSS', profit, cumulativePnL: currentPnL
@@ -1599,7 +1666,11 @@
                 }
             });
 
-            return { trades, totalTrades: wins + losses, wins, losses, profit: currentPnL, roi: totalStaked > 0 ? (currentPnL / totalStaked) * 100 : 0 };
+            return { 
+                trades, totalTrades: wins + losses, wins, losses, profit: currentPnL, 
+                roi: totalStaked > 0 ? (currentPnL / totalStaked) * 100 : 0,
+                maxDrawdown, maxWinStreak, maxLossStreak 
+            };
         };
 
         window.addCondition = () => { conditions.push({ field: '', operator: '==', value: '' }); renderConditions(); };
@@ -1651,6 +1722,10 @@
             
             document.getElementById('kpiROI').innerText = (res.roi>0?'+':'') + res.roi.toFixed(2) + '%';
             document.getElementById('kpiROI').className = `text-2xl font-bold ${res.roi>0?'text-apple-green': res.roi<0?'text-apple-red':'text-white'}`;
+
+            document.getElementById('kpiDrawdown').innerText = res.maxDrawdown.toFixed(2);
+            document.getElementById('kpiWinStreak').innerText = res.maxWinStreak;
+            document.getElementById('kpiLossStreak').innerText = res.maxLossStreak;
 
             currentTradeLog = res.trades; 
 
@@ -1872,7 +1947,9 @@
             xG_Away = Math.max(0.1, xG_Away);
 
             let homeProb = 0, drawProb = 0, awayProb = 0, over25Prob = 0, under25Prob = 0, bttsProb = 0;
+            let over15Prob = 0, under15Prob = 0, over35Prob = 0, under35Prob = 0;
             const scorelines = [];
+            const poissonGrid = Array.from({length: 6}, () => Array(6).fill(0));
 
             for(let h=0; h<=6; h++) {
                 for(let a=0; a<=6; a++) {
@@ -1883,10 +1960,16 @@
                     else if(a > h) awayProb += prob;
                     else drawProb += prob;
 
-                    if((h+a) > 2.5) over25Prob += prob;
-                    else under25Prob += prob;
+                    if((h+a) > 1.5) over15Prob += prob; else under15Prob += prob;
+                    if((h+a) > 2.5) over25Prob += prob; else under25Prob += prob;
+                    if((h+a) > 3.5) over35Prob += prob; else under35Prob += prob;
                     
                     if(h > 0 && a > 0) bttsProb += prob;
+
+                    // Populate UI Matrix explicitly for 0 to 5 goals
+                    if(h <= 5 && a <= 5) {
+                        poissonGrid[h][a] = prob;
+                    }
                 }
             }
             
@@ -1896,7 +1979,9 @@
                 xG_Home, xG_Away, 
                 baseXG_Home, baseXG_Away, shotXG_Home, shotXG_Away, formXG_Home, formXG_Away, h2hXG_Home, h2hXG_Away,
                 aAvgHST, aAvgAST_Conceded, aAvgHC, bAvgAST, bAvgHST_Conceded, bAvgAC,
-                homeProb, drawProb, awayProb, over25Prob, under25Prob, bttsProb, scorelines,
+                homeProb, drawProb, awayProb, over25Prob, under25Prob, bttsProb, 
+                over15Prob, under15Prob, over35Prob, under35Prob,
+                scorelines, poissonGrid,
                 radarA, radarB
             };
         };
@@ -1968,38 +2053,43 @@
             document.getElementById('probBarAway').style.width = toPct(res.awayProb);
             document.getElementById('fairAway').innerText = `Odds: ${toFair(res.awayProb)}`;
 
+            // Goal Markets
+            document.getElementById('probO15').innerText = toPct(res.over15Prob);
+            document.getElementById('fairO15').innerText = `Fair Odds: ${toFair(res.over15Prob)}`;
+            
             document.getElementById('probO25').innerText = toPct(res.over25Prob);
             document.getElementById('fairO25').innerText = `Fair Odds: ${toFair(res.over25Prob)}`;
+
+            document.getElementById('probO35').innerText = toPct(res.over35Prob);
+            document.getElementById('fairO35').innerText = `Fair Odds: ${toFair(res.over35Prob)}`;
             
             document.getElementById('probBTTS').innerText = toPct(res.bttsProb);
             document.getElementById('fairBTTS').innerText = `Fair Odds: ${toFair(res.bttsProb)}`;
 
-            // Market Value Overlay (Edge Finder) & Fractional Kelly Recommendation
+            // Value Betting Engine Update & Override
             const predOddsH = parseFloat(document.getElementById('predOddsH').value);
             const predOddsD = parseFloat(document.getElementById('predOddsD').value);
             const predOddsA = parseFloat(document.getElementById('predOddsA').value);
 
-            const calculateEdge = (modelProb, odds) => {
-                if (!odds || isNaN(odds)) return null;
-                const implied = 1 / odds;
-                return (modelProb - implied) * 100;
-            };
-
-            const renderEdge = (elementId, edge) => {
+            const renderEdge = (elementId, modelProb, odds) => {
                 const el = document.getElementById(elementId);
-                if (edge === null) { el.innerHTML = ''; return; }
-                if (edge > 5) {
-                    el.innerHTML = `<span class="bg-apple-green/20 text-apple-green px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ml-2">Value Detected</span>`;
-                } else if (edge < -5) {
-                    el.innerHTML = `<span class="bg-apple-red/20 text-apple-red px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ml-2">Poor Value</span>`;
+                if (!odds || isNaN(odds)) { el.innerHTML = ''; return; }
+                const implied = 1 / odds;
+                const edge = (modelProb - implied) * 100;
+
+                let html = `<span class="text-apple-textMuted bg-black/20 px-1.5 py-0.5 rounded border border-white/5 text-[9px] uppercase tracking-widest ml-1">Impl: ${(implied*100).toFixed(1)}%</span>`;
+
+                if (edge > 0) {
+                    html += `<span class="bg-apple-green/20 text-apple-green border border-apple-green/30 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-widest ml-1">+${edge.toFixed(1)}% Value</span>`;
                 } else {
-                    el.innerHTML = `<span class="bg-white/10 text-apple-textMuted px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ml-2">Fair Price</span>`;
+                    html += `<span class="bg-apple-red/20 text-apple-red border border-apple-red/30 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-widest ml-1">${edge.toFixed(1)}% Edge</span>`;
                 }
+                el.innerHTML = html;
             };
 
-            renderEdge('edgeHome', calculateEdge(res.homeProb, predOddsH));
-            renderEdge('edgeDraw', calculateEdge(res.drawProb, predOddsD));
-            renderEdge('edgeAway', calculateEdge(res.awayProb, predOddsA));
+            renderEdge('edgeHome', res.homeProb, predOddsH);
+            renderEdge('edgeDraw', res.drawProb, predOddsD);
+            renderEdge('edgeAway', res.awayProb, predOddsA);
 
             // Execute Kelly
             renderKelly('kellyHome', calculateKelly(res.homeProb, predOddsH));
@@ -2018,6 +2108,26 @@
                 `;
             });
             document.getElementById('predScorelines').innerHTML = scoreHtml;
+
+            // Render Poisson Matrix
+            let headHtml = '<tr><th class="p-2 text-apple-textMuted border-b border-white/10 font-bold tracking-widest">H \\ A</th>';
+            for(let a=0; a<=5; a++) headHtml += `<th class="p-2 text-apple-orange border-b border-white/10 font-bold">${a}</th>`;
+            headHtml += '</tr>';
+            document.getElementById('poissonMatrixHead').innerHTML = headHtml;
+
+            let bodyHtml = '';
+            for(let h=0; h<=5; h++) {
+                bodyHtml += `<tr><th class="p-2 text-apple-blue border-r border-white/10 font-bold">${h}</th>`;
+                for(let a=0; a<=5; a++) {
+                    const val = (res.poissonGrid[h][a] * 100);
+                    const alpha = Math.min(1, val / 15); // color scaling
+                    const bg = val > 5 ? `background-color: rgba(48, 209, 88, ${alpha})` : (val > 2 ? `background-color: rgba(10, 132, 255, ${alpha})` : '');
+                    bodyHtml += `<td class="p-2 border border-white/5" style="${bg}">${val.toFixed(1)}%</td>`;
+                }
+                bodyHtml += `</tr>`;
+            }
+            document.getElementById('poissonMatrixBody').innerHTML = bodyHtml;
+
 
             // Render Radar Chart
             if(charts.radar) charts.radar.destroy();
@@ -2439,6 +2549,7 @@
 
             let leadCount = 0, leadWins = 0, trailCount = 0, trailPts = 0;
             let tCards = 0, t2H = 0, tGF = 0, tGA = 0;
+            let hGF = 0, hGA = 0, aGF = 0, aGA = 0;
 
             matches.forEach(m => {
                 if (m.FTR === undefined || m.FTR === '') return; // Skip unplayed
@@ -2452,11 +2563,15 @@
                     t2H += (hg - (m.HTHG||0));
                     tGF += hg;
                     tGA += ag;
+                    hGF += hg;
+                    hGA += ag;
                 } else {
                     tCards += (m.AY||0) + (m.AR||0)*2;
                     t2H += (ag - (m.HTAG||0));
                     tGF += ag;
                     tGA += hg;
+                    aGF += ag;
+                    aGA += hg;
                 }
 
                 // Standard W/D/L
@@ -2501,6 +2616,29 @@
             const rDis = globalAvgCards ? Math.max(0, 100 - (tCPG / (globalAvgCards/2)) * 50) : 50;
             const rForm = globalAvgPPG ? Math.min(100, (tPPG / globalAvgPPG) * 50) : 50;
             const r2H = globalAvg2H ? Math.min(100, (t2HPG / globalAvg2H) * 50) : 50;
+
+            // Attack/Defense strength calculations
+            let lHGF = 0, lHGA = 0, lAGF = 0, lAGA = 0;
+            let lMatches = mergedData.filter(m => m.FTR === 'H' || m.FTR === 'A' || m.FTR === 'D');
+            lMatches.forEach(m => {
+                 lHGF += (m.FTHG||0); lHGA += (m.FTAG||0);
+                 lAGF += (m.FTAG||0); lAGA += (m.FTHG||0);
+            });
+            const lHGames = lMatches.length || 1;
+            const avgLgeHomeGF = lHGF / lHGames;
+            const avgLgeHomeGA = lHGA / lHGames;
+            const avgLgeAwayGF = lAGF / lHGames;
+            const avgLgeAwayGA = lAGA / lHGames;
+
+            const tmHGF = hGames ? hGF / hGames : 0;
+            const tmHGA = hGames ? hGA / hGames : 0;
+            const tmAGF = aGames ? aGF / aGames : 0;
+            const tmAGA = aGames ? aGA / aGames : 0;
+
+            const hAttStr = avgLgeHomeGF ? (tmHGF / avgLgeHomeGF).toFixed(2) : '1.00';
+            const hDefStr = avgLgeHomeGA ? (tmHGA / avgLgeHomeGA).toFixed(2) : '1.00';
+            const aAttStr = avgLgeAwayGF ? (tmAGF / avgLgeAwayGF).toFixed(2) : '1.00';
+            const aDefStr = avgLgeAwayGA ? (tmAGA / avgLgeAwayGA).toFixed(2) : '1.00';
 
             const hPPG = hGames ? (hPts/hGames).toFixed(2) : '0.00';
             const hWinPct = hGames ? ((hWins/hGames)*100).toFixed(1) : '0.0';
@@ -2580,13 +2718,21 @@
                         <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mb-2 font-bold flex items-center gap-2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg> Home Performance</p>
                         <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">PPG</span><span class="font-bold text-white">${hPPG}</span></div>
                         <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">Win Rate</span><span class="font-bold text-apple-blue">${hWinPct}%</span></div>
-                        <div class="flex justify-between items-center text-sm"><span class="text-apple-textMuted">Clean Sheets</span><span class="font-bold text-apple-green">${hCSPct}%</span></div>
+                        <div class="flex justify-between items-center text-sm mb-3"><span class="text-apple-textMuted">Clean Sheets</span><span class="font-bold text-apple-green">${hCSPct}%</span></div>
+                        <div class="pt-2 border-t border-white/10">
+                            <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">Attack Str</span><span class="font-bold ${hAttStr > 1 ? 'text-apple-green' : 'text-white'}">${hAttStr}x</span></div>
+                            <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">Defense Str <span class="text-[10px]">(Inv)</span></span><span class="font-bold ${hDefStr < 1 ? 'text-apple-green' : 'text-apple-red'}">${hDefStr}x</span></div>
+                        </div>
                     </div>
                     <div class="bg-white/5 rounded-xl p-4 border border-white/5">
                         <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mb-2 font-bold flex items-center gap-2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M16.2 7.8l-2 6.3-6.4 2.1 2-6.3z"></path></svg> Away Performance</p>
                         <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">PPG</span><span class="font-bold text-white">${aPPG}</span></div>
                         <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">Win Rate</span><span class="font-bold text-apple-blue">${aWinPct}%</span></div>
-                        <div class="flex justify-between items-center text-sm"><span class="text-apple-textMuted">Clean Sheets</span><span class="font-bold text-apple-green">${aCSPct}%</span></div>
+                        <div class="flex justify-between items-center text-sm mb-3"><span class="text-apple-textMuted">Clean Sheets</span><span class="font-bold text-apple-green">${aCSPct}%</span></div>
+                        <div class="pt-2 border-t border-white/10">
+                            <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">Attack Str</span><span class="font-bold ${aAttStr > 1 ? 'text-apple-green' : 'text-white'}">${aAttStr}x</span></div>
+                            <div class="flex justify-between items-center text-sm mb-1"><span class="text-apple-textMuted">Defense Str <span class="text-[10px]">(Inv)</span></span><span class="font-bold ${aDefStr < 1 ? 'text-apple-green' : 'text-apple-red'}">${aDefStr}x</span></div>
+                        </div>
                     </div>
                     <div class="bg-white/5 rounded-xl p-4 border border-white/5">
                         <p class="text-[10px] text-apple-textMuted uppercase tracking-wider mb-2 font-bold flex items-center gap-2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Market Tendencies</p>
