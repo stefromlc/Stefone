@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Metadata -->
+    <title>eBay Label Placer - Optimize Your Shipping Labels</title>
+    <meta name="description" content="Easily place your A4 eBay or Royal Mail PDF postage labels into specific quadrants. Save your sticky sheets by organizing multiple labels onto a single A4 page.">
+    <meta name="keywords" content="eBay label, Royal Mail label, PDF label placer, quadrant label, print label, save sticky sheets, shipping label tool">
+    <meta name="author" content="Your Portfolio">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:title" content="eBay Label Placer">
+    <meta property="og:description" content="Easily place your A4 eBay or Royal Mail PDF postage labels into specific quadrants to save sticky sheets.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourwebsite.com/projects/label-placer">
+    
+    <!-- Code-based Favicon (SVG) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234F46E5'/><path d='M30 30h40v40H30z' fill='white'/><path d='M40 40h20v5H40zM40 50h15v5H40z' fill='%234F46E5'/></svg>">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- PDF-Lib for PDF manipulation -->
+    <script crossorigin src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        /* Hide scrollbar for iframe */
+        iframe::-webkit-scrollbar { display: none; }
+        
+        /* Custom animations for UI */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.4s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen text-slate-800 selection:bg-indigo-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { PDFDocument } = PDFLib;
+
+        // Icons
+        const UploadIcon = ({ active }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mx-auto h-12 w-12 mb-3 transition-colors ${active ? 'text-indigo-500' : 'text-slate-400'}`}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+        );
+
+        const DownloadIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+        );
+
+        const ArrowLeftIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+        );
+
+        function App() {
+            const [file, setFile] = useState(null);
+            const [position, setPosition] = useState('TL'); // TL, TR, BL, BR
+            const [previewUrl, setPreviewUrl] = useState(null);
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [dragActive, setDragActive] = useState(false);
+            const fileInputRef = useRef(null);
+
+            // Handle file selection
+            const handleFileChange = (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    setFile(e.target.files[0]);
+                }
+            };
+
+            // Drag and Drop handlers
+            const handleDrag = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.type === "dragenter" || e.type === "dragover") {
+                    setDragActive(true);
+                } else if (e.type === "dragleave") {
+                    setDragActive(false);
+                }
+            };
+
+            const handleDrop = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDragActive(false);
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    const droppedFile = e.dataTransfer.files[0];
+                    if (droppedFile.type === "application/pdf") {
+                        setFile(droppedFile);
+                    } else {
+                        alert("Please upload a valid PDF file.");
+                    }
+                }
+            };
+
+            // Main PDF processing logic
+            useEffect(() => {
+                const generatePdf = async () => {
+                    if (!file) return;
+                    setIsGenerating(true);
+
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const sourceDoc = await PDFDocument.load(arrayBuffer);
+                        const newDoc = await PDFDocument.create();
+
+                        // Standard A4 Dimensions in points
+                        const PAGE_WIDTH = 595.28;
+                        const PAGE_HEIGHT = 841.89;
+
+                        const newPage = newDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+
+                        // Extract the first page from the uploaded PDF
+                        const [embeddedPage] = await newDoc.embedPdf(sourceDoc, [0]);
+                        const ew = embeddedPage.width;
+                        const eh = embeddedPage.height;
+
+                        // Calculate quadrant target coordinates
+                        let targetX = 0;
+                        let targetY = PAGE_HEIGHT;
+
+                        if (position === 'TL') { targetX = 0; targetY = PAGE_HEIGHT; }
+                        if (position === 'TR') { targetX = PAGE_WIDTH / 2; targetY = PAGE_HEIGHT; }
+                        if (position === 'BL') { targetX = 0; targetY = PAGE_HEIGHT / 2; }
+                        if (position === 'BR') { targetX = PAGE_WIDTH / 2; targetY = PAGE_HEIGHT / 2; }
+
+                        // Draw the embedded page aligning its top-left with the target quadrant top-left
+                        // Note: pdf-lib uses bottom-left as the origin (0,0)
+                        newPage.drawPage(embeddedPage, {
+                            x: targetX,
+                            y: targetY - eh,
+                            width: ew,
+                            height: eh,
+                        });
+
+                        const pdfBytes = await newDoc.save();
+                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                        const url = URL.createObjectURL(blob);
+
+                        // Cleanup previous URL to prevent memory leaks
+                        if (previewUrl) {
+                            URL.revokeObjectURL(previewUrl);
+                        }
+
+                        setPreviewUrl(url);
+                    } catch (error) {
+                        console.error("Error generating PDF:", error);
+                        alert("Failed to process the PDF. Please ensure it is a valid document.");
+                    } finally {
+                        setIsGenerating(false);
+                    }
+                };
+
+                generatePdf();
+            }, [file, position]);
+
+            const downloadPdf = () => {
+                if (!previewUrl) return;
+                const link = document.createElement('a');
+                link.href = previewUrl;
+                link.download = `ebay_label_${position}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            const QuadrantButton = ({ id, label }) => {
+                const isSelected = position === id;
+                return (
+                    <button
+                        onClick={() => setPosition(id)}
+                        className={`flex-1 flex items-center justify-center font-medium rounded-md border-2 transition-all duration-200 ${
+                            isSelected 
+                                ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm z-10 scale-[1.02]' 
+                                : 'bg-white border-dashed border-slate-300 text-slate-500 hover:bg-slate-50 hover:border-slate-400 hover:text-slate-700'
+                        }`}
+                    >
+                        {label}
+                    </button>
+                );
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto p-4 md:p-8 animate-fade-in">
+                    
+                    {/* Navigation / Back Button */}
+                    <nav className="mb-6">
+                        <a 
+                            href="/projects/" 
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm"
+                        >
+                            <ArrowLeftIcon />
+                            Back to Projects
+                        </a>
+                    </nav>
+
+                    <header className="mb-8">
+                        <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600 mb-3">Label Placer</h1>
+                        <p className="text-slate-600 text-lg max-w-2xl">Upload your A4 eBay or Royal Mail PDF label and place it in the exact quadrant you need. Save your sticky sheets and eliminate waste.</p>
+                    </header>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        
+                        {/* Left Column: Controls */}
+                        <div className="lg:col-span-4 flex flex-col gap-6">
+                            
+                            {/* Step 1: Upload */}
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                                <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Step 1: Upload Label</h2>
+                                
+                                <div 
+                                    className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${dragActive ? 'border-indigo-500 bg-indigo-50/50 scale-[1.02]' : 'border-slate-300 hover:border-indigo-300 hover:bg-slate-50'}`}
+                                    onDragEnter={handleDrag}
+                                    onDragLeave={handleDrag}
+                                    onDragOver={handleDrag}
+                                    onDrop={handleDrop}
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <input 
+                                        type="file" 
+                                        accept="application/pdf" 
+                                        className="hidden" 
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                    />
+                                    <UploadIcon active={dragActive || file} />
+                                    {file ? (
+                                        <div className="flex flex-col items-center">
+                                            <div className="text-indigo-700 font-semibold break-words px-2 text-sm bg-indigo-100 py-1 px-3 rounded-full mb-1">{file.name}</div>
+                                            <p className="text-xs text-slate-500 mt-2 hover:text-indigo-500 transition-colors">Click to change file</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="text-slate-700 font-medium mb-1">Click to upload or drag and drop</p>
+                                            <p className="text-slate-400 text-sm">PDF files only (Max 10MB)</p>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Step 2: Position */}
+                            <div className={`bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 relative overflow-hidden transition-all duration-300 ${!file ? 'opacity-60 grayscale-[0.5] pointer-events-none' : 'opacity-100 grayscale-0'}`}>
+                                <div className={`absolute top-0 left-0 w-1 h-full ${file ? 'bg-indigo-500' : 'bg-slate-300'}`}></div>
+                                <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Step 2: Choose Position</h2>
+                                
+                                <div className="bg-slate-50 p-5 rounded-xl border border-slate-100 flex justify-center">
+                                    {/* A4 Sheet Representation */}
+                                    <div className="w-56 h-[310px] bg-white border-2 border-slate-200 rounded-md shadow-sm flex flex-col gap-1.5 p-1.5 relative">
+                                        <div className="flex flex-1 gap-1.5">
+                                            <QuadrantButton id="TL" label="Top Left" />
+                                            <QuadrantButton id="TR" label="Top Right" />
+                                        </div>
+                                        <div className="flex flex-1 gap-1.5">
+                                            <QuadrantButton id="BL" label="Bottom Left" />
+                                            <QuadrantButton id="BR" label="Bottom Right" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Download Button */}
+                            <button 
+                                onClick={downloadPdf}
+                                disabled={!previewUrl || isGenerating}
+                                className={`w-full py-4 px-6 rounded-xl font-bold text-lg flex items-center justify-center transition-all duration-300 shadow-md ${!previewUrl || isGenerating ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-200 hover:shadow-xl hover:-translate-y-1 active:translate-y-0'}`}
+                            >
+                                <DownloadIcon />
+                                {isGenerating ? 'Processing...' : 'Download Print-Ready PDF'}
+                            </button>
+                        </div>
+
+                        {/* Right Column: Preview */}
+                        <div className="lg:col-span-8">
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 h-[800px] overflow-hidden flex flex-col relative group">
+                                <div className="p-4 border-b border-slate-100 bg-white flex justify-between items-center z-10 shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                                        <h2 className="font-semibold text-slate-700">Live Document Preview</h2>
+                                    </div>
+                                    {isGenerating && <span className="text-sm bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-medium animate-pulse">Generating Map...</span>}
+                                </div>
+                                
+                                <div className="flex-1 bg-slate-100/50 relative p-4 md:p-8 flex items-center justify-center overflow-hidden">
+                                    {!file && !previewUrl && (
+                                        <div className="flex flex-col items-center justify-center text-slate-400 max-w-sm text-center">
+                                            <div className="w-24 h-24 mb-6 rounded-full bg-slate-100 flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                            </div>
+                                            <h3 className="text-lg font-semibold text-slate-600 mb-2">No Document Loaded</h3>
+                                            <p className="text-sm text-slate-500 leading-relaxed">Upload a label using the panel on the left to see exactly how it will print on your A4 sheet.</p>
+                                        </div>
+                                    )}
+                                    {previewUrl && (
+                                        <div className="w-full h-full bg-white shadow-xl rounded ring-1 ring-slate-900/5 overflow-hidden animate-fade-in">
+                                            <iframe 
+                                                src={`${previewUrl}#toolbar=0&view=FitH`} 
+                                                className="w-full h-full border-0"
+                                                title="PDF Preview"
+                                            ></iframe>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

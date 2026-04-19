@@ -1,5 +1,22 @@
 [
   {
+    "title": "WebTunes",
+    "slug": "webtunes",
+    "description": "WebTunes Player is an iTunes-inspired browser music player. Drag and drop local audio files to enjoy an Apple-style UI, custom playlists, and fluid visualizers.",
+    "thumbnail": "assets/thumbs/webtunes.jpg",
+    "tags": [
+      "Music",
+      "Player",
+      "Visualizer",
+      "iTunes"
+    ],
+    "category": "Apps",
+    "featured": true,
+    "date": "2026-04-19",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "Pitch-Data Pro",
     "slug": "pitch-data-pro",
     "description": "Analyze football data like a pro! Upload datasets from football-data.co.uk or your own files, build betting algorithms, and backtest strategies. Generate stat-powered match predictions, insights, and performance tracking.",
