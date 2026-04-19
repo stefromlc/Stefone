@@ -319,6 +319,9 @@
                         <button onclick="shuffleView()" class="bg-gray-100 text-gray-700 px-6 py-1.5 rounded-full font-medium border border-gray-200 hover:bg-gray-200 transition flex items-center gap-2">
                             <i class="ph ph-shuffle"></i> Shuffle
                         </button>
+                        <button id="btn-delete-playlist" onclick="deleteCurrentPlaylist()" class="hidden bg-white text-red-500 px-4 py-1.5 rounded-full font-medium border border-gray-200 hover:bg-red-50 hover:border-red-200 transition flex items-center gap-2">
+                            <i class="ph ph-trash"></i> Delete
+                        </button>
                     </div>
                 </div>
             </div>
@@ -429,6 +432,7 @@
         const viewTitle = document.getElementById('view-title');
         const viewMeta = document.getElementById('view-meta');
         const dragOverlay = document.getElementById('drag-overlay');
+        const btnDeletePlaylist = document.getElementById('btn-delete-playlist');
         
         // Player UI
         const mainPlayIcon = document.getElementById('main-play-icon');
@@ -799,9 +803,11 @@
             
             if (id === 'all') {
                 viewTitle.textContent = "Library";
+                btnDeletePlaylist.classList.add('hidden');
             } else {
                 const pl = playlists.find(p => p.id === id);
                 viewTitle.textContent = pl ? pl.name : "Playlist";
+                btnDeletePlaylist.classList.remove('hidden');
             }
             updateViewMeta();
         }
@@ -1159,6 +1165,20 @@
                 renderSidebar();
                 selectView(id);
                 showToast(`Playlist "${name.trim()}" created`, 'ph-list-plus');
+            }
+        }
+
+        function deleteCurrentPlaylist() {
+            if (currentViewId === 'all') return;
+            
+            const pl = playlists.find(p => p.id === currentViewId);
+            if (!pl) return;
+            
+            if(confirm(`Are you sure you want to delete the playlist "${pl.name}"?`)) {
+                playlists = playlists.filter(p => p.id !== currentViewId);
+                savePlaylists();
+                selectView('all'); // Return to library view
+                showToast(`Playlist deleted`, 'ph-trash');
             }
         }
 
@@ -1576,9 +1596,24 @@
             }
         }
 
-        function resetApp() {
-            if(confirm("Are you sure you want to reset the app? All playlists and saved data will be lost.")) {
+        async function resetApp() {
+            if(confirm("Are you sure you want to reset the app? All playlists and saved data will be permanently lost. This action cannot be undone.")) {
+                
+                // Stop audio before resetting
+                audio.pause();
+                audio.src = '';
+                
+                // 1. Clear standard localStorage
                 localStorage.clear();
+                
+                // 2. Safely wipe all IndexedDB data stored by idb-keyval library
+                try {
+                    await idbKeyval.clear();
+                } catch (e) {
+                    console.error("Failed to clear IndexedDB", e);
+                }
+                
+                // 3. Reload cleanly
                 location.reload();
             }
         }
