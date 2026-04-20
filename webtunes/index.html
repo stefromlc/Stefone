@@ -3,127 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Primary Meta Tags -->
-<title>WebTunes</title>
-<meta name="title" content="WebTunes" />
-<meta name="description" content="WebTunes Player is an iTunes-inspired browser music player. Drag and drop local audio files to enjoy an Apple-style UI, custom playlists, and fluid visualizers." />
-
-<!-- Favicon configuration -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22grad%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ffffff%22%20%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23a7abd3%22%20%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2250%22%20fill%3D%22url(%23grad)%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2252%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2283%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22%23ffffff%22%3E%F0%9F%8E%B5%3C%2Ftext%3E%3C%2Fsvg%3E">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
-
-<!-- Open Graph -->
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://stefone.com/webtunes/" />
-<meta property="og:title" content="WebTunes" />
-<meta property="og:description" content="WebTunes Player is an iTunes-inspired browser music player. Drag and drop local audio files to enjoy an Apple-style UI, custom playlists, and fluid visualizers." />
-<meta property="og:image" content="https://stefone.com/assets/thumbs/webtunes.jpg" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="WebTunes preview" />
-
-<!-- Twitter / X -->
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="WebTunes" />
-<meta name="twitter:description" content="WebTunes Player is an iTunes-inspired browser music player. Drag and drop local audio files to enjoy an Apple-style UI, custom playlists, and fluid visualizers." />
-<meta name="twitter:image" content="https://stefone.com/assets/thumbs/webtunes.jpg" />
-
-<!-- Optional -->
-<meta name="theme-color" content="#ffffff">
-
+    <title>WebTunes</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; /* Prevent body scroll, handle scroll in containers */
+            overflow: hidden;
         }
 
-        /* Custom Scrollbar to match desktop apps */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
         /* Apple-style Range Sliders */
         input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-            height: 20px; /* Increased hit area to fix sliding */
-            position: relative;
-            z-index: 10;
-            outline: none;
-        }
-        input[type=range]:focus {
-            outline: none;
+            -webkit-appearance: none; width: 100%; background: transparent;
+            height: 20px; position: relative; z-index: 10; outline: none;
         }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #e5e7eb;
-            border-radius: 2px;
-            margin-top: 8px; /* Centers track vertically in the 20px hit area */
+            width: 100%; height: 4px; cursor: pointer; background: #e5e7eb; border-radius: 2px; margin-top: 8px;
         }
         input[type=range]::-webkit-slider-thumb {
-            height: 14px;
-            width: 14px;
-            border-radius: 50%;
-            background: #4b5563;
-            cursor: pointer;
-            -webkit-appearance: none;
-            margin-top: -5px; /* Centers thumb vertically on the 4px track */
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
+            height: 14px; width: 14px; border-radius: 50%; background: #4b5563; cursor: pointer;
+            -webkit-appearance: none; margin-top: -5px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.1s;
         }
         input[type=range]:hover::-webkit-slider-thumb {
-            transform: scale(1.2);
-            background: #fa243c; /* Apple Music Red / Accent */
+            transform: scale(1.2); background: #fa243c;
         }
         
-        /* Specific progress bar filled portion */
-        .progress-bar-container {
-            position: relative;
-            display: flex;
-            align-items: center;
+        /* EQ Vertical Sliders */
+        .eq-slider {
+            -webkit-appearance: slider-vertical; width: 8px; height: 100%;
+            background: #e5e7eb; outline: none; border-radius: 4px; cursor: pointer;
         }
-        .progress-filled {
-            position: absolute;
-            height: 4px;
-            background: #4b5563;
-            border-radius: 2px;
-            pointer-events: none;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        
-        /* Waveform Canvas */
-        #waveform-canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
+        .eq-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%;
+            background: #fa243c; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
-        /* Tracklist Table Row Hover */
+        /* Settings Sliders (Dark Theme for Visualizer) */
+        .dark-slider::-webkit-slider-runnable-track { background: rgba(255,255,255,0.2); }
+        .dark-slider::-webkit-slider-thumb { background: #fff; }
+        .dark-slider:hover::-webkit-slider-thumb { background: #fa243c; }
+
+        .progress-bar-container { position: relative; display: flex; align-items: center; }
+        .progress-filled {
+            position: absolute; height: 4px; background: #4b5563; border-radius: 2px;
+            pointer-events: none; left: 0; top: 50%; transform: translateY(-50%);
+        }
+        
+        #waveform-canvas { width: 100%; height: 100%; display: block; }
+
+        /* Tracklist Table */
         .track-row .track-num { display: block; }
         .track-row .track-play { display: none; color: #fa243c; }
         .track-row:hover .track-num { display: none; }
@@ -132,40 +72,28 @@
         .track-row.playing .track-num { display: none; }
         .track-row.playing .track-play { display: block; color: #fa243c; }
         .track-row.playing td { color: #fa243c; }
-
         .accent-text { color: #fa243c; }
         .accent-bg { background-color: #fa243c; }
 
-        /* Glassmorphism sidebar */
-        .glass-sidebar {
-            background-color: rgba(249, 250, 251, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+        /* Cover Flow 3D Engine */
+        .coverflow-container { perspective: 1000px; transform-style: preserve-3d; }
+        .coverflow-item {
+            position: absolute; top: 50%; left: 50%; width: 160px; height: 160px;
+            margin-top: -95px; margin-left: -80px;
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease, filter 0.5s ease;
+            cursor: pointer; border-radius: 6px; box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            -webkit-box-reflect: below 2px linear-gradient(transparent, transparent 70%, rgba(0,0,0,0.4));
         }
-        
-        /* LCD Screen */
-        .lcd-screen {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-        }
-        
-        /* Ensure table doesn't squash too much on small screens */
-        .table-container {
-            min-width: 600px;
+        .coverflow-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+
+        /* Seek Tooltip */
+        .tooltip-arrow::after {
+            content: ''; position: absolute; top: 100%; left: 50%; margin-left: -4px;
+            border-width: 4px; border-style: solid; border-color: #1f2937 transparent transparent transparent;
         }
 
-        /* Seek Tooltip Pointer */
-        .tooltip-arrow::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -4px;
-            border-width: 4px;
-            border-style: solid;
-            border-color: #1f2937 transparent transparent transparent;
-        }
+        /* Dark Select for Settings */
+        .dark-select option { background: #1f2937; color: white; }
     </style>
 </head>
 <body class="bg-white text-gray-800 text-sm select-none h-screen flex flex-col relative">
@@ -179,30 +107,45 @@
         <p class="text-gray-500 font-medium text-lg">MP3, WAV, M4A supported</p>
     </div>
 
-    <!-- Toast Notifications Container -->
-    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[150] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Lyrics Modal -->
+    <div id="lyrics-modal" class="hidden fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[85vh] overflow-hidden transform transition-transform scale-95">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <div class="flex items-center gap-3">
+                    <i class="ph-fill ph-text-align-center text-red-500 text-xl"></i>
+                    <h3 class="font-bold text-lg text-gray-900" id="lyrics-title-bar">Lyrics</h3>
+                </div>
+                <button onclick="toggleLyrics()" class="text-gray-400 hover:text-black transition bg-gray-200/50 hover:bg-gray-200 p-1.5 rounded-full"><i class="ph ph-x text-lg"></i></button>
+            </div>
+            <div class="p-8 overflow-y-auto whitespace-pre-wrap font-medium text-gray-700 leading-loose text-center text-base" id="lyrics-content">
+                <!-- Lyrics go here -->
+            </div>
+        </div>
+    </div>
 
     <!-- Top Player Bar -->
     <header class="min-h-[6rem] py-3 border-b border-gray-200 flex flex-wrap md:flex-nowrap items-center justify-between px-4 bg-gray-50 flex-shrink-0 relative z-20 gap-y-3">
         
-        <!-- Left: Window Controls Placeholder & Add Music -->
-        <div class="flex items-center w-full md:w-1/4 gap-4 order-1">
-            <div class="hidden md:flex gap-2 mr-4">
+        <!-- Left Controls -->
+        <div class="flex items-center w-full md:w-1/4 gap-3 order-1">
+            <div class="hidden md:flex gap-2 mr-2">
                 <div class="w-3 h-3 rounded-full bg-red-400"></div>
                 <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
                 <div class="w-3 h-3 rounded-full bg-green-400"></div>
             </div>
-            
+            <a href="/projects/" class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-md bg-white hover:bg-gray-100 transition shadow-sm text-xs font-medium text-gray-700">
+                <i class="ph ph-caret-left text-lg"></i> Projects
+            </a>
             <input type="file" id="file-input" class="hidden" multiple accept="audio/*">
-<a href="/projects/" class="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-md bg-white hover:bg-gray-100 transition shadow-sm text-xs font-medium text-gray-700">
-    <i class="ph ph-caret-left text-lg"></i> Projects
-</a>
             <button onclick="document.getElementById('file-input').click()" class="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-md bg-white hover:bg-gray-100 transition shadow-sm text-xs font-medium">
                 <i class="ph ph-folder-plus text-lg"></i> Add Music
             </button>
         </div>
 
-        <!-- Center: Playback Controls & LCD -->
+        <!-- Center Playback -->
         <div class="w-full md:flex-1 max-w-2xl flex flex-col items-center justify-center order-3 md:order-2">
             <div class="flex items-center gap-6 mb-1">
                 <button onclick="shuffleQueue()" class="text-gray-400 hover:text-gray-700 transition" id="btn-shuffle-main"><i class="ph-fill ph-shuffle text-lg"></i></button>
@@ -214,32 +157,25 @@
                 <button class="text-gray-400 hover:text-gray-700 transition"><i class="ph-bold ph-repeat text-lg"></i></button>
             </div>
             
-            <!-- LCD Display -->
-            <div class="lcd-screen w-full max-w-md mx-auto rounded-md flex flex-col justify-center h-14 player-hover cursor-pointer relative group bg-gray-100 border border-gray-300 shadow-inner">
-                <!-- Album Art (absolute to not disrupt text centering) -->
-                <img id="lcd-art" src="" class="w-11 h-11 rounded shadow-sm absolute left-1.5 top-1/2 transform -translate-y-1/2 hidden object-cover z-10 border border-gray-200" alt="Album Art">
-                
-                <!-- Info container -->
-                <div id="lcd-info" class="flex flex-col items-center w-full justify-center relative z-0 transition-transform duration-300 px-14 overflow-hidden">
-                    <div id="now-playing-title" class="font-bold text-gray-900 text-xs truncate w-full text-center leading-tight">WebTunes</div>
-                    <div id="now-playing-artist" class="text-[10px] text-gray-600 font-medium truncate w-full text-center leading-tight mt-0.5">Import some tracks to begin</div>
+            <div class="w-full max-w-md mx-auto rounded-md flex flex-col justify-center h-14 bg-gray-100 border border-gray-300 shadow-inner relative group cursor-pointer overflow-hidden">
+                <img id="lcd-art" src="" class="w-11 h-11 rounded shadow-sm absolute left-1.5 top-1/2 transform -translate-y-1/2 hidden object-cover z-10 border border-gray-200" alt="Art">
+                <div id="lcd-info" class="flex flex-col items-center w-full justify-center relative z-0 transition-transform duration-300 px-14">
+                    <div id="now-playing-title" class="font-bold text-gray-900 text-xs truncate w-full text-center">WebTunes</div>
+                    <div id="now-playing-artist" class="text-[10px] text-gray-600 font-medium truncate w-full text-center mt-0.5">Import some tracks to begin</div>
                 </div>
-                
-                <!-- Progress Bar Stacked Below Text -->
                 <div id="progress-container" class="flex items-center w-full absolute bottom-1 left-0 right-0 px-12 opacity-0 transition-opacity duration-300 hidden">
                     <span id="time-current" class="text-[9px] w-8 text-right font-medium text-gray-600">0:00</span>
                     <div class="progress-bar-container flex-1 mx-2 group/slider relative h-5">
-                        <canvas id="waveform-canvas" class="w-full h-full cursor-pointer absolute inset-0 z-10"></canvas>
-                        <!-- Seek Hover Tooltip -->
-                        <div id="seek-tooltip" class="absolute -top-7 bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded shadow-lg pointer-events-none opacity-0 group-hover/slider:opacity-100 transition-opacity transform -translate-x-1/2 z-[50] whitespace-nowrap hidden tooltip-arrow font-medium tracking-wide">0:00</div>
+                        <canvas id="waveform-canvas" class="w-full h-full absolute inset-0 z-10"></canvas>
+                        <div id="seek-tooltip" class="absolute -top-7 bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded shadow-lg pointer-events-none opacity-0 group-hover/slider:opacity-100 transition-opacity transform -translate-x-1/2 z-[50] hidden tooltip-arrow font-medium">0:00</div>
                     </div>
                     <span id="time-total" class="text-[9px] w-8 text-left font-medium text-gray-600">0:00</span>
                 </div>
             </div>
         </div>
 
-        <!-- Right: Volume & Search -->
-        <div class="flex items-center justify-end w-full md:w-1/4 gap-3 order-2 md:order-3">
+        <!-- Right Controls -->
+        <div class="flex items-center justify-end w-full md:w-1/4 gap-3 order-2 md:order-3 relative">
             <i class="ph ph-speaker-low text-gray-500 text-lg hidden lg:block"></i>
             <div class="progress-bar-container w-24 hidden lg:flex">
                 <div id="vol-fill" class="progress-filled w-full bg-gray-600"></div>
@@ -247,6 +183,14 @@
             </div>
             <i class="ph ph-speaker-high text-gray-500 text-lg mr-2 hidden lg:block"></i>
             
+            <button onclick="toggleLyrics()" class="text-gray-400 hover:text-blue-500 transition px-1" title="Lyrics">
+                <i class="ph-bold ph-text-align-center text-xl"></i>
+            </button>
+
+            <button onclick="toggleEQ()" id="btn-eq" class="text-gray-400 hover:text-green-500 transition px-1 relative" title="Equalizer">
+                <i class="ph-bold ph-sliders-horizontal text-xl"></i>
+            </button>
+
             <button onclick="toggleVisualizer()" class="text-gray-400 hover:text-red-500 transition px-1" title="Toggle Visualizer">
                 <i class="ph-bold ph-waveform text-xl"></i>
             </button>
@@ -255,6 +199,24 @@
                 <i class="ph ph-magnifying-glass absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                 <input type="text" id="search-input" placeholder="Search" class="pl-8 pr-3 py-1 w-full md:w-40 border border-gray-300 rounded-full text-xs focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 bg-white shadow-sm transition-all">
             </div>
+
+            <!-- EQ Panel -->
+            <div id="eq-panel" class="hidden absolute top-14 right-10 z-[100] bg-white/95 backdrop-blur-md shadow-xl border border-gray-200 rounded-lg p-4 w-64 transform transition-all">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-xs font-bold uppercase text-gray-500 tracking-wider">Equalizer</h4>
+                    <button onclick="resetEQ()" class="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded transition">Reset</button>
+                </div>
+                <div class="flex justify-between h-32 gap-2 px-2" id="eq-sliders">
+                    <input type="range" min="-12" max="12" value="0" class="eq-slider" oninput="updateEQ(0, this.value)">
+                    <input type="range" min="-12" max="12" value="0" class="eq-slider" oninput="updateEQ(1, this.value)">
+                    <input type="range" min="-12" max="12" value="0" class="eq-slider" oninput="updateEQ(2, this.value)">
+                    <input type="range" min="-12" max="12" value="0" class="eq-slider" oninput="updateEQ(3, this.value)">
+                    <input type="range" min="-12" max="12" value="0" class="eq-slider" oninput="updateEQ(4, this.value)">
+                </div>
+                <div class="flex justify-between text-[10px] text-gray-400 mt-3 px-1 font-semibold tracking-tighter">
+                    <span>60</span><span>230</span><span>910</span><span>3.6k</span><span>14k</span>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -262,37 +224,34 @@
     <div class="flex flex-1 overflow-hidden relative">
         
         <!-- Sidebar -->
-        <aside class="w-56 glass-sidebar border-r border-gray-200 hidden md:flex flex-col h-full z-10 flex-shrink-0">
+        <aside class="w-56 bg-gray-50 border-r border-gray-200 hidden md:flex flex-col h-full z-10 flex-shrink-0">
             <div class="p-4 flex flex-col gap-6 overflow-y-auto flex-1">
-                
-                <!-- Library -->
                 <div>
                     <h3 class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">Library</h3>
                     <ul class="space-y-0.5">
                         <li>
-                            <button onclick="selectView('all')" id="nav-all" class="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-200/50 text-gray-700 accent-bg-active transition">
+                            <button onclick="selectView('all')" id="nav-all" class="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-200/50 text-gray-700 transition">
                                 <i class="ph ph-music-notes text-lg text-red-500"></i> Songs
                             </button>
                         </li>
                         <li>
-                            <button onclick="alert('Artists view is not implemented in this demo.')" class="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-200/50 text-gray-700 transition">
-                                <i class="ph ph-microphone-stage text-lg text-red-500"></i> Artists
+                            <button onclick="selectView('recent')" id="nav-recent" class="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-200/50 text-gray-700 transition">
+                                <i class="ph ph-clock-counter-clockwise text-lg text-blue-500"></i> Recently Added
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="selectView('most-played')" id="nav-most-played" class="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-200/50 text-gray-700 transition">
+                                <i class="ph ph-trend-up text-lg text-green-500"></i> Most Played
                             </button>
                         </li>
                     </ul>
                 </div>
-
-                <!-- Playlists -->
                 <div>
                     <h3 class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">Playlists</h3>
-                    <ul id="playlist-nav" class="space-y-0.5">
-                        <!-- Playlists rendered here -->
-                    </ul>
+                    <ul id="playlist-nav" class="space-y-0.5"></ul>
                 </div>
             </div>
-            
-            <!-- Bottom Actions -->
-            <div class="p-3 border-t border-gray-200/50 bg-gray-50/50 flex flex-col gap-2">
+            <div class="p-3 border-t border-gray-200 bg-gray-100 flex flex-col gap-2">
                 <button onclick="promptCreatePlaylist()" class="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-200/50 text-gray-600 transition text-xs font-medium">
                     <i class="ph ph-plus-circle text-lg"></i> New Playlist
                 </button>
@@ -302,40 +261,54 @@
             </div>
         </aside>
 
-        <!-- Main Content (Tracklist) -->
+        <!-- Main Content -->
         <main class="flex-1 flex flex-col bg-white overflow-hidden relative w-full">
             
-            <!-- View Header -->
-            <div class="md:h-48 border-b border-gray-200 bg-gradient-to-b from-gray-50 to-white flex flex-col md:flex-row items-center md:items-end p-6 flex-shrink-0 gap-6">
-                <div class="w-32 h-32 bg-gray-200 rounded-md shadow-md flex items-center justify-center border border-gray-300 overflow-hidden relative" id="view-cover-container">
-                    <img id="view-cover-img" src="" class="w-full h-full object-cover hidden absolute inset-0 z-10" alt="Playlist Cover">
-                    <i class="ph ph-music-notes text-5xl text-gray-400 relative z-0"></i>
+            <!-- Cover Flow Header & Toolbar -->
+            <div class="flex-shrink-0 relative flex flex-col border-b border-gray-200 bg-gray-50">
+                <!-- 3D Carousel Area -->
+                <div class="h-64 bg-gradient-to-b from-gray-900 to-black w-full relative flex items-center justify-center overflow-hidden">
+                    <div id="carousel-container" class="coverflow-container w-full h-full absolute inset-0">
+                        <!-- JS injected Cover Flow items -->
+                        <div class="text-gray-500 text-sm flex flex-col items-center justify-center h-full opacity-50">
+                            <i class="ph ph-vinyl-record text-5xl mb-2"></i>
+                            <span class="uppercase tracking-widest font-semibold">Cover Flow</span>
+                        </div>
+                    </div>
+                    <!-- Album Info Overlay -->
+                    <div class="absolute bottom-4 left-0 right-0 flex flex-col items-center pointer-events-none transition-opacity duration-300 opacity-0 z-10" id="carousel-info">
+                         <div class="text-white font-bold text-lg drop-shadow-lg tracking-wide" id="carousel-title"></div>
+                         <div class="text-gray-300 text-xs drop-shadow-md font-medium" id="carousel-artist"></div>
+                    </div>
                 </div>
-                <div class="flex-1 text-center md:text-left">
-                    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Playlist</h2>
-                    <h1 id="view-title" class="text-3xl font-bold text-gray-900 mb-2">Library</h1>
-                    <p id="view-meta" class="text-sm text-gray-500 mb-4">0 songs, 0 minutes</p>
-                    <div class="flex gap-2 justify-center md:justify-start">
-                        <button onclick="playView()" class="accent-bg text-white px-6 py-1.5 rounded-full font-medium shadow flex items-center gap-2 hover:bg-red-600 transition">
+
+                <!-- Action Toolbar -->
+                <div class="px-6 py-3 flex justify-between items-center bg-gray-50 z-20">
+                    <div>
+                        <h1 id="view-title" class="text-xl font-bold text-gray-900 leading-tight">Library</h1>
+                        <p id="view-meta" class="text-xs text-gray-500 font-medium mt-0.5">0 songs, 0 minutes</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="playView()" class="accent-bg text-white px-5 py-1.5 rounded-full font-medium shadow-sm flex items-center gap-2 hover:bg-red-600 transition text-sm">
                             <i class="ph-fill ph-play"></i> Play
                         </button>
-                        <button onclick="shuffleView()" class="bg-gray-100 text-gray-700 px-6 py-1.5 rounded-full font-medium border border-gray-200 hover:bg-gray-200 transition flex items-center gap-2">
+                        <button onclick="shuffleView()" class="bg-white text-gray-700 px-5 py-1.5 rounded-full font-medium border border-gray-300 shadow-sm hover:bg-gray-100 transition flex items-center gap-2 text-sm">
                             <i class="ph ph-shuffle"></i> Shuffle
                         </button>
-                        <button id="btn-delete-playlist" onclick="deleteCurrentPlaylist()" class="hidden bg-white text-red-500 px-4 py-1.5 rounded-full font-medium border border-gray-200 hover:bg-red-50 hover:border-red-200 transition flex items-center gap-2">
+                        <button id="btn-delete-playlist" onclick="deleteCurrentPlaylist()" class="hidden bg-white text-red-500 px-4 py-1.5 rounded-full font-medium border border-gray-300 hover:bg-red-50 transition flex items-center gap-2 text-sm">
                             <i class="ph ph-trash"></i> Delete
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="flex-1 overflow-auto overflow-x-auto relative">
-                <table class="w-full text-left border-collapse table-container">
-                    <thead class="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm z-10 text-xs text-gray-500 font-medium">
+            <!-- Tracklist Table -->
+            <div class="flex-1 overflow-auto relative">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead class="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm z-30 text-xs text-gray-500 font-medium">
                         <tr>
                             <th class="w-12 py-2 text-center border-r border-gray-100">#</th>
-                            <th class="w-10 py-2 border-r border-gray-100"></th> <!-- Art Column -->
+                            <th class="w-10 py-2 border-r border-gray-100"></th>
                             <th class="py-2 px-3 border-r border-gray-100">Title</th>
                             <th class="w-16 py-2 px-3 border-r border-gray-100"><i class="ph ph-clock"></i></th>
                             <th class="py-2 px-3 border-r border-gray-100">Artist</th>
@@ -344,89 +317,133 @@
                         </tr>
                     </thead>
                     <tbody id="tracklist-body">
-                        <!-- Tracks rendered here -->
+                        <!-- JS Rendered Tracks -->
                     </tbody>
                 </table>
             </div>
-
         </main>
     </div>
 
-    <!-- Context Menu (Dropdown) -->
-    <div id="context-menu" class="hidden absolute z-50 bg-white/95 backdrop-blur-md shadow-xl border border-gray-200 rounded-md py-1 w-48 text-sm">
+    <!-- Context Menu -->
+    <div id="context-menu" class="hidden fixed z-[200] bg-white/95 backdrop-blur-md shadow-xl border border-gray-200 rounded-md py-1 w-48 text-sm">
         <div class="px-4 py-1.5 text-gray-400 font-semibold text-[10px] uppercase tracking-wider">Queue</div>
         <div class="px-4 py-1.5 hover:bg-blue-500 hover:text-white transition text-gray-700 cursor-pointer" id="btn-play-next">Play Next</div>
         <div class="px-4 py-1.5 hover:bg-blue-500 hover:text-white transition text-gray-700 cursor-pointer" id="btn-add-queue">Add to Queue</div>
         <div class="border-t border-gray-100 my-1"></div>
         <div class="px-4 py-1.5 text-gray-400 font-semibold text-[10px] uppercase tracking-wider">Add to Playlist</div>
-        <div id="context-playlist-list" class="max-h-48 overflow-y-auto">
-            <!-- Playlist items go here -->
-        </div>
+        <div id="context-playlist-list" class="max-h-48 overflow-y-auto"></div>
         <div class="border-t border-gray-100 mt-1 pt-1">
-            <button onclick="promptCreatePlaylistFromMenu()" class="w-full text-left px-4 py-1.5 hover:bg-blue-500 hover:text-white transition text-gray-700">
-                New Playlist...
-            </button>
+            <button onclick="promptCreatePlaylistFromMenu()" class="w-full text-left px-4 py-1.5 hover:bg-blue-500 hover:text-white transition text-gray-700">New Playlist...</button>
         </div>
         <div class="border-t border-gray-100 mt-1 pt-1" id="remove-from-playlist-container" style="display:none;">
-             <button id="btn-remove-playlist" class="w-full text-left px-4 py-1.5 hover:bg-red-500 hover:text-white transition text-red-500">
-                Remove from Playlist
-            </button>
+             <button id="btn-remove-playlist" class="w-full text-left px-4 py-1.5 hover:bg-red-500 hover:text-white transition text-red-500">Remove from Playlist</button>
         </div>
     </div>
 
     <!-- Visualizer Overlay -->
-    <div id="visualizer-overlay" class="hidden fixed inset-0 z-[60] flex flex-col bg-gray-900 overflow-hidden font-sans">
-        <!-- Blurred Background -->
+    <div id="visualizer-overlay" class="hidden fixed inset-0 z-[300] flex flex-col bg-gray-900 overflow-hidden font-sans">
         <div id="vis-bg" class="absolute inset-0 bg-cover bg-center blur-[80px] opacity-60 scale-125 transition-all duration-1000"></div>
-        <!-- Dark tint for contrast -->
-        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="absolute inset-0 bg-black/50"></div>
         
-        <!-- Header -->
+        <!-- Vis Header & Controls -->
         <div class="flex justify-between items-center p-6 text-white relative z-20">
             <button onclick="toggleVisualizer()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition shadow-lg">
                 <i class="ph-bold ph-caret-down text-xl"></i>
             </button>
-            <div class="flex gap-3">
-                <button onclick="cycleVisPreset()" id="vis-preset-btn" class="px-5 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold transition tracking-wide shadow-lg border border-white/5">Mode: Ambient Waves</button>
+            <div class="flex gap-3 relative items-center">
+                <button onclick="cycleVisPreset()" id="vis-preset-btn" class="px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold transition tracking-wide shadow-lg border border-white/5">Mode: Fluid Waves</button>
+                
+                <!-- Settings Dropdown -->
+                <div class="relative">
+                    <button onclick="toggleVisSettings()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition shadow-lg" title="Visualizer Settings">
+                        <i class="ph-bold ph-sliders text-xl"></i>
+                    </button>
+                    <!-- Settings Panel -->
+                    <div id="vis-settings-panel" class="hidden absolute top-14 right-0 bg-gray-900/90 backdrop-blur-md border border-white/10 rounded-xl p-5 w-64 shadow-2xl">
+                        <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-4">Visualizer Settings</h4>
+                        
+                        <!-- Theme -->
+                        <label class="block text-white/70 text-[10px] uppercase font-semibold mb-1">Color Theme</label>
+                        <select onchange="updateVisTheme(this.value)" class="w-full bg-white/10 text-white border border-white/20 rounded py-1.5 px-2 text-xs mb-4 outline-none dark-select cursor-pointer">
+                            <option value="0">Default</option>
+                            <option value="1">Synthwave</option>
+                            <option value="2">Cyberpunk</option>
+                            <option value="3">Fire</option>
+                        </select>
+                        
+                        <!-- Intensity -->
+                        <label class="block text-white/70 text-[10px] uppercase font-semibold mb-1 flex justify-between">
+                            <span>Intensity</span> <span id="vis-intensity-val">1.0x</span>
+                        </label>
+                        <input type="range" min="0.5" max="3" step="0.1" value="1" oninput="updateVisIntensity(this.value)" class="w-full mb-4 dark-slider">
+                        
+                        <!-- Smoothing -->
+                        <label class="block text-white/70 text-[10px] uppercase font-semibold mb-1 flex justify-between">
+                            <span>Smoothing</span> <span id="vis-smoothing-val">85%</span>
+                        </label>
+                        <input type="range" min="0" max="99" step="1" value="85" oninput="updateVisSmoothing(this.value)" class="w-full dark-slider">
+                    </div>
+                </div>
             </div>
         </div>
-
-        <!-- Main Content (Art + Text) -->
+        
         <div class="flex-1 flex flex-col items-center justify-center relative z-10 pointer-events-none mb-16">
-            <img id="vis-art" src="" class="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-cover mb-8 transition-transform duration-75" alt="Album Art">
+            <img id="vis-art" src="" class="w-64 h-64 md:w-80 md:h-80 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-cover mb-8 transition-transform duration-75" alt="Art">
             <h2 id="vis-title" class="text-3xl md:text-4xl font-bold text-white text-center mb-2 drop-shadow-lg px-4 max-w-2xl truncate">Title</h2>
             <h3 id="vis-artist" class="text-xl text-white/70 text-center font-medium drop-shadow-md px-4 max-w-xl truncate">Artist</h3>
         </div>
-
-        <!-- Canvas -->
         <canvas id="vis-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-15"></canvas>
     </div>
 
     <script>
         // --- State ---
         let allSongs = [];
-        
-        // Storage State
         let playlists = [{ id: 'favs', name: 'Favorites', songIds: [] }];
         let savedMetadata = {};
         
-        let currentViewId = 'all'; // 'all' or playlist id
+        let currentViewId = 'all'; 
+        let currentTracklist = []; 
         
         let audio = new Audio();
-        
-        // Smart Queue System
-        let baseQueue = []; // Currently playing context (library/playlist)
-        let upNextQueue = []; // Explicitly queued items
-        let playingIndex = -1; // Index in baseQueue
+        let baseQueue = []; 
+        let upNextQueue = []; 
+        let playingIndex = -1; 
         let currentSongId = null;
         let isPlaying = false;
         let isShuffleActive = false;
         
-        // Waveform State
         let currentPeaks = null;
-        
-        // Context menu state
         let contextMenuTargetSongId = null;
+
+        // Cover Flow State
+        let currentCarouselIndex = 0;
+        let carouselItemsData = [];
+
+        // Audio & Visualizer State
+        let audioCtx, analyser, source;
+        let sharedDecodeCtx = null;
+        let canvas, canvasCtx;
+        
+        let isVisActive = false;
+        let animationId;
+        
+        // Advanced Visualizer State & Settings
+        let visMode = 0; 
+        let visIntensity = 1.0;
+        let visSmoothing = 0.85;
+        let visTheme = 0; 
+        
+        const visModes = ['Fluid Waves', 'Neon Bars', 'Dynamic Aura', 'Stardust', 'Energy Strings', 'Neon Matrix', 'Hyperspace Grid', 'Orbitals'];
+        const visThemes = [
+            ['rgba(250, 36, 60, OPACITY)', 'rgba(255, 149, 0, OPACITY)', 'rgba(88, 86, 214, OPACITY)'], // Default
+            ['rgba(255, 0, 255, OPACITY)', 'rgba(0, 255, 255, OPACITY)', 'rgba(128, 0, 255, OPACITY)'], // Synthwave
+            ['rgba(255, 255, 0, OPACITY)', 'rgba(0, 255, 255, OPACITY)', 'rgba(255, 0, 128, OPACITY)'], // Cyberpunk
+            ['rgba(255, 50, 0, OPACITY)', 'rgba(255, 150, 0, OPACITY)', 'rgba(255, 255, 0, OPACITY)']   // Fire
+        ];
+        
+        // EQ State
+        let eqBands = [];
+        const eqFreqs = [60, 230, 910, 3600, 14000];
 
         // --- DOM Elements ---
         const fileInput = document.getElementById('file-input');
@@ -434,10 +451,8 @@
         const playlistNav = document.getElementById('playlist-nav');
         const viewTitle = document.getElementById('view-title');
         const viewMeta = document.getElementById('view-meta');
-        const dragOverlay = document.getElementById('drag-overlay');
         const btnDeletePlaylist = document.getElementById('btn-delete-playlist');
         
-        // Player UI
         const mainPlayIcon = document.getElementById('main-play-icon');
         const nowPlayingTitle = document.getElementById('now-playing-title');
         const nowPlayingArtist = document.getElementById('now-playing-artist');
@@ -450,22 +465,20 @@
         const seekTooltip = document.getElementById('seek-tooltip');
         const lcdArt = document.getElementById('lcd-art');
         const btnShuffleMain = document.getElementById('btn-shuffle-main');
-        const viewCoverImg = document.getElementById('view-cover-img');
         
-        // Context Menu
         const contextMenu = document.getElementById('context-menu');
         const contextPlaylistList = document.getElementById('context-playlist-list');
         const removeFromPlaylistContainer = document.getElementById('remove-from-playlist-container');
         const btnRemovePlaylist = document.getElementById('btn-remove-playlist');
         const searchInput = document.getElementById('search-input');
         
-        // Queue Buttons
         const btnPlayNext = document.getElementById('btn-play-next');
         const btnAddQueue = document.getElementById('btn-add-queue');
+        
+        const carouselContainer = document.getElementById('carousel-container');
 
         // --- Initialization ---
         async function init() {
-            // Load state from IndexedDB safely
             try {
                 const storedPlaylists = await idbKeyval.get('webtunes_playlists');
                 if (storedPlaylists) playlists = storedPlaylists;
@@ -478,51 +491,278 @@
             renderTracklist();
             setupDragAndDrop();
             setupSeekHover();
+            setupCarouselControls();
+            setupMediaSession();
             
-            // Audio Event Listeners
+            audio.crossOrigin = "anonymous";
             audio.addEventListener('timeupdate', updateProgress);
-            audio.addEventListener('ended', playNext);
+            audio.addEventListener('ended', onSongEnded);
             audio.addEventListener('play', () => { isPlaying = true; updatePlayPauseIcon(); renderTracklist(); });
             audio.addEventListener('pause', () => { isPlaying = false; updatePlayPauseIcon(); renderTracklist(); });
-            audio.addEventListener('loadedmetadata', () => {
-                timeTotal.textContent = formatTime(audio.duration);
-            });
+            audio.addEventListener('loadedmetadata', () => timeTotal.textContent = formatTime(audio.duration));
 
-            // Sliders
             volumeSlider.addEventListener('input', (e) => {
                 audio.volume = e.target.value / 100;
                 volFill.style.width = e.target.value + '%';
             });
-            // Initial Volume setup
             audio.volume = 1;
             volFill.style.width = '100%';
 
-            // File Upload
             fileInput.addEventListener('change', handleFiles);
 
-            // Hide context menu on click outside
             document.addEventListener('click', (e) => {
-                if (!contextMenu.contains(e.target)) {
-                    contextMenu.classList.add('hidden');
+                // Context Menu
+                if (!contextMenu.contains(e.target)) contextMenu.classList.add('hidden');
+                
+                // EQ Panel
+                const eqPanel = document.getElementById('eq-panel');
+                const btnEq = document.getElementById('btn-eq');
+                if (!eqPanel.classList.contains('hidden') && !eqPanel.contains(e.target) && !btnEq.contains(e.target)) {
+                    eqPanel.classList.add('hidden');
+                    btnEq.classList.remove('text-green-500');
+                }
+                
+                // Vis Settings Panel
+                const visPanel = document.getElementById('vis-settings-panel');
+                const btnVisSettings = document.querySelector('button[onclick="toggleVisSettings()"]');
+                if (!visPanel.classList.contains('hidden') && !visPanel.contains(e.target) && !btnVisSettings.contains(e.target)) {
+                    visPanel.classList.add('hidden');
                 }
             });
 
-            // Search
             searchInput.addEventListener('input', (e) => renderTracklist(e.target.value));
             
-            // Queue Actions
-            btnPlayNext.addEventListener('click', () => {
-                queueNext(contextMenuTargetSongId);
-                contextMenu.classList.add('hidden');
+            btnPlayNext.addEventListener('click', () => { queueNext(contextMenuTargetSongId); contextMenu.classList.add('hidden'); });
+            btnAddQueue.addEventListener('click', () => { queueLast(contextMenuTargetSongId); contextMenu.classList.add('hidden'); });
+        }
+
+        // --- Media Session API ---
+        function setupMediaSession() {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.setActionHandler('play', togglePlay);
+                navigator.mediaSession.setActionHandler('pause', togglePlay);
+                navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+                navigator.mediaSession.setActionHandler('nexttrack', playNext);
+            }
+        }
+
+        function updateMediaSession(song) {
+            if ('mediaSession' in navigator) {
+                const artwork = [];
+                if (song.albumArt) {
+                    artwork.push({ src: song.albumArt, sizes: '512x512', type: 'image/jpeg' }); 
+                }
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: song.title,
+                    artist: song.artist,
+                    album: song.album !== "Unknown Album" ? song.album : "",
+                    artwork: artwork
+                });
+            }
+        }
+
+        // --- Web Audio API Setup (EQ + Visualizer) ---
+        function initAudioContext() {
+            if (audioCtx) return;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                source = audioCtx.createMediaElementSource(audio);
+                
+                let prevNode = source;
+                eqFreqs.forEach((freq) => {
+                    let filter = audioCtx.createBiquadFilter();
+                    filter.type = "peaking"; filter.frequency.value = freq; filter.Q.value = 1; filter.gain.value = 0; 
+                    prevNode.connect(filter); prevNode = filter; eqBands.push(filter);
+                });
+                
+                prevNode.connect(analyser); 
+                analyser.connect(audioCtx.destination);
+                
+                analyser.fftSize = 256; 
+                analyser.smoothingTimeConstant = visSmoothing; 
+                canvas = document.getElementById('vis-canvas');
+                canvasCtx = canvas.getContext('2d');
+            } catch(e) { console.error("Audio Context Init Failed", e); }
+        }
+
+        function toggleEQ() {
+            initAudioContext();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const panel = document.getElementById('eq-panel');
+            const btn = document.getElementById('btn-eq');
+            
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden'); btn.classList.add('text-green-500');
+            } else {
+                panel.classList.add('hidden'); btn.classList.remove('text-green-500');
+            }
+        }
+
+        function updateEQ(bandIndex, value) {
+            initAudioContext();
+            if (eqBands[bandIndex]) eqBands[bandIndex].gain.value = parseFloat(value);
+        }
+
+        function resetEQ() {
+            const sliders = document.querySelectorAll('.eq-slider');
+            sliders.forEach((slider, i) => { slider.value = 0; if (eqBands[i]) eqBands[i].gain.value = 0; });
+            showToast('EQ Reset to Flat', 'ph-sliders-horizontal');
+        }
+
+        // --- Lyrics Feature ---
+        async function fetchLyrics(song) {
+            if (song.lyrics) return song.lyrics;
+            try {
+                const cleanTitle = song.title.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim();
+                const res = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(song.artist)}/${encodeURIComponent(cleanTitle)}`);
+                const data = await res.json();
+                if (data.lyrics) {
+                    song.lyrics = data.lyrics;
+                    if (!savedMetadata[song.id]) savedMetadata[song.id] = {};
+                    savedMetadata[song.id].lyrics = data.lyrics;
+                    saveMetadata();
+                    return data.lyrics;
+                }
+            } catch (e) { console.log("Lyrics API fetch failed", e); }
+            return "No lyrics found. Add them to your file's ID3 tags!";
+        }
+
+        async function toggleLyrics() {
+            const modal = document.getElementById('lyrics-modal');
+            const innerContent = modal.querySelector('div');
+            
+            if (modal.classList.contains('hidden')) {
+                if (!currentSongId) return showToast("Play a song to view lyrics", 'ph-text-align-center');
+                
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    innerContent.classList.remove('scale-95'); innerContent.classList.add('scale-100');
+                }, 10);
+                
+                const content = document.getElementById('lyrics-content');
+                const titleBar = document.getElementById('lyrics-title-bar');
+                content.innerHTML = '<div class="py-12"><i class="ph ph-spinner animate-spin text-4xl text-gray-400"></i><p class="text-sm mt-4 text-gray-500">Searching...</p></div>';
+                
+                const song = allSongs.find(s => s.id === currentSongId);
+                titleBar.textContent = song.title;
+                const lyrics = await fetchLyrics(song);
+                content.textContent = lyrics;
+            } else {
+                modal.classList.add('opacity-0');
+                innerContent.classList.remove('scale-100'); innerContent.classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        // --- Cover Flow Logic ---
+        function setupCarouselControls() {
+            carouselContainer.addEventListener('wheel', (e) => {
+                if (carouselItemsData.length === 0) return;
+                e.preventDefault();
+                if (e.deltaY > 0 || e.deltaX > 0) { currentCarouselIndex = Math.min(currentCarouselIndex + 1, carouselItemsData.length - 1); } 
+                else { currentCarouselIndex = Math.max(currentCarouselIndex - 1, 0); }
+                updateCarousel();
             });
-            btnAddQueue.addEventListener('click', () => {
-                queueLast(contextMenuTargetSongId);
-                contextMenu.classList.add('hidden');
+
+            document.addEventListener('keydown', (e) => {
+                if (document.activeElement === searchInput || carouselItemsData.length === 0) return;
+                if (e.key === 'ArrowRight') { currentCarouselIndex = Math.min(currentCarouselIndex + 1, carouselItemsData.length - 1); updateCarousel(); } 
+                else if (e.key === 'ArrowLeft') { currentCarouselIndex = Math.max(currentCarouselIndex - 1, 0); updateCarousel(); } 
+                else if (e.key === 'Enter') { const song = carouselItemsData[currentCarouselIndex]; if (song) playFromTracklist(song.id); }
             });
         }
 
-        // --- Core Logic ---
+        function renderCarousel(songsList) {
+            const map = new Map();
+            songsList.forEach(s => {
+                const key = `${s.album}_${s.artist}`.toLowerCase().trim();
+                if (!map.has(key)) { map.set(key, s); } 
+                else if (!map.get(key).albumArt && s.albumArt) { map.set(key, s); }
+            });
+            
+            const newCarouselData = Array.from(map.values()).filter(s => s.albumArt).slice(0, 40);
+            const oldKeys = carouselItemsData.map(s => s.id).join('|');
+            const newKeys = newCarouselData.map(s => s.id).join('|');
+            
+            if (oldKeys === newKeys && carouselContainer.children.length > 0 && carouselItemsData.length > 0) {
+                if (currentSongId) syncCarouselToSong(currentSongId);
+                updateCarousel(); return;
+            }
 
+            carouselItemsData = newCarouselData;
+
+            if (carouselItemsData.length === 0) {
+                carouselContainer.innerHTML = `
+                    <div class="text-gray-600 flex flex-col items-center justify-center h-full">
+                        <i class="ph ph-vinyl-record text-5xl mb-2 opacity-50"></i>
+                        <span class="text-xs font-semibold uppercase tracking-widest opacity-50">Cover Flow</span>
+                    </div>`;
+                document.getElementById('carousel-info').style.opacity = 0;
+                return;
+            }
+
+            carouselContainer.innerHTML = '';
+            carouselItemsData.forEach((song, i) => {
+                const div = document.createElement('div');
+                div.className = 'coverflow-item';
+                div.innerHTML = `<img src="${song.albumArt}" alt="art">`;
+                div.onclick = () => {
+                    if (currentCarouselIndex === i) { playFromTracklist(song.id); } 
+                    else { currentCarouselIndex = i; updateCarousel(); }
+                };
+                carouselContainer.appendChild(div);
+            });
+
+            currentCarouselIndex = Math.floor(carouselItemsData.length / 2);
+            if (currentSongId) syncCarouselToSong(currentSongId);
+            updateCarousel();
+        }
+
+        function syncCarouselToSong(songId) {
+            if (!songId || carouselItemsData.length === 0) return;
+            const song = allSongs.find(s => s.id === songId);
+            if (!song) return;
+            
+            const albumKey = `${song.album}_${song.artist}`.toLowerCase().trim();
+            const index = carouselItemsData.findIndex(item => `${item.album}_${item.artist}`.toLowerCase().trim() === albumKey);
+            if (index !== -1) currentCarouselIndex = index;
+        }
+
+        function updateCarousel() {
+            const items = document.querySelectorAll('.coverflow-item');
+            if (items.length === 0) return;
+
+            items.forEach((item, index) => {
+                const offset = index - currentCarouselIndex; const sign = Math.sign(offset); const absOffset = Math.abs(offset);
+                if (absOffset === 0) {
+                    item.style.transform = `translateX(0px) translateZ(140px) scale(1.15)`; item.style.zIndex = 100;
+                    item.style.filter = 'brightness(1)'; item.style.opacity = 1;
+                } else if (absOffset <= 6) {
+                    const x = sign * (130 + absOffset * 35); const z = -absOffset * 40; const rotate = -sign * 65;
+                    item.style.transform = `translateX(${x}px) translateZ(${z}px) rotateY(${rotate}deg) scale(0.9)`;
+                    item.style.zIndex = 100 - absOffset; item.style.filter = `brightness(${1 - absOffset * 0.12})`; item.style.opacity = 1;
+                } else {
+                    item.style.transform = `translateX(${sign * 600}px) translateZ(-300px) rotateY(${-sign * 70}deg) scale(0.5)`;
+                    item.style.zIndex = 0; item.style.opacity = 0;
+                }
+            });
+
+            const infoDiv = document.getElementById('carousel-info');
+            const titleEl = document.getElementById('carousel-title');
+            const artistEl = document.getElementById('carousel-artist');
+            const currentSong = carouselItemsData[currentCarouselIndex];
+
+            if (currentSong) {
+                infoDiv.style.opacity = 1;
+                titleEl.textContent = currentSong.album !== "Unknown Album" ? currentSong.album : currentSong.title;
+                artistEl.textContent = currentSong.artist;
+            }
+        }
+
+        // --- Core Logic ---
         function showToast(message, icon = 'ph-info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -530,262 +770,158 @@
             toast.innerHTML = `<i class="ph-fill ${icon} text-red-500 text-xl"></i><span class="text-sm font-medium tracking-wide">${message}</span>`;
             
             container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.remove('translate-y-12', 'opacity-0'));
             
-            // Trigger animation in
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-12', 'opacity-0');
-            });
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'scale-95');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            setTimeout(() => { toast.classList.add('opacity-0', 'scale-95'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
         function setupDragAndDrop() {
             let dragCounter = 0;
-
-            document.addEventListener('dragenter', (e) => {
-                e.preventDefault();
-                dragCounter++;
-                dragOverlay.classList.remove('hidden');
-                dragOverlay.classList.add('flex');
-            });
-            
+            document.addEventListener('dragenter', (e) => { e.preventDefault(); dragCounter++; dragOverlay.classList.remove('hidden'); dragOverlay.classList.add('flex'); });
             document.addEventListener('dragover', (e) => e.preventDefault());
-            
-            document.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                dragCounter--;
-                if(dragCounter === 0) {
-                    dragOverlay.classList.add('hidden');
-                    dragOverlay.classList.remove('flex');
-                }
-            });
-            
-            document.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dragCounter = 0;
-                dragOverlay.classList.add('hidden');
-                dragOverlay.classList.remove('flex');
-                
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    handleFiles({ target: { files: e.dataTransfer.files } });
-                }
-            });
+            document.addEventListener('dragleave', (e) => { e.preventDefault(); dragCounter--; if(dragCounter === 0) { dragOverlay.classList.add('hidden'); dragOverlay.classList.remove('flex'); } });
+            document.addEventListener('drop', (e) => { e.preventDefault(); dragCounter = 0; dragOverlay.classList.add('hidden'); dragOverlay.classList.remove('flex'); if (e.dataTransfer.files && e.dataTransfer.files.length > 0) handleFiles({ target: { files: e.dataTransfer.files } }); });
         }
 
         function setupSeekHover() {
-            waveformCanvas.addEventListener('mouseenter', () => {
-                if (audio.duration) seekTooltip.classList.remove('hidden');
-            });
-            
-            waveformCanvas.addEventListener('mouseleave', () => {
-                seekTooltip.classList.add('hidden');
-            });
-
+            waveformCanvas.addEventListener('mouseenter', () => { if (audio.duration) seekTooltip.classList.remove('hidden'); });
+            waveformCanvas.addEventListener('mouseleave', () => seekTooltip.classList.add('hidden'));
             waveformCanvas.addEventListener('mousemove', (e) => {
                 if(!audio.duration) return;
-                const rect = waveformCanvas.getBoundingClientRect();
-                const pos = (e.clientX - rect.left) / rect.width;
-                const percent = Math.max(0, Math.min(1, pos));
-                const previewTime = percent * audio.duration;
-                
-                seekTooltip.textContent = formatTime(previewTime);
-                seekTooltip.style.left = `${percent * 100}%`;
+                const rect = waveformCanvas.getBoundingClientRect(); const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                seekTooltip.textContent = formatTime(pos * audio.duration); seekTooltip.style.left = `${pos * 100}%`;
             });
-            
             waveformCanvas.addEventListener('click', (e) => {
                 if(!audio.duration) return;
-                const rect = waveformCanvas.getBoundingClientRect();
-                const pos = (e.clientX - rect.left) / rect.width;
-                const percent = Math.max(0, Math.min(1, pos));
-                audio.currentTime = percent * audio.duration;
-                updateProgress();
+                const rect = waveformCanvas.getBoundingClientRect(); const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                audio.currentTime = pos * audio.duration; updateProgress();
             });
         }
 
-        function savePlaylists() {
-            idbKeyval.set('webtunes_playlists', playlists);
-        }
-        
-        function saveMetadata() {
-            idbKeyval.set('webtunes_metadata', savedMetadata);
-        }
+        function savePlaylists() { idbKeyval.set('webtunes_playlists', playlists); }
+        function saveMetadata() { idbKeyval.set('webtunes_metadata', savedMetadata); }
 
         function generateStableId(file) {
-            let str = file.name + "_" + file.size;
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                let char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash; // Convert to 32bit integer
-            }
+            let str = file.name + "_" + file.size; let hash = 0;
+            for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash) + str.charCodeAt(i);
             return 'song_' + Math.abs(hash);
         }
 
         function handleFiles(event) {
-            const files = event.target.files;
-            if (!files.length) return;
-
+            const files = event.target.files; if (!files.length) return;
             showToast(`Importing ${files.length} track(s)...`, 'ph-check-circle');
 
             Array.from(files).forEach(file => {
                 const objectUrl = URL.createObjectURL(file);
                 const tempAudio = new Audio(objectUrl);
-                
                 const id = generateStableId(file);
                 
-                // Parse basic info from filename as fallback
-                let title = file.name.replace(/\.[^/.]+$/, ""); 
-                let artist = "Unknown Artist";
-                
-                if (title.includes('-')) {
-                    const parts = title.split('-');
-                    artist = parts[0].trim();
-                    title = parts.slice(1).join('-').trim();
-                }
+                let title = file.name.replace(/\.[^/.]+$/, ""); let artist = "Unknown Artist";
+                if (title.includes('-')) { const parts = title.split('-'); artist = parts[0].trim(); title = parts.slice(1).join('-').trim(); }
 
-                const song = {
-                    id: id,
-                    title: title,
-                    artist: artist,
-                    album: "Unknown Album",
-                    duration: 0, 
-                    file: file,
-                    url: objectUrl,
-                    albumArt: null 
+                const song = { 
+                    id: id, title: title, artist: artist, album: "Unknown Album", 
+                    duration: 0, file: file, url: objectUrl, albumArt: null, lyrics: null,
+                    dateAdded: Date.now(), playCount: 0 
                 };
                 
-                // Restore saved metadata if it exists
-                if (savedMetadata[id]) {
-                    song.title = savedMetadata[id].title || song.title;
-                    song.artist = savedMetadata[id].artist || song.artist;
-                    song.album = savedMetadata[id].album || song.album;
-                    song.albumArt = savedMetadata[id].albumArt || song.albumArt;
+                if (savedMetadata[id]) { 
+                    Object.assign(song, savedMetadata[id]); 
+                    if (!song.dateAdded) song.dateAdded = Date.now();
+                    if (song.playCount === undefined) song.playCount = 0;
+                } else {
+                    savedMetadata[id] = { dateAdded: song.dateAdded, playCount: song.playCount };
                 }
                 
-                // Prevent exact duplicates in active memory
-                if (!allSongs.find(s => s.id === id)) {
-                    allSongs.push(song);
-                }
+                if (!allSongs.find(s => s.id === id)) allSongs.push(song);
                 
-                // Get duration async
                 tempAudio.onloadedmetadata = () => {
                     song.duration = tempAudio.duration;
-                    if(currentViewId === 'all') renderTracklist();
+                    if(['all', 'recent'].includes(currentViewId)) renderTracklist(searchInput.value);
                     updateViewMeta();
                 };
 
-                // Read real ID3 tags using jsmediatags
                 window.jsmediatags.read(file, {
                     onSuccess: function(tag) {
                         const tags = tag.tags;
-                        if (tags.title) song.title = tags.title;
-                        if (tags.artist) song.artist = tags.artist;
-                        if (tags.album) song.album = tags.album;
+                        if (tags.title) song.title = tags.title; if (tags.artist) song.artist = tags.artist; if (tags.album) song.album = tags.album;
+                        if (tags.lyrics && tags.lyrics.lyrics) song.lyrics = tags.lyrics.lyrics;
+                        if (tags.picture) { try { const blob = new Blob([new Uint8Array(tags.picture.data)], { type: tags.picture.format }); song.albumArt = URL.createObjectURL(blob); } catch (e) { } }
                         
-                        if (tags.picture) {
-                            try {
-                                const blob = new Blob([new Uint8Array(tags.picture.data)], { type: tags.picture.format });
-                                song.albumArt = URL.createObjectURL(blob);
-                            } catch (e) {
-                                console.error("Error parsing album art", e);
-                            }
-                        }
-                        
-                        // Save to memory so it remembers titles next time without reparsing
-                        savedMetadata[song.id] = { title: song.title, artist: song.artist, album: song.album };
+                        savedMetadata[song.id] = { ...(savedMetadata[song.id] || {}), title: song.title, artist: song.artist, album: song.album, lyrics: song.lyrics };
                         if(song.albumArt && song.albumArt.startsWith('http')) savedMetadata[song.id].albumArt = song.albumArt;
                         saveMetadata();
                         
-                        // Re-render with new metadata
-                        renderTracklist();
-                        updateViewMeta();
-                        
-                        if (currentSongId === song.id) {
-                            updateLCD(song);
-                        }
-                        
-                        // If we still don't have art, try iTunes API as fallback
-                        if (!song.albumArt) {
-                            fetchSongMetadata(song);
-                        }
+                        renderTracklist(searchInput.value); updateViewMeta();
+                        if (currentSongId === song.id) updateLCD(song);
+                        if (!song.albumArt) fetchSongMetadata(song);
                     },
-                    onError: function(error) {
-                        // Fallback to iTunes Search if tag reading fails
-                        fetchSongMetadata(song);
-                    }
+                    onError: function() { fetchSongMetadata(song); }
                 });
             });
             
-            if(currentViewId === 'all') renderTracklist();
+            if(['all', 'recent'].includes(currentViewId)) renderTracklist(searchInput.value);
             updateViewMeta();
-            if(fileInput) fileInput.value = ''; // Reset input
+            if(fileInput) fileInput.value = '';
         }
 
         function getDisplaySongs() {
-            if (currentViewId === 'all') {
-                return allSongs;
-            } else {
-                const pl = playlists.find(p => p.id === currentViewId);
-                if (!pl) return [];
-                return pl.songIds.map(id => allSongs.find(s => s.id === id)).filter(Boolean);
+            if (currentViewId === 'all') return allSongs;
+            if (currentViewId === 'recent') {
+                return [...allSongs].sort((a, b) => (b.dateAdded || 0) - (a.dateAdded || 0)).slice(0, 20);
             }
+            if (currentViewId === 'most-played') {
+                return [...allSongs].sort((a, b) => (b.playCount || 0) - (a.playCount || 0)).filter(s => (s.playCount || 0) > 0);
+            }
+            const pl = playlists.find(p => p.id === currentViewId);
+            return pl ? pl.songIds.map(id => allSongs.find(s => s.id === id)).filter(Boolean) : [];
         }
 
         function formatTime(seconds) {
             if (isNaN(seconds)) return "0:00";
-            const m = Math.floor(seconds / 60);
-            const s = Math.floor(seconds % 60);
+            const m = Math.floor(seconds / 60); const s = Math.floor(seconds % 60);
             return `${m}:${s.toString().padStart(2, '0')}`;
         }
 
-        // Fetch Metadata via iTunes Search API (Fallback)
         async function fetchSongMetadata(song) {
             try {
-                // Clean the title: remove leading track numbers (e.g., "01. ", "02 - ") so the search is more accurate
                 let cleanTitle = song.title.replace(/^\d+[\s.-_]+/, '').trim();
-                
-                // Construct search query
                 const query = `${cleanTitle} ${song.artist !== 'Unknown Artist' ? song.artist : ''}`.trim();
                 const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`);
                 const data = await response.json();
                 
                 if (data.results && data.results.length > 0) {
                     const result = data.results[0];
-                    // Replace generic info with proper metadata
                     if (!song.albumArt) song.albumArt = result.artworkUrl100;
                     if (song.artist === "Unknown Artist") song.artist = result.artistName;
-                    if (song.album === "Unknown Album" || song.album === "Local Files") song.album = result.collectionName;
+                    if (song.album === "Unknown Album") song.album = result.collectionName;
                     
-                    // Save the fetch result
-                    savedMetadata[song.id] = { title: song.title, artist: song.artist, album: song.album, albumArt: song.albumArt };
+                    savedMetadata[song.id] = { ...(savedMetadata[song.id] || {}), title: song.title, artist: song.artist, album: song.album, albumArt: song.albumArt };
                     saveMetadata();
                     
-                    // Re-render to show changes
-                    renderTracklist();
-                    updateViewMeta(); 
-                    
-                    // Update Now Playing LCD if this song is playing
-                    if (currentSongId === song.id) {
-                        updateLCD(song);
-                    }
+                    renderTracklist(searchInput.value); updateViewMeta(); 
+                    if (currentSongId === song.id) updateLCD(song);
                 }
-            } catch (err) {
-                console.log("Could not fetch metadata for:", song.title);
-            }
+            } catch (err) {}
         }
 
         // --- UI Rendering ---
-
         function renderSidebar() {
             playlistNav.innerHTML = '';
             
-            // Handle active states
-            document.getElementById('nav-all').classList.toggle('bg-gray-200', currentViewId === 'all');
-            document.getElementById('nav-all').classList.toggle('font-medium', currentViewId === 'all');
+            const libraryIds = ['all', 'recent', 'most-played'];
+            libraryIds.forEach(id => {
+                const el = document.getElementById(`nav-${id}`);
+                if (el) {
+                    if (currentViewId === id) {
+                        el.classList.add('bg-gray-200', 'font-medium', 'text-black');
+                        el.classList.remove('text-gray-700');
+                    } else {
+                        el.classList.remove('bg-gray-200', 'font-medium', 'text-black');
+                        el.classList.add('text-gray-700');
+                    }
+                }
+            });
 
             playlists.forEach(pl => {
                 const li = document.createElement('li');
@@ -793,585 +929,355 @@
                 li.innerHTML = `
                     <button onclick="selectView('${pl.id}')" class="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-200/50 transition ${isActive ? 'bg-gray-200 font-medium text-black' : 'text-gray-700'}">
                         <i class="ph ph-list-dashes text-lg text-gray-400"></i> <span class="truncate">${pl.name}</span>
-                    </button>
-                `;
+                    </button>`;
                 playlistNav.appendChild(li);
             });
         }
 
         function selectView(id) {
-            currentViewId = id;
-            renderSidebar();
-            renderTracklist();
-            
-            if (id === 'all') {
-                viewTitle.textContent = "Library";
-                btnDeletePlaylist.classList.add('hidden');
-            } else {
-                const pl = playlists.find(p => p.id === id);
-                viewTitle.textContent = pl ? pl.name : "Playlist";
-                btnDeletePlaylist.classList.remove('hidden');
-            }
-            updateViewMeta();
+            currentViewId = id; searchInput.value = ''; 
+            renderSidebar(); renderTracklist(); updateViewMeta();
         }
 
         function updateViewMeta() {
-            const songs = getDisplaySongs();
+            const songs = getDisplaySongs(); 
             const totalSecs = songs.reduce((acc, s) => acc + (s.duration || 0), 0);
             const totalMins = Math.floor(totalSecs / 60);
             viewMeta.textContent = `${songs.length} song${songs.length !== 1 ? 's' : ''}, ${totalMins} minute${totalMins !== 1 ? 's' : ''}`;
             
-            // Prefer currently playing song's art, fallback to first available in playlist
-            const activeSong = allSongs.find(s => s.id === currentSongId);
-            const artSource = activeSong?.albumArt ? activeSong : songs.find(s => s.albumArt);
-            
-            if (artSource && artSource.albumArt) {
-                viewCoverImg.src = artSource.albumArt.replace('100x100bb', '300x300bb'); // Request higher res
-                viewCoverImg.classList.remove('hidden');
-            } else {
-                viewCoverImg.classList.add('hidden');
-            }
+            if (currentViewId === 'all') { viewTitle.textContent = "Library"; btnDeletePlaylist.classList.add('hidden'); } 
+            else if (currentViewId === 'recent') { viewTitle.textContent = "Recently Added"; btnDeletePlaylist.classList.add('hidden'); }
+            else if (currentViewId === 'most-played') { viewTitle.textContent = "Most Played"; btnDeletePlaylist.classList.add('hidden'); }
+            else { const pl = playlists.find(p => p.id === currentViewId); viewTitle.textContent = pl ? pl.name : "Playlist"; btnDeletePlaylist.classList.remove('hidden'); }
         }
 
-        function renderTracklist(searchQuery = '') {
+        function renderTracklist(searchQuery = searchInput.value) {
             let songs = getDisplaySongs();
-            
             if (searchQuery) {
                 const q = searchQuery.toLowerCase();
-                songs = songs.filter(s => 
-                    s.title.toLowerCase().includes(q) || 
-                    s.artist.toLowerCase().includes(q) ||
-                    s.album.toLowerCase().includes(q)
-                );
+                songs = songs.filter(s => s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q) || s.album.toLowerCase().includes(q));
             }
 
+            currentTracklist = songs;
+            renderCarousel(currentTracklist); 
+
             tracklistBody.innerHTML = '';
-            
             if (songs.length === 0) {
+                let emptyMsg = 'Your library is empty';
+                if (currentViewId === 'recent') emptyMsg = 'No recently added tracks';
+                else if (currentViewId === 'most-played') emptyMsg = 'No most played tracks yet';
+                else if (currentViewId !== 'all') emptyMsg = 'This playlist is empty';
+                
                 tracklistBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center py-24 text-gray-400">
-                            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-50 border-2 border-dashed border-gray-300 mb-6 group hover:border-red-400 hover:bg-red-50/50 transition-colors cursor-pointer" onclick="document.getElementById('file-input').click()">
-                                <i class="ph-fill ph-music-note-plus text-5xl text-gray-300 group-hover:text-red-400 group-hover:scale-110 transition-transform duration-300"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-gray-800 mb-2">${searchQuery ? 'No matches found' : (currentViewId === 'all' ? 'Your library is empty' : 'This playlist is empty')}</h3>
-                            <p class="text-sm text-gray-500 mb-8 max-w-sm mx-auto leading-relaxed">
-                                ${searchQuery ? 'Try searching for a different term.' : (currentViewId === 'all' ? 'Drag and drop your audio files anywhere on the screen, or click below to browse your computer.' : 'Add songs to this playlist by clicking the three dots next to any track.')}
-                            </p>
-                            ${currentViewId === 'all' && !searchQuery ? `<button onclick="document.getElementById('file-input').click()" class="px-6 py-2.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow-md font-medium text-sm flex items-center gap-2 mx-auto"><i class="ph-bold ph-plus"></i> Browse Files</button>` : ''}
-                        </td>
-                    </tr>
-                `;
+                    <tr><td colspan="7" class="text-center py-24 text-gray-400">
+                        <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-50 border-2 border-dashed border-gray-300 mb-6 group hover:border-red-400 hover:bg-red-50/50 transition-colors cursor-pointer" onclick="document.getElementById('file-input').click()">
+                            <i class="ph-fill ph-music-note-plus text-5xl text-gray-300 group-hover:text-red-400 group-hover:scale-110 transition-transform duration-300"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">${searchQuery ? 'No matches found' : emptyMsg}</h3>
+                        <p class="text-sm text-gray-500 mb-8 max-w-sm mx-auto leading-relaxed">${searchQuery ? 'Try searching for a different term.' : 'Drag and drop your audio files anywhere on the screen, or click below to browse.'}</p>
+                        ${['all', 'recent'].includes(currentViewId) && !searchQuery ? `<button onclick="document.getElementById('file-input').click()" class="px-6 py-2.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow-md font-medium text-sm flex items-center gap-2 mx-auto"><i class="ph-bold ph-plus"></i> Browse Files</button>` : ''}
+                    </td></tr>`;
                 return;
             }
 
-            // Figure out which song is currently playing to highlight it
-            const activeSongId = currentSongId;
-
             songs.forEach((song, index) => {
                 const tr = document.createElement('tr');
-                const isThisPlaying = (song.id === activeSongId && isPlaying);
-                
-                tr.className = `track-row group border-b border-gray-100 hover:bg-gray-50 transition cursor-default ${song.id === activeSongId ? 'bg-gray-50' : ''}`;
-                
+                const isThisPlaying = (song.id === currentSongId && isPlaying);
+                tr.className = `track-row group border-b border-gray-100 hover:bg-gray-50 transition cursor-default ${song.id === currentSongId ? 'bg-gray-50' : ''}`;
                 tr.innerHTML = `
                     <td class="w-12 py-2 text-center text-gray-400 relative">
                         <span class="track-num ${isThisPlaying ? 'hidden' : ''}">${song.id === currentSongId ? '<i class="ph-fill ph-speaker-high accent-text"></i>' : (index + 1)}</span>
-                        <button onclick="playFromTracklist(${index})" class="track-play mx-auto focus:outline-none">
-                            <i class="ph-fill ${isThisPlaying ? 'ph-pause' : 'ph-play'} text-lg"></i>
-                        </button>
+                        <button onclick="playFromTracklist('${song.id}')" class="track-play mx-auto focus:outline-none"><i class="ph-fill ${isThisPlaying ? 'ph-pause' : 'ph-play'} text-lg"></i></button>
                     </td>
-                    <td class="w-10 py-1">
-                        ${song.albumArt ? `<img src="${song.albumArt}" class="w-8 h-8 rounded shadow-sm object-cover" alt="Art">` : `<div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-400"><i class="ph ph-music-notes"></i></div>`}
-                    </td>
-                    <td class="py-2 px-3 font-medium ${song.id === activeSongId ? 'accent-text' : 'text-gray-900'} truncate max-w-xs">${song.title}</td>
+                    <td class="w-10 py-1">${song.albumArt ? `<img src="${song.albumArt}" class="w-8 h-8 rounded shadow-sm object-cover" alt="Art">` : `<div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-400"><i class="ph ph-music-notes"></i></div>`}</td>
+                    <td class="py-2 px-3 font-medium ${song.id === currentSongId ? 'accent-text' : 'text-gray-900'} truncate max-w-xs">${song.title}</td>
                     <td class="w-16 py-2 px-3 text-gray-500">${formatTime(song.duration)}</td>
                     <td class="py-2 px-3 text-gray-500 truncate max-w-xs">${song.artist}</td>
                     <td class="py-2 px-3 text-gray-500 truncate max-w-xs">${song.album}</td>
-                    <td class="w-10 py-2 text-center">
-                        <button onclick="openContextMenu(event, '${song.id}')" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-black p-1 rounded-full hover:bg-gray-200 transition">
-                            <i class="ph-bold ph-dots-three text-lg"></i>
-                        </button>
-                    </td>
+                    <td class="w-10 py-2 text-center"><button onclick="openContextMenu(event, '${song.id}')" class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-black p-1 rounded-full hover:bg-gray-200 transition"><i class="ph-bold ph-dots-three text-lg"></i></button></td>
                 `;
-                
-                // Double click to play
-                tr.addEventListener('dblclick', (e) => {
-                    if(!e.target.closest('button')) playFromTracklist(index);
-                });
-
+                tr.addEventListener('dblclick', (e) => { if(!e.target.closest('button')) playFromTracklist(song.id); });
                 tracklistBody.appendChild(tr);
             });
         }
 
         // --- Playback Controls ---
-
-        function playFromTracklist(index) {
-            baseQueue = [...getDisplaySongs()];
-            playingIndex = index;
-            upNextQueue = []; // Clear user queue when picking a new context
-            playSong(baseQueue[playingIndex]);
+        function playFromTracklist(songId) {
+            baseQueue = [...currentTracklist]; playingIndex = baseQueue.findIndex(s => s.id === songId);
+            if(playingIndex === -1) { baseQueue = [...getDisplaySongs()]; playingIndex = baseQueue.findIndex(s => s.id === songId); }
+            upNextQueue = []; if(playingIndex !== -1) playSong(baseQueue[playingIndex]);
         }
 
         function playView() {
-            const songs = getDisplaySongs();
-            if (songs.length === 0) return;
-            baseQueue = [...songs];
-            playingIndex = 0;
-            upNextQueue = [];
-            playSong(baseQueue[0]);
+            if (currentTracklist.length === 0) return;
+            baseQueue = [...currentTracklist]; playingIndex = 0; upNextQueue = []; playSong(baseQueue[0]);
         }
 
         function shuffleView() {
-            const songs = getDisplaySongs();
-            if (songs.length === 0) return;
-            
-            let shuffled = [...songs];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            
-            baseQueue = shuffled;
-            playingIndex = 0;
-            upNextQueue = [];
-            playSong(baseQueue[0]);
-            
-            isShuffleActive = true;
-            btnShuffleMain.classList.add('text-black');
-            btnShuffleMain.classList.remove('text-gray-400');
+            if (currentTracklist.length === 0) return;
+            let shuffled = [...currentTracklist];
+            for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+            baseQueue = shuffled; playingIndex = 0; upNextQueue = []; playSong(baseQueue[0]);
+            isShuffleActive = true; btnShuffleMain.classList.add('text-black'); btnShuffleMain.classList.remove('text-gray-400');
         }
 
         function shuffleQueue() {
             isShuffleActive = !isShuffleActive;
             if (isShuffleActive) {
-                btnShuffleMain.classList.add('text-black');
-                btnShuffleMain.classList.remove('text-gray-400');
-                
-                // Shuffle remaining base queue silently so Play Next continues seamlessly
+                btnShuffleMain.classList.add('text-black'); btnShuffleMain.classList.remove('text-gray-400');
                 if (baseQueue.length > 0 && playingIndex >= 0) {
                     const remaining = baseQueue.slice(playingIndex + 1);
-                    for (let i = remaining.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
-                    }
+                    for (let i = remaining.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [remaining[i], remaining[j]] = [remaining[j], remaining[i]]; }
                     baseQueue = [...baseQueue.slice(0, playingIndex + 1), ...remaining];
                 }
-            } else {
-                btnShuffleMain.classList.add('text-gray-400');
-                btnShuffleMain.classList.remove('text-black');
-            }
+            } else { btnShuffleMain.classList.add('text-gray-400'); btnShuffleMain.classList.remove('text-black'); }
         }
         
-        function queueNext(songId) {
-            const song = allSongs.find(s => s.id === songId);
-            if(song) {
-                upNextQueue.unshift(song);
-                showToast(`Playing Next: ${song.title}`, 'ph-arrow-fat-line-right');
-            }
-        }
-
-        function queueLast(songId) {
-            const song = allSongs.find(s => s.id === songId);
-            if(song) {
-                upNextQueue.push(song);
-                showToast(`Added to Queue`, 'ph-list-plus');
-            }
-        }
+        function queueNext(songId) { const song = allSongs.find(s => s.id === songId); if(song) { upNextQueue.unshift(song); showToast(`Playing Next: ${song.title}`, 'ph-arrow-fat-line-right'); } }
+        function queueLast(songId) { const song = allSongs.find(s => s.id === songId); if(song) { upNextQueue.push(song); showToast(`Added to Queue`, 'ph-list-plus'); } }
 
         async function playSong(song, updateBaseIndex = true) {
             if (!song) return;
-            
-            // Update base index if this song is from the base queue
-            if (updateBaseIndex) {
-                const idx = baseQueue.findIndex(s => s.id === song.id);
-                if (idx !== -1) playingIndex = idx;
-            }
-            
-            // If clicking the currently playing song in the list, toggle pause
-            if (currentSongId === song.id && isPlaying && audio.src === song.url) {
-                togglePlay();
-                return;
-            }
+            if (updateBaseIndex) { const idx = baseQueue.findIndex(s => s.id === song.id); if (idx !== -1) playingIndex = idx; }
+            if (currentSongId === song.id && isPlaying && audio.src === song.url) { togglePlay(); return; }
 
-            currentSongId = song.id;
+            currentSongId = song.id; audio.src = song.url;
+            audio.play().then(() => { if(typeof initAudioContext === 'function') initAudioContext(); }).catch(e => { if (e.name !== 'AbortError') console.error("Playback error:", e); });
             
-            audio.src = song.url;
-            audio.play().then(() => {
-                if(typeof initAudioContext === 'function') initAudioContext();
-            }).catch(e => console.error("Playback failed:", e));
-            
-            currentPeaks = null; // Clear old waveform immediately
-            updateLCD(song);
-            renderTracklist();
-            updateViewMeta(); 
-            updateVisualizerMetadata(); 
-            
-            // Fetch and draw waveform
-            currentPeaks = await getWaveformPeaks(song);
-            drawWaveform(0);
+            currentPeaks = null; updateLCD(song); renderTracklist(searchInput.value); updateVisualizerMetadata(); 
+            syncCarouselToSong(song.id); updateCarousel();
+            currentPeaks = await getWaveformPeaks(song); drawWaveform(0);
         }
 
         function updateLCD(song) {
-            // Update UI Details
-            nowPlayingTitle.textContent = song.title;
-            nowPlayingArtist.textContent = song.artist;
-            
-            // Show Progress Bar cleanly underneath
-            progressContainer.classList.remove('hidden');
-            setTimeout(() => progressContainer.classList.remove('opacity-0'), 10);
-            
-            // Handle Artwork
-            if (song.albumArt) {
-                lcdArt.src = song.albumArt;
-                lcdArt.classList.remove('hidden');
-            } else {
-                lcdArt.classList.add('hidden');
-            }
-
-            // Animate LCD info up slightly to make room for progress bar
+            nowPlayingTitle.textContent = song.title; nowPlayingArtist.textContent = song.artist;
+            progressContainer.classList.remove('hidden'); setTimeout(() => progressContainer.classList.remove('opacity-0'), 10);
+            if (song.albumArt) { lcdArt.src = song.albumArt; lcdArt.classList.remove('hidden'); } else { lcdArt.classList.add('hidden'); }
             document.getElementById('lcd-info').style.transform = 'translateY(-6px)';
+            const modal = document.getElementById('lyrics-modal'); if(!modal.classList.contains('hidden')) toggleLyrics(); 
+            updateMediaSession(song);
         }
 
         function togglePlay() {
             if (!currentSongId) return;
-            if (isPlaying) {
-                audio.pause();
-            } else {
-                audio.play().then(() => {
-                    if(typeof initAudioContext === 'function') initAudioContext();
-                });
+            if (isPlaying) { audio.pause(); } else { audio.play().then(() => { if(typeof initAudioContext === 'function') initAudioContext(); }).catch(e => { if (e.name !== 'AbortError') console.error("Playback error:", e); }); }
+        }
+
+        function onSongEnded() {
+            if (currentSongId) {
+                const song = allSongs.find(s => s.id === currentSongId);
+                if (song) {
+                    song.playCount = (song.playCount || 0) + 1;
+                    if (!savedMetadata[song.id]) savedMetadata[song.id] = {};
+                    savedMetadata[song.id].playCount = song.playCount;
+                    saveMetadata();
+                    
+                    if (currentViewId === 'most-played') renderTracklist();
+                }
             }
+            playNext();
         }
 
         function playNext() {
-            if (upNextQueue.length > 0) {
-                const nextSong = upNextQueue.shift();
-                playSong(nextSong, false); // false = dont advance the base library index
-            } else {
-                if (baseQueue.length === 0) return;
-                playingIndex++;
-                if (playingIndex >= baseQueue.length) playingIndex = 0; // loop
-                playSong(baseQueue[playingIndex]);
-            }
+            if (upNextQueue.length > 0) { playSong(upNextQueue.shift(), false); } 
+            else { if (baseQueue.length === 0) return; playingIndex++; if (playingIndex >= baseQueue.length) playingIndex = 0; playSong(baseQueue[playingIndex]); }
         }
 
         function playPrev() {
-            if (audio.currentTime > 3) {
-                audio.currentTime = 0;
-            } else {
-                if (baseQueue.length === 0) return;
-                playingIndex--;
-                if (playingIndex < 0) playingIndex = baseQueue.length - 1;
-                playSong(baseQueue[playingIndex]);
-            }
+            if (audio.currentTime > 3) { audio.currentTime = 0; } 
+            else { if (baseQueue.length === 0) return; playingIndex--; if (playingIndex < 0) playingIndex = baseQueue.length - 1; playSong(baseQueue[playingIndex]); }
         }
 
         async function getWaveformPeaks(song) {
-            if (savedMetadata[song.id] && savedMetadata[song.id].peaks) {
-                return savedMetadata[song.id].peaks;
-            }
-            
+            if (savedMetadata[song.id] && savedMetadata[song.id].peaks) return savedMetadata[song.id].peaks;
             try {
-                // If it's a local file, we can generate the waveform
                 if (!song.file) return new Array(80).fill(0.1);
-
                 const arrayBuffer = await song.file.arrayBuffer();
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-                
+                if (!sharedDecodeCtx) sharedDecodeCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const audioBuffer = await sharedDecodeCtx.decodeAudioData(arrayBuffer);
                 const channelData = audioBuffer.getChannelData(0);
-                const samples = 80; // Number of visual bars
-                const blockSize = Math.floor(channelData.length / samples);
+                const samples = 80; const blockSize = Math.floor(channelData.length / samples);
                 const peaks = [];
-                
                 for (let i = 0; i < samples; i++) {
-                    let max = 0;
-                    for (let j = 0; j < blockSize; j++) {
-                        const val = Math.abs(channelData[i * blockSize + j]);
-                        if (val > max) max = val;
-                    }
+                    let max = 0; for (let j = 0; j < blockSize; j++) { const val = Math.abs(channelData[i * blockSize + j]); if (val > max) max = val; }
                     peaks.push(max);
                 }
-                
-                const maxPeak = Math.max(...peaks) || 1;
-                const normalized = peaks.map(p => p / maxPeak);
-                
+                const maxPeak = Math.max(...peaks) || 1; const normalized = peaks.map(p => p / maxPeak);
                 if (!savedMetadata[song.id]) savedMetadata[song.id] = {};
-                savedMetadata[song.id].peaks = normalized;
-                saveMetadata();
-                
-                return normalized;
-            } catch (e) {
-                console.error("Waveform generation failed", e);
-                return new Array(80).fill(0.1); // Fallback flatline
-            }
+                savedMetadata[song.id].peaks = normalized; saveMetadata(); return normalized;
+            } catch (e) { return new Array(80).fill(0.1); }
         }
 
         function drawWaveform(percent) {
             if (!waveformCanvas || !currentPeaks) return;
-            
-            const dpr = window.devicePixelRatio || 1;
-            const rect = waveformCanvas.getBoundingClientRect();
-            
-            // Adjust canvas resolution for retina/high-DPI screens
-            if (waveformCanvas.width !== rect.width * dpr) {
-                waveformCanvas.width = rect.width * dpr;
-                waveformCanvas.height = rect.height * dpr;
-            }
-            
-            const ctx = waveformCanvas.getContext('2d');
-            ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
-            
-            const barWidth = waveformCanvas.width / currentPeaks.length;
-            const gap = 2 * dpr;
+            const dpr = window.devicePixelRatio || 1; const rect = waveformCanvas.getBoundingClientRect();
+            if (waveformCanvas.width !== rect.width * dpr) { waveformCanvas.width = rect.width * dpr; waveformCanvas.height = rect.height * dpr; }
+            const ctx = waveformCanvas.getContext('2d'); ctx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+            const barWidth = waveformCanvas.width / currentPeaks.length; const gap = 2 * dpr;
             
             currentPeaks.forEach((peak, i) => {
-                const x = i * barWidth;
-                const w = Math.max(1, barWidth - gap);
-                const h = Math.max(2 * dpr, peak * waveformCanvas.height * 0.8);
-                const y = (waveformCanvas.height - h) / 2;
-                
-                const isPlayed = (i / currentPeaks.length) <= percent;
-                ctx.fillStyle = isPlayed ? '#fa243c' : '#cbd5e1'; // Red vs Tailwind slate-300
-                
-                ctx.beginPath();
-                ctx.roundRect(x, y, w, h, 2 * dpr);
-                ctx.fill();
+                const x = i * barWidth; const w = Math.max(1, barWidth - gap); const h = Math.max(2 * dpr, peak * waveformCanvas.height * 0.8);
+                const y = (waveformCanvas.height - h) / 2; const isPlayed = (i / currentPeaks.length) <= percent;
+                ctx.fillStyle = isPlayed ? '#fa243c' : '#cbd5e1'; 
+                ctx.beginPath(); ctx.roundRect(x, y, w, h, 2 * dpr); ctx.fill();
             });
         }
 
         function updateProgress() {
             const percent = audio.duration ? audio.currentTime / audio.duration : 0;
-            timeCurrent.textContent = formatTime(audio.currentTime);
-            drawWaveform(percent);
+            timeCurrent.textContent = formatTime(audio.currentTime); drawWaveform(percent);
         }
 
         function updatePlayPauseIcon() {
-            if (isPlaying) {
-                mainPlayIcon.classList.remove('ph-play');
-                mainPlayIcon.classList.add('ph-pause');
-            } else {
-                mainPlayIcon.classList.remove('ph-pause');
-                mainPlayIcon.classList.add('ph-play');
-            }
+            if (isPlaying) { mainPlayIcon.classList.replace('ph-play', 'ph-pause'); } else { mainPlayIcon.classList.replace('ph-pause', 'ph-play'); }
         }
 
         // --- Playlists & Context Menu ---
-
         function promptCreatePlaylist() {
             const name = prompt("Enter playlist name:");
             if (name && name.trim()) {
-                const id = 'pl_' + Date.now();
-                playlists.push({ id, name: name.trim(), songIds: [] });
-                savePlaylists();
-                renderSidebar();
-                selectView(id);
-                showToast(`Playlist "${name.trim()}" created`, 'ph-list-plus');
+                const id = 'pl_' + Date.now(); playlists.push({ id, name: name.trim(), songIds: [] });
+                savePlaylists(); renderSidebar(); selectView(id); showToast(`Playlist "${name.trim()}" created`, 'ph-list-plus');
             }
         }
 
         function deleteCurrentPlaylist() {
-            if (currentViewId === 'all') return;
-            
-            const pl = playlists.find(p => p.id === currentViewId);
-            if (!pl) return;
-            
+            if (['all', 'recent', 'most-played'].includes(currentViewId)) return;
+            const pl = playlists.find(p => p.id === currentViewId); if (!pl) return;
             if(confirm(`Are you sure you want to delete the playlist "${pl.name}"?`)) {
                 playlists = playlists.filter(p => p.id !== currentViewId);
-                savePlaylists();
-                selectView('all'); // Return to library view
-                showToast(`Playlist deleted`, 'ph-trash');
+                savePlaylists(); selectView('all'); showToast(`Playlist deleted`, 'ph-trash');
             }
         }
 
         function promptCreatePlaylistFromMenu() {
             const name = prompt("Enter playlist name:");
             if (name && name.trim()) {
-                const id = 'pl_' + Date.now();
-                playlists.push({ id, name: name.trim(), songIds: [contextMenuTargetSongId] });
-                savePlaylists();
-                renderSidebar();
-                contextMenu.classList.add('hidden');
-                showToast(`Created and added to "${name.trim()}"`, 'ph-list-plus');
+                const id = 'pl_' + Date.now(); playlists.push({ id, name: name.trim(), songIds: [contextMenuTargetSongId] });
+                savePlaylists(); renderSidebar(); contextMenu.classList.add('hidden'); showToast(`Created and added to "${name.trim()}"`, 'ph-list-plus');
             }
         }
 
         function openContextMenu(event, songId) {
-            event.stopPropagation();
-            contextMenuTargetSongId = songId;
+            event.stopPropagation(); contextMenuTargetSongId = songId; contextPlaylistList.innerHTML = '';
             
-            // Populate playlist options
-            contextPlaylistList.innerHTML = '';
-            if (playlists.length === 0) {
-                contextPlaylistList.innerHTML = '<div class="px-4 py-2 text-gray-400 text-xs italic">No playlists</div>';
-            } else {
+            if (playlists.length === 0) { contextPlaylistList.innerHTML = '<div class="px-4 py-2 text-gray-400 text-xs italic">No playlists</div>'; } 
+            else {
                 playlists.forEach(pl => {
-                    const btn = document.createElement('button');
-                    btn.className = "w-full text-left px-4 py-1.5 hover:bg-blue-500 hover:text-white transition text-gray-700 truncate";
+                    const btn = document.createElement('button'); btn.className = "w-full text-left px-4 py-1.5 hover:bg-blue-500 hover:text-white transition text-gray-700 truncate";
                     btn.textContent = pl.name;
                     btn.onclick = () => {
-                        if (!pl.songIds.includes(songId)) {
-                            pl.songIds.push(songId);
-                            savePlaylists();
-                            if(currentViewId === pl.id) {
-                                renderTracklist();
-                                updateViewMeta();
-                            }
-                            showToast(`Added to "${pl.name}"`, 'ph-check');
-                        } else {
-                            showToast(`Already in "${pl.name}"`, 'ph-info');
-                        }
+                        if (!pl.songIds.includes(songId)) { pl.songIds.push(songId); savePlaylists(); if(currentViewId === pl.id) { renderTracklist(); updateViewMeta(); } showToast(`Added to "${pl.name}"`, 'ph-check'); } 
+                        else { showToast(`Already in "${pl.name}"`, 'ph-info'); }
                         contextMenu.classList.add('hidden');
                     };
                     contextPlaylistList.appendChild(btn);
                 });
             }
 
-            // Show "Remove from Playlist" if we are in a playlist view
-            if (currentViewId !== 'all') {
+            if (!['all', 'recent', 'most-played'].includes(currentViewId)) {
                 removeFromPlaylistContainer.style.display = 'block';
                 btnRemovePlaylist.onclick = () => {
                     const pl = playlists.find(p => p.id === currentViewId);
-                    if (pl) {
-                        pl.songIds = pl.songIds.filter(id => id !== songId);
-                        savePlaylists();
-                        renderTracklist();
-                        updateViewMeta();
-                        showToast(`Removed from playlist`, 'ph-trash');
-                    }
+                    if (pl) { pl.songIds = pl.songIds.filter(id => id !== songId); savePlaylists(); renderTracklist(); updateViewMeta(); showToast(`Removed from playlist`, 'ph-trash'); }
                     contextMenu.classList.add('hidden');
                 };
-            } else {
-                removeFromPlaylistContainer.style.display = 'none';
-            }
+            } else { removeFromPlaylistContainer.style.display = 'none'; }
 
-            // Position Menu
-            contextMenu.classList.remove('hidden');
-            const rect = event.target.getBoundingClientRect();
-            
-            // Simple collision detection for bottom screen edge
-            let topPos = rect.bottom + window.scrollY;
-            if (topPos + contextMenu.offsetHeight > window.innerHeight) {
-                topPos = rect.top + window.scrollY - contextMenu.offsetHeight;
-            }
-            
-            contextMenu.style.top = `${topPos}px`;
-            contextMenu.style.left = `${rect.left - 150}px`; // offset left so it doesn't run off screen usually
+            contextMenu.classList.remove('hidden'); const rect = event.target.getBoundingClientRect();
+            let topPos = rect.bottom + window.scrollY; if (topPos + contextMenu.offsetHeight > window.innerHeight) topPos = rect.top + window.scrollY - contextMenu.offsetHeight;
+            contextMenu.style.top = `${topPos}px`; contextMenu.style.left = `${rect.left - 150}px`; 
         }
 
-        // --- Visualizer & Reset Logic ---
-
-        let audioCtx, analyser, source;
-        let canvas, canvasCtx;
-        let visMode = 0; 
-        let isVisActive = false;
-        let animationId;
-        const visModes = ['Fluid Waves', 'Neon Bars', 'Dynamic Aura', 'Stardust', 'Energy Strings'];
-        
-        // Advanced Visualizer State
-        let barCaps = new Array(128).fill(0);
-        let particles = [];
-        let stringPhases = new Array(20).fill(0).map(() => Math.random() * Math.PI * 2);
-
-        function initAudioContext() {
-            if (audioCtx) return;
-            try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioCtx.createAnalyser();
-                source = audioCtx.createMediaElementSource(audio);
-                source.connect(analyser);
-                analyser.connect(audioCtx.destination);
-                analyser.fftSize = 256;
-                analyser.smoothingTimeConstant = 0.85; // Smoother animations for Apple feel
-
-                canvas = document.getElementById('vis-canvas');
-                canvasCtx = canvas.getContext('2d');
-            } catch(e) {
-                console.error("Audio Context Init Failed", e);
-            }
-        }
-
+        // --- Visualizer Settings & Reset Logic ---
         function updateVisualizerMetadata() {
             if(!currentSongId) return;
-            const song = allSongs.find(s => s.id === currentSongId);
-            if(!song) return;
+            const song = allSongs.find(s => s.id === currentSongId); if(!song) return;
             
             document.getElementById('vis-title').textContent = song.title;
             document.getElementById('vis-artist').textContent = song.artist;
-            
-            const artEl = document.getElementById('vis-art');
-            const bgEl = document.getElementById('vis-bg');
+            const artEl = document.getElementById('vis-art'); const bgEl = document.getElementById('vis-bg');
             
             if(song.albumArt) {
-                const highRes = song.albumArt.replace('100x100bb', '600x600bb'); // High res for fullscreen
-                artEl.src = highRes;
-                artEl.classList.remove('hidden');
-                bgEl.style.backgroundImage = `url(${highRes})`;
-            } else {
-                artEl.classList.add('hidden');
-                bgEl.style.backgroundImage = 'none';
-                bgEl.style.backgroundColor = '#1f2937';
-            }
+                const highRes = song.albumArt.replace('100x100bb', '600x600bb'); 
+                artEl.src = highRes; artEl.classList.remove('hidden'); bgEl.style.backgroundImage = `url(${highRes})`;
+            } else { artEl.classList.add('hidden'); bgEl.style.backgroundImage = 'none'; bgEl.style.backgroundColor = '#1f2937'; }
         }
 
         function toggleVisualizer() {
             initAudioContext();
-            if(audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             const overlay = document.getElementById('visualizer-overlay');
             isVisActive = !isVisActive;
             if (isVisActive) {
-                updateVisualizerMetadata(); // Load art/text immediately
-                overlay.classList.remove('hidden');
-                resizeCanvas();
-                window.addEventListener('resize', resizeCanvas);
-                drawVisualizer();
+                updateVisualizerMetadata(); overlay.classList.remove('hidden');
+                resizeCanvas(); window.addEventListener('resize', resizeCanvas); drawVisualizer();
             } else {
-                overlay.classList.add('hidden');
-                window.removeEventListener('resize', resizeCanvas);
-                cancelAnimationFrame(animationId);
+                overlay.classList.add('hidden'); window.removeEventListener('resize', resizeCanvas); cancelAnimationFrame(animationId);
             }
+        }
+        
+        function toggleVisSettings() {
+            const panel = document.getElementById('vis-settings-panel');
+            panel.classList.toggle('hidden');
+        }
+        
+        function updateVisTheme(val) {
+            visTheme = parseInt(val);
+        }
+        
+        function updateVisIntensity(val) {
+            visIntensity = parseFloat(val);
+            document.getElementById('vis-intensity-val').textContent = visIntensity.toFixed(1) + 'x';
+        }
+        
+        function updateVisSmoothing(val) {
+            visSmoothing = parseInt(val) / 100;
+            document.getElementById('vis-smoothing-val').textContent = val + '%';
+            if (analyser) analyser.smoothingTimeConstant = visSmoothing;
         }
 
         function resizeCanvas() {
             if(!canvas) return;
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         }
 
         function cycleVisPreset() {
             visMode = (visMode + 1) % visModes.length;
             document.getElementById('vis-preset-btn').textContent = 'Mode: ' + visModes[visMode];
-            particles = []; // Clear particles on switch
+            particles = []; 
         }
+
+        function getThemeColor(index, opacity) {
+            const themeColors = visThemes[visTheme] || visThemes[0];
+            return themeColors[index % themeColors.length].replace('OPACITY', opacity);
+        }
+
+        function getThemeHue(index) {
+            const hues = [[340, 20], [300, 180], [60, 180], [10, 50]]; // Theme mappings
+            return hues[visTheme][index % 2];
+        }
+
+        let barCaps = new Array(128).fill(0);
+        let particles = [];
+        let stringPhases = new Array(20).fill(0).map(() => Math.random() * Math.PI * 2);
 
         function drawVisualizer() {
             if (!isVisActive || !analyser) return;
             animationId = requestAnimationFrame(drawVisualizer);
-
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
-            
-            const w = canvas.width;
-            const h = canvas.height;
-
-            // Clear canvas to let the blurred background show through
+            const w = canvas.width; const h = canvas.height;
             canvasCtx.clearRect(0, 0, w, h);
 
-            // --- Audio Analysis ---
             const freqData = new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(freqData);
-            let bassSum = 0;
-            for(let i = 0; i < 8; i++) bassSum += freqData[i]; // Low frequencies
-            const avgBass = bassSum / 8;
+            let bassSum = 0; for(let i = 0; i < 8; i++) bassSum += freqData[i]; 
+            const avgBass = Math.min(255, (bassSum / 8) * visIntensity);
             
-            // --- Art Pulsing Effect ---
-            const targetScale = 1 + (avgBass / 255) * 0.06;
+            const targetScale = 1 + (avgBass / 255) * 0.08;
             const artEl = document.getElementById('vis-art');
-            let artRect = { left: w/2 - 150, top: h/2 - 150, width: 300, height: 300 }; // Fallback
+            let artRect = { left: w/2 - 150, top: h/2 - 150, width: 300, height: 300 }; 
             
             if(artEl && !artEl.classList.contains('hidden')) {
                 artEl.style.transform = `scale(${targetScale})`;
@@ -1381,249 +1287,201 @@
             const artCenterX = artRect.left + artRect.width / 2;
             const artCenterY = artRect.top + artRect.height / 2;
 
-            if (visMode === 0) { 
-                // 1. FLUID WAVES (Siri/Apple style)
+            if (visMode === 0) { // FLUID WAVES
                 analyser.getByteTimeDomainData(dataArray);
-                
-                // Multi-layered filled fluid blobs
-                const colors = [
-                    'rgba(250, 36, 60, 0.4)',  // Red
-                    'rgba(255, 149, 0, 0.3)',  // Orange
-                    'rgba(88, 86, 214, 0.4)',  // Purple
-                    'rgba(255, 255, 255, 0.15)' // White overlay
-                ];
-                
-                // Base Y position for the waves (bottom 3rd of screen)
                 const baseY = h * 0.75;
-                
-                for(let j = 0; j < colors.length; j++) {
-                    canvasCtx.fillStyle = colors[j];
-                    canvasCtx.beginPath();
-                    
-                    const sliceWidth = w * 1.0 / bufferLength;
-                    let x = 0;
-                    
-                    canvasCtx.moveTo(0, h); // Start bottom left
-                    canvasCtx.lineTo(0, baseY);
-
+                for(let j = 0; j < 3; j++) {
+                    canvasCtx.fillStyle = getThemeColor(j, 0.4); canvasCtx.beginPath();
+                    const sliceWidth = w * 1.0 / bufferLength; let x = 0;
+                    canvasCtx.moveTo(0, h); canvasCtx.lineTo(0, baseY);
                     for(let i = 0; i < bufferLength; i++) {
-                        const v = dataArray[i] / 128.0;
-                        // Create phase offsets and speed variance per layer for fluid motion
+                        const rawV = dataArray[i] / 128.0;
+                        const v = 1 + ((rawV - 1) * visIntensity); // Apply intensity
                         const timeShift = performance.now() * (0.001 + j * 0.0005);
-                        const wavePhase = Math.sin(i * 0.05 + timeShift) * 40 * (j + 1);
-                        
-                        // Combine audio data with organic sine waves
+                        const wavePhase = Math.sin(i * 0.05 + timeShift) * 40 * (j + 1) * visIntensity;
                         const y = baseY + ((v - 1) * h * 0.3) + wavePhase;
-
-                        // Use quadratic curves for supreme smoothness
                         if (i < bufferLength - 1) {
-                            const nextV = dataArray[i+1] / 128.0;
-                            const nextWavePhase = Math.sin((i+1) * 0.05 + timeShift) * 40 * (j + 1);
+                            const rawNextV = dataArray[i+1] / 128.0;
+                            const nextV = 1 + ((rawNextV - 1) * visIntensity);
+                            const nextWavePhase = Math.sin((i+1) * 0.05 + timeShift) * 40 * (j + 1) * visIntensity;
                             const nextY = baseY + ((nextV - 1) * h * 0.3) + nextWavePhase;
-                            
-                            const xc = (x + (x + sliceWidth)) / 2;
-                            const yc = (y + nextY) / 2;
+                            const xc = (x + (x + sliceWidth)) / 2; const yc = (y + nextY) / 2;
                             canvasCtx.quadraticCurveTo(x, y, xc, yc);
-                        } else {
-                            canvasCtx.lineTo(x, y);
-                        }
+                        } else { canvasCtx.lineTo(x, y); }
                         x += sliceWidth;
                     }
-                    canvasCtx.lineTo(w, h); // To bottom right
-                    canvasCtx.closePath();
-                    canvasCtx.fill();
+                    canvasCtx.lineTo(w, h); canvasCtx.closePath(); canvasCtx.fill();
                 }
-
-            } else if (visMode === 1) { 
-                // 2. NEON BARS with Gravity Caps
+            } else if (visMode === 1) { // NEON BARS
                 analyser.getByteFrequencyData(dataArray);
-                
-                const barCount = 64; 
-                const barWidth = Math.max(4, (w / barCount) * 0.5);
-                const spacing = (w - (barWidth * barCount)) / (barCount + 1);
-                let x = spacing; 
-
+                const barCount = 64; const barWidth = Math.max(4, (w / barCount) * 0.5);
+                const spacing = (w - (barWidth * barCount)) / (barCount + 1); let x = spacing; 
                 for(let i = 0; i < barCount; i++) {
-                    // Logarithmic frequency sampling looks better for music
                     const index = Math.floor(Math.pow(i / barCount, 2) * (bufferLength / 2));
-                    const value = dataArray[index] || 0; 
-                    const rawHeight = (value / 255) * (h * 0.4); 
-                    const barHeight = Math.max(rawHeight, 4); // Min height
-                    
-                    // Cap physics (Gravity)
-                    if (barHeight > barCaps[i]) {
-                        barCaps[i] = barHeight; // Push cap up instantly
-                    } else {
-                        barCaps[i] -= 3; // Fall down
-                        if (barCaps[i] < barHeight) barCaps[i] = barHeight; 
+                    const rawVal = dataArray[index] || 0; 
+                    const value = Math.min(255, rawVal * visIntensity);
+                    const barHeight = Math.max((value / 255) * (h * 0.4), 4);
+                    if (barHeight > barCaps[i]) { barCaps[i] = barHeight; } else {
+                        barCaps[i] -= 3; if (barCaps[i] < barHeight) barCaps[i] = barHeight; 
                     }
-
                     const yStart = h - 60;
-                    
-                    // Draw Bar Main Body
                     const grad = canvasCtx.createLinearGradient(0, yStart, 0, yStart - barHeight);
-                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-                    grad.addColorStop(1, 'rgba(250, 36, 60, 0.8)');
-                    
-                    canvasCtx.fillStyle = grad;
-                    canvasCtx.beginPath();
-                    canvasCtx.roundRect(x, yStart - barHeight, barWidth, barHeight, barWidth/2);
-                    canvasCtx.fill();
-                    
-                    // Draw Floating Cap
-                    canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                    canvasCtx.shadowBlur = 10;
-                    canvasCtx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-                    canvasCtx.beginPath();
-                    canvasCtx.roundRect(x, yStart - barCaps[i] - barWidth - 2, barWidth, barWidth, barWidth/2);
-                    canvasCtx.fill();
-                    canvasCtx.shadowBlur = 0; // Reset shadow
-                    
-                    x += barWidth + spacing;
+                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.1)'); grad.addColorStop(1, getThemeColor(0, 0.8));
+                    canvasCtx.fillStyle = grad; canvasCtx.beginPath();
+                    canvasCtx.roundRect(x, yStart - barHeight, barWidth, barHeight, barWidth/2); canvasCtx.fill();
+                    canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.9)'; canvasCtx.shadowBlur = 10; canvasCtx.shadowColor = getThemeColor(1, 0.8);
+                    canvasCtx.beginPath(); canvasCtx.roundRect(x, yStart - barCaps[i] - barWidth - 2, barWidth, barWidth, barWidth/2); canvasCtx.fill();
+                    canvasCtx.shadowBlur = 0; x += barWidth + spacing;
                 }
-
-            } else if (visMode === 2) { 
-                // 3. DYNAMIC AURA (Radiates perfectly from the Album Art edge)
+            } else if (visMode === 2) { // DYNAMIC AURA
                 analyser.getByteFrequencyData(dataArray);
-                
-                // Base radius tightly hugs the dynamically sized album art
-                const baseRadius = (artRect.width / 2) + 15; 
-                const barCount = 100;
-                
-                canvasCtx.lineCap = 'round';
-
+                const baseRadius = (artRect.width / 2) + 15; const barCount = 100; canvasCtx.lineCap = 'round';
                 for(let i = 0; i < barCount; i++) {
-                    const value = dataArray[Math.floor(i * (bufferLength / barCount))] || 0;
-                    // Exponential spike length for dramatic bass hits
+                    const rawVal = dataArray[Math.floor(i * (bufferLength / barCount))] || 0;
+                    const value = Math.min(255, rawVal * visIntensity);
                     const spikeLength = Math.pow(value / 255, 2) * (h * 0.25);
-                    const rads = (Math.PI * 2 * i) / barCount - (Math.PI / 2); // Start at top
-                    
-                    const xStart = artCenterX + Math.cos(rads) * baseRadius;
-                    const yStart = artCenterY + Math.sin(rads) * baseRadius;
-                    const xEnd = artCenterX + Math.cos(rads) * (baseRadius + spikeLength);
-                    const yEnd = artCenterY + Math.sin(rads) * (baseRadius + spikeLength);
-                    
-                    // Color transitions based on angle and intensity
-                    canvasCtx.strokeStyle = `rgba(255, ${255 - value}, ${200 + (value/5)}, ${0.4 + (value/255)*0.6})`;
-                    canvasCtx.lineWidth = 4;
-                    canvasCtx.beginPath();
-                    canvasCtx.moveTo(xStart, yStart);
-                    canvasCtx.lineTo(xEnd, yEnd);
-                    canvasCtx.stroke();
-                    
-                    // Inner glow dots at the base of the aura
-                    canvasCtx.fillStyle = 'white';
-                    canvasCtx.beginPath();
-                    canvasCtx.arc(xStart, yStart, 2, 0, Math.PI * 2);
-                    canvasCtx.fill();
+                    const rads = (Math.PI * 2 * i) / barCount - (Math.PI / 2); 
+                    const xStart = artCenterX + Math.cos(rads) * baseRadius; const yStart = artCenterY + Math.sin(rads) * baseRadius;
+                    const xEnd = artCenterX + Math.cos(rads) * (baseRadius + spikeLength); const yEnd = artCenterY + Math.sin(rads) * (baseRadius + spikeLength);
+                    canvasCtx.strokeStyle = getThemeColor(i, 0.4 + (value/255)*0.6); canvasCtx.lineWidth = 4;
+                    canvasCtx.beginPath(); canvasCtx.moveTo(xStart, yStart); canvasCtx.lineTo(xEnd, yEnd); canvasCtx.stroke();
+                    canvasCtx.fillStyle = 'white'; canvasCtx.beginPath(); canvasCtx.arc(xStart, yStart, 2, 0, Math.PI * 2); canvasCtx.fill();
                 }
-
-            } else if (visMode === 3) {
-                // 4. STARDUST PARTICLES (Physics based)
+            } else if (visMode === 3) { // STARDUST
                 analyser.getByteFrequencyData(dataArray);
-                
-                // Spawn particles on heavy bass
                 if (avgBass > 200 && Math.random() > 0.5) {
-                    const spawnCount = Math.floor(Math.random() * 5) + 2;
+                    const spawnCount = Math.floor(Math.random() * 5 * visIntensity) + 2;
                     for(let i=0; i<spawnCount; i++) {
-                        const angle = Math.random() * Math.PI * 2;
-                        const speed = 2 + Math.random() * 8 + (avgBass/50);
+                        const angle = Math.random() * Math.PI * 2; const speed = (2 + Math.random() * 8 + (avgBass/50)) * visIntensity;
                         particles.push({
-                            x: artCenterX + Math.cos(angle) * (artRect.width/2),
-                            y: artCenterY + Math.sin(angle) * (artRect.height/2),
-                            vx: Math.cos(angle) * speed,
-                            vy: Math.sin(angle) * speed,
-                            life: 1.0,
-                            decay: 0.01 + Math.random() * 0.02,
-                            size: 2 + Math.random() * 5,
-                            hue: 340 + Math.random() * 40 // Red to Orange range
+                            x: artCenterX + Math.cos(angle) * (artRect.width/2), y: artCenterY + Math.sin(angle) * (artRect.height/2),
+                            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 1.0, decay: 0.01 + Math.random() * 0.02,
+                            size: (2 + Math.random() * 5) * visIntensity, hue: getThemeHue(Math.floor(Math.random()*2)) + Math.random() * 40 
                         });
                     }
                 }
-                
-                // Update and draw particles
                 for(let i = particles.length - 1; i >= 0; i--) {
-                    let p = particles[i];
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.life -= p.decay;
-                    
-                    if (p.life <= 0) {
-                        particles.splice(i, 1);
-                        continue;
-                    }
-                    
-                    canvasCtx.shadowBlur = 15;
-                    canvasCtx.shadowColor = `hsla(${p.hue}, 100%, 60%, ${p.life})`;
-                    canvasCtx.fillStyle = `hsla(${p.hue}, 100%, 80%, ${p.life})`;
-                    canvasCtx.beginPath();
-                    canvasCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-                    canvasCtx.fill();
+                    let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+                    if (p.life <= 0) { particles.splice(i, 1); continue; }
+                    canvasCtx.shadowBlur = 15; canvasCtx.shadowColor = `hsla(${p.hue}, 100%, 60%, ${p.life})`;
+                    canvasCtx.fillStyle = `hsla(${p.hue}, 100%, 80%, ${p.life})`; canvasCtx.beginPath();
+                    canvasCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); canvasCtx.fill();
                 }
                 canvasCtx.shadowBlur = 0;
-
-            } else if (visMode === 4) {
-                // 5. ENERGY STRINGS (3D-like vibrating tunnel lines)
+            } else if (visMode === 4) { // ENERGY STRINGS
                 analyser.getByteTimeDomainData(dataArray);
-                
-                const numStrings = 12;
-                canvasCtx.lineWidth = 2;
-                
+                const numStrings = 12; canvasCtx.lineWidth = 2;
                 for(let s = 0; s < numStrings; s++) {
-                    const yOffset = (s - numStrings/2) * 40;
-                    const perspective = 1 - Math.abs(s - numStrings/2) * 0.1; // Faux 3D depth
-                    
-                    canvasCtx.beginPath();
-                    // Color fades out for strings further in the "background"
-                    canvasCtx.strokeStyle = `rgba(255, 255, 255, ${0.1 + (perspective * 0.6)})`;
-                    
-                    const sliceWidth = w * 1.0 / bufferLength;
-                    let x = 0;
-
+                    const yOffset = (s - numStrings/2) * 40; const perspective = 1 - Math.abs(s - numStrings/2) * 0.1;
+                    canvasCtx.beginPath(); canvasCtx.strokeStyle = getThemeColor(s, 0.1 + (perspective * 0.6));
+                    const sliceWidth = w * 1.0 / bufferLength; let x = 0;
                     for(let i = 0; i < bufferLength; i++) {
-                        const v = dataArray[i] / 128.0;
-                        // Each string has a different phase to look like a complex vibrating surface
+                        const rawV = dataArray[i] / 128.0; const v = 1 + ((rawV - 1) * visIntensity);
                         const phase = stringPhases[s] + (performance.now() * 0.002);
-                        const vibration = Math.sin(i * 0.1 + phase) * 20 * perspective;
-                        
-                        // Combine audio wave with physical string vibration
+                        const vibration = Math.sin(i * 0.1 + phase) * 20 * perspective * visIntensity;
                         const y = (h/2) + yOffset + ((v - 1) * h * 0.2 * perspective) + vibration;
-
-                        if(i === 0) canvasCtx.moveTo(x, y);
-                        else canvasCtx.lineTo(x, y);
-                        
+                        if(i === 0) canvasCtx.moveTo(x, y); else canvasCtx.lineTo(x, y);
                         x += sliceWidth;
                     }
                     canvasCtx.stroke();
                 }
+            } else if (visMode === 5) { // NEON MATRIX (Pixel Grid)
+                analyser.getByteFrequencyData(dataArray);
+                const cols = 30; const rows = 15;
+                const cellW = w / cols; const cellH = h / rows;
+                const centerX = cols / 2; const centerY = rows / 2;
+                
+                for(let i = 0; i < cols; i++) {
+                    for(let j = 0; j < rows; j++) {
+                        // Calc distance from center to map to frequency
+                        const dist = Math.sqrt(Math.pow(i - centerX, 2) + Math.pow(j - centerY, 2));
+                        const dataIndex = Math.floor(Math.min(dist * 2, bufferLength - 1));
+                        const rawVal = dataArray[dataIndex] || 0;
+                        const value = Math.min(255, rawVal * visIntensity);
+                        
+                        if(value > 100) {
+                            const scale = (value / 255);
+                            canvasCtx.fillStyle = getThemeColor(Math.floor(dist), scale);
+                            const szW = cellW * scale * 0.8; const szH = cellH * scale * 0.8;
+                            canvasCtx.fillRect(i * cellW + (cellW - szW)/2, j * cellH + (cellH - szH)/2, szW, szH);
+                        }
+                    }
+                }
+            } else if (visMode === 6) { // HYPERSPACE GRID (3D Plane)
+                analyser.getByteTimeDomainData(dataArray);
+                const lines = 20; const spacing = w / lines;
+                canvasCtx.lineWidth = 2;
+                
+                // Draw horizontal lines moving down to simulate forward motion
+                const timeOffset = (performance.now() * 0.05) % spacing;
+                
+                for(let i = 0; i < h/spacing; i++) {
+                    const y = i * spacing + timeOffset;
+                    // Perspective scaling based on Y
+                    const perspective = Math.max(0.1, y / h); 
+                    
+                    canvasCtx.beginPath();
+                    canvasCtx.strokeStyle = getThemeColor(i, perspective);
+                    
+                    let x = 0; const step = w / bufferLength;
+                    for(let j = 0; j < bufferLength; j++) {
+                        const rawV = dataArray[j] / 128.0;
+                        const deformation = (rawV - 1) * 150 * visIntensity * (1 - perspective); 
+                        if(j === 0) canvasCtx.moveTo(x, y + deformation);
+                        else canvasCtx.lineTo(x, y + deformation);
+                        x += step;
+                    }
+                    canvasCtx.stroke();
+                }
+            } else if (visMode === 7) { // ORBITALS
+                analyser.getByteFrequencyData(dataArray);
+                canvasCtx.lineWidth = 6; canvasCtx.lineCap = 'round';
+                const time = performance.now() * 0.001;
+                
+                // Track 3 bands: bass, mid, treble
+                const bands = [
+                    { min: 0, max: 10, dir: 1, baseRadius: artRect.width/2 + 40 },
+                    { min: 20, max: 60, dir: -1, baseRadius: artRect.width/2 + 80 },
+                    { min: 100, max: 200, dir: 1, baseRadius: artRect.width/2 + 120 }
+                ];
+                
+                bands.forEach((b, index) => {
+                    let sum = 0; for(let i = b.min; i < b.max; i++) sum += dataArray[i];
+                    const avg = sum / (b.max - b.min);
+                    const val = Math.min(255, avg * visIntensity);
+                    
+                    const radOffset = (val / 255) * 40;
+                    const radius = b.baseRadius + radOffset;
+                    
+                    canvasCtx.beginPath();
+                    canvasCtx.strokeStyle = getThemeColor(index, 0.2 + (val/255)*0.8);
+                    
+                    // Creates broken arcs that spin
+                    const startAngle = time * b.dir * (1 + val/255);
+                    const arcLength = Math.PI * 1.5 * (val/255 + 0.2); // Lengthens on beat
+                    
+                    canvasCtx.arc(artCenterX, artCenterY, radius, startAngle, startAngle + arcLength);
+                    canvasCtx.stroke();
+                    
+                    // Draw a dot at the head of the orbital
+                    canvasCtx.beginPath();
+                    canvasCtx.fillStyle = 'white';
+                    canvasCtx.arc(artCenterX + Math.cos(startAngle + arcLength) * radius, artCenterY + Math.sin(startAngle + arcLength) * radius, 4, 0, Math.PI*2);
+                    canvasCtx.fill();
+                });
             }
         }
 
         async function resetApp() {
             if(confirm("Are you sure you want to reset the app? All playlists and saved data will be permanently lost. This action cannot be undone.")) {
-                
-                // Stop audio before resetting
-                audio.pause();
-                audio.src = '';
-                
-                // 1. Clear standard localStorage
+                audio.pause(); audio.src = '';
                 localStorage.clear();
-                
-                // 2. Safely wipe all IndexedDB data stored by idb-keyval library
-                try {
-                    await idbKeyval.clear();
-                } catch (e) {
-                    console.error("Failed to clear IndexedDB", e);
-                }
-                
-                // 3. Reload cleanly
+                try { await idbKeyval.clear(); } catch (e) { console.error(e); }
                 location.reload();
             }
         }
 
-        // Start
         window.onload = init;
-
     </script>
 </body>
 </html>
