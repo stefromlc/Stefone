@@ -3,36 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Primary Meta Tags -->
-<title>LocalStream</title>
-<meta name="title" content="LocalStream" />
-<meta name="description" content="A serverless, browser-based personal media center. Transform your local movie and TV show folders into a cinematic streaming experience with automated artwork, progress tracking, and a Netflix-style UI." />
-
-<!-- Favicon configuration -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22grad%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23fafafa%22%20%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23ebedff%22%20%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2250%22%20fill%3D%22url(%23grad)%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2252%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2261%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%20fill%3D%22%23ffffff%22%3E%F0%9F%8E%AC%3C%2Ftext%3E%3C%2Fsvg%3E">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
-
-<!-- Open Graph -->
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://stefone.com/localstream/" />
-<meta property="og:title" content="LocalStream" />
-<meta property="og:description" content="A serverless, browser-based personal media center. Transform your local movie and TV show folders into a cinematic streaming experience with automated artwork, progress tracking, and a Netflix-style UI." />
-<meta property="og:image" content="https://stefone.com/assets/thumbs/localstream.jpg" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="LocalStream preview" />
-
-<!-- Twitter / X -->
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="LocalStream" />
-<meta name="twitter:description" content="A serverless, browser-based personal media center. Transform your local movie and TV show folders into a cinematic streaming experience with automated artwork, progress tracking, and a Netflix-style UI." />
-<meta name="twitter:image" content="https://stefone.com/assets/thumbs/localstream.jpg" />
-
-<!-- Optional -->
-<meta name="theme-color" content="#fafafa">
+    <title>LocalStream | Personal Media Center</title>
+    
+    <!-- Meta Tags & SEO -->
+    <meta name="description" content="A cinematic, entirely local media player that runs in your browser. Auto-scans Jellyfin/Kodi structures.">
+    <meta name="theme-color" content="#141414">
+    <meta name="author" content="LocalStream">
+    
+    <!-- Code-based Inline SVG Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23e50914'/><polygon points='35,25 35,75 75,50' fill='white'/></svg>">
+    
     <style>
         /* CSS Variables & Theme */
         :root {
@@ -59,7 +39,8 @@
             -webkit-font-smoothing: antialiased;
         }
         button { cursor: pointer; border: none; outline: none; font-family: inherit; }
-        input { font-family: inherit; outline: none; }
+        input { font-family: inherit; outline: none; user-select: text; } /* Explicitly allow typing selection */
+        a { text-decoration: none; }
 
         /* Utility Classes */
         .hidden { display: none !important; }
@@ -127,24 +108,35 @@
             transition: background 0.4s ease, height 0.4s ease;
         }
         #navbar.scrolled { background: rgba(20,20,20,0.95); height: 70px; backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        .nav-left { display: flex; align-items: center; gap: 3rem; }
-        .logo { color: var(--primary-color); font-size: 2rem; font-weight: 900; letter-spacing: -1.5px; cursor: pointer; }
+        .nav-left { display: flex; align-items: center; gap: 2rem; }
+        
+        .btn-back-projects {
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); width: 40px; height: 40px; border-radius: 50%;
+            transition: all 0.2s; background: rgba(255,255,255,0.05); border: 1px solid #333;
+        }
+        .btn-back-projects:hover { background: rgba(255,255,255,0.2); color: white; transform: translateX(-3px); border-color: #555; }
+        .btn-back-projects svg { width: 22px; height: 22px; fill: currentColor; }
+        
+        .logo { color: var(--primary-color); font-size: 2rem; font-weight: 900; letter-spacing: -1.5px; cursor: pointer; margin-right: 1rem; }
         .nav-links { display: flex; gap: 1.8rem; }
         .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.95rem; transition: color 0.2s, text-shadow 0.2s; cursor: pointer; font-weight: 500; }
         .nav-links a:hover, .nav-links a.active { color: var(--text-main); font-weight: 600; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
         
-        .nav-right { display: flex; align-items: center; gap: 1.5rem; }
-        .search-box { display: flex; align-items: center; background: rgba(0,0,0,0.6); border: 1px solid #444; padding: 0.4rem 0.8rem; border-radius: 50px; transition: all 0.3s; }
+        .nav-right { display: flex; align-items: center; gap: 1rem; }
+        .search-box { display: flex; align-items: center; background: rgba(0,0,0,0.6); border: 1px solid #444; padding: 0.4rem 0.8rem; border-radius: 50px; transition: all 0.3s; margin-right: 0.5rem; }
         .search-box:focus-within { background: rgba(0,0,0,0.8); border-color: var(--text-muted); }
         .search-box input { background: transparent; border: none; color: white; width: 0; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 0; font-size: 0.9rem; }
         .search-box:focus-within input, .search-box input.active { width: 220px; padding-left: 10px; }
         .search-box svg { fill: white; width: 20px; height: 20px; cursor: pointer; }
 
-        /* Settings Dropdown */
+        /* Top Action Buttons (Settings, View Toggle) */
+        .action-btn { background: transparent; color: white; fill: white; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s; }
+        .action-btn:hover { background: rgba(255,255,255,0.1); }
+        .action-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
         .settings-container { position: relative; }
-        .settings-btn { background: transparent; fill: white; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s; }
-        .settings-btn:hover { background: rgba(255,255,255,0.1); }
-        .settings-dropdown { position: absolute; right: 0; top: 45px; background: rgba(20,20,20,0.95); border: 1px solid #333; border-radius: 8px; width: 200px; padding: 0.5rem 0; display: none; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
+        .settings-dropdown { position: absolute; right: 0; top: 50px; background: rgba(20,20,20,0.95); border: 1px solid #333; border-radius: 8px; width: 200px; padding: 0.5rem 0; display: none; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
         .settings-container:hover .settings-dropdown { display: flex; animation: fadeIn 0.2s; }
         .settings-dropdown button { background: transparent; color: var(--text-muted); padding: 0.8rem 1.2rem; text-align: left; font-size: 0.9rem; transition: all 0.2s; width: 100%; display: flex; align-items: center; gap: 10px; }
         .settings-dropdown button:hover { background: rgba(255,255,255,0.1); color: white; }
@@ -154,12 +146,38 @@
         #hero {
             position: relative; width: 100%; height: 90vh; min-height: 600px;
             background-size: cover; background-position: center top; background-color: #111;
+            transition: background-image 0.8s ease-in-out;
         }
         .hero-vignette {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--hero-gradient);
             box-shadow: inset 250px 0 300px -50px #0f0f0f;
+            z-index: 1; pointer-events: none;
         }
+        
+        /* Hero Carousel Nav */
+        .hero-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.2); border: none; color: white; font-size: 2.5rem;
+            padding: 1.5rem 0.8rem; cursor: pointer; z-index: 10; opacity: 0;
+            transition: opacity 0.3s, background 0.3s; backdrop-filter: blur(5px);
+        }
+        #hero:hover .hero-nav { opacity: 1; }
+        .hero-nav:hover { background: rgba(0,0,0,0.7); }
+        .hero-nav-left { left: 0; border-radius: 0 12px 12px 0; }
+        .hero-nav-right { right: 0; border-radius: 12px 0 0 12px; }
+        
+        .hero-indicators {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 10px; z-index: 10;
+        }
+        .hero-dot {
+            width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3);
+            cursor: pointer; transition: background 0.3s, transform 0.3s;
+        }
+        .hero-dot:hover { background: rgba(255,255,255,0.6); }
+        .hero-dot.active { background: white; transform: scale(1.3); }
+
         .hero-content {
             position: absolute; bottom: 20%; left: 4%; max-width: 650px; z-index: 2;
         }
@@ -226,10 +244,22 @@
         .progress-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: rgba(255,255,255,0.2); width: 100%; z-index: 5; }
         .progress-bar-fill { height: 100%; background: var(--primary-color); width: 0%; box-shadow: 0 0 5px var(--primary-color); }
 
+        /* Grid View Mode Override */
+        .content-container.view-grid .row-posters {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            overflow-x: hidden;
+            padding-bottom: 2rem;
+        }
+        .content-container.view-grid .card { width: 100%; margin-bottom: 10px; }
+        .content-container.view-grid .card:hover { transform: scale(1.04) translateY(-5px); z-index: 10; }
+
         /* Search Grid */
         #search-view { padding: 120px 4% 50px; display: none; }
         #search-view h2 { margin-bottom: 2rem; color: #fff; font-size: 2rem; }
         .search-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .search-grid .card { width: 100%; }
 
         /* Modal Details View */
         #details-modal {
@@ -396,11 +426,15 @@
     <div id="main-ui" class="screen hidden">
         <nav id="navbar">
             <div class="nav-left">
+                <!-- Back to Projects Button -->
+                <a href="/projects/" class="btn-back-projects" title="Back to Projects">
+                    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                </a>
                 <div class="logo" onclick="App.UI.showHome()">LocalStream</div>
                 <div class="nav-links">
                     <a class="active" onclick="App.UI.showHome()">Home</a>
-                    <a onclick="App.UI.scrollToRow('TV Shows')">Series</a>
-                    <a onclick="App.UI.scrollToRow('Movies')">Films</a>
+                    <a onclick="App.UI.scrollToRow('Series')">Series</a>
+                    <a onclick="App.UI.scrollToRow('Films')">Films</a>
                     <a onclick="App.UI.scrollToRow('My List')">My List</a>
                 </div>
             </div>
@@ -409,10 +443,19 @@
                     <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
                     <input type="text" id="search-input" placeholder="Titles, genres...">
                 </div>
+                
+                <!-- View Toggle (Grid vs Rows) -->
+                <button class="action-btn" id="btn-toggle-view" onclick="App.UI.toggleViewMode()" title="Toggle Grid/Row View">
+                    <!-- Grid Icon default -->
+                    <svg id="icon-view-grid" viewBox="0 0 24 24"><path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z"/></svg>
+                    <!-- Rows Icon hidden -->
+                    <svg id="icon-view-rows" class="hidden" viewBox="0 0 24 24"><path d="M3 4h18v4H3zm0 6h18v4H3zm0 6h18v4H3z"/></svg>
+                </button>
+
                 <!-- Settings Menu -->
                 <div class="settings-container">
-                    <button class="settings-btn">
-                        <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+                    <button class="action-btn settings-btn">
+                        <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
                     </button>
                     <div class="settings-dropdown">
                         <button onclick="App.UI.resetSetup()">
@@ -427,9 +470,14 @@
         </nav>
 
         <div id="home-view">
+            <!-- Hero Carousel -->
             <div id="hero">
                 <div class="hero-vignette"></div>
-                <div class="hero-content">
+                <!-- Carousel Arrows -->
+                <button class="hero-nav hero-nav-left" onclick="App.UI.prevHero()">❮</button>
+                <button class="hero-nav hero-nav-right" onclick="App.UI.nextHero()">❯</button>
+                
+                <div class="hero-content fade-in">
                     <div id="hero-title-container">
                         <h1 class="hero-title" id="hero-title">Welcome</h1>
                     </div>
@@ -446,8 +494,12 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- Carousel Dots -->
+                <div class="hero-indicators" id="hero-indicators"></div>
             </div>
 
+            <!-- View container. View mode classes toggled here -->
             <div class="content-container" id="rows-container">
                 <!-- Rows dynamically injected here -->
             </div>
@@ -566,6 +618,10 @@ const App = {
         history: {}, // { id: { time, duration, lastWatched } }
         mylist: {},  // { id: timestamp }
         setup: { movies: false, shows: false },
+        viewMode: 'rows', // 'rows' or 'grid'
+        heroItems: [],    // Items featured in carousel
+        heroIndex: 0,     // Current carousel index
+        heroTimer: null,  // Auto-advance timer
         objectURLs: []
     },
 
@@ -617,7 +673,6 @@ const App = {
         db: null,
         init() {
             return new Promise((resolve, reject) => {
-                // Upgrading DB version to 3 to add 'mylist' store
                 const request = indexedDB.open('LocalStreamDB', 3);
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
@@ -870,6 +925,16 @@ const App = {
         async init() {
             App.state.history = await App.DB.getAll('history') || {};
             App.state.mylist = await App.DB.getAll('mylist') || {};
+            
+            // Check for saved view mode preference
+            if(localStorage.getItem('localstream_viewmode')) {
+                App.state.viewMode = localStorage.getItem('localstream_viewmode');
+                if (App.state.viewMode === 'grid') {
+                    document.getElementById('icon-view-grid').classList.add('hidden');
+                    document.getElementById('icon-view-rows').classList.remove('hidden');
+                }
+            }
+
             document.getElementById('setup-screen').classList.remove('hidden');
             this.setupFileInputs();
         },
@@ -940,7 +1005,7 @@ const App = {
             document.getElementById('main-ui').classList.add('fade-in');
             
             this.setupNavbar();
-            this.renderHero();
+            this.setupHeroRotation();
             this.renderRows();
         },
 
@@ -957,26 +1022,30 @@ const App = {
             
             searchInput.addEventListener('input', (e) => {
                 const q = e.target.value.toLowerCase();
-                if (q.length > 1) {
+                if (q.length > 0) {
                     document.getElementById('home-view').style.display = 'none';
                     document.getElementById('search-view').style.display = 'block';
                     this.renderSearch(q);
                 } else {
-                    this.showHome();
+                    this.showHome(false); // pass false so we do NOT clear the input while typing!
                 }
             });
         },
 
-        showHome() {
+        showHome(clearSearch = true) {
             document.getElementById('home-view').style.display = 'block';
             document.getElementById('search-view').style.display = 'none';
-            document.getElementById('search-input').value = '';
+            if (clearSearch) {
+                document.getElementById('search-input').value = '';
+            }
             document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-            document.querySelector('.nav-links a').classList.add('active');
+            // Default "Home" to active
+            const homeLink = Array.from(document.querySelectorAll('.nav-links a')).find(a => a.innerText === 'Home');
+            if (homeLink) homeLink.classList.add('active');
         },
 
         scrollToRow(title) {
-            this.showHome();
+            this.showHome(true); // Clear search when navigating to a row
             const rows = document.querySelectorAll('.row-title');
             for(let r of rows) {
                 if (r.innerText === title) {
@@ -994,31 +1063,102 @@ const App = {
             }
         },
 
-        renderHero() {
+        toggleViewMode() {
+            App.state.viewMode = App.state.viewMode === 'grid' ? 'rows' : 'grid';
+            localStorage.setItem('localstream_viewmode', App.state.viewMode);
+            
+            const container = document.getElementById('rows-container');
+            if (App.state.viewMode === 'grid') {
+                container.classList.add('view-grid');
+                document.getElementById('icon-view-grid').classList.add('hidden');
+                document.getElementById('icon-view-rows').classList.remove('hidden');
+            } else {
+                container.classList.remove('view-grid');
+                document.getElementById('icon-view-grid').classList.remove('hidden');
+                document.getElementById('icon-view-rows').classList.add('hidden');
+            }
+        },
+
+        // --- Hero Carousel Functions ---
+        setupHeroRotation() {
             const allMedia = [...App.state.movies, ...App.state.shows];
             if (allMedia.length === 0) return;
-            const featured = allMedia[Math.floor(Math.random() * allMedia.length)];
+
+            // Prioritize media with both Fanart & Clearlogo for premium hero displays
+            let premium = allMedia.filter(m => m.hasFanart && m.hasClearlogo);
             
+            // If we don't have enough premium, pad with items that just have fanart
+            if (premium.length < 5) {
+                premium = [...premium, ...allMedia.filter(m => m.hasFanart && !m.hasClearlogo)];
+            }
+            
+            // Ensure uniqueness
+            premium = [...new Set(premium)];
+            
+            // Fallback to all media if no artwork found
+            if (premium.length === 0) premium = allMedia;
+
+            // Select up to 7 random items for the carousel
+            App.state.heroItems = premium.sort(() => 0.5 - Math.random()).slice(0, 7);
+            App.state.heroIndex = 0;
+            
+            this.renderHero(App.state.heroItems[App.state.heroIndex]);
+            this.startHeroTimer();
+        },
+
+        startHeroTimer() {
+            clearInterval(App.state.heroTimer);
+            App.state.heroTimer = setInterval(() => this.nextHero(), 8000); // 8 seconds per slide
+        },
+
+        nextHero() {
+            App.state.heroIndex = (App.state.heroIndex + 1) % App.state.heroItems.length;
+            this.renderHero(App.state.heroItems[App.state.heroIndex]);
+            this.startHeroTimer(); // Reset timer when manually triggered
+        },
+
+        prevHero() {
+            App.state.heroIndex = (App.state.heroIndex - 1 + App.state.heroItems.length) % App.state.heroItems.length;
+            this.renderHero(App.state.heroItems[App.state.heroIndex]);
+            this.startHeroTimer();
+        },
+
+        goToHero(idx) {
+            App.state.heroIndex = idx;
+            this.renderHero(App.state.heroItems[App.state.heroIndex]);
+            this.startHeroTimer();
+        },
+
+        renderHero(item) {
+            if (!item) return;
             const titleContainer = document.getElementById('hero-title-container');
             const heroEl = document.getElementById('hero');
+            const contentEl = document.querySelector('.hero-content');
 
-            if (featured.hasClearlogo) {
-                const logoFile = App.Scanner.filesMap.get((featured.posterId || featured.id) + '_clearlogo');
+            // Force reflow to restart fade-in animation
+            contentEl.classList.remove('fade-in');
+            void contentEl.offsetWidth; 
+            contentEl.classList.add('fade-in');
+
+            const idToUse = item.posterId || item.id;
+
+            if (item.hasClearlogo) {
+                const logoFile = App.Scanner.filesMap.get(idToUse + '_clearlogo');
                 if (logoFile) {
                     const url = URL.createObjectURL(logoFile);
                     App.state.objectURLs.push(url);
-                    titleContainer.innerHTML = `<img src="${url}" class="hero-logo-img fade-in" alt="${featured.title}">`;
+                    titleContainer.innerHTML = `<img src="${url}" class="hero-logo-img fade-in" alt="${item.title}">`;
                 }
             } else {
-                titleContainer.innerHTML = `<h1 class="hero-title fade-in" id="hero-title">${featured.title}</h1>`;
+                titleContainer.innerHTML = `<h1 class="hero-title fade-in" id="hero-title">${item.title}</h1>`;
             }
             
-            document.getElementById('hero-type').innerText = featured.type === 'show' ? 'Series' : 'Movie';
-            document.getElementById('hero-year').innerText = featured.year;
+            document.getElementById('hero-type').innerText = item.type === 'show' ? 'Series' : 'Movie';
+            document.getElementById('hero-year').innerText = item.year || '';
             
             let bgFile = null;
-            if (featured.hasFanart) bgFile = App.Scanner.filesMap.get((featured.posterId || featured.id) + '_fanart');
-            else if (featured.hasPoster) bgFile = App.Scanner.filesMap.get((featured.posterId || featured.id) + '_poster');
+            if (item.hasFanart) bgFile = App.Scanner.filesMap.get(idToUse + '_fanart');
+            else if (item.hasPoster) bgFile = App.Scanner.filesMap.get(idToUse + '_poster');
 
             if (bgFile) {
                 const url = URL.createObjectURL(bgFile);
@@ -1030,11 +1170,22 @@ const App = {
             }
 
             document.getElementById('hero-play').onclick = () => {
-                if (featured.type === 'movie') App.Player.play(featured);
-                else this.openModal(featured);
+                if (item.type === 'movie') App.Player.play(item);
+                else this.openModal(item);
             };
-            document.getElementById('hero-info').onclick = () => this.openModal(featured);
+            document.getElementById('hero-info').onclick = () => this.openModal(item);
+
+            // Update bottom indicator dots
+            const indContainer = document.getElementById('hero-indicators');
+            indContainer.innerHTML = '';
+            App.state.heroItems.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = `hero-dot ${idx === App.state.heroIndex ? 'active' : ''}`;
+                dot.onclick = () => this.goToHero(idx);
+                indContainer.appendChild(dot);
+            });
         },
+        // ------------------------------
 
         createCard(item, progress = 0) {
             const card = document.createElement('div');
@@ -1069,6 +1220,10 @@ const App = {
         renderRows() {
             const container = document.getElementById('rows-container');
             container.innerHTML = '';
+            
+            if (App.state.viewMode === 'grid') {
+                container.classList.add('view-grid');
+            }
 
             // Continue Watching Row
             const cwItems = [];
@@ -1133,7 +1288,10 @@ const App = {
             cardElements.forEach(c => posters.appendChild(c));
             
             posters.addEventListener('wheel', (e) => {
-                if(e.deltaY !== 0) { e.preventDefault(); posters.scrollLeft += e.deltaY; }
+                if (App.state.viewMode !== 'grid' && e.deltaY !== 0) {
+                    e.preventDefault(); 
+                    posters.scrollLeft += e.deltaY; 
+                }
             });
 
             container.appendChild(row);
