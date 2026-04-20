@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,7 +64,6 @@
 
 <meta name="theme-color" content="#ffffff">
 
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
@@ -473,6 +473,7 @@
         
         let currentPeaks = null;
         let contextMenuTargetSongId = null;
+        let hasCountedCurrentPlay = false;
 
         // Cover Flow State
         let currentCarouselIndex = 0;
@@ -1100,7 +1101,14 @@
             if (updateBaseIndex) { const idx = baseQueue.findIndex(s => s.id === song.id); if (idx !== -1) playingIndex = idx; }
             if (currentSongId === song.id && isPlaying && audio.src === song.url) { togglePlay(); return; }
 
+            const isNewSong = currentSongId !== song.id;
             currentSongId = song.id; audio.src = song.url;
+            
+            if (isNewSong) {
+                // Reset tracking flag for the new song
+                hasCountedCurrentPlay = false;
+            }
+
             audio.play().then(() => { if(typeof initAudioContext === 'function') initAudioContext(); }).catch(e => { if (e.name !== 'AbortError') console.error("Playback error:", e); });
             
             currentPeaks = null; updateLCD(song); renderTracklist(searchInput.value); updateVisualizerMetadata(); 
@@ -1123,17 +1131,6 @@
         }
 
         function onSongEnded() {
-            if (currentSongId) {
-                const song = allSongs.find(s => s.id === currentSongId);
-                if (song) {
-                    song.playCount = (song.playCount || 0) + 1;
-                    if (!savedMetadata[song.id]) savedMetadata[song.id] = {};
-                    savedMetadata[song.id].playCount = song.playCount;
-                    saveMetadata();
-                    
-                    if (currentViewId === 'most-played') renderTracklist();
-                }
-            }
             playNext();
         }
 
@@ -1185,6 +1182,21 @@
         function updateProgress() {
             const percent = audio.duration ? audio.currentTime / audio.duration : 0;
             timeCurrent.textContent = formatTime(audio.currentTime); drawWaveform(percent);
+            
+            // 20% Play Tracking Logic
+            if (!hasCountedCurrentPlay && percent >= 0.20 && currentSongId) {
+                hasCountedCurrentPlay = true;
+                const song = allSongs.find(s => s.id === currentSongId);
+                if (song) {
+                    song.playCount = (song.playCount || 0) + 1;
+                    if (!savedMetadata[song.id]) savedMetadata[song.id] = {};
+                    savedMetadata[song.id].playCount = song.playCount;
+                    saveMetadata();
+                    
+                    // Refresh tracklist if we are currently looking at the Most Played view
+                    if (currentViewId === 'most-played') renderTracklist();
+                }
+            }
         }
 
         function updatePlayPauseIcon() {
