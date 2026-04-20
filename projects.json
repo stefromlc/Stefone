@@ -1,10 +1,32 @@
 [
   {
+    "title": "LocalStream",
+    "slug": "localstream",
+    "description": "A serverless, browser-based personal media center. Transform your local movie and TV show folders into a cinematic streaming experience with automated artwork, progress tracking, and a Netflix-style UI.",
+    "thumbnail": "assets/thumbs/localstream.jpg",
+    "tags": [
+      "Jellyfin",
+      "Media",
+      "Netflix",
+      "Player"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-04-20",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "WebTunes",
     "slug": "webtunes",
     "description": "WebTunes Player is an iTunes-inspired browser music player. Drag and drop local audio files, build playlists, and enjoy a sleek Apple-style interface with smooth animations and built-in visualizers.",
     "thumbnail": "assets/thumbs/webtunes.jpg",
-    "tags": ["Music","Player","Visualizer","iTunes"],
+    "tags": [
+      "Music",
+      "Player",
+      "Visualizer",
+      "iTunes"
+    ],
     "category": "Apps",
     "featured": true,
     "date": "2026-04-19",
@@ -16,7 +38,14 @@
     "slug": "pitch-data-pro",
     "description": "Analyze football data with ease. Upload datasets, build betting models, and backtest strategies. Generate predictions, insights, and performance tracking from real match statistics.",
     "thumbnail": "assets/thumbs/pitch-data-pro.jpg",
-    "tags": ["AI Tools","Analyze","Data","Football","Prediction","Tools"],
+    "tags": [
+      "AI Tools",
+      "Analyze",
+      "Data",
+      "Football",
+      "Prediction",
+      "Tools"
+    ],
     "category": "Tools",
     "featured": true,
     "date": "2026-04-08",
@@ -28,7 +57,11 @@
     "slug": "pokepricer",
     "description": "Turn eBay sold listings into Pokémon card market insights. Track price trends, filter outliers, and spot profitable deals with built-in analytics and a lightweight research workspace.",
     "thumbnail": "assets/thumbs/pokepricer.jpg",
-    "tags": ["Pokemon","Tools","eBay"],
+    "tags": [
+      "Pokemon",
+      "Tools",
+      "eBay"
+    ],
     "category": "Tools",
     "featured": true,
     "date": "2026-03-12",
@@ -40,7 +73,11 @@
     "slug": "osint",
     "description": "A live OSINT dashboard for tracking global conflict signals. Monitor alerts, geospatial activity, and curated feeds with powerful search, filtering, and real-time updates.",
     "thumbnail": "assets/thumbs/osint.jpg",
-    "tags": ["Military","News","War"],
+    "tags": [
+      "Military",
+      "News",
+      "War"
+    ],
     "category": "Tools",
     "featured": true,
     "date": "2026-03-05",
@@ -52,7 +89,14 @@
     "slug": "zine-maker",
     "description": "Create printable 8-page pocket zines in minutes. Import content or build page-by-page with full control over layout, fonts, and images. Export print-ready designs to fold and share.",
     "thumbnail": "assets/thumbs/zine-maker.jpg",
-    "tags": ["Book","Booklet","Comic","Maker","Tools","Zine"],
+    "tags": [
+      "Book",
+      "Booklet",
+      "Comic",
+      "Maker",
+      "Tools",
+      "Zine"
+    ],
     "category": "Tools",
     "featured": true,
     "date": "2026-02-26",
@@ -64,7 +108,11 @@
     "slug": "wordy",
     "description": "Explore themed word search boards across tech, sci-fi, nature, and more. Smooth controls and clean animations make for a relaxed but engaging puzzle experience.",
     "thumbnail": "assets/thumbs/wordy.jpg",
-    "tags": ["Fun","Game","Wordsearch"],
+    "tags": [
+      "Fun",
+      "Game",
+      "Wordsearch"
+    ],
     "category": "Games",
     "featured": true,
     "date": "2026-02-24",
@@ -76,7 +124,12 @@
     "slug": "defend-the-uk",
     "description": "Defend the UK from an incoming fleet. Strategically deploy boats, fire cannons, and manage health and score in fast-paced, arcade-style gameplay.",
     "thumbnail": "assets/thumbs/defend-the-uk.jpg",
-    "tags": ["Defend","Fun","Game","Uk"],
+    "tags": [
+      "Defend",
+      "Fun",
+      "Game",
+      "Uk"
+    ],
     "category": "Games",
     "featured": true,
     "date": "2026-02-22",
@@ -88,7 +141,12 @@
     "slug": "currently",
     "description": "Save articles to read later, filter unread content, and search headlines quickly. Feeds are cached locally for speed and update in the background without interruptions.",
     "thumbnail": "assets/thumbs/currently.jpg",
-    "tags": ["News","RSS","Tool","Tools"],
+    "tags": [
+      "News",
+      "RSS",
+      "Tool",
+      "Tools"
+    ],
     "category": "Tools",
     "featured": false,
     "date": "2026-02-21",
@@ -100,7 +158,12 @@
     "slug": "favicon-lab",
     "description": "Design, preview, and export favicons and meta tags in one place. Create using text, shapes, or uploads, then export optimized assets and ready-to-use SEO snippets.",
     "thumbnail": "assets/thumbs/favicon-lab.jpg",
-    "tags": ["Favicon","Meta","SEO","Tags"],
+    "tags": [
+      "Favicon",
+      "Meta",
+      "SEO",
+      "Tags"
+    ],
     "category": "Apps",
     "featured": true,
     "date": "2026-02-21",
@@ -112,7 +175,14 @@
     "slug": "monster-tracker",
     "description": "Track energy drink habits in a neon dashboard. Monitor spending, stock, caffeine, and sugar while visualizing long-term impact—all stored locally in your browser.",
     "thumbnail": "assets/thumbs/monster-tracker.jpg",
-    "tags": ["App","Drink","Energy","Health","Monster","Tracker"],
+    "tags": [
+      "App",
+      "Drink",
+      "Energy",
+      "Health",
+      "Monster",
+      "Tracker"
+    ],
     "category": "Apps",
     "featured": true,
     "date": "2026-02-20",
@@ -124,7 +194,13 @@
     "slug": "abstractify",
     "description": "Generate abstract art from photos with real-time controls. Experiment with styles, remix instantly, and export high-resolution visuals directly from your browser.",
     "thumbnail": "assets/thumbs/abstractify.jpg",
-    "tags": ["Abstract","Art","Generator","Image","Tool"],
+    "tags": [
+      "Abstract",
+      "Art",
+      "Generator",
+      "Image",
+      "Tool"
+    ],
     "category": "Art",
     "featured": false,
     "date": "2026-02-16",
@@ -136,7 +212,13 @@
     "slug": "spendscope",
     "description": "Track recurring spending and visualize how habits grow over time. Explore long-term financial impact and set fun goals through an interactive reward system.",
     "thumbnail": "assets/thumbs/spendscope.jpg",
-    "tags": ["Financial","Scope","Spend","Tracker","Wealth"],
+    "tags": [
+      "Financial",
+      "Scope",
+      "Spend",
+      "Tracker",
+      "Wealth"
+    ],
     "category": "Experiments",
     "featured": true,
     "date": "2026-02-14",
@@ -148,7 +230,12 @@
     "slug": "airtouch-gallery",
     "description": "Control photos and maps with webcam gestures. Pinch, zoom, rotate, and navigate hands-free with smooth, privacy-friendly processing done locally.",
     "thumbnail": "assets/thumbs/airtouch-gallery.jpg",
-    "tags": ["Gesture Control","Hands-Free","Photo Viewer","Webcam"],
+    "tags": [
+      "Gesture Control",
+      "Hands-Free",
+      "Photo Viewer",
+      "Webcam"
+    ],
     "category": "Art",
     "featured": true,
     "date": "2026-02-10",
@@ -160,7 +247,11 @@
     "slug": "open95",
     "description": "A browser-based retro OS inspired by Windows 95. Includes a working desktop, classic apps, and a built-in marketplace with free software.",
     "thumbnail": "assets/thumbs/open95.jpg",
-    "tags": ["Nostalgia","Retro","Windows 95"],
+    "tags": [
+      "Nostalgia",
+      "Retro",
+      "Windows 95"
+    ],
     "category": "UI/UX",
     "featured": false,
     "date": "2026-02-08",
@@ -172,7 +263,13 @@
     "slug": "tune-3310",
     "description": "Create nostalgic Nokia 3310-style ringtones by tapping out melodies. A simple, playful tool inspired by classic mobile sounds.",
     "thumbnail": "assets/thumbs/tune-3310.jpg",
-    "tags": ["Fun","Nokia","Nostalgia","Retro","Ringtone Maker"],
+    "tags": [
+      "Fun",
+      "Nokia",
+      "Nostalgia",
+      "Retro",
+      "Ringtone Maker"
+    ],
     "category": "Apps",
     "featured": true,
     "date": "2026-01-25",
@@ -184,7 +281,12 @@
     "slug": "timebox",
     "description": "A cinematic 3D word clock that transforms time into a glowing visual scene. Customize motion and lighting or let it run as an ambient display.",
     "thumbnail": "assets/thumbs/timebox.jpg",
-    "tags": ["Clock","Fun","Screensaver","Tools"],
+    "tags": [
+      "Clock",
+      "Fun",
+      "Screensaver",
+      "Tools"
+    ],
     "category": "Apps",
     "featured": false,
     "date": "2026-02-13",
@@ -196,7 +298,13 @@
     "slug": "promptvault",
     "description": "Organize and reuse AI prompts in a clean, offline workspace. Search, edit, and store ideas with a distraction-free writing experience.",
     "thumbnail": "assets/thumbs/promptvault.jpg",
-    "tags": ["AI Tools","Organization","Productivity","Prompts","Writing"],
+    "tags": [
+      "AI Tools",
+      "Organization",
+      "Productivity",
+      "Prompts",
+      "Writing"
+    ],
     "category": "Tools",
     "featured": true,
     "date": "2026-02-07",
@@ -208,7 +316,14 @@
     "slug": "sonar",
     "description": "A retro naval strategy game inspired by Battleship. Use sonar pings, outsmart AI, and hunt ships in quick, tactical rounds with a CRT-style interface.",
     "thumbnail": "assets/thumbs/sonar.jpg",
-    "tags": ["Arcade","Battleships","Game","Retro","Sonar","Strategy"],
+    "tags": [
+      "Arcade",
+      "Battleships",
+      "Game",
+      "Retro",
+      "Sonar",
+      "Strategy"
+    ],
     "category": "Games",
     "featured": true,
     "date": "2026-02-07",
@@ -220,7 +335,14 @@
     "slug": "jobhunter",
     "description": "A private job-hunting dashboard with Kanban tracking, CV tools, and interview prep. Everything runs offline and stays securely on your device.",
     "thumbnail": "assets/thumbs/jobhunter.jpg",
-    "tags": ["Apps","Hunter","Job","Organization","Productivity","Tools"],
+    "tags": [
+      "Apps",
+      "Hunter",
+      "Job",
+      "Organization",
+      "Productivity",
+      "Tools"
+    ],
     "category": "Experiments",
     "featured": false,
     "date": "2026-02-16",
@@ -232,7 +354,13 @@
     "slug": "sound-canvas",
     "description": "Turn audio into customizable visual art. Adjust styles in real time and export shareable visuals with minimal effort.",
     "thumbnail": "assets/thumbs/sound-canvas.jpg",
-    "tags": ["Audio","Export","Music","Tools","Visualizer"],
+    "tags": [
+      "Audio",
+      "Export",
+      "Music",
+      "Tools",
+      "Visualizer"
+    ],
     "category": "Tools",
     "featured": false,
     "date": "2026-02-07",
@@ -244,7 +372,11 @@
     "slug": "split-pdf",
     "description": "Split PDFs directly in your browser by page count or equal parts. Fast, simple, and completely private with no uploads required.",
     "thumbnail": "assets/thumbs/split-pdf.jpg",
-    "tags": ["PDF","Productivity","Tools"],
+    "tags": [
+      "PDF",
+      "Productivity",
+      "Tools"
+    ],
     "category": "Tools",
     "featured": true,
     "date": "2026-02-07",
@@ -256,7 +388,14 @@
     "slug": "metaview",
     "description": "Preview how links appear on social and search. Edit titles, descriptions, and images live, then export clean, copy-ready meta tags.",
     "thumbnail": "assets/thumbs/metaview.jpg",
-    "tags": ["Audit","Productivity","SEO","Social Preview","Tools","Web"],
+    "tags": [
+      "Audit",
+      "Productivity",
+      "SEO",
+      "Social Preview",
+      "Tools",
+      "Web"
+    ],
     "category": "Tools",
     "featured": false,
     "date": "2026-02-08",
@@ -268,7 +407,13 @@
     "slug": "lifestats",
     "description": "Turn your age into relatable stats like heartbeats, sleep, and steps. A playful way to visualize time and make abstract numbers feel real.",
     "thumbnail": "assets/thumbs/lifestats.jpg",
-    "tags": ["Data","Interactive","Life","Reflection","Time"],
+    "tags": [
+      "Data",
+      "Interactive",
+      "Life",
+      "Reflection",
+      "Time"
+    ],
     "category": "Apps",
     "featured": false,
     "date": "2026-02-08",
@@ -280,7 +425,13 @@
     "slug": "streampack",
     "description": "A self-hosted tool for organizing shows and movies onto USB storage. Auto-group episodes, manage queues, and track space usage with ease.",
     "thumbnail": "assets/thumbs/streampack.jpg",
-    "tags": ["File","Jellyfin","Manager","Media","Tools"],
+    "tags": [
+      "File",
+      "Jellyfin",
+      "Manager",
+      "Media",
+      "Tools"
+    ],
     "category": "Tools",
     "featured": false,
     "date": "2026-02-13",
