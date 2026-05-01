@@ -1,5 +1,17 @@
 [
   {
+    "title": "Wiki Rabbit Hole",
+    "slug": "wiki-rabbit-hole",
+    "description": "Wiki Rabbit Hole is an interactive tool that maps the shortest path between any two Wikipedia topics via bidirectional traversal. It features a dynamic knowledge graph, node expansion, and search suggestions, helping users visualize connections within human knowledge.",
+    "thumbnail": "assets/thumbs/wiki-rabbit-hole.jpg",
+    "tags": [],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-05-01",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "LocalStream",
     "slug": "localstream",
     "description": "A serverless, browser-based personal media center. Transform your local movie and TV show folders into a cinematic streaming experience with automated artwork, progress tracking, and a Netflix-style UI.",
