@@ -3,52 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="theme-color" content="#040812">
+    <meta name="theme-color" content="#030711">
+    
+    <!-- Rich Sharing / Open Graph Meta Tags -->
     <title>Wiki Rabbit Hole — Map Human Knowledge</title>
     <meta name="description" content="Discover the hidden connections between any two Wikipedia articles. Bidirectional traversal maps the shortest path across human knowledge.">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕳️</text></svg>">
+    <meta property="og:title" content="Wiki Rabbit Hole — Map Human Knowledge">
+    <meta property="og:description" content="Discover the hidden connections between any two Wikipedia articles. Bidirectional traversal maps the shortest path across human knowledge.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&auto=format&fit=crop">
+    <meta name="twitter:card" content="summary_large_image">
 
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕳️</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        display: ['Syne', 'system-ui', 'sans-serif'],
-                        body: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        cyan: { 400: '#22d3ee', 500: '#06b6d4' },
-                        void: '#040812',
-                    }
-                }
-            }
-        }
-    </script>
-
     <style>
         :root {
-            --bg-void: #040812;
-            --bg-deep: #070e1f;
-            --bg-surface: #0d1629;
-            --bg-raised: #132035;
-            --border-dim: rgba(255,255,255,0.06);
-            --border-bright: rgba(34,211,238,0.3);
-            --accent-cyan: #22d3ee;
-            --accent-rose: #f43f5e;
-            --accent-violet: #a78bfa;
-            --accent-amber: #fbbf24;
-            --text-primary: #f0f6ff;
-            --text-secondary: #8899b4;
-            --text-dim: #445060;
+            --bg-void:    #030711;
+            --bg-deep:    #060d1e;
+            --bg-surface: #0b1528;
+            --bg-raised:  #111e36;
+            --bg-card:    #0e1a30;
+
+            --border-dim:    rgba(255,255,255,0.05);
+            --border-mid:    rgba(255,255,255,0.1);
+            --border-bright: rgba(79,209,255,0.3);
+
+            --accent-primary: #4fd1ff;
+            --accent-rose:    #ff4f7b;
+            --accent-violet:  #a78bfa;
+            --accent-amber:   #fbbf24;
+            --accent-emerald: #34d399;
+
+            --text-primary:   #eef4ff;
+            --text-secondary: #7b90b8;
+            --text-dim:       #3a4d68;
+            --text-muted:     #1e2d45;
+
+            /* Category colors */
+            --cat-science:   #06b6d4;
+            --cat-tech:      #3b82f6;
+            --cat-history:   #f59e0b;
+            --cat-arts:      #ec4899;
+            --cat-geo:       #10b981;
+            --cat-people:    #f97316;
+            --cat-math:      #8b5cf6;
+            --cat-sports:    #84cc16;
+            --cat-default:   #64748b;
         }
 
-        *, *::before, *::after { box-sizing: border-box; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             background-color: var(--bg-void);
@@ -58,79 +64,104 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ── Scrollbar ─────────────────────────────────────── */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1e2d48; border-radius: 99px; }
-        ::-webkit-scrollbar-thumb:hover { background: #2a3f60; }
+        ::-webkit-scrollbar-thumb { background: #1a2a42; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #243650; }
 
-        /* ── Glass ─────────────────────────────────────────── */
+        /* ── Glass ── */
         .glass {
-            background: rgba(13, 22, 41, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(11, 21, 40, 0.72);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid var(--border-dim);
         }
         .glass-bright {
-            background: rgba(13, 22, 41, 0.85);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(34,211,238,0.15);
-            box-shadow: 0 0 30px rgba(34,211,238,0.05), inset 0 1px 0 rgba(255,255,255,0.05);
+            background: rgba(11, 21, 40, 0.88);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(79,209,255,0.12);
+            box-shadow: 0 0 40px rgba(79,209,255,0.04), inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
         }
 
-        /* ── Input ──────────────────────────────────────────── */
+        /* ── Input ── */
         .input-field {
-            background: rgba(19, 32, 53, 0.6);
-            border: 1px solid rgba(68, 80, 96, 0.5);
-            transition: all 0.25s ease;
+            background: rgba(17, 30, 54, 0.7);
+            border: 1px solid rgba(58, 77, 104, 0.5);
+            transition: all 0.2s ease;
         }
         .input-field:focus-within {
-            background: rgba(19, 32, 53, 0.9);
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 0 3px rgba(34,211,238,0.12), 0 0 20px rgba(34,211,238,0.08);
+            background: rgba(17, 30, 54, 0.95);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(79,209,255,0.1), 0 0 20px rgba(79,209,255,0.06);
         }
 
-        /* ── Autocomplete ──────────────────────────────────── */
+        /* ── Autocomplete ── */
         .autocomplete-dropdown {
             position: absolute;
-            top: calc(100% + 6px);
+            top: calc(100% + 5px);
             left: 0; right: 0;
-            max-height: 220px;
+            max-height: 200px;
             overflow-y: auto;
             z-index: 50;
         }
 
-        /* ── Button styles ─────────────────────────────────── */
+        /* ── Buttons ── */
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent-cyan) 0%, #0ea5e9 100%);
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #2196f3 100%);
             color: #020c1b;
             font-family: 'Syne', sans-serif;
             font-weight: 700;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.03em;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 20px rgba(34,211,238,0.25);
+            box-shadow: 0 4px 24px rgba(79,209,255,0.2);
         }
-        .btn-primary:hover {
-            box-shadow: 0 6px 30px rgba(34,211,238,0.4);
-            transform: translateY(-1px);
-        }
+        .btn-primary:hover { box-shadow: 0 6px 36px rgba(79,209,255,0.35); transform: translateY(-1px); }
         .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
         .btn-secondary {
             background: var(--bg-raised);
-            border: 1px solid rgba(68,80,96,0.6);
+            border: 1px solid rgba(58,77,104,0.6);
             color: var(--text-secondary);
             transition: all 0.2s ease;
         }
-        .btn-secondary:hover {
-            border-color: var(--accent-cyan);
-            color: var(--accent-cyan);
-            background: rgba(34,211,238,0.05);
+        .btn-secondary:hover { border-color: var(--accent-primary); color: var(--accent-primary); background: rgba(79,209,255,0.05); }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--border-dim);
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+        }
+        .btn-ghost:hover { border-color: var(--border-mid); color: var(--text-primary); background: rgba(255,255,255,0.03); }
+
+        /* ── Mode toggle ── */
+        .mode-tab {
+            flex: 1; padding: 6px 10px;
+            border-radius: 7px;
+            font-size: 11px; font-weight: 600;
+            font-family: 'Syne', sans-serif;
+            letter-spacing: 0.02em;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border: none; background: transparent;
+        }
+        .mode-tab.active {
+            background: var(--accent-primary);
+            color: #020c1b;
+            box-shadow: 0 2px 12px rgba(79,209,255,0.3);
         }
 
-        /* ── Vis.js ─────────────────────────────────────────── */
+        /* ── Vis.js ── */
         .vis-network:focus { outline: none; }
         .vis-manipulation {
-            background: rgba(13,22,41,0.95) !important;
+            background: rgba(11,21,40,0.97) !important;
             border: 1px solid var(--border-dim) !important;
             border-top: none !important;
             color: var(--text-primary) !important;
@@ -139,1515 +170,1913 @@
             padding: 4px !important;
         }
         .vis-manipulation .vis-button:hover {
-            background: rgba(34,211,238,0.1) !important;
-            box-shadow: none !important;
-            border-radius: 6px;
+            background: rgba(79,209,255,0.08) !important;
+            box-shadow: none !important; border-radius: 6px;
         }
         .vis-manipulation .vis-button .vis-label {
             color: var(--text-primary) !important;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 12px;
+            font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px;
         }
 
-        /* ── Tooltip ─────────────────────────────────────────── */
+        /* ── Tooltip ── */
         #custom-tooltip {
-            background: rgba(7, 14, 31, 0.97);
-            border: 1px solid rgba(34,211,238,0.2);
-            backdrop-filter: blur(16px);
+            background: rgba(6,13,30,0.98);
+            border: 1px solid rgba(79,209,255,0.18);
+            backdrop-filter: blur(20px);
             max-width: 300px;
             pointer-events: none;
             z-index: 100;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,211,238,0.05);
+            box-shadow: 0 12px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(79,209,255,0.04);
         }
 
-        /* ── Canvas background ──────────────────────────────── */
+        /* ── Canvas bg ── */
         .canvas-bg {
             background-image:
-                linear-gradient(rgba(34,211,238,0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(34,211,238,0.025) 1px, transparent 1px);
-            background-size: 50px 50px;
-            background-position: center center;
+                linear-gradient(rgba(79,209,255,0.018) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79,209,255,0.018) 1px, transparent 1px);
+            background-size: 48px 48px;
         }
 
-        /* ── Animations ─────────────────────────────────────── */
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; } to { opacity: 1; }
-        }
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateY(12px) scale(0.92); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes toastOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.92); }
-        }
-        @keyframes spinGlow {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(34,211,238,0.4); }
-            50% { box-shadow: 0 0 0 8px rgba(34,211,238,0); }
-        }
-        @keyframes floatDot {
-            0%, 100% { transform: translateY(0); opacity: 0.5; }
-            50% { transform: translateY(-8px); opacity: 1; }
-        }
-        @keyframes shimmer {
-            0% { background-position: -200% center; }
-            100% { background-position: 200% center; }
-        }
-        @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100vh); }
-        }
+        /* ── Animations ── */
+        @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
+        @keyframes toastIn  { from { opacity:0; transform:translateY(10px) scale(0.94); } to { opacity:1; transform:translateY(0) scale(1); } }
+        @keyframes toastOut { from { opacity:1; transform:scale(1); } to { opacity:0; transform:scale(0.92); } }
+        @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(79,209,255,0.5); } 50% { box-shadow: 0 0 0 7px rgba(79,209,255,0); } }
+        @keyframes floatDot { 0%,100% { transform:translateY(0); opacity:0.5; } 50% { transform:translateY(-7px); opacity:1; } }
+        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+        @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+        
+        .animate-fadeup { animation: fadeUp 0.38s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .animate-fadein { animation: fadeIn 0.38s ease forwards; }
 
-        .animate-fadeup { animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
-        .animate-fadein { animation: fadeIn 0.4s ease forwards; }
-
-        /* ── Pulse dot ──────────────────────────────────────── */
+        /* ── Pulse dot ── */
         .pulse-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: var(--accent-cyan);
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--accent-primary);
             animation: pulseGlow 2s ease-in-out infinite;
         }
+        .pulse-dot.rose { background: var(--accent-rose); animation: none; }
 
-        /* ── Shimmer loader ─────────────────────────────────── */
-        .shimmer {
-            background: linear-gradient(90deg, var(--bg-raised) 25%, rgba(34,211,238,0.08) 50%, var(--bg-raised) 75%);
-            background-size: 200% auto;
-            animation: shimmer 1.8s linear infinite;
-        }
-
-        /* ── Progress bar ───────────────────────────────────── */
+        /* ── Progress bar ── */
         .progress-bar {
             height: 2px;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-violet));
-            transition: width 0.3s ease;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-violet));
+            transition: width 0.35s ease;
             border-radius: 99px;
         }
 
-        /* ── Glow line (header separator) ───────────────────── */
-        .glow-line {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(34,211,238,0.4), transparent);
-        }
+        /* ── Glow line ── */
+        .glow-line { height: 1px; background: linear-gradient(90deg, transparent, rgba(79,209,255,0.35), transparent); }
 
-        /* ── Node legend ─────────────────────────────────────── */
-        .legend-dot {
-            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-        }
-
-        /* ── Ad placeholder ─────────────────────────────────── */
-        .ad-slot {
-            border: 1px dashed rgba(68,80,96,0.4);
-            border-radius: 12px;
-            position: relative;
-            overflow: hidden;
-        }
-        .ad-slot::before {
-            content: 'AD';
-            position: absolute;
-            top: 6px; right: 8px;
-            font-size: 9px;
-            letter-spacing: 0.1em;
-            color: var(--text-dim);
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .ad-slot-inner {
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            gap: 6px;
-            color: var(--text-dim);
-        }
-
-        /* ── Path step connector ─────────────────────────────── */
+        /* ── Path step ── */
         .path-step:not(:last-child)::after {
-            content: '';
-            display: block;
-            width: 1px;
-            height: 20px;
-            background: linear-gradient(to bottom, rgba(34,211,238,0.3), transparent);
-            margin: 0 auto;
+            content:''; display:block; width:1px; height:24px;
+            background: linear-gradient(to bottom, rgba(79,209,255,0.25), transparent);
+            margin: 4px auto;
         }
 
-        /* ── Badge ───────────────────────────────────────────── */
-        .badge {
-            font-family: 'Syne', sans-serif;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            padding: 2px 8px;
-            border-radius: 99px;
+        /* ── Badge ── */
+        .badge { font-family:'Syne',sans-serif; font-size:9px; font-weight:700; letter-spacing:0.06em; padding:2px 7px; border-radius:99px; }
+        .diff-easy   { background:rgba(52,211,153,0.12); color:#34d399; border:1px solid rgba(52,211,153,0.25); }
+        .diff-medium { background:rgba(251,191,36,0.12); color:#fbbf24; border:1px solid rgba(251,191,36,0.25); }
+        .diff-hard   { background:rgba(255,79,123,0.12); color:#ff4f7b; border:1px solid rgba(255,79,123,0.25); }
+
+        /* ── KBD ── */
+        .kbd { display:inline-flex; align-items:center; background:var(--bg-raised); border:1px solid rgba(58,77,104,0.6); border-radius:4px; padding:1px 5px; font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-secondary); }
+
+        /* ── Modal ── */
+        .modal-overlay { background:rgba(3,7,17,0.88); backdrop-filter:blur(10px); }
+
+        /* ── Sidebar scroll ── */
+        .sidebar-scroll { scrollbar-width:none; }
+        .sidebar-scroll::-webkit-scrollbar { display:none; }
+
+        /* ── Stat ── */
+        .stat-value { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; color:var(--accent-primary); line-height:1; }
+        .stat-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.09em; font-family:'JetBrains Mono',monospace; }
+
+        /* ── Toolbar ── */
+        .toolbar-btn { padding:7px; color:var(--text-secondary); border-radius:8px; transition:all 0.15s ease; display:flex; align-items:center; justify-content:center; }
+        .toolbar-btn:hover { color:var(--accent-primary); background:rgba(79,209,255,0.08); }
+        .toolbar-btn.active { color:var(--accent-primary); background:rgba(79,209,255,0.12); }
+        .toolbar-divider { width:1px; height:18px; background:var(--border-dim); margin:0 2px; }
+
+        /* ── Section header ── */
+        .section-label {
+            font-family:'JetBrains Mono',monospace;
+            font-size:9px; text-transform:uppercase; letter-spacing:0.1em;
+            color:var(--text-dim);
         }
 
-        /* ── Difficulty badges ───────────────────────────────── */
-        .diff-easy   { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
-        .diff-medium { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
-        .diff-hard   { background: rgba(244,63,94,0.15);  color: #f43f5e; border: 1px solid rgba(244,63,94,0.3); }
-
-        /* ── Keyboard shortcut chips ─────────────────────────── */
-        .kbd {
-            display: inline-flex; align-items: center;
-            background: var(--bg-raised);
-            border: 1px solid rgba(68,80,96,0.6);
-            border-radius: 5px;
-            padding: 1px 5px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            color: var(--text-secondary);
+        /* ── Snippet highlight ── */
+        .snippet-highlight {
+            background: rgba(79,209,255,0.18);
+            color: var(--accent-primary);
+            border-radius: 3px;
+            padding: 0 2px;
+            font-weight: 600;
         }
 
-        /* ── Floating dots (empty state) ─────────────────────── */
-        .float-orb {
-            position: absolute;
+        /* ── Float orbs ── */
+        .float-orb { position:absolute; border-radius:50%; filter:blur(70px); opacity:0.06; pointer-events:none; }
+
+        /* ── Spin loader ── */
+        .spin-loader {
+            width:14px; height:14px;
+            border: 2px solid rgba(79,209,255,0.2);
+            border-top-color: var(--accent-primary);
             border-radius: 50%;
-            filter: blur(60px);
-            opacity: 0.08;
-            pointer-events: none;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
         }
 
-        /* ── Modal overlay ───────────────────────────────────── */
-        .modal-overlay {
-            background: rgba(4,8,18,0.85);
-            backdrop-filter: blur(8px);
+        /* ── Export badge ── */
+        .export-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 10px; border-radius: 7px;
+            font-size: 10px; font-family: 'Syne',sans-serif; font-weight:700; letter-spacing:0.04em;
+            cursor: pointer; transition: all 0.15s ease;
         }
+        .export-btn-md {
+            background: rgba(167,139,250,0.1); color: var(--accent-violet);
+            border: 1px solid rgba(167,139,250,0.25);
+        }
+        .export-btn-md:hover { background: rgba(167,139,250,0.18); }
+        .export-btn-json {
+            background: rgba(251,191,36,0.1); color: var(--accent-amber);
+            border: 1px solid rgba(251,191,36,0.25);
+        }
+        .export-btn-json:hover { background: rgba(251,191,36,0.18); }
 
-        /* ── Line clamp ──────────────────────────────────────── */
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .line-clamp-3 {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
+        /* ── Category legend item ── */
+        .cat-legend-item { display:flex; align-items:center; gap:6px; font-size:10px; color:var(--text-secondary); }
+        .cat-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
-        /* ── Sidebar scroll ──────────────────────────────────── */
-        .sidebar-scroll {
-            scrollbar-width: none;
-        }
-        .sidebar-scroll::-webkit-scrollbar { display: none; }
-
-        /* ── Stats counter ───────────────────────────────────── */
-        .stat-value {
-            font-family: 'Syne', sans-serif;
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--accent-cyan);
-            line-height: 1;
-        }
-        .stat-label {
-            font-size: 10px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* ── Toolbar button ──────────────────────────────────── */
-        .toolbar-btn {
-            padding: 7px;
-            color: var(--text-secondary);
-            border-radius: 8px;
-            transition: all 0.15s ease;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .toolbar-btn:hover {
-            color: var(--accent-cyan);
-            background: rgba(34,211,238,0.08);
-        }
-        .toolbar-btn.active {
-            color: var(--accent-cyan);
-            background: rgba(34,211,238,0.12);
-        }
-        .toolbar-divider {
-            width: 1px;
-            height: 20px;
-            background: var(--border-dim);
-            margin: 0 2px;
+        /* ── Node count badge on legend ── */
+        .cat-count {
+            margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--text-dim);
         }
     </style>
 </head>
 
 <body class="flex flex-col min-h-screen">
 
-    <!-- ═══════════════════════════════════════════════════════ HEADER -->
-    <header class="sticky top-0 z-40 border-b border-white/[0.06]"
-            style="background: rgba(4,8,18,0.92); backdrop-filter: blur(20px);">
-        <div class="max-w-screen-2xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header class="sticky top-0 z-40 border-b"
+        style="background:rgba(3,7,17,0.94); backdrop-filter:blur(24px); border-color:var(--border-dim);">
+    <div class="max-w-screen-2xl mx-auto px-4 md:px-6 h-13 flex items-center justify-between gap-4" style="height:52px;">
 
-            <!-- Logo -->
-            <div class="flex items-center gap-3 flex-shrink-0">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center relative overflow-hidden"
-                     style="background: linear-gradient(135deg, #22d3ee, #6366f1);">
-                    <i data-lucide="route" class="w-4 h-4 text-white relative z-10"></i>
-                </div>
-                <div class="hidden sm:block">
-                    <span class="font-display font-800 text-white text-lg leading-none tracking-tight" style="font-family:'Syne',sans-serif; font-weight:800;">
-                        Wiki<span style="color: var(--accent-cyan);">Rabbit</span>Hole
-                    </span>
-                </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <a href="/projects/" class="toolbar-btn gap-1.5 px-2 text-xs" style="text-decoration:none;" title="Back to Projects">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </a>
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center relative overflow-hidden"
+                 style="background:linear-gradient(135deg,#4fd1ff,#6366f1); margin-left: 4px;">
+                <i data-lucide="route" class="w-4 h-4 text-white relative z-10"></i>
             </div>
-
-            <!-- Center: Progress bar (visible during search) -->
-            <div id="header-progress" class="flex-1 max-w-xs mx-auto hidden">
-                <div class="h-1 bg-white/5 rounded-full overflow-hidden">
-                    <div id="progress-fill" class="progress-bar" style="width:0%"></div>
-                </div>
-                <p id="header-status" class="text-center text-xs mt-1" style="color:var(--text-dim); font-family:'JetBrains Mono',monospace;">Traversing...</p>
-            </div>
-
-            <!-- Nav -->
-            <nav class="flex items-center gap-1">
-                <button onclick="ShortcutsModal.show()"
-                        class="toolbar-btn text-xs gap-1.5 px-3"
-                        title="Keyboard Shortcuts">
-                    <i data-lucide="keyboard" class="w-4 h-4"></i>
-                    <span class="hidden md:block text-xs" style="font-family:'JetBrains Mono',monospace;">Shortcuts</span>
-                </button>
-                <div class="toolbar-divider"></div>
-                <button onclick="CookieManager.showBanner()" class="toolbar-btn px-3 gap-1.5 text-xs">
-                    <i data-lucide="shield" class="w-4 h-4"></i>
-                    <span class="hidden md:block">Privacy</span>
-                </button>
-                <a href="#" class="toolbar-btn px-3 gap-1.5 text-xs">
-                    <i data-lucide="info" class="w-4 h-4"></i>
-                    <span class="hidden md:block">About</span>
-                </a>
-            </nav>
+            <span class="hidden sm:block font-display font-800 text-white text-base leading-none tracking-tight"
+                  style="font-family:'Syne',sans-serif; font-weight:800;">
+                Wiki<span style="color:var(--accent-primary);">Rabbit</span>Hole
+            </span>
         </div>
-        <div class="glow-line"></div>
-    </header>
 
-    <!-- ═══════════════════════════════════════════════════════ MAIN LAYOUT -->
-    <main class="flex-1 flex flex-col lg:flex-row w-full max-w-screen-2xl mx-auto overflow-hidden" style="height: calc(100vh - 56px);">
+        <!-- Progress -->
+        <div id="header-progress" class="flex-1 max-w-sm mx-auto hidden">
+            <div class="h-0.5 bg-white/5 rounded-full overflow-hidden">
+                <div id="progress-fill" class="progress-bar" style="width:0%"></div>
+            </div>
+            <p id="header-status" class="text-center text-[10px] mt-1 font-mono"
+               style="color:var(--text-dim);font-family:'JetBrains Mono',monospace;">Traversing...</p>
+        </div>
 
-        <!-- ════════════════════════════════════ LEFT SIDEBAR -->
-        <aside class="w-full lg:w-[400px] flex-shrink-0 flex flex-col border-r"
-               style="border-color: var(--border-dim); background: var(--bg-deep); overflow: hidden;">
-            <div class="flex-1 overflow-y-auto sidebar-scroll p-5 space-y-5">
+        <nav class="flex items-center gap-1">
+            <button onclick="ShortcutsModal.show()" class="toolbar-btn gap-1.5 px-3 text-xs">
+                <i data-lucide="keyboard" class="w-4 h-4"></i>
+                <span class="hidden md:block" style="font-family:'JetBrains Mono',monospace; font-size:11px;">Shortcuts</span>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button onclick="CookieManager.showBanner()" class="toolbar-btn px-3 gap-1.5 text-xs">
+                <i data-lucide="shield" class="w-4 h-4"></i>
+                <span class="hidden md:block" style="font-size:11px;">Privacy</span>
+            </button>
+        </nav>
+    </div>
+    <div class="glow-line"></div>
+</header>
 
-                <!-- Hero copy -->
-                <div class="pt-1">
-                    <h2 class="text-xl font-800 leading-tight mb-1" style="font-family:'Syne',sans-serif; font-weight:800;">
-                        Explore Knowledge<br>
-                        <span style="color: var(--accent-cyan);">Connections</span>
-                    </h2>
-                    <p class="text-xs leading-relaxed" style="color: var(--text-secondary);">
-                        Bidirectional BFS traversal finds the shortest path between any two Wikipedia articles.
-                    </p>
-                </div>
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main class="flex-1 flex flex-col lg:flex-row w-full max-w-screen-2xl mx-auto overflow-hidden"
+      style="height:calc(100vh - 52px);">
 
-                <!-- ─── SEARCH FORM ──────────────────────── -->
-                <form id="app-form" autocomplete="off" class="space-y-3">
+    <!-- ══════ LEFT SIDEBAR ══════ -->
+    <aside class="w-full lg:w-[390px] flex-shrink-0 flex flex-col border-r relative z-30"
+           style="border-color:var(--border-dim); background:var(--bg-deep); overflow:hidden;">
+        <div class="flex-1 overflow-y-auto sidebar-scroll" style="padding:18px; display:flex; flex-direction:column; gap:16px;">
 
-                    <!-- Origin -->
-                    <div class="relative" style="z-index: 22;">
-                        <label class="text-[10px] font-700 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"
-                               style="font-family:'Syne',sans-serif; color: var(--accent-cyan);">
-                            <i data-lucide="circle-dot" class="w-3 h-3"></i> Origin
-                        </label>
-                        <div class="input-field rounded-xl flex items-center px-4 py-3 gap-3">
-                            <input type="text" id="input-start" placeholder="e.g., Quantum Computing"
-                                   class="flex-1 bg-transparent border-none focus:outline-none text-sm"
-                                   style="color: var(--text-primary); font-family:'Plus Jakarta Sans',sans-serif;"
-                                   required>
-                            <button type="button" id="btn-clear-start" class="hidden opacity-50 hover:opacity-100 transition-opacity"
-                                    onclick="document.getElementById('input-start').value=''; this.classList.add('hidden');">
-                                <i data-lucide="x" class="w-3.5 h-3.5" style="color: var(--text-secondary);"></i>
-                            </button>
-                        </div>
-                        <ul id="autocomplete-start"
-                            class="autocomplete-dropdown hidden glass rounded-xl shadow-2xl border overflow-hidden"
-                            style="border-color: rgba(34,211,238,0.15);"></ul>
-                    </div>
+            <!-- Hero -->
+            <div class="pt-1">
+                <h2 style="font-family:'Syne',sans-serif; font-weight:800; font-size:18px; line-height:1.25; margin-bottom:5px;">
+                    Explore Knowledge<br>
+                    <span style="color:var(--accent-primary);">Connections</span>
+                </h2>
+                <p style="font-size:11px; color:var(--text-secondary); line-height:1.6;">
+                    Map the optimal semantic paths between any two topics across human knowledge.
+                </p>
+            </div>
 
-                    <!-- Swap / connector -->
-                    <div class="flex items-center justify-center gap-3 -my-1 relative z-0 pointer-events-none">
-                        <div class="flex-1 h-px" style="background: linear-gradient(to right, transparent, var(--border-dim));"></div>
-                        <button type="button"
-                                class="pointer-events-auto w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                                style="background: var(--bg-raised); border: 1px solid rgba(68,80,96,0.5);"
-                                onclick="AppController.swapInputs()" title="Swap origin and destination">
-                            <i data-lucide="arrow-up-down" class="w-3.5 h-3.5" style="color: var(--text-secondary);"></i>
-                        </button>
-                        <div class="flex-1 h-px" style="background: linear-gradient(to left, transparent, var(--border-dim));"></div>
-                    </div>
+            <!-- ── SEARCH FORM ── -->
+            <form id="app-form" autocomplete="off" style="display:flex; flex-direction:column; gap:10px;">
 
-                    <!-- Destination -->
-                    <div class="relative" style="z-index: 20;">
-                        <label class="text-[10px] font-700 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"
-                               style="font-family:'Syne',sans-serif; color: var(--accent-rose);">
-                            <i data-lucide="map-pin" class="w-3 h-3"></i> Destination
-                        </label>
-                        <div class="input-field rounded-xl flex items-center px-4 py-3 gap-3">
-                            <input type="text" id="input-end" placeholder="e.g., Banana"
-                                   class="flex-1 bg-transparent border-none focus:outline-none text-sm"
-                                   style="color: var(--text-primary); font-family:'Plus Jakarta Sans',sans-serif;"
-                                   required>
-                            <button type="button" id="btn-clear-end" class="hidden opacity-50 hover:opacity-100 transition-opacity"
-                                    onclick="document.getElementById('input-end').value=''; this.classList.add('hidden');">
-                                <i data-lucide="x" class="w-3.5 h-3.5" style="color: var(--text-secondary);"></i>
-                            </button>
-                        </div>
-                        <ul id="autocomplete-end"
-                            class="autocomplete-dropdown hidden glass rounded-xl shadow-2xl border overflow-hidden"
-                            style="border-color: rgba(244,63,94,0.15);"></ul>
-                    </div>
-
-                    <!-- Action buttons -->
-                    <div class="flex gap-2 pt-1">
-                        <button type="submit" id="btn-search"
-                                class="btn-primary flex-1 py-3 rounded-xl flex items-center justify-center gap-2 text-sm">
-                            <i data-lucide="radar" class="w-4 h-4"></i>
-                            <span style="font-family:'Syne',sans-serif; font-weight:700;">Traverse</span>
-                        </button>
-                        <button type="button" id="btn-random" title="Random pair (R)"
-                                class="btn-secondary w-11 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <i data-lucide="dices" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-
-                    <button type="button" id="btn-cancel"
-                            class="hidden w-full py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-all"
-                            style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2); color: var(--accent-rose);">
-                        <i data-lucide="x-circle" class="w-4 h-4"></i>
-                        <span>Abort Traversal</span>
-                    </button>
-
-                    <!-- Keyboard hint -->
-                    <p class="text-center text-[10px]" style="color: var(--text-dim); font-family:'JetBrains Mono',monospace;">
-                        <kbd class="kbd">⌘ Enter</kbd> to search · <kbd class="kbd">R</kbd> for random · <kbd class="kbd">Esc</kbd> to cancel
-                    </p>
-                </form>
-
-                <!-- ─── INSPIRE CHIPS ─────────────────────── -->
+                <!-- Mode toggle -->
                 <div>
-                    <p class="text-[10px] uppercase tracking-widest mb-2" style="color: var(--text-dim); font-family:'JetBrains Mono',monospace;">
-                        Try these →
-                    </p>
-                    <div class="flex flex-wrap gap-1.5" id="inspire-chips"></div>
-                </div>
-
-                <!-- ─── STATUS PANEL ───────────────────────── -->
-                <div id="status-panel" class="hidden glass-bright rounded-xl p-4 animate-fadeup">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2">
-                            <div class="pulse-dot"></div>
-                            <span id="status-msg" class="text-xs font-500" style="font-family:'JetBrains Mono',monospace; color: var(--accent-cyan);">Initialising...</span>
-                        </div>
-                        <span id="status-depth" class="text-[10px]" style="color: var(--text-dim); font-family:'JetBrains Mono',monospace;">Depth: 0</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="rounded-lg p-3 text-center" style="background: var(--bg-void);">
-                            <div class="stat-value" id="stat-time">0.0s</div>
-                            <div class="stat-label mt-1">Elapsed</div>
-                        </div>
-                        <div class="rounded-lg p-3 text-center" style="background: var(--bg-void);">
-                            <div class="stat-value" id="stat-nodes">0</div>
-                            <div class="stat-label mt-1">Nodes</div>
-                        </div>
-                    </div>
-                    <div class="mt-3 h-0.5 rounded-full overflow-hidden" style="background: rgba(255,255,255,0.05);">
-                        <div id="status-progress" class="progress-bar h-full" style="width: 5%; transition: width 0.5s ease;"></div>
+                    <p class="section-label" style="margin-bottom:6px;">Traversal Mode</p>
+                    <div class="input-field" style="border-radius:10px; padding:4px; display:flex; gap:2px;">
+                        <button type="button" class="mode-tab active" id="mode-shortest" onclick="AppController.setMode('shortest')">
+                            Shortest
+                        </button>
+                        <button type="button" class="mode-tab" id="mode-thematic" onclick="AppController.setMode('thematic')">
+                            Thematic
+                        </button>
+                        <button type="button" class="mode-tab" id="mode-obscure" onclick="AppController.setMode('obscure')">
+                            Obscure
+                        </button>
                     </div>
                 </div>
 
-                <!-- ─── AD SLOT #1: Sidebar MREC 300×250 ──── -->
-                <div class="ad-slot" style="height: 160px;" data-ad-unit="sidebar-leaderboard" data-ad-size="370x160">
-                    <div class="ad-slot-inner h-full">
-                        <i data-lucide="layout" class="w-6 h-6" style="color: var(--text-dim);"></i>
-                        <span class="text-xs" style="color: var(--text-dim); font-family:'JetBrains Mono',monospace;">Advertisement</span>
-                        <span class="text-[10px]" style="color: var(--text-dim);">370 × 160</span>
+                <!-- Origin -->
+                <div class="relative" style="z-index:22;">
+                    <label style="font-family:'Syne',sans-serif; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent-primary); display:flex; align-items:center; gap:5px; margin-bottom:5px;">
+                        <i data-lucide="circle-dot" class="w-3 h-3"></i> Origin
+                    </label>
+                    <div class="input-field" style="border-radius:10px; display:flex; align-items:center; padding:10px 14px; gap:10px;">
+                        <input type="text" id="input-start" placeholder="e.g., Quantum Computing"
+                               style="flex:1; background:transparent; border:none; outline:none; font-size:13px; color:var(--text-primary); font-family:'Plus Jakarta Sans',sans-serif;" required>
+                        <button type="button" id="btn-clear-start" class="hidden" style="opacity:0.5; transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5"
+                                onclick="document.getElementById('input-start').value=''; this.classList.add('hidden');">
+                            <i data-lucide="x" class="w-3 h-3" style="color:var(--text-secondary);"></i>
+                        </button>
                     </div>
+                    <ul id="autocomplete-start" class="autocomplete-dropdown hidden glass rounded-xl shadow-2xl overflow-hidden"
+                        style="border:1px solid rgba(79,209,255,0.12);"></ul>
                 </div>
 
-                <!-- ─── HISTORY ───────────────────────────── -->
-                <div id="history-panel" class="hidden animate-fadein">
-                    <p class="text-[10px] uppercase tracking-widest mb-2" style="color: var(--text-dim); font-family:'JetBrains Mono',monospace;">
-                        Recent Traversals
-                    </p>
-                    <div id="history-list" class="flex flex-col gap-1.5"></div>
+                <!-- Swap -->
+                <div style="display:flex; align-items:center; justify-content:center; gap:10px; position:relative; z-index:0; pointer-events:none; margin:-4px 0;">
+                    <div style="flex:1; height:1px; background:linear-gradient(to right,transparent,var(--border-dim));"></div>
+                    <button type="button" style="pointer-events:auto; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--bg-raised); border:1px solid rgba(58,77,104,0.5); transition:all 0.2s;"
+                            onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.transform='scale(1.1)'"
+                            onmouseout="this.style.borderColor='rgba(58,77,104,0.5)'; this.style.transform='scale(1)'"
+                            onclick="AppController.swapInputs()" title="Swap">
+                        <i data-lucide="arrow-up-down" class="w-3 h-3" style="color:var(--text-secondary);"></i>
+                    </button>
+                    <div style="flex:1; height:1px; background:linear-gradient(to left,transparent,var(--border-dim));"></div>
                 </div>
 
-                <!-- ─── RESULTS PANEL ─────────────────────── -->
-                <div id="results-panel" class="hidden animate-fadeup">
-
-                    <!-- Path summary card -->
-                    <div id="result-summary" class="glass-bright rounded-xl p-4 mb-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="git-branch" class="w-4 h-4" style="color: var(--accent-cyan);"></i>
-                                <span class="text-xs font-700" style="font-family:'Syne',sans-serif; color: var(--text-primary);">Path Found</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span id="diff-badge" class="badge"></span>
-                                <button id="btn-share"
-                                        class="btn-secondary text-[10px] py-1 px-2.5 rounded-lg flex items-center gap-1"
-                                        onclick="AppController.shareResult()">
-                                    <i data-lucide="share-2" class="w-3 h-3"></i> Share
-                                </button>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2">
-                            <div class="text-center rounded-lg py-2" style="background: var(--bg-void);">
-                                <div class="stat-value" id="result-hops">—</div>
-                                <div class="stat-label mt-0.5">Hops</div>
-                            </div>
-                            <div class="text-center rounded-lg py-2" style="background: var(--bg-void);">
-                                <div class="stat-value" id="result-time">—</div>
-                                <div class="stat-label mt-0.5">Time</div>
-                            </div>
-                            <div class="text-center rounded-lg py-2" style="background: var(--bg-void);">
-                                <div class="stat-value" id="result-nodes-exp">—</div>
-                                <div class="stat-label mt-0.5">Explored</div>
-                            </div>
-                        </div>
+                <!-- Destination -->
+                <div class="relative" style="z-index:20;">
+                    <label style="font-family:'Syne',sans-serif; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent-rose); display:flex; align-items:center; gap:5px; margin-bottom:5px;">
+                        <i data-lucide="map-pin" class="w-3 h-3"></i> Destination
+                    </label>
+                    <div class="input-field" style="border-radius:10px; display:flex; align-items:center; padding:10px 14px; gap:10px;">
+                        <input type="text" id="input-end" placeholder="e.g., Banana"
+                               style="flex:1; background:transparent; border:none; outline:none; font-size:13px; color:var(--text-primary); font-family:'Plus Jakarta Sans',sans-serif;" required>
+                        <button type="button" id="btn-clear-end" class="hidden" style="opacity:0.5; transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5"
+                                onclick="document.getElementById('input-end').value=''; this.classList.add('hidden');">
+                            <i data-lucide="x" class="w-3 h-3" style="color:var(--text-secondary);"></i>
+                        </button>
                     </div>
+                    <ul id="autocomplete-end" class="autocomplete-dropdown hidden glass rounded-xl shadow-2xl overflow-hidden"
+                        style="border:1px solid rgba(255,79,123,0.12);"></ul>
+                </div>
 
-                    <!-- Path steps -->
-                    <p class="text-[10px] uppercase tracking-widest mb-3" style="color: var(--text-dim); font-family:'JetBrains Mono',monospace;">
-                        Optimal Path
-                    </p>
-                    <div id="path-list" class="space-y-2"></div>
-
-                    <!-- Copy path button -->
-                    <button onclick="AppController.copyPath()"
-                            class="btn-secondary w-full mt-3 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2">
-                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                        Copy Path as Text
+                <!-- Actions -->
+                <div style="display:flex; gap:8px; padding-top:4px;">
+                    <button type="submit" id="btn-search"
+                            class="btn-primary" style="flex:1; padding:11px; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:7px; font-size:13px; border:none; cursor:pointer;">
+                        <i data-lucide="radar" class="w-4 h-4"></i>
+                        <span style="font-family:'Syne',sans-serif; font-weight:700;">Traverse</span>
+                    </button>
+                    <button type="button" id="btn-random" title="Random pair (R)"
+                            class="btn-secondary" style="width:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer;">
+                        <i data-lucide="dices" class="w-4 h-4"></i>
                     </button>
                 </div>
 
-                <!-- Bottom spacer -->
-                <div class="h-4"></div>
-            </div>
-        </aside>
-
-        <!-- ════════════════════════════════════ CANVAS AREA -->
-        <section class="flex-1 relative overflow-hidden canvas-bg" style="background-color: var(--bg-void);">
-
-            <!-- Atmosphere blobs -->
-            <div class="float-orb w-96 h-96 top-1/4 left-1/4" style="background: var(--accent-cyan);"></div>
-            <div class="float-orb w-80 h-80 bottom-1/4 right-1/4" style="background: var(--accent-violet);"></div>
-
-            <!-- Tooltip -->
-            <div id="custom-tooltip" class="absolute hidden rounded-xl shadow-2xl p-4 text-sm z-50"></div>
-
-            <!-- ─── TOOLBAR ──────────────────────── -->
-            <div class="absolute top-3 right-3 z-20 flex items-center gap-1 glass rounded-xl p-1.5 shadow-lg"
-                 style="border-color: var(--border-dim);">
-                <button class="toolbar-btn" id="btn-edit" onclick="AppController.toggleEditMode()" title="Edit Mode">
-                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                <button type="button" id="btn-cancel"
+                        class="hidden" style="width:100%; padding:9px; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:7px; font-size:12px; background:rgba(255,79,123,0.07); border:1px solid rgba(255,79,123,0.2); color:var(--accent-rose); cursor:pointer; transition:all 0.2s;"
+                        onmouseover="this.style.background='rgba(255,79,123,0.12)'"
+                        onmouseout="this.style.background='rgba(255,79,123,0.07)'">
+                    <i data-lucide="x-circle" class="w-4 h-4"></i>
+                    <span>Abort Traversal</span>
                 </button>
-                <button class="toolbar-btn" id="btn-focus" onclick="AppController.toggleFocusMode()" title="Focus Path">
-                    <i data-lucide="eye" class="w-4 h-4"></i>
-                </button>
-                <div class="toolbar-divider"></div>
-                <button class="toolbar-btn" onclick="AppController.zoomIn()" title="Zoom In">
-                    <i data-lucide="zoom-in" class="w-4 h-4"></i>
-                </button>
-                <button class="toolbar-btn" onclick="AppController.zoomOut()" title="Zoom Out">
-                    <i data-lucide="zoom-out" class="w-4 h-4"></i>
-                </button>
-                <div class="toolbar-divider"></div>
-                <button class="toolbar-btn" onclick="AppController.fitGraph()" title="Fit to Screen">
-                    <i data-lucide="maximize-2" class="w-4 h-4"></i>
-                </button>
-                <div class="toolbar-divider"></div>
-                <button class="toolbar-btn" onclick="AppController.exportGraph()" title="Export PNG">
-                    <i data-lucide="image-down" class="w-4 h-4"></i>
-                </button>
-            </div>
 
-            <!-- ─── LEGEND ───────────────────────── -->
-            <div id="graph-legend" class="hidden absolute top-3 left-3 z-20 glass rounded-xl p-3 shadow-lg text-[10px] space-y-1.5"
-                 style="font-family:'JetBrains Mono',monospace; color: var(--text-secondary);">
-                <p class="text-[9px] uppercase tracking-widest mb-2" style="color: var(--text-dim);">Legend</p>
-                <div class="flex items-center gap-2"><div class="legend-dot" style="background:#22d3ee;"></div> Origin</div>
-                <div class="flex items-center gap-2"><div class="legend-dot" style="background:#f43f5e; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div> Destination</div>
-                <div class="flex items-center gap-2"><div class="legend-dot" style="background:#3b82f6;"></div> Path Node</div>
-                <div class="flex items-center gap-2"><div class="legend-dot" style="background:#8b5cf6;"></div> Expanded</div>
-                <div class="flex items-center gap-2"><div class="legend-dot" style="background:#1e293b; border: 1px solid #334155;"></div> Context</div>
-                <div class="toolbar-divider" style="height:1px; width:100%; margin: 4px 0;"></div>
-                <p class="text-[9px]">Click node to expand</p>
-                <p class="text-[9px]">Right-click to collapse</p>
-            </div>
-
-            <!-- ─── EMPTY STATE ──────────────────── -->
-            <div id="empty-state"
-                 class="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pointer-events-none z-10">
-                <div class="relative mb-6">
-                    <div class="w-20 h-20 rounded-2xl flex items-center justify-center relative overflow-hidden"
-                         style="background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.12);">
-                        <div class="absolute inset-0" style="background: radial-gradient(ellipse at center, rgba(34,211,238,0.1), transparent 70%);"></div>
-                        <i data-lucide="network" class="w-10 h-10 relative z-10" style="color: rgba(34,211,238,0.6);"></i>
-                    </div>
-                    <!-- Orbiting dots -->
-                    <div style="position:absolute; top:-6px; right:-6px; width:12px; height:12px; border-radius:50%; background: var(--accent-cyan); animation: floatDot 2s ease-in-out infinite;"></div>
-                    <div style="position:absolute; bottom:-4px; left:-4px; width:8px; height:8px; border-radius:50%; background: var(--accent-violet); animation: floatDot 2.5s ease-in-out infinite 0.5s;"></div>
-                </div>
-                <h3 class="text-lg font-800 mb-2" style="font-family:'Syne',sans-serif; font-weight:800; color: var(--text-primary);">
-                    Knowledge Graph Ready
-                </h3>
-                <p class="text-xs max-w-xs leading-relaxed" style="color: var(--text-secondary);">
-                    Enter two topics to deploy the bidirectional traversal algorithm and map the shortest semantic path.
+                <p style="text-align:center; font-size:9px; color:var(--text-dim); font-family:'JetBrains Mono',monospace;">
+                    <span class="kbd">⌘ Enter</span> search · <span class="kbd">R</span> random · <span class="kbd">Esc</span> cancel
                 </p>
+            </form>
+
+            <!-- ── INSPIRE CHIPS ── -->
+            <div>
+                <p class="section-label" style="margin-bottom:7px;">Try these →</p>
+                <div id="inspire-chips" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
             </div>
 
-            <!-- Graph canvas -->
-            <div id="network-canvas" class="w-full h-full absolute inset-0" style="cursor: grab;"></div>
-
-            <!-- ─── BOTTOM: AD LEADERBOARD ──────── -->
-            <div id="canvas-ad-bar" class="hidden absolute bottom-0 left-0 right-0 z-20">
-                <div class="ad-slot mx-4 mb-3 rounded-xl" style="height: 60px;" data-ad-unit="canvas-leaderboard" data-ad-size="728x60">
-                    <div class="ad-slot-inner h-full">
-                        <span class="text-xs" style="color: var(--text-dim); font-family:'JetBrains Mono',monospace;">Advertisement · 728 × 60 Leaderboard</span>
+            <!-- ── STATUS PANEL ── -->
+            <div id="status-panel" class="hidden glass-bright animate-fadeup" style="border-radius:12px; padding:14px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div class="pulse-dot"></div>
+                        <span id="status-msg" style="font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--accent-primary);">Initialising...</span>
+                    </div>
+                    <span id="status-depth" style="font-size:9px; color:var(--text-dim); font-family:'JetBrains Mono',monospace;">Depth: 0</span>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
+                    <div style="border-radius:8px; padding:10px; text-align:center; background:var(--bg-void);">
+                        <div class="stat-value" id="stat-time">0.0s</div>
+                        <div class="stat-label" style="margin-top:3px;">Elapsed</div>
+                    </div>
+                    <div style="border-radius:8px; padding:10px; text-align:center; background:var(--bg-void);">
+                        <div class="stat-value" id="stat-nodes">0</div>
+                        <div class="stat-label" style="margin-top:3px;">Nodes</div>
+                    </div>
+                    <div style="border-radius:8px; padding:10px; text-align:center; background:var(--bg-void);">
+                        <div class="stat-value" id="stat-mode-lbl" style="font-size:11px;">BFS</div>
+                        <div class="stat-label" style="margin-top:3px;">Mode</div>
                     </div>
                 </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- ═══════════════════════════════════════════════════════ TOAST -->
-    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-    <!-- ═══════════════════════════════════════════════════════ COOKIE BANNER -->
-    <div id="cookie-banner"
-         class="fixed bottom-0 left-0 right-0 z-50 p-4 translate-y-full transition-transform duration-500 ease-out">
-        <div class="max-w-2xl mx-auto glass-bright rounded-2xl p-5 flex flex-col sm:flex-row items-center gap-4">
-            <div class="flex-1">
-                <div class="flex items-center gap-2 mb-1">
-                    <i data-lucide="cookie" class="w-4 h-4" style="color: var(--accent-cyan);"></i>
-                    <span class="text-sm font-700" style="font-family:'Syne',sans-serif;">Privacy Notice</span>
+                <div style="margin-top:10px; height:2px; border-radius:99px; overflow:hidden; background:rgba(255,255,255,0.04);">
+                    <div id="status-progress" class="progress-bar" style="width:5%; height:100%; transition:width 0.5s ease;"></div>
                 </div>
-                <p class="text-xs" style="color: var(--text-secondary);">
-                    We cache Wikipedia data locally to speed up your experience. No tracking, no third-party cookies.
-                </p>
             </div>
-            <button onclick="CookieManager.acceptAll()"
-                    class="btn-primary flex-shrink-0 px-5 py-2.5 rounded-xl text-sm whitespace-nowrap">
-                Got it
+
+            <!-- ── HISTORY ── -->
+            <div id="history-panel" class="hidden animate-fadein">
+                <p class="section-label" style="margin-bottom:7px;">Recent Traversals</p>
+                <div id="history-list" style="display:flex; flex-direction:column; gap:5px;"></div>
+            </div>
+
+            <!-- ── RESULTS PANEL ── -->
+            <div id="results-panel" class="hidden animate-fadeup" style="display:flex; flex-direction:column; gap:12px;">
+
+                <!-- Summary card -->
+                <div class="glass-bright" style="border-radius:12px; padding:14px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:7px;">
+                            <i data-lucide="git-branch" class="w-3.5 h-3.5" style="color:var(--accent-primary);"></i>
+                            <span style="font-family:'Syne',sans-serif; font-weight:700; font-size:12px;">Path Found</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span id="diff-badge" class="badge"></span>
+                            <button id="btn-share" class="btn-ghost" style="font-size:9px; padding:4px 8px; border-radius:7px; display:flex; align-items:center; gap:4px; cursor:pointer;"
+                                    onclick="AppController.shareResult()">
+                                <i data-lucide="share-2" class="w-3 h-3"></i> Share Link
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
+                        <div style="text-align:center; border-radius:8px; padding:9px; background:var(--bg-void);">
+                            <div class="stat-value" id="result-hops">—</div>
+                            <div class="stat-label" style="margin-top:2px;">Hops</div>
+                        </div>
+                        <div style="text-align:center; border-radius:8px; padding:9px; background:var(--bg-void);">
+                            <div class="stat-value" id="result-time">—</div>
+                            <div class="stat-label" style="margin-top:2px;">Time</div>
+                        </div>
+                        <div style="text-align:center; border-radius:8px; padding:9px; background:var(--bg-void);">
+                            <div class="stat-value" id="result-nodes-exp">—</div>
+                            <div class="stat-label" style="margin-top:2px;">Explored</div>
+                        </div>
+                    </div>
+
+                    <!-- Export buttons -->
+                    <div style="display:flex; gap:6px; margin-top:10px;">
+                        <button onclick="PathExporter.exportMarkdown()" class="export-btn export-btn-md" style="flex:1; justify-content:center;">
+                            <i data-lucide="file-text" style="width:11px;height:11px;"></i> Markdown
+                        </button>
+                        <button onclick="PathExporter.exportJSON()" class="export-btn export-btn-json" style="flex:1; justify-content:center;">
+                            <i data-lucide="braces" style="width:11px;height:11px;"></i> JSON
+                        </button>
+                        <button onclick="AppController.exportGraph()" class="export-btn" style="flex:1; justify-content:center; background:rgba(52,211,153,0.1); color:var(--accent-emerald); border:1px solid rgba(52,211,153,0.25);">
+                            <i data-lucide="image-down" style="width:11px;height:11px;"></i> PNG
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Path steps -->
+                <div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                        <p class="section-label">Optimal Path</p>
+                        <button onclick="AppController.copyPath()" class="btn-ghost" style="font-size:9px; padding:3px 8px; border-radius:6px; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                            <i data-lucide="copy" style="width:10px;height:10px;"></i> Copy
+                        </button>
+                    </div>
+                    <div id="path-list" style="display:flex; flex-direction:column; gap:4px;"></div>
+                </div>
+            </div>
+
+            <!-- Bottom spacer -->
+            <div style="height:16px;"></div>
+        </div>
+    </aside>
+
+    <!-- ══════ CANVAS ══════ -->
+    <section class="flex-1 relative overflow-hidden canvas-bg" style="background-color:var(--bg-void);">
+
+        <!-- Atmosphere -->
+        <div class="float-orb" style="width:350px;height:350px;top:20%;left:15%;background:var(--accent-primary);"></div>
+        <div class="float-orb" style="width:280px;height:280px;bottom:20%;right:20%;background:var(--accent-violet);"></div>
+
+        <!-- Tooltip -->
+        <div id="custom-tooltip" class="absolute hidden" style="border-radius:12px; padding:14px; font-size:13px; z-index:50;"></div>
+
+        <!-- Toolbar -->
+        <div class="absolute top-3 right-3 z-20 flex items-center gap-1 glass"
+             style="border-radius:11px; padding:6px; box-shadow:0 4px 24px rgba(0,0,0,0.3);">
+            <button class="toolbar-btn" id="btn-edit" onclick="AppController.toggleEditMode()" title="Edit Mode (E)">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+            </button>
+            <button class="toolbar-btn" id="btn-focus" onclick="AppController.toggleFocusMode()" title="Focus Path (V)">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button class="toolbar-btn" onclick="AppController.zoomIn()" title="Zoom In">
+                <i data-lucide="zoom-in" class="w-4 h-4"></i>
+            </button>
+            <button class="toolbar-btn" onclick="AppController.zoomOut()" title="Zoom Out">
+                <i data-lucide="zoom-out" class="w-4 h-4"></i>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button class="toolbar-btn" onclick="AppController.fitGraph()" title="Fit (F)">
+                <i data-lucide="maximize-2" class="w-4 h-4"></i>
             </button>
         </div>
-    </div>
 
-    <!-- ═══════════════════════════════════════════════════════ SHORTCUTS MODAL -->
-    <div id="shortcuts-modal"
-         class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center p-4"
-         onclick="if(event.target===this) ShortcutsModal.hide()">
-        <div class="glass-bright rounded-2xl p-6 w-full max-w-sm animate-fadeup">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-800 text-sm" style="font-family:'Syne',sans-serif;">Keyboard Shortcuts</h3>
-                <button onclick="ShortcutsModal.hide()" class="toolbar-btn">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+        <!-- Legend -->
+        <div id="graph-legend" class="hidden absolute top-3 left-3 z-20 glass"
+             style="border-radius:11px; padding:12px; box-shadow:0 4px 24px rgba(0,0,0,0.3); min-width:150px;">
+            <p style="font-size:9px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-dim); font-family:'JetBrains Mono',monospace; margin-bottom:8px;">Legend</p>
+            <div style="display:flex; flex-direction:column; gap:5px;" id="legend-items">
+                <div class="cat-legend-item"><div class="cat-dot" style="background:#4fd1ff;"></div> Origin</div>
+                <div class="cat-legend-item"><div class="cat-dot" style="background:#ff4f7b; clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);"></div> Destination</div>
+                <div class="cat-legend-item"><div class="cat-dot" style="background:#3b82f6;"></div> Path Node</div>
+                <div class="cat-legend-item"><div class="cat-dot" style="background:#8b5cf6;"></div> Expanded</div>
+                <div class="cat-legend-item"><div class="cat-dot" style="background:var(--bg-raised); border:1px solid #334155;"></div> Context</div>
+                <div style="width:100%; height:1px; background:var(--border-dim); margin:3px 0;"></div>
+                <div id="cat-legend-dynamic" style="display:flex; flex-direction:column; gap:5px;"></div>
             </div>
-            <div class="space-y-2 text-xs" style="font-family:'JetBrains Mono',monospace; color: var(--text-secondary);">
-                <div class="flex justify-between"><span>Traverse / Search</span><span><kbd class="kbd">⌘ Enter</kbd></span></div>
-                <div class="flex justify-between"><span>Random pair</span><span><kbd class="kbd">R</kbd></span></div>
-                <div class="flex justify-between"><span>Cancel search</span><span><kbd class="kbd">Esc</kbd></span></div>
-                <div class="flex justify-between"><span>Fit graph</span><span><kbd class="kbd">F</kbd></span></div>
-                <div class="flex justify-between"><span>Toggle focus mode</span><span><kbd class="kbd">V</kbd></span></div>
-                <div class="flex justify-between"><span>Export graph PNG</span><span><kbd class="kbd">E</kbd></span></div>
-                <div class="flex justify-between"><span>Swap origin / dest</span><span><kbd class="kbd">S</kbd></span></div>
+            <div style="margin-top:8px; padding-top:7px; border-top:1px solid var(--border-dim);">
+                <p style="font-size:9px; color:var(--text-dim); font-family:'JetBrains Mono',monospace;">Click node to expand</p>
+                <p style="font-size:9px; color:var(--text-dim); font-family:'JetBrains Mono',monospace;">Right-click to collapse</p>
             </div>
         </div>
+
+        <!-- Empty state -->
+        <div id="empty-state"
+             class="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pointer-events-none z-10">
+            <div style="position:relative; margin-bottom:20px;">
+                <div style="width:80px; height:80px; border-radius:18px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; background:rgba(79,209,255,0.05); border:1px solid rgba(79,209,255,0.1);">
+                    <div style="position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(79,209,255,0.08), transparent 70%);"></div>
+                    <i data-lucide="network" class="w-10 h-10 relative z-10" style="color:rgba(79,209,255,0.55);"></i>
+                </div>
+                <div style="position:absolute; top:-5px; right:-5px; width:11px; height:11px; border-radius:50%; background:var(--accent-primary); animation:floatDot 2s ease-in-out infinite;"></div>
+                <div style="position:absolute; bottom:-3px; left:-3px; width:7px; height:7px; border-radius:50%; background:var(--accent-violet); animation:floatDot 2.5s ease-in-out infinite 0.5s;"></div>
+            </div>
+            <h3 style="font-family:'Syne',sans-serif; font-weight:800; font-size:17px; margin-bottom:7px; color:var(--text-primary);">Knowledge Graph Ready</h3>
+            <p style="font-size:12px; max-width:280px; line-height:1.6; color:var(--text-secondary);">Enter two topics to deploy the traversal algorithm and map the optimal semantic path.</p>
+        </div>
+
+        <!-- Graph canvas -->
+        <div id="network-canvas" class="w-full h-full absolute inset-0" style="cursor:grab;"></div>
+    </section>
+</main>
+
+<!-- ═══════════ TOAST ═══════════ -->
+<div id="toast-container" class="fixed top-4 left-1/2 z-50 flex flex-col gap-2 pointer-events-none"
+     style="transform:translateX(-50%);"></div>
+
+<!-- ═══════════ COOKIE BANNER ═══════════ -->
+<div id="cookie-banner"
+     class="fixed bottom-0 left-0 right-0 z-50 p-4"
+     style="transform:translateY(100%); transition:transform 0.45s cubic-bezier(0.16,1,0.3,1);">
+    <div class="glass-bright max-w-xl mx-auto" style="border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:12px;">
+        <div>
+            <div style="display:flex; align-items:center; gap:7px; margin-bottom:4px;">
+                <i data-lucide="cookie" class="w-4 h-4" style="color:var(--accent-primary);"></i>
+                <span style="font-family:'Syne',sans-serif; font-weight:700; font-size:13px;">Privacy Notice</span>
+            </div>
+            <p style="font-size:11px; color:var(--text-secondary); line-height:1.6;">We cache Wikipedia data locally to speed up your experience. No tracking, no third-party cookies.</p>
+        </div>
+        <button onclick="CookieManager.acceptAll()" class="btn-primary" style="border:none; padding:10px 22px; border-radius:9px; font-size:12px; cursor:pointer; align-self:flex-end;">
+            Got it
+        </button>
     </div>
+</div>
 
-    <!-- ═══════════════════════════════════════════════════════ SCRIPTS -->
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-    <script src="https://unpkg.com/lucide@0.395.0/dist/umd/lucide.min.js"></script>
-    <script>
+<!-- ═══════════ SHORTCUTS MODAL ═══════════ -->
+<div id="shortcuts-modal"
+     class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center p-4"
+     onclick="if(event.target===this)ShortcutsModal.hide()">
+    <div class="glass-bright animate-fadeup" style="border-radius:16px; padding:22px; width:100%; max-width:320px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+            <h3 style="font-family:'Syne',sans-serif; font-weight:800; font-size:14px;">Keyboard Shortcuts</h3>
+            <button onclick="ShortcutsModal.hide()" class="toolbar-btn"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:7px; font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--text-secondary);">
+            <div style="display:flex; justify-content:space-between;"><span>Traverse / Search</span><span class="kbd">⌘ Enter</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Random pair</span><span class="kbd">R</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Cancel search</span><span class="kbd">Esc</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Fit graph</span><span class="kbd">F</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Toggle focus mode</span><span class="kbd">V</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Export graph PNG</span><span class="kbd">G</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Swap origin / dest</span><span class="kbd">S</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Shortcuts help</span><span class="kbd">?</span></div>
+        </div>
+    </div>
+</div>
 
-    /* ══════════════════════════════════════════════════════════
-       TOAST
-    ══════════════════════════════════════════════════════════ */
-    const Toast = {
-        container: document.getElementById('toast-container'),
-        show(message, type = 'success') {
-            const t = document.createElement('div');
-            const isSuccess = type === 'success';
-            t.style.cssText = `
-                pointer-events: auto;
-                display: flex; align-items: center; gap: 8px;
-                background: rgba(7,14,31,0.97);
-                border: 1px solid ${isSuccess ? 'rgba(34,211,238,0.25)' : 'rgba(244,63,94,0.25)'};
-                padding: 10px 16px; border-radius: 10px;
-                font-size: 12px; font-family: 'Plus Jakarta Sans', sans-serif;
-                color: ${isSuccess ? '#a5f3fc' : '#fda4af'};
-                box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-                animation: toastIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
-            `;
-            t.innerHTML = `
-                <i data-lucide="${isSuccess ? 'check-circle' : 'alert-circle'}" style="width:14px;height:14px;color:${isSuccess ? '#22d3ee' : '#f43f5e'};flex-shrink:0;"></i>
-                <span>${message}</span>
-            `;
-            this.container.appendChild(t);
-            lucide.createIcons();
-            setTimeout(() => {
-                t.style.animation = 'toastOut 0.3s ease forwards';
-                setTimeout(() => t.remove(), 300);
-            }, 3000);
+<!-- ═══════════ SCRIPTS ═══════════ -->
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script src="https://unpkg.com/lucide@0.395.0/dist/umd/lucide.min.js"></script>
+<script>
+
+/* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
+const Toast = {
+    container: document.getElementById('toast-container'),
+    show(message, type = 'success') {
+        const t = document.createElement('div');
+        const ok = type === 'success';
+        t.style.cssText = `
+            pointer-events:auto; display:flex; align-items:center; gap:8px;
+            background:rgba(6,13,30,0.98);
+            border:1px solid ${ok ? 'rgba(79,209,255,0.2)' : 'rgba(255,79,123,0.2)'};
+            padding:10px 14px; border-radius:10px; font-size:12px;
+            font-family:'Plus Jakarta Sans',sans-serif;
+            color:${ok ? '#a5f3fc' : '#fda4af'};
+            box-shadow:0 8px 32px rgba(0,0,0,0.5);
+            animation:toastIn 0.28s cubic-bezier(0.16,1,0.3,1) forwards;
+            max-width:320px;
+        `;
+        t.innerHTML = `
+            <i data-lucide="${ok?'check-circle':'alert-circle'}" style="width:13px;height:13px;color:${ok?'#4fd1ff':'#ff4f7b'};flex-shrink:0;"></i>
+            <span>${message}</span>
+        `;
+        this.container.appendChild(t);
+        lucide.createIcons();
+        setTimeout(() => {
+            t.style.animation = 'toastOut 0.25s ease forwards';
+            setTimeout(() => t.remove(), 250);
+        }, 3200);
+    }
+};
+
+/* ══════════════════════════════════════════════
+   SHORTCUTS MODAL
+══════════════════════════════════════════════ */
+const ShortcutsModal = {
+    el: document.getElementById('shortcuts-modal'),
+    show() { this.el.classList.remove('hidden'); this.el.classList.add('flex'); },
+    hide() { this.el.classList.add('hidden'); this.el.classList.remove('flex'); }
+};
+
+/* ══════════════════════════════════════════════
+   SESSION CACHE
+══════════════════════════════════════════════ */
+const SessionCache = {
+    links: new Map(), backlinks: new Map(), titles: new Map(),
+    images: new Map(), extracts: new Map(), categories: new Map(),
+    snippets: new Map(),
+    get(map, key) { return this[map].get(key); },
+    set(map, key, val) { this[map].set(key, val); }
+};
+
+/* ══════════════════════════════════════════════
+   COOKIE MANAGER
+══════════════════════════════════════════════ */
+const CookieManager = {
+    el: document.getElementById('cookie-banner'),
+    init() { if (!localStorage.getItem('wrh_consent')) setTimeout(() => this.el.style.transform = 'translateY(0)', 1000); },
+    acceptAll() { localStorage.setItem('wrh_consent','1'); this.el.style.transform = 'translateY(100%)'; },
+    showBanner() { this.el.style.transform = 'translateY(0)'; }
+};
+
+/* ══════════════════════════════════════════════
+   HISTORY MANAGER
+══════════════════════════════════════════════ */
+const HistoryManager = {
+    key: 'wrh_history_v2',
+    get() { try { return JSON.parse(localStorage.getItem(this.key) || '[]'); } catch { return []; } },
+    add(start, end, hops, ms) {
+        let h = this.get().filter(i => !(i.start === start && i.end === end));
+        h.unshift({ start, end, hops, ms, ts: Date.now() });
+        if (h.length > 8) h.pop();
+        try { localStorage.setItem(this.key, JSON.stringify(h)); } catch {}
+        this.render();
+    },
+    render() {
+        const h = this.get();
+        const panel = document.getElementById('history-panel');
+        const list  = document.getElementById('history-list');
+        if (!h.length) { panel.classList.add('hidden'); return; }
+        panel.classList.remove('hidden');
+        list.innerHTML = h.map(item => `
+            <button style="width:100%; text-align:left; border-radius:9px; padding:9px 11px; display:flex; align-items:center; gap:7px; font-size:11px; color:var(--text-secondary); background:var(--bg-surface); border:1px solid var(--border-dim); cursor:pointer; transition:all 0.15s;"
+                    onmouseover="this.style.borderColor='rgba(79,209,255,0.2)'; this.style.color='var(--text-primary)'"
+                    onmouseout="this.style.borderColor='var(--border-dim)'; this.style.color='var(--text-secondary)'"
+                    onclick="AppController.loadHistory('${item.start.replace(/'/g,"\\'")}','${item.end.replace(/'/g,"\\'")}')">
+                <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:'Plus Jakarta Sans',sans-serif;">${item.start}</span>
+                <i data-lucide="arrow-right" style="width:11px;height:11px;color:var(--accent-primary);flex-shrink:0;"></i>
+                <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right; font-family:'Plus Jakarta Sans',sans-serif;">${item.end}</span>
+                ${item.hops ? `<span class="badge" style="background:rgba(79,209,255,0.08);color:var(--accent-primary);border:1px solid rgba(79,209,255,0.18);font-size:9px;flex-shrink:0;">${item.hops}</span>` : ''}
+            </button>
+        `).join('');
+        lucide.createIcons();
+    }
+};
+
+/* ══════════════════════════════════════════════
+   CATEGORY SYSTEM
+══════════════════════════════════════════════ */
+const CategorySystem = {
+    mapping: {
+        science:   { keywords: ['physics','chemistry','biology','astronomy','science','geology','ecology','genetics','neuroscience','medicine','health','climate','ocean','animal','plant','species'], color: '#06b6d4', label: 'Science' },
+        tech:      { keywords: ['technology','computing','software','internet','electronics','engineering','artificial','robot','algorithm','computer','digital','data','network','programming'], color: '#3b82f6', label: 'Technology' },
+        history:   { keywords: ['history','war','empire','century','ancient','medieval','revolution','dynasty','civilization','archaeological','colonial','era','battle','treaty'], color: '#f59e0b', label: 'History' },
+        arts:      { keywords: ['art','music','film','literature','theatre','poetry','painting','sculpture','culture','design','architecture','photography','dance','fashion','media'], color: '#ec4899', label: 'Arts & Culture' },
+        geo:       { keywords: ['country','city','geography','river','mountain','continent','island','region','state','province','ocean','lake','capital','territory'], color: '#10b981', label: 'Geography' },
+        people:    { keywords: ['people','biography','born','politician','philosopher','scientist','athlete','actor','musician','author','artist','leader','king','queen','president'], color: '#f97316', label: 'People' },
+        math:      { keywords: ['mathematics','algebra','calculus','geometry','statistics','probability','logic','theorem','number'], color: '#8b5cf6', label: 'Mathematics' },
+        sports:    { keywords: ['sport','football','cricket','tennis','basketball','olympic','athletics','swimming','cycling','baseball','hockey'], color: '#84cc16', label: 'Sports' },
+    },
+    nodeCategories: new Map(),
+
+    classify(title, cats) {
+        const text = (title + ' ' + (cats || []).join(' ')).toLowerCase();
+        for (const [key, def] of Object.entries(this.mapping)) {
+            if (def.keywords.some(kw => text.includes(kw))) return { key, ...def };
         }
-    };
+        return { key: 'default', color: '#475569', label: 'General' };
+    },
 
-    /* ══════════════════════════════════════════════════════════
-       SHORTCUTS MODAL
-    ══════════════════════════════════════════════════════════ */
-    const ShortcutsModal = {
-        el: document.getElementById('shortcuts-modal'),
-        show() { this.el.classList.remove('hidden'); this.el.classList.add('flex'); },
-        hide() { this.el.classList.add('hidden'); this.el.classList.remove('flex'); }
-    };
+    getNodeColor(nodeId) {
+        const cat = this.nodeCategories.get(nodeId);
+        return cat ? cat.color : null;
+    },
 
-    /* ══════════════════════════════════════════════════════════
-       SESSION CACHE
-    ══════════════════════════════════════════════════════════ */
-    const SessionCache = {
-        links: new Map(), backlinks: new Map(),
-        titles: new Map(), images: new Map(), extracts: new Map(),
-        get(map, key) { return this[map].get(key); },
-        set(map, key, val) { this[map].set(key, val); }
-    };
-
-    /* ══════════════════════════════════════════════════════════
-       COOKIE MANAGER
-    ══════════════════════════════════════════════════════════ */
-    const CookieManager = {
-        el: document.getElementById('cookie-banner'),
-        init() { if (!localStorage.getItem('wrh_consent')) setTimeout(() => this.el.classList.remove('translate-y-full'), 1200); },
-        acceptAll() { localStorage.setItem('wrh_consent', '1'); this.el.classList.add('translate-y-full'); },
-        showBanner() { this.el.classList.remove('translate-y-full'); }
-    };
-
-    /* ══════════════════════════════════════════════════════════
-       HISTORY MANAGER
-    ══════════════════════════════════════════════════════════ */
-    const HistoryManager = {
-        key: 'wrh_history',
-        get() { try { return JSON.parse(localStorage.getItem(this.key) || '[]'); } catch { return []; } },
-        add(start, end, hops, ms) {
-            let h = this.get().filter(i => !(i.start === start && i.end === end));
-            h.unshift({ start, end, hops, ms });
-            if (h.length > 8) h.pop();
-            try { localStorage.setItem(this.key, JSON.stringify(h)); } catch {}
-            this.render();
-        },
-        render() {
-            const h = this.get();
-            const panel = document.getElementById('history-panel');
-            const list = document.getElementById('history-list');
-            if (!h.length) { panel.classList.add('hidden'); return; }
-            panel.classList.remove('hidden');
-            list.innerHTML = h.map(item => `
-                <button class="w-full text-left rounded-lg px-3 py-2 transition-all flex items-center gap-2 group"
-                        style="background: var(--bg-surface); border: 1px solid var(--border-dim); font-size: 11px; color: var(--text-secondary);"
-                        onmouseover="this.style.borderColor='rgba(34,211,238,0.2)'"
-                        onmouseout="this.style.borderColor='var(--border-dim)'"
-                        onclick="AppController.loadHistory('${item.start.replace(/'/g, "\\'")}','${item.end.replace(/'/g, "\\'")}')">
-                    <span class="flex-1 truncate font-500" style="font-family:'Plus Jakarta Sans',sans-serif;">${item.start}</span>
-                    <i data-lucide="arrow-right" style="width:12px;height:12px;color:var(--accent-cyan);flex-shrink:0;"></i>
-                    <span class="flex-1 truncate text-right" style="font-family:'Plus Jakarta Sans',sans-serif;">${item.end}</span>
-                    ${item.hops ? `<span class="badge" style="background:rgba(34,211,238,0.1);color:var(--accent-cyan);border:1px solid rgba(34,211,238,0.2);font-size:9px;flex-shrink:0;">${item.hops}</span>` : ''}
-                </button>
+    updateLegend() {
+        const container = document.getElementById('cat-legend-dynamic');
+        const counts = {};
+        this.nodeCategories.forEach(cat => {
+            if (!counts[cat.key]) counts[cat.key] = { ...cat, count: 0 };
+            counts[cat.key].count++;
+        });
+        container.innerHTML = Object.values(counts)
+            .filter(c => c.count > 0)
+            .sort((a, b) => b.count - a.count)
+            .map(c => `
+                <div class="cat-legend-item">
+                    <div class="cat-dot" style="background:${c.color};"></div>
+                    <span>${c.label}</span>
+                    <span class="cat-count">${c.count}</span>
+                </div>
             `).join('');
-            lucide.createIcons();
-        }
-    };
+    }
+};
 
-    /* ══════════════════════════════════════════════════════════
-       WIKI API
-    ══════════════════════════════════════════════════════════ */
-    class WikiAPI {
-        static isFiltered(title) {
-            const blocked = ['Wikipedia:', 'Help:', 'Category:', 'Portal:', 'Draft:', 'Template:', 'Talk:', 'User:', 'List of ', 'Template talk:', 'Special:', 'File:', 'Module:'];
-            return blocked.some(p => title.startsWith(p));
-        }
-        static async fetchWithRetry(url, retries = 3, backoff = 500) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return await res.json();
-                } catch (e) {
-                    if (i === retries - 1) throw e;
-                    await new Promise(r => setTimeout(r, backoff * Math.pow(2, i)));
-                }
+/* ══════════════════════════════════════════════
+   WIKI API
+══════════════════════════════════════════════ */
+class WikiAPI {
+    static isFiltered(title) {
+        const blocked = ['Wikipedia:','Help:','Category:','Portal:','Draft:','Template:','Talk:','User:','List of ','Template talk:','Special:','File:','Module:'];
+        return blocked.some(p => title.startsWith(p));
+    }
+
+    static async fetchWithRetry(url, retries = 3, backoff = 600) {
+        for (let i = 0; i < retries; i++) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return await res.json();
+            } catch(e) {
+                if (i === retries - 1) throw e;
+                await new Promise(r => setTimeout(r, backoff * Math.pow(1.8, i)));
             }
-        }
-        static async getExactTitle(query) {
-            const cached = SessionCache.get('titles', query.toLowerCase());
-            if (cached) return cached;
-            const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(query)}&redirects=1&format=json&origin=*`;
-            try {
-                const data = await this.fetchWithRetry(url);
-                const pageId = Object.keys(data.query.pages)[0];
-                const title = pageId == -1 ? null : data.query.pages[pageId].title;
-                if (title) SessionCache.set('titles', query.toLowerCase(), title);
-                return title;
-            } catch { return null; }
-        }
-        static async fetchLinks(title) {
-            const cached = SessionCache.get('links', title);
-            if (cached) return cached;
-            const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=links&pllimit=500&plnamespace=0&format=json&origin=*`;
-            try {
-                const data = await this.fetchWithRetry(url);
-                const pageId = Object.keys(data.query.pages)[0];
-                let links = (!data.query.pages[pageId] || !data.query.pages[pageId].links) ? []
-                    : data.query.pages[pageId].links.map(l => l.title);
-                links = links.filter(l => !this.isFiltered(l));
-                SessionCache.set('links', title, links);
-                return links;
-            } catch { return []; }
-        }
-        static async fetchBacklinks(title) {
-            const cached = SessionCache.get('backlinks', title);
-            if (cached) return cached;
-            const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=linkshere&lhlimit=500&lhnamespace=0&format=json&origin=*`;
-            try {
-                const data = await this.fetchWithRetry(url);
-                const pageId = Object.keys(data.query.pages)[0];
-                let backlinks = (!data.query.pages[pageId] || !data.query.pages[pageId].linkshere) ? []
-                    : data.query.pages[pageId].linkshere.map(l => l.title);
-                backlinks = backlinks.filter(l => !this.isFiltered(l));
-                SessionCache.set('backlinks', title, backlinks);
-                return backlinks;
-            } catch { return []; }
-        }
-        static async searchSuggestions(query) {
-            if (!query || query.length < 2) return [];
-            const url = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=6&namespace=0&format=json&origin=*`;
-            try {
-                const data = await this.fetchWithRetry(url, 2);
-                return data[1] || [];
-            } catch { return []; }
-        }
-        static async getRandomPairs() {
-            const url = `https://en.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=2&format=json&origin=*`;
-            try {
-                const data = await this.fetchWithRetry(url, 2);
-                return data.query.random.map(r => r.title);
-            } catch { return ['Earth', 'Water']; }
-        }
-        static async fetchContextForTitles(titles) {
-            const toFetch = [...new Set(titles.filter(t => !SessionCache.images.has(t) || !SessionCache.extracts.has(t)))];
-            if (!toFetch.length) return;
-            const chunks = [];
-            for (let i = 0; i < toFetch.length; i += 20) chunks.push(toFetch.slice(i, i + 20));
-            for (const chunk of chunks) {
-                const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(chunk.join('|'))}&prop=pageimages|extracts&piprop=thumbnail&pithumbsize=200&exintro=1&exchars=280&explaintext=1&format=json&origin=*`;
-                try {
-                    const data = await this.fetchWithRetry(url, 2);
-                    Object.values(data.query.pages).forEach(page => {
-                        SessionCache.set('images', page.title, page.thumbnail?.source || null);
-                        SessionCache.set('extracts', page.title, page.extract || 'No summary available.');
-                    });
-                } catch (e) { console.error(e); }
-            }
-        }
-        static async fetchSingleExtract(title) {
-            const cached = SessionCache.get('extracts', title);
-            if (cached) return cached;
-            await this.fetchContextForTitles([title]);
-            return SessionCache.get('extracts', title) || 'Summary unavailable.';
         }
     }
 
-    /* ══════════════════════════════════════════════════════════
-       GRAPH ENGINE
-    ══════════════════════════════════════════════════════════ */
-    class GraphEngine {
-        constructor(containerId) {
-            this.container = document.getElementById(containerId);
-            this.network = null;
-            this.tooltipEl = document.getElementById('custom-tooltip');
-            this.nodes = new vis.DataSet();
-            this.edges = new vis.DataSet();
-            this.addedNodes = new Set();
-            this.collapsedData = {};
-            this.mainPath = [];
-            this.focusMode = false;
-            this.editMode = false;
-            this.dragState = { active: false, parentId: null, offsets: {} };
-            this.hoveredNode = null;
-        }
+    static async getExactTitle(query) {
+        const cached = SessionCache.get('titles', query.toLowerCase());
+        if (cached) return cached;
+        const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(query)}&redirects=1&format=json&origin=*`;
+        try {
+            const data = await this.fetchWithRetry(url);
+            const pageId = Object.keys(data.query.pages)[0];
+            const title = pageId == -1 ? null : data.query.pages[pageId].title;
+            if (title) SessionCache.set('titles', query.toLowerCase(), title);
+            return title;
+        } catch { return null; }
+    }
 
-        getStyles(type, hasImage) {
-            const config = {
-                start:    { bg: '#22d3ee', border: '#0891b2', size: 30 },
-                end:      { bg: '#f43f5e', border: '#e11d48', size: 35 },
-                path:     { bg: '#3b82f6', border: '#2563eb', size: 25 },
-                context:  { bg: '#132035', border: '#0d1629', size: 10, fontColor: '#445060' },
-                expanded: { bg: '#8b5cf6', border: '#6d28d9', size: 16, fontColor: '#c4b5fd' }
-            };
-            const s = config[type];
-            let shape = hasImage ? 'circularImage' : (type === 'context' || type === 'expanded' ? 'dot' : 'hexagon');
-            if (type === 'end' && !hasImage) shape = 'star';
-            const opacity = (this.focusMode && (type === 'context' || type === 'expanded')) ? 0.1 : 1;
-            return {
-                color: { background: s.bg, border: s.border, highlight: { background: '#fff', border: s.bg }, opacity },
-                size: s.size, shape,
-                font: { color: s.fontColor || '#f0f6ff', face: 'Plus Jakarta Sans', strokeWidth: type === 'context' ? 0 : 4, strokeColor: '#040812', size: type === 'context' ? 9 : 13 },
-                borderWidth: hasImage ? 3 : 2,
-                shadow: { enabled: opacity === 1, color: 'rgba(0,0,0,0.7)', size: 12, x: 0, y: 5 },
-                opacity
-            };
-        }
+    static async fetchLinks(title) {
+        const cached = SessionCache.get('links', title);
+        if (cached) return cached;
+        const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=links&pllimit=500&plnamespace=0&format=json&origin=*`;
+        try {
+            const data = await this.fetchWithRetry(url);
+            const pageId = Object.keys(data.query.pages)[0];
+            let links = (!data.query.pages[pageId]?.links) ? [] : data.query.pages[pageId].links.map(l => l.title);
+            links = links.filter(l => !this.isFiltered(l));
+            SessionCache.set('links', title, links);
+            return links;
+        } catch { return []; }
+    }
 
-        getDependentSubtree(targetNodeId) {
-            const coreAnchors = this.mainPath.filter(n => n !== targetNodeId);
-            if (!coreAnchors.length) return [];
-            const reachableFromCore = new Set(coreAnchors);
-            const queue = [...coreAnchors];
-            let head = 0;
-            while (head < queue.length) {
-                const current = queue[head++];
-                for (const neighbor of this.network.getConnectedNodes(current)) {
-                    if (neighbor !== targetNodeId && !reachableFromCore.has(neighbor)) {
-                        reachableFromCore.add(neighbor);
-                        queue.push(neighbor);
-                    }
-                }
-            }
-            const subtree = [];
-            this.addedNodes.forEach(nodeId => {
-                if (nodeId !== targetNodeId && !reachableFromCore.has(nodeId)) subtree.push(nodeId);
-            });
-            return subtree;
-        }
+    static async fetchBacklinks(title) {
+        const cached = SessionCache.get('backlinks', title);
+        if (cached) return cached;
+        const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=linkshere&lhlimit=500&lhnamespace=0&format=json&origin=*`;
+        try {
+            const data = await this.fetchWithRetry(url);
+            const pageId = Object.keys(data.query.pages)[0];
+            let backlinks = (!data.query.pages[pageId]?.linkshere) ? [] : data.query.pages[pageId].linkshere.map(l => l.title);
+            backlinks = backlinks.filter(l => !this.isFiltered(l));
+            SessionCache.set('backlinks', title, backlinks);
+            return backlinks;
+        } catch { return []; }
+    }
 
-        async render(path, contextCache) {
-            document.getElementById('empty-state').style.display = 'none';
-            document.getElementById('graph-legend').classList.remove('hidden');
-            document.getElementById('canvas-ad-bar').classList.remove('hidden');
-            this.nodes.clear(); this.edges.clear(); this.addedNodes.clear(); this.collapsedData = {};
-            this.dragState = { active: false, parentId: null, offsets: {} };
-            this.mainPath = path; this.focusMode = false; this.editMode = false;
-            await WikiAPI.fetchContextForTitles(path);
+    static async searchSuggestions(query) {
+        if (!query || query.length < 2) return [];
+        const url = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=6&namespace=0&format=json&origin=*`;
+        try {
+            const data = await this.fetchWithRetry(url, 2);
+            return data[1] || [];
+        } catch { return []; }
+    }
 
-            path.forEach((title, index) => {
-                const type = index === 0 ? 'start' : (index === path.length - 1 ? 'end' : 'path');
-                const imgUrl = SessionCache.get('images', title);
-                this.nodes.add({ id: title, label: title, ...this.getStyles(type, !!imgUrl), ...(imgUrl && { image: imgUrl }) });
-                this.addedNodes.add(title);
-                if (index < path.length - 1) {
-                    this.edges.add({
-                        from: title, to: path[index + 1],
-                        color: { color: '#818cf8', highlight: '#c4b5fd' },
-                        width: 3, arrows: 'to',
-                        smooth: { type: 'cubicBezier', forceDirection: 'none' }
-                    });
-                }
-            });
+    static async getRandomPairs() {
+        const url = `https://en.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=2&format=json&origin=*`;
+        try {
+            const data = await this.fetchWithRetry(url, 2);
+            return data.query.random.map(r => r.title);
+        } catch { return ['Earth','Water']; }
+    }
 
-            path.slice(0, -1).forEach(pathNode => {
-                const links = (contextCache[pathNode] || []).filter(l => !path.includes(l)).sort(() => 0.5 - Math.random()).slice(0, 5);
-                links.forEach(link => {
-                    if (!this.addedNodes.has(link)) {
-                        this.nodes.add({ id: link, label: link, ...this.getStyles('context', false) });
-                        this.addedNodes.add(link);
-                    }
-                    this.edges.add({ id: `${pathNode}-ctx-${link}`, from: pathNode, to: link, color: 'rgba(30,41,59,0.6)', width: 1, arrows: 'to' });
+    static async fetchContextForTitles(titles) {
+        const toFetch = [...new Set(titles.filter(t => !SessionCache.images.has(t) || !SessionCache.extracts.has(t)))];
+        if (!toFetch.length) return;
+        const chunks = [];
+        for (let i = 0; i < toFetch.length; i += 20) chunks.push(toFetch.slice(i, i + 20));
+        for (const chunk of chunks) {
+            const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(chunk.join('|'))}&prop=pageimages|extracts&piprop=thumbnail&pithumbsize=220&exintro=1&exchars=350&explaintext=1&format=json&origin=*`;
+            try {
+                const data = await this.fetchWithRetry(url, 2);
+                Object.values(data.query.pages).forEach(page => {
+                    SessionCache.set('images', page.title, page.thumbnail?.source || null);
+                    SessionCache.set('extracts', page.title, page.extract || 'No summary available.');
                 });
-            });
+            } catch(e) { console.error(e); }
+        }
+    }
 
-            const options = {
-                physics: {
-                    barnesHut: { gravitationalConstant: -2500, centralGravity: 0.1, springLength: 160, springConstant: 0.04, damping: 0.09 },
-                    stabilization: { iterations: 200 }
-                },
-                interaction: { hover: true, tooltipDelay: 150, hideEdgesOnDrag: true, zoomView: true },
-                manipulation: { enabled: false, addEdge: true, deleteNode: true, deleteEdge: true }
-            };
+    static async fetchSingleExtract(title) {
+        const cached = SessionCache.get('extracts', title);
+        if (cached) return cached;
+        await this.fetchContextForTitles([title]);
+        return SessionCache.get('extracts', title) || 'Summary unavailable.';
+    }
 
-            if (this.network) this.network.destroy();
-            this.network = new vis.Network(this.container, { nodes: this.nodes, edges: this.edges }, options);
-            this.network.on('stabilizationIterationsDone', () => this.network.setOptions({ physics: { enabled: false } }));
+    static async fetchCategories(titles) {
+        const toFetch = titles.filter(t => !SessionCache.categories.has(t));
+        if (!toFetch.length) return;
+        const chunks = [];
+        for (let i = 0; i < toFetch.length; i += 20) chunks.push(toFetch.slice(i, i + 20));
+        for (const chunk of chunks) {
+            const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(chunk.join('|'))}&prop=categories&cllimit=8&clshow=!hidden&format=json&origin=*`;
+            try {
+                const data = await this.fetchWithRetry(url, 2);
+                Object.values(data.query.pages).forEach(page => {
+                    const cats = (page.categories || []).map(c => c.title.replace('Category:',''));
+                    SessionCache.set('categories', page.title, cats);
+                    const classified = CategorySystem.classify(page.title, cats);
+                    CategorySystem.nodeCategories.set(page.title, classified);
+                });
+            } catch(e) { console.error(e); }
+        }
+    }
 
-            this.network.on('dragStart', params => {
-                this.tooltipEl.classList.add('hidden');
-                if (params.nodes.length === 1 && !this.editMode) {
-                    const pid = params.nodes[0];
-                    const subtree = this.getDependentSubtree(pid);
-                    if (subtree.length > 0) {
-                        this.dragState = { active: true, parentId: pid, offsets: {} };
-                        const ppos = this.network.getPositions([pid])[pid];
-                        const cpos = this.network.getPositions(subtree);
-                        subtree.forEach(id => {
-                            this.dragState.offsets[id] = { dx: cpos[id].x - ppos.x, dy: cpos[id].y - ppos.y };
-                        });
+    /* Fetch a snippet from source article mentioning target */
+    static async fetchLinkSnippet(sourceTitle, targetTitle) {
+        const key = `${sourceTitle}|||${targetTitle}`;
+        const cached = SessionCache.get('snippets', key);
+        if (cached !== undefined) return cached;
+
+        // Fetch full extract text (removed exchars limit to scan the whole article)
+        const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(sourceTitle)}&prop=extracts&exintro=false&explaintext=1&format=json&origin=*`;
+        try {
+            const data = await this.fetchWithRetry(url, 2);
+            const page = Object.values(data.query.pages)[0];
+            const text = page?.extract || '';
+
+            // Allow 2-letter words (e.g. UK, TV, US) and split by hyphens (e.g. Pay-per-view)
+            let targetWords = targetTitle.toLowerCase().split(/[\s-]+/).filter(w => w.length > 1);
+            if (targetWords.length === 0) targetWords = [targetTitle.toLowerCase()];
+
+            let bestSentence = null;
+            let bestScore = 0;
+
+            // Split by newlines first (handles list items & bullet points safely)
+            const blocks = text.split(/\n+/);
+            for (const block of blocks) {
+                // Further split by sentence-ending punctuation, or take the whole block if none
+                const sentences = block.match(/[^.!?]+[.!?]+(\s|$)|.+/g) || [block];
+
+                for (let sent of sentences) {
+                    sent = sent.trim();
+                    if (sent.length < 5) continue; // Skip tiny fragments
+
+                    const lower = sent.toLowerCase();
+                    let score = 0;
+
+                    // Huge boost for an exact phrase match
+                    if (lower.includes(targetTitle.toLowerCase())) score += 50;
+
+                    // Word level matches
+                    score += targetWords.filter(w => lower.includes(w)).length;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        // Truncate massively long strings (e.g., massive list without periods)
+                        if (sent.length > 350) {
+                            const firstMatch = targetWords.find(w => lower.includes(w)) || targetTitle.toLowerCase();
+                            const idx = lower.indexOf(firstMatch);
+                            const start = Math.max(0, idx - 120);
+                            const end = Math.min(sent.length, idx + 150);
+                            sent = (start > 0 ? '... ' : '') + sent.substring(start, end).trim() + (end < sent.length ? ' ...' : '');
+                        }
+                        bestSentence = sent;
                     }
-                }
-            });
-            this.network.on('dragging', () => {
-                if (this.dragState.active) {
-                    const ppos = this.network.getPositions([this.dragState.parentId])[this.dragState.parentId];
-                    this.nodes.update(Object.keys(this.dragState.offsets).map(id => ({
-                        id, x: ppos.x + this.dragState.offsets[id].dx, y: ppos.y + this.dragState.offsets[id].dy
-                    })));
-                }
-            });
-            this.network.on('dragEnd', () => this.dragState.active = false);
-            this.network.on('selectNode', params => { if (!this.editMode) this.expandNode(params.nodes[0]); });
-            this.network.on('oncontext', params => {
-                params.event.preventDefault();
-                const id = this.network.getNodeAt(params.pointer.DOM);
-                if (id && !this.editMode) this.toggleCollapse(id);
-            });
-            this.network.on('hoverNode', async params => {
-                if (this.editMode || this.dragState.active) return;
-                const nid = params.node; this.hoveredNode = nid;
-                let ext = SessionCache.get('extracts', nid);
-                const img = SessionCache.get('images', nid);
-                const pos = this.network.canvasToDOM(this.network.getPositions([nid])[nid]);
-                const rect = this.container.getBoundingClientRect();
-
-                let left = pos.x + 20, top = pos.y - 20;
-                if (left + 300 > rect.width) left = pos.x - 320;
-                if (top < 0) top = pos.y + 20;
-
-                this.tooltipEl.style.left = left + 'px';
-                this.tooltipEl.style.top = top + 'px';
-                this.tooltipEl.innerHTML = `
-                    ${img ? `<img src="${img}" class="w-full h-28 object-cover rounded-lg mb-3" style="object-position:top;">` : ''}
-                    <strong style="color:var(--accent-cyan);font-size:13px;font-family:'Syne',sans-serif;display:block;margin-bottom:6px;">${nid}</strong>
-                    <p style="color:#8899b4;font-size:11px;line-height:1.65;font-family:'Plus Jakarta Sans',sans-serif;">${ext || '⏳ Fetching summary...'}</p>
-                    <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(nid)}" target="_blank"
-                       style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:10px;color:var(--accent-cyan);font-family:'JetBrains Mono',monospace;text-decoration:none;pointer-events:auto;">
-                        Open Wikipedia ↗
-                    </a>
-                `;
-                this.tooltipEl.classList.remove('hidden');
-                if (!ext) {
-                    ext = await WikiAPI.fetchSingleExtract(nid);
-                    if (this.hoveredNode === nid) {
-                        const p = this.tooltipEl.querySelector('p');
-                        if (p) p.innerText = ext;
-                    }
-                }
-            });
-            this.network.on('blurNode', () => { this.hoveredNode = null; this.tooltipEl.classList.add('hidden'); });
-        }
-
-        toggleEditMode() {
-            this.editMode = !this.editMode;
-            this.network.setOptions({ manipulation: { enabled: this.editMode } });
-            document.getElementById('btn-edit').classList.toggle('active', this.editMode);
-            if (this.editMode) this.tooltipEl.classList.add('hidden');
-            Toast.show(this.editMode ? 'Edit mode on — draw edges, delete nodes' : 'Edit mode off', 'success');
-        }
-        toggleFocusMode() {
-            this.focusMode = !this.focusMode;
-            document.getElementById('btn-focus').classList.toggle('active', this.focusMode);
-            this.nodes.update(this.nodes.get().map(n => ({
-                id: n.id, ...this.getStyles(
-                    this.mainPath.includes(n.id) ? (n.id === this.mainPath[0] ? 'start' : n.id === this.mainPath[this.mainPath.length - 1] ? 'end' : 'path')
-                    : (n.image ? 'expanded' : 'context'),
-                    !!n.image)
-            })));
-            Toast.show(this.focusMode ? 'Focus mode — path highlighted' : 'Focus mode off', 'success');
-        }
-        toggleCollapse(nodeId) {
-            if (this.collapsedData[nodeId]) {
-                const data = this.collapsedData[nodeId];
-                const nodesToAdd = data.nodes.filter(n => !this.nodes.get(n.id));
-                if (nodesToAdd.length) this.nodes.add(nodesToAdd);
-                this.edges.add(data.edges.filter(e => !this.edges.get(e.id)));
-                nodesToAdd.forEach(n => this.addedNodes.add(n.id));
-                delete this.collapsedData[nodeId];
-                Toast.show(`Expanded ${nodeId}`, 'success');
-            } else {
-                const subtree = this.getDependentSubtree(nodeId);
-                if (subtree.length > 0) {
-                    this.collapsedData[nodeId] = {
-                        nodes: this.nodes.get(subtree),
-                        edges: this.edges.get().filter(e => subtree.includes(e.from) || subtree.includes(e.to))
-                    };
-                    this.nodes.remove(subtree);
-                    subtree.forEach(n => this.addedNodes.delete(n));
-                    Toast.show(`Collapsed ${subtree.length} node${subtree.length > 1 ? 's' : ''}`, 'success');
                 }
             }
+
+            const result = bestScore > 0 ? bestSentence : null;
+            SessionCache.set('snippets', key, result);
+            return result;
+        } catch {
+            SessionCache.set('snippets', key, null);
+            return null;
         }
-        async expandNode(nodeId) {
-            document.body.style.cursor = 'wait';
-            const links = await WikiAPI.fetchLinks(nodeId);
-            const sample = links.filter(l => !this.addedNodes.has(l)).sort(() => 0.5 - Math.random()).slice(0, 5);
-            if (sample.length > 0) {
-                await WikiAPI.fetchContextForTitles(sample);
-                const ppos = this.network.getPositions([nodeId])[nodeId];
-                const neighbors = this.network.getConnectedNodes(nodeId);
-                const npos = this.network.getPositions(neighbors);
-                let exAngles = neighbors.map(id => {
-                    let a = Math.atan2(npos[id].y - ppos.y, npos[id].x - ppos.x);
-                    return a < 0 ? a + 2 * Math.PI : a;
-                }).sort((a, b) => a - b);
-                let startA = 0, spread = 2 * Math.PI;
-                if (exAngles.length > 0) {
-                    let maxG = 0, bestS = 0;
-                    for (let i = 0; i < exAngles.length; i++) {
-                        const g = (exAngles[(i + 1) % exAngles.length] - exAngles[i] + 2 * Math.PI) % (2 * Math.PI);
-                        if (g > maxG) { maxG = g; bestS = exAngles[i]; }
-                    }
-                    startA = bestS + Math.PI / 6; spread = maxG - Math.PI / 3;
-                }
-                const isClear = (x, y, buffer = 90) => {
-                    const allPos = this.network.getPositions(this.nodes.getIds());
-                    for (const id in allPos) {
-                        const dx = x - allPos[id].x, dy = y - allPos[id].y;
-                        if (Math.sqrt(dx * dx + dy * dy) < buffer) return false;
-                    }
-                    return true;
-                };
-                sample.forEach((link, i) => {
-                    const img = SessionCache.get('images', link);
-                    const angle = startA + (sample.length > 1 ? (i * spread / (sample.length - 1)) : spread / 2);
-                    let rad = 180, fx, fy;
-                    for (let step = 0; step < 10; step++) {
-                        fx = ppos.x + rad * Math.cos(angle);
-                        fy = ppos.y + rad * Math.sin(angle);
-                        if (isClear(fx, fy)) break;
-                        rad += 60;
-                    }
-                    this.nodes.add({ id: link, label: link, x: fx, y: fy, ...this.getStyles('expanded', !!img), ...(img && { image: img }) });
+    }
+}
+
+/* ══════════════════════════════════════════════
+   PATH EXPORTER
+══════════════════════════════════════════════ */
+const PathExporter = {
+    _data: null,
+
+    setData(path, hops, timeStr, nodesExplored, snippets) {
+        this._data = { path, hops, timeStr, nodesExplored, snippets, timestamp: new Date().toISOString() };
+    },
+
+    exportMarkdown() {
+        if (!this._data) { Toast.show('No path to export','error'); return; }
+        const d = this._data;
+        const lines = [
+            `# Wiki Rabbit Hole — Path Report`,
+            ``,
+            `**Generated:** ${d.timestamp}  `,
+            `**Hops:** ${d.hops}  `,
+            `**Time:** ${d.timeStr}  `,
+            `**Nodes Explored:** ${d.nodesExplored}  `,
+            ``,
+            `## Path`,
+            ``,
+            `\`${d.path.join(' → ')}\``,
+            ``,
+            `## Step-by-Step`,
+            ``
+        ];
+
+        d.path.forEach((title, i) => {
+            const isLast = i === d.path.length - 1;
+            lines.push(`### ${i+1}. [${title}](https://en.wikipedia.org/wiki/${encodeURIComponent(title)})`);
+            if (!isLast && d.snippets[i]) {
+                const nextTitle = d.path[i+1];
+                lines.push(`> *"${d.snippets[i]}"*`);
+                lines.push(`↳ Mentions **${nextTitle}** in context`);
+            }
+            const extract = SessionCache.get('extracts', title);
+            if (extract) lines.push(`\n${extract}`);
+            lines.push('');
+        });
+
+        lines.push('---');
+        lines.push('*Generated by [WikiRabbitHole](https://en.wikipedia.org)*');
+
+        this._download(lines.join('\n'), `wiki-path-${d.path[0]}-to-${d.path[d.path.length-1]}.md`, 'text/markdown');
+        Toast.show('Markdown exported!', 'success');
+    },
+
+    exportJSON() {
+        if (!this._data) { Toast.show('No path to export','error'); return; }
+        const d = this._data;
+        const json = {
+            metadata: { generated: d.timestamp, tool: 'WikiRabbitHole', mode: AppController.state.mode },
+            traversal: { hops: d.hops, time_seconds: parseFloat(d.timeStr), nodes_explored: d.nodesExplored },
+            path: d.path.map((title, i) => ({
+                index: i, title,
+                url: `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`,
+                extract: SessionCache.get('extracts', title) || null,
+                image: SessionCache.get('images', title) || null,
+                categories: SessionCache.get('categories', title) || [],
+                snippet_to_next: i < d.path.length-1 ? (d.snippets[i] || null) : null,
+                next_article: i < d.path.length-1 ? d.path[i+1] : null
+            }))
+        };
+        this._download(JSON.stringify(json, null, 2), `wiki-path-${Date.now()}.json`, 'application/json');
+        Toast.show('JSON exported!', 'success');
+    },
+
+    _download(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+};
+
+/* ══════════════════════════════════════════════
+   GRAPH ENGINE
+══════════════════════════════════════════════ */
+class GraphEngine {
+    constructor(containerId) {
+        this.container  = document.getElementById(containerId);
+        this.network    = null;
+        this.tooltipEl  = document.getElementById('custom-tooltip');
+        this.nodes      = new vis.DataSet();
+        this.edges      = new vis.DataSet();
+        this.addedNodes = new Set();
+        this.collapsedData = {};
+        this.mainPath   = [];
+        this.focusMode  = false;
+        this.editMode   = false;
+        this.dragState  = { active: false, parentId: null, offsets: {} };
+        this.hoveredNode = null;
+    }
+
+    getNodeStyle(title, type) {
+        const catColor = CategorySystem.getNodeColor(title);
+        const imgUrl   = SessionCache.get('images', title);
+        const hasImg   = !!imgUrl;
+
+        const baseStyles = {
+            start:    { bg: '#4fd1ff', border: '#0891b2', size: 28 },
+            end:      { bg: '#ff4f7b', border: '#e11d48', size: 32 },
+            path:     { bg: catColor || '#3b82f6', border: catColor ? this._darken(catColor) : '#2563eb', size: 22 },
+            context:  { bg: '#0e1a30', border: '#111e36', size: 9, fontColor: '#3a4d68' },
+            expanded: { bg: catColor || '#8b5cf6', border: catColor ? this._darken(catColor) : '#6d28d9', size: 14, fontColor: catColor ? '#fff' : '#c4b5fd' }
+        };
+
+        const s = baseStyles[type] || baseStyles.context;
+        let shape = hasImg ? 'circularImage' : (type === 'context' ? 'dot' : type === 'expanded' ? 'dot' : 'hexagon');
+        if (type === 'end' && !hasImg) shape = 'star';
+
+        const dimmed = this.focusMode && (type === 'context' || type === 'expanded');
+
+        return {
+            color: {
+                background: s.bg,
+                border: s.border,
+                highlight: { background: '#fff', border: s.bg },
+                opacity: dimmed ? 0.08 : 1
+            },
+            size: s.size,
+            shape,
+            font: {
+                color: s.fontColor || '#eef4ff',
+                face: 'Plus Jakarta Sans',
+                strokeWidth: type === 'context' ? 0 : 3,
+                strokeColor: '#030711',
+                size: type === 'context' ? 9 : 12
+            },
+            borderWidth: hasImg ? 3 : 2,
+            shadow: { enabled: !dimmed, color: 'rgba(0,0,0,0.65)', size: 10, x: 0, y: 4 },
+            opacity: dimmed ? 0.08 : 1,
+            ...(hasImg && { image: imgUrl })
+        };
+    }
+
+    _darken(hex) {
+        const n = parseInt(hex.slice(1), 16);
+        const r = Math.max(0, (n >> 16) - 50), g = Math.max(0, ((n >> 8) & 0xff) - 50), b = Math.max(0, (n & 0xff) - 50);
+        return `#${[r,g,b].map(v => v.toString(16).padStart(2,'0')).join('')}`;
+    }
+
+    getDependentSubtree(targetNodeId) {
+        const coreAnchors = this.mainPath.filter(n => n !== targetNodeId);
+        if (!coreAnchors.length) return [];
+        const reachable = new Set(coreAnchors);
+        const queue = [...coreAnchors]; let head = 0;
+        while (head < queue.length) {
+            const cur = queue[head++];
+            for (const nb of this.network.getConnectedNodes(cur)) {
+                if (nb !== targetNodeId && !reachable.has(nb)) { reachable.add(nb); queue.push(nb); }
+            }
+        }
+        const subtree = [];
+        this.addedNodes.forEach(id => { if (id !== targetNodeId && !reachable.has(id)) subtree.push(id); });
+        return subtree;
+    }
+
+    async render(path, contextCache) {
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('graph-legend').classList.remove('hidden');
+        this.nodes.clear(); this.edges.clear(); this.addedNodes.clear(); this.collapsedData = {};
+        this.mainPath = path;
+        this.focusMode = false; this.editMode = false;
+
+        await WikiAPI.fetchContextForTitles(path);
+        await WikiAPI.fetchCategories(path);
+        CategorySystem.updateLegend();
+
+        // Main path nodes
+        path.forEach((title, i) => {
+            const type = i === 0 ? 'start' : (i === path.length-1 ? 'end' : 'path');
+            this.nodes.add({ id: title, label: title, ...this.getNodeStyle(title, type) });
+            this.addedNodes.add(title);
+            if (i < path.length-1) {
+                this.edges.add({
+                    from: title, to: path[i+1],
+                    color: { color: '#818cf8', highlight: '#c4b5fd', opacity: 0.9 },
+                    width: 3, arrows: 'to',
+                    smooth: { type: 'cubicBezier', forceDirection: 'none' }
+                });
+            }
+        });
+
+        // Context nodes
+        path.slice(0,-1).forEach(pathNode => {
+            const links = (contextCache[pathNode] || []).filter(l => !path.includes(l)).sort(() => 0.5 - Math.random()).slice(0, 4);
+            links.forEach(link => {
+                if (!this.addedNodes.has(link)) {
+                    this.nodes.add({ id: link, label: link, ...this.getNodeStyle(link, 'context') });
                     this.addedNodes.add(link);
-                    this.edges.add({ from: nodeId, to: link, color: 'rgba(139,92,246,0.45)', width: 2, arrows: 'to' });
-                });
-                Toast.show(`Expanded "${nodeId}" → ${sample.length} nodes`, 'success');
-            } else {
-                Toast.show('No new nodes to expand', 'error');
-            }
-            document.body.style.cursor = 'default';
-        }
+                }
+                this.edges.add({ from: pathNode, to: link, color: { color: 'rgba(17,30,54,0.7)' }, width: 1, arrows: 'to' });
+            });
+        });
 
-        zoomIn()  { if (this.network) this.network.moveTo({ scale: this.network.getScale() * 1.5, animation: { duration: 200, easingFunction: 'easeInOutQuad' } }); }
-        zoomOut() { if (this.network) this.network.moveTo({ scale: this.network.getScale() / 1.5, animation: { duration: 200, easingFunction: 'easeInOutQuad' } }); }
-        fitGraph(){ if (this.network) this.network.fit({ animation: { duration: 400, easingFunction: 'easeInOutQuad' } }); }
-        exportPNG() {
-            if (!this.network) { Toast.show('No graph to export', 'error'); return; }
-            try {
-                const canvas = this.network.canvas.frame.canvas;
-                const link = document.createElement('a');
-                link.download = 'wiki-rabbit-hole.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-                Toast.show('Graph exported as PNG', 'success');
-            } catch (e) { Toast.show('Export failed', 'error'); }
+        const options = {
+            physics: {
+                barnesHut: { gravitationalConstant: -2800, centralGravity: 0.08, springLength: 170, springConstant: 0.035, damping: 0.1 },
+                stabilization: { iterations: 250, fit: true }
+            },
+            interaction: { hover: true, tooltipDelay: 100, hideEdgesOnDrag: true, zoomView: true },
+            manipulation: { enabled: false }
+        };
+
+        if (this.network) this.network.destroy();
+        this.network = new vis.Network(this.container, { nodes: this.nodes, edges: this.edges }, options);
+        this.network.on('stabilizationIterationsDone', () => {
+            this.network.setOptions({ physics: { enabled: false } });
+        });
+
+        // Drag with subtree
+        this.network.on('dragStart', params => {
+            this.tooltipEl.classList.add('hidden');
+            if (params.nodes.length === 1 && !this.editMode) {
+                const pid = params.nodes[0];
+                const subtree = this.getDependentSubtree(pid);
+                if (subtree.length > 0) {
+                    this.dragState = { active: true, parentId: pid, offsets: {} };
+                    const ppos = this.network.getPositions([pid])[pid];
+                    const cpos = this.network.getPositions(subtree);
+                    subtree.forEach(id => {
+                        this.dragState.offsets[id] = { dx: cpos[id].x - ppos.x, dy: cpos[id].y - ppos.y };
+                    });
+                }
+            }
+        });
+        this.network.on('dragging', () => {
+            if (this.dragState.active) {
+                const ppos = this.network.getPositions([this.dragState.parentId])[this.dragState.parentId];
+                this.nodes.update(Object.keys(this.dragState.offsets).map(id => ({
+                    id, x: ppos.x + this.dragState.offsets[id].dx, y: ppos.y + this.dragState.offsets[id].dy
+                })));
+            }
+        });
+        this.network.on('dragEnd', () => this.dragState.active = false);
+        this.network.on('selectNode', params => { if (!this.editMode) this.expandNode(params.nodes[0]); });
+        this.network.on('oncontext', params => {
+            params.event.preventDefault();
+            const id = this.network.getNodeAt(params.pointer.DOM);
+            if (id && !this.editMode) this.toggleCollapse(id);
+        });
+
+        // Tooltip
+        this.network.on('hoverNode', async params => {
+            if (this.editMode || this.dragState.active) return;
+            const nid = params.node;
+            const realTitle = nid;
+            this.hoveredNode = nid;
+            let ext = SessionCache.get('extracts', realTitle);
+            const img = SessionCache.get('images', realTitle);
+            const cat = CategorySystem.nodeCategories.get(realTitle);
+            const pos = this.network.canvasToDOM(this.network.getPositions([nid])[nid]);
+            const rect = this.container.getBoundingClientRect();
+
+            let left = pos.x + 24, top = pos.y - 24;
+            if (left + 310 > rect.width) left = pos.x - 320;
+            if (top < 10) top = pos.y + 24;
+            if (top + 240 > rect.height) top = rect.height - 250;
+
+            this.tooltipEl.style.left = left + 'px';
+            this.tooltipEl.style.top  = top  + 'px';
+            this.tooltipEl.innerHTML = `
+                ${img ? `<img src="${img}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:10px;object-position:top;">` : ''}
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                    <strong style="color:var(--accent-primary);font-size:12px;font-family:'Syne',sans-serif;line-height:1.3;">${realTitle}</strong>
+                    ${cat ? `<span style="font-size:9px;padding:1px 6px;border-radius:99px;background:rgba(0,0,0,0.3);color:${cat.color};border:1px solid ${cat.color}44;flex-shrink:0;">${cat.label}</span>` : ''}
+                </div>
+                <p style="color:#7b90b8;font-size:10px;line-height:1.65;font-family:'Plus Jakarta Sans',sans-serif;">${ext || '<span style="color:var(--text-dim);">⏳ Loading...</span>'}</p>
+                <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(realTitle)}" target="_blank"
+                   style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:9px;color:var(--accent-primary);font-family:'JetBrains Mono',monospace;text-decoration:none;pointer-events:auto;">
+                    Open Wikipedia ↗
+                </a>
+            `;
+            this.tooltipEl.classList.remove('hidden');
+            if (!ext) {
+                ext = await WikiAPI.fetchSingleExtract(realTitle);
+                if (this.hoveredNode === nid) {
+                    const p = this.tooltipEl.querySelector('p');
+                    if (p) p.innerText = ext;
+                }
+            }
+        });
+        this.network.on('blurNode', () => { this.hoveredNode = null; this.tooltipEl.classList.add('hidden'); });
+    }
+
+    toggleEditMode() {
+        this.editMode = !this.editMode;
+        this.network?.setOptions({ manipulation: { enabled: this.editMode } });
+        document.getElementById('btn-edit').classList.toggle('active', this.editMode);
+        if (this.editMode) this.tooltipEl.classList.add('hidden');
+        Toast.show(this.editMode ? 'Edit mode on — draw edges, delete nodes' : 'Edit mode off', 'success');
+    }
+
+    toggleFocusMode() {
+        this.focusMode = !this.focusMode;
+        document.getElementById('btn-focus').classList.toggle('active', this.focusMode);
+        this.nodes.update(this.nodes.get().map(n => {
+            const t = n.id;
+            let type = 'context';
+            if (this.mainPath.includes(t)) {
+                type = t === this.mainPath[0] ? 'start' : t === this.mainPath[this.mainPath.length-1] ? 'end' : 'path';
+            } else if (SessionCache.images.has(t)) type = 'expanded';
+            return { id: n.id, ...this.getNodeStyle(t, type) };
+        }));
+        Toast.show(this.focusMode ? 'Focus mode — path highlighted' : 'Focus mode off', 'success');
+    }
+
+    toggleCollapse(nodeId) {
+        if (this.collapsedData[nodeId]) {
+            const data = this.collapsedData[nodeId];
+            const toAdd = data.nodes.filter(n => !this.nodes.get(n.id));
+            if (toAdd.length) this.nodes.add(toAdd);
+            this.edges.add(data.edges.filter(e => !this.edges.get(e.id)));
+            toAdd.forEach(n => this.addedNodes.add(n.id));
+            delete this.collapsedData[nodeId];
+            Toast.show(`Expanded ${nodeId}`, 'success');
+        } else {
+            const subtree = this.getDependentSubtree(nodeId);
+            if (subtree.length > 0) {
+                this.collapsedData[nodeId] = {
+                    nodes: this.nodes.get(subtree),
+                    edges: this.edges.get().filter(e => subtree.includes(e.from) || subtree.includes(e.to))
+                };
+                this.nodes.remove(subtree);
+                subtree.forEach(n => this.addedNodes.delete(n));
+                Toast.show(`Collapsed ${subtree.length} node${subtree.length > 1 ? 's' : ''}`, 'success');
+            }
         }
     }
 
-    /* ══════════════════════════════════════════════════════════
-       APP CONTROLLER
-    ══════════════════════════════════════════════════════════ */
-    const AppController = {
-        state: { isSearching: false, cancelFlag: false, startTime: 0, nodesExplored: 0, timerInterval: null, finalTime: 0 },
-        graph: new GraphEngine('network-canvas'),
+    async expandNode(nodeId) {
+        if (!this.network) return;
+        document.body.style.cursor = 'wait';
+        const realId = nodeId;
+        const links = await WikiAPI.fetchLinks(realId);
+        const sample = links.filter(l => !this.addedNodes.has(l)).sort(() => 0.5-Math.random()).slice(0,5);
 
-        el: {
-            form:        () => document.getElementById('app-form'),
-            startInput:  () => document.getElementById('input-start'),
-            endInput:    () => document.getElementById('input-end'),
-            acStart:     () => document.getElementById('autocomplete-start'),
-            acEnd:       () => document.getElementById('autocomplete-end'),
-            btnSearch:   () => document.getElementById('btn-search'),
-            btnCancel:   () => document.getElementById('btn-cancel'),
-            btnRandom:   () => document.getElementById('btn-random'),
-            statusPanel: () => document.getElementById('status-panel'),
-            statusMsg:   () => document.getElementById('status-msg'),
-            statusDepth: () => document.getElementById('status-depth'),
-            statusProg:  () => document.getElementById('status-progress'),
-            headerProg:  () => document.getElementById('header-progress'),
-            headerStat:  () => document.getElementById('header-status'),
-            statTime:    () => document.getElementById('stat-time'),
-            statNodes:   () => document.getElementById('stat-nodes'),
-            resultsPanel:() => document.getElementById('results-panel'),
-            pathList:    () => document.getElementById('path-list'),
-            progressFill:() => document.getElementById('progress-fill'),
-        },
+        if (sample.length > 0) {
+            await WikiAPI.fetchContextForTitles(sample);
+            await WikiAPI.fetchCategories(sample);
+            CategorySystem.updateLegend();
 
-        /* Featured pairs */
-        inspiredPairs: [
-            { from: 'Black hole', to: 'Jazz' },
-            { from: 'Dinosaur', to: 'Bitcoin' },
-            { from: 'Cleopatra', to: 'Moon landing' },
-            { from: 'Chess', to: 'Artificial intelligence' },
-            { from: 'Shakespeare', to: 'Quantum mechanics' },
-            { from: 'Ancient Rome', to: 'Smartphone' },
-        ],
+            const ppos = this.network.getPositions([nodeId])[nodeId];
+            const neighbors = this.network.getConnectedNodes(nodeId);
+            const npos = this.network.getPositions(neighbors);
+            let exAngles = neighbors.map(id => {
+                let a = Math.atan2(npos[id]?.y - ppos.y, npos[id]?.x - ppos.x);
+                return a < 0 ? a + 2*Math.PI : a;
+            }).sort((a,b) => a-b);
 
-        init() {
-            this.el.form().addEventListener('submit', e => this.handleSearch(e));
-            this.el.btnCancel().addEventListener('click', () => this.cancelSearch());
-            this.el.btnRandom().addEventListener('click', () => this.handleRandom());
-            this.setupAutocomplete(this.el.startInput(), this.el.acStart());
-            this.setupAutocomplete(this.el.endInput(), this.el.acEnd());
-            this.setupClearButtons();
-            this.renderInspiredPairs();
-            this.setupKeyboard();
-            this.loadFromURL();
-            HistoryManager.render();
-            CookieManager.init();
-            lucide.createIcons();
-        },
-
-        setupClearButtons() {
-            ['start', 'end'].forEach(id => {
-                const input = document.getElementById(`input-${id}`);
-                const btn = document.getElementById(`btn-clear-${id}`);
-                input.addEventListener('input', () => btn.classList.toggle('hidden', !input.value));
-            });
-        },
-
-        renderInspiredPairs() {
-            const container = document.getElementById('inspire-chips');
-            container.innerHTML = this.inspiredPairs.map(p => `
-                <button onclick="AppController.loadHistory('${p.from.replace(/'/g,"\\'")}','${p.to.replace(/'/g,"\\'")}' )"
-                        class="text-[10px] px-2.5 py-1 rounded-full transition-all"
-                        style="background: var(--bg-surface); border: 1px solid var(--border-dim); color: var(--text-secondary); font-family:'JetBrains Mono',monospace;"
-                        onmouseover="this.style.borderColor='rgba(34,211,238,0.3)'; this.style.color='var(--accent-cyan)'"
-                        onmouseout="this.style.borderColor='var(--border-dim)'; this.style.color='var(--text-secondary)'">
-                    ${p.from} → ${p.to}
-                </button>
-            `).join('');
-        },
-
-        setupKeyboard() {
-            document.addEventListener('keydown', e => {
-                const tag = e.target.tagName;
-                if (tag === 'INPUT' || tag === 'TEXTAREA') {
-                    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                        e.preventDefault();
-                        this.handleSearch(new Event('submit'));
-                    }
-                    return;
+            let startA = 0, spread = 2*Math.PI;
+            if (exAngles.length > 0) {
+                let maxG = 0, bestS = 0;
+                for (let i = 0; i < exAngles.length; i++) {
+                    const g = (exAngles[(i+1)%exAngles.length] - exAngles[i] + 2*Math.PI) % (2*Math.PI);
+                    if (g > maxG) { maxG = g; bestS = exAngles[i]; }
                 }
-                switch (e.key.toLowerCase()) {
-                    case 'r': this.handleRandom(); break;
-                    case 'escape': this.cancelSearch(); break;
-                    case 'f': this.fitGraph(); break;
-                    case 'v': this.toggleFocusMode(); break;
-                    case 'e': this.exportGraph(); break;
-                    case 's': this.swapInputs(); break;
-                    case '?': ShortcutsModal.show(); break;
-                }
-            });
-        },
-
-        loadFromURL() {
-            const params = new URLSearchParams(window.location.search);
-            const from = params.get('from'), to = params.get('to');
-            if (from && to) {
-                this.el.startInput().value = from;
-                this.el.endInput().value = to;
-                document.getElementById('btn-clear-start').classList.remove('hidden');
-                document.getElementById('btn-clear-end').classList.remove('hidden');
-                setTimeout(() => this.handleSearch(new Event('submit')), 600);
+                startA = bestS + Math.PI/6; spread = maxG - Math.PI/3;
             }
-        },
 
-        setupAutocomplete(input, dropdown) {
-            let timer;
-            input.addEventListener('input', e => {
-                clearTimeout(timer);
-                const val = e.target.value.trim();
-                if (val.length < 2) { dropdown.classList.add('hidden'); return; }
-                timer = setTimeout(async () => {
-                    const sug = await WikiAPI.searchSuggestions(val);
-                    if (sug.length) {
-                        dropdown.innerHTML = sug.map(s => `
-                            <li class="px-4 py-2.5 text-xs cursor-pointer transition-colors flex items-center gap-2"
-                                style="color: var(--text-primary); font-family:'Plus Jakarta Sans',sans-serif;"
-                                onmouseover="this.style.background='rgba(34,211,238,0.06)'"
-                                onmouseout="this.style.background=''"
-                                data-val="${s}">
-                                <i data-lucide="search" style="width:12px;height:12px;color:var(--text-dim);flex-shrink:0;"></i>
-                                ${s}
-                            </li>
-                        `).join('');
-                        dropdown.classList.remove('hidden');
-                        lucide.createIcons();
-                    } else { dropdown.classList.add('hidden'); }
-                }, 280);
-            });
-            dropdown.addEventListener('mousedown', e => {
-                const li = e.target.closest('li');
-                if (li) { input.value = li.dataset.val; dropdown.classList.add('hidden'); document.getElementById(`btn-clear-${input.id.replace('input-', '')}`).classList.remove('hidden'); }
-            });
-            document.addEventListener('click', e => { if (!dropdown.contains(e.target) && e.target !== input) dropdown.classList.add('hidden'); });
-        },
+            const isClear = (x,y,buf=85) => {
+                const allPos = this.network.getPositions(this.nodes.getIds());
+                for (const id in allPos) {
+                    const dx = x - allPos[id].x, dy = y - allPos[id].y;
+                    if (Math.sqrt(dx*dx + dy*dy) < buf) return false;
+                }
+                return true;
+            };
 
-        async handleRandom() {
-            Toast.show('Fetching random pair...', 'success');
-            const p = await WikiAPI.getRandomPairs();
-            this.el.startInput().value = p[0];
-            this.el.endInput().value = p[1];
+            sample.forEach((link, i) => {
+                const angle = startA + (sample.length > 1 ? (i * spread / (sample.length-1)) : spread/2);
+                let rad = 175, fx, fy;
+                for (let step = 0; step < 10; step++) {
+                    fx = ppos.x + rad * Math.cos(angle);
+                    fy = ppos.y + rad * Math.sin(angle);
+                    if (isClear(fx, fy)) break;
+                    rad += 55;
+                }
+                this.nodes.add({ id: link, label: link, x: fx, y: fy, ...this.getNodeStyle(link, 'expanded') });
+                this.addedNodes.add(link);
+                this.edges.add({ from: nodeId, to: link, color: { color: 'rgba(139,92,246,0.4)' }, width: 2, arrows: 'to' });
+            });
+            Toast.show(`Expanded "${realId}" → ${sample.length} nodes`, 'success');
+        } else {
+            Toast.show('No new nodes to expand', 'error');
+        }
+        document.body.style.cursor = 'default';
+    }
+
+    zoomIn()  { this.network?.moveTo({ scale: this.network.getScale() * 1.5, animation: { duration: 200, easingFunction: 'easeInOutQuad' } }); }
+    zoomOut() { this.network?.moveTo({ scale: this.network.getScale() / 1.5, animation: { duration: 200, easingFunction: 'easeInOutQuad' } }); }
+    fitGraph(){ this.network?.fit({ animation: { duration: 400, easingFunction: 'easeInOutQuad' } }); }
+
+    async exportPNG() {
+        if (!this.network) { Toast.show('No graph to export','error'); return; }
+        Toast.show('Preparing PNG export…','success');
+
+        this.network.fit({ animation: { duration: 300, easingFunction: 'easeInOutQuad' } });
+        await new Promise(r => setTimeout(r, 450));
+
+        try {
+            const visCanvas = this.network.canvas.frame.canvas;
+            const dpr = Math.max(window.devicePixelRatio || 1, 2);
+
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width  = visCanvas.width  * dpr;
+            exportCanvas.height = visCanvas.height * dpr;
+            const ctx = exportCanvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+
+            ctx.fillStyle = '#030711';
+            ctx.fillRect(0, 0, visCanvas.width, visCanvas.height);
+
+            ctx.strokeStyle = 'rgba(79,209,255,0.025)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < visCanvas.width; x += 48) {
+                ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x, visCanvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < visCanvas.height; y += 48) {
+                ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(visCanvas.width, y); ctx.stroke();
+            }
+
+            ctx.drawImage(visCanvas, 0, 0);
+
+            ctx.font = '11px "JetBrains Mono", monospace';
+            ctx.fillStyle = 'rgba(79,209,255,0.35)';
+            ctx.textAlign = 'right';
+            ctx.fillText('WikiRabbitHole', visCanvas.width - 12, visCanvas.height - 12);
+
+            const link = document.createElement('a');
+            link.download = `wiki-rabbit-hole-${Date.now()}.png`;
+            link.href = exportCanvas.toDataURL('image/png', 1.0);
+            link.click();
+            Toast.show('Graph exported! High-res PNG saved.','success');
+        } catch(e) {
+            Toast.show('Export failed — check browser permissions','error');
+            console.error('PNG export error:', e);
+        }
+    }
+}
+
+/* ══════════════════════════════════════════════
+   ALGORITHM RUNNER
+══════════════════════════════════════════════ */
+const AlgorithmRunner = {
+    /* Shortest mode: Bidirectional BFS */
+    async runBidirectionalBFS(s, e, state) {
+        let fQ = [s], bQ = [e];
+        let fV = new Set([s]), bV = new Set([e]);
+        let fP = { [s]: [s] }, bP = { [e]: [e] };
+        let ctx = {}, depth = 0;
+
+        while (fQ.length && bQ.length) {
+            if (state.cancelFlag) return { error: 'Traversal aborted.' };
+            depth++;
+            state.onDepth(depth);
+
+            const currF = fQ.shift();
+            const fLinks = await WikiAPI.fetchLinks(currF);
+            ctx[currF] = fLinks;
+            state.onNode();
+
+            for (const l of fLinks) {
+                if (state.cancelFlag) return { error: 'Traversal aborted.' };
+                if (bV.has(l)) {
+                    return { path: [...fP[currF], l, ...bP[l].slice(0,-1).reverse()], context: ctx };
+                }
+                if (!fV.has(l)) { fV.add(l); fP[l] = [...fP[currF], l]; fQ.push(l); }
+            }
+
+            if (state.cancelFlag) return { error: 'Traversal aborted.' };
+            const currB = bQ.shift();
+            const bLinks = await WikiAPI.fetchBacklinks(currB);
+            state.onNode();
+
+            for (const l of bLinks) {
+                if (state.cancelFlag) return { error: 'Traversal aborted.' };
+                if (fV.has(l)) {
+                    return { path: [...fP[l], ...bP[currB].slice().reverse()], context: ctx };
+                }
+                if (!bV.has(l)) { bV.add(l); bP[l] = [...bP[currB], l]; bQ.push(l); }
+            }
+        }
+        return { error: 'No path found between these articles.' };
+    },
+
+    /* Thematic & Obscure mode: Modified Greedy heuristic */
+    async runGreedy(s, e, state, mode) {
+        const score = (title) => {
+            if (title === e) return 99999;
+            const tWords = new Set(e.toLowerCase().split(/\W+/).filter(w => w.length > 2));
+            const cWords = title.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+            let overlap = cWords.filter(w => tWords.has(w)).length;
+            let base = overlap * 10;
+
+            if (mode === 'thematic') {
+                // Prefers semantic overlap with target
+                return base + (title.length > 3 && e.toLowerCase().includes(title.slice(0,4).toLowerCase()) ? 5 : 0);
+            } else if (mode === 'obscure') {
+                // Penalizes direct word overlaps, prefers long complex titles, adds randomness to wander
+                return -base + (title.length * 0.5) + (Math.random() * 50);
+            }
+            return base;
+        };
+
+        let queue = [{ path: [s], priority: score(s) }];
+        const visited = new Set([s]);
+        const ctx = {};
+
+        while (queue.length) {
+            if (state.cancelFlag) return { error: 'Traversal aborted.' };
+            queue.sort((a,b) => b.priority - a.priority);
+            const { path } = queue.shift();
+            const current = path[path.length-1];
+
+            if (current === e) return { path, context: ctx };
+            if (path.length > 10) continue; // safety depth limit for wandering
+
+            const links = await WikiAPI.fetchLinks(current);
+            ctx[current] = links;
+            state.onNode();
+
+            for (const link of links) {
+                if (state.cancelFlag) return { error: 'Traversal aborted.' };
+                if (link === e) return { path: [...path, link], context: ctx };
+                if (!visited.has(link)) {
+                    visited.add(link);
+                    queue.push({ path: [...path, link], priority: score(link) });
+                    if (queue.length > 400) queue = queue.slice(0, 300);
+                }
+            }
+        }
+        return { error: `Search failed to find a path using ${mode} mode.` };
+    }
+};
+
+/* ══════════════════════════════════════════════
+   APP CONTROLLER
+══════════════════════════════════════════════ */
+const AppController = {
+    state: {
+        isSearching: false, cancelFlag: false, startTime: 0,
+        nodesExplored: 0, timerInterval: null, finalTime: 0,
+        mode: 'shortest', // 'shortest' | 'thematic' | 'obscure'
+    },
+    graph: new GraphEngine('network-canvas'),
+    _lastPath: null, _lastSnippets: [],
+
+    el: {
+        form:        () => document.getElementById('app-form'),
+        startInput:  () => document.getElementById('input-start'),
+        endInput:    () => document.getElementById('input-end'),
+        acStart:     () => document.getElementById('autocomplete-start'),
+        acEnd:       () => document.getElementById('autocomplete-end'),
+        btnSearch:   () => document.getElementById('btn-search'),
+        btnCancel:   () => document.getElementById('btn-cancel'),
+        btnRandom:   () => document.getElementById('btn-random'),
+        statusPanel: () => document.getElementById('status-panel'),
+        statusMsg:   () => document.getElementById('status-msg'),
+        statusDepth: () => document.getElementById('status-depth'),
+        statusProg:  () => document.getElementById('status-progress'),
+        headerProg:  () => document.getElementById('header-progress'),
+        headerStat:  () => document.getElementById('header-status'),
+        statTime:    () => document.getElementById('stat-time'),
+        statNodes:   () => document.getElementById('stat-nodes'),
+        statMode:    () => document.getElementById('stat-mode-lbl'),
+        resultsPanel:() => document.getElementById('results-panel'),
+        pathList:    () => document.getElementById('path-list'),
+        progressFill:() => document.getElementById('progress-fill'),
+    },
+
+    inspiredPairs: [
+        { from:'Black hole', to:'Jazz' },
+        { from:'Dinosaur', to:'Bitcoin' },
+        { from:'Cleopatra', to:'Moon landing' },
+        { from:'Chess', to:'Artificial intelligence' },
+        { from:'Shakespeare', to:'Quantum mechanics' },
+        { from:'Ancient Rome', to:'Smartphone' },
+    ],
+
+    init() {
+        this.el.form().addEventListener('submit', e => this.handleSearch(e));
+        this.el.btnCancel().addEventListener('click', () => this.cancelSearch());
+        this.el.btnRandom().addEventListener('click', () => this.handleRandom());
+        this.setupAutocomplete(this.el.startInput(), this.el.acStart());
+        this.setupAutocomplete(this.el.endInput(), this.el.acEnd());
+        this.setupClearButtons();
+        this.renderInspiredPairs();
+        this.setupKeyboard();
+        this.loadFromURL();
+        HistoryManager.render();
+        CookieManager.init();
+        lucide.createIcons();
+    },
+
+    setMode(mode) {
+        this.state.mode = mode;
+        ['shortest','thematic','obscure'].forEach(m => {
+            document.getElementById(`mode-${m}`).classList.toggle('active', m === mode);
+        });
+    },
+
+    setupClearButtons() {
+        ['start','end'].forEach(id => {
+            const input = document.getElementById(`input-${id}`);
+            const btn   = document.getElementById(`btn-clear-${id}`);
+            input.addEventListener('input', () => btn.classList.toggle('hidden', !input.value));
+        });
+    },
+
+    renderInspiredPairs() {
+        const container = document.getElementById('inspire-chips');
+        container.innerHTML = this.inspiredPairs.map(p => `
+            <button onclick="AppController.loadHistory('${p.from.replace(/'/g,"\\'")}','${p.to.replace(/'/g,"\\'")}' )"
+                    style="font-size:10px; padding:4px 10px; border-radius:99px; background:var(--bg-surface); border:1px solid var(--border-dim); color:var(--text-secondary); cursor:pointer; font-family:'JetBrains Mono',monospace; transition:all 0.15s;"
+                    onmouseover="this.style.borderColor='rgba(79,209,255,0.3)'; this.style.color='var(--accent-primary)'"
+                    onmouseout="this.style.borderColor='var(--border-dim)'; this.style.color='var(--text-secondary)'">
+                ${p.from} → ${p.to}
+            </button>
+        `).join('');
+    },
+
+    setupKeyboard() {
+        document.addEventListener('keydown', e => {
+            const tag = e.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); this.handleSearch(new Event('submit')); }
+                return;
+            }
+            switch(e.key.toLowerCase()) {
+                case 'r': this.handleRandom(); break;
+                case 'escape': this.cancelSearch(); break;
+                case 'f': this.fitGraph(); break;
+                case 'v': this.toggleFocusMode(); break;
+                case 'g': this.exportGraph(); break;
+                case 's': this.swapInputs(); break;
+                case '?': ShortcutsModal.show(); break;
+            }
+        });
+    },
+
+    loadFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        const from = params.get('from'), to = params.get('to');
+        const mode = params.get('mode');
+        const pathStr = params.get('path');
+
+        if (from && to) {
+            this.el.startInput().value = from;
+            this.el.endInput().value   = to;
+            if (mode) this.setMode(mode);
+
             document.getElementById('btn-clear-start').classList.remove('hidden');
             document.getElementById('btn-clear-end').classList.remove('hidden');
-        },
 
-        cancelSearch() {
-            if (this.state.isSearching) {
-                this.state.cancelFlag = true;
+            if (pathStr) {
+                const path = pathStr.split('|').map(decodeURIComponent);
+                this.state.isSearching = false;
+                this.setSearching(false);
+                this.restorePath(path);
+            } else {
+                setTimeout(() => this.handleSearch(new Event('submit')), 700);
+            }
+        }
+    },
+
+    async restorePath(path) {
+        this.el.statusPanel().classList.remove('hidden');
+        this.el.statusMsg().innerText = 'Restoring shared path...';
+        this.el.statNodes().innerText = 'Cached';
+        this.el.statTime().innerText  = '-';
+        this.state.finalTime = '0.0';
+        this.state.nodesExplored = path.length;
+
+        const modeLabels = { shortest:'BFS', thematic:'Them.', obscure:'Obsc.' };
+        this.el.statMode().innerText = modeLabels[this.state.mode] || 'BFS';
+
+        await WikiAPI.fetchContextForTitles(path);
+        await WikiAPI.fetchCategories(path);
+
+        await this.graph.render(path, {});
+        await this.renderResults(path);
+        this.el.statusPanel().classList.add('hidden');
+    },
+
+    setupAutocomplete(input, dropdown) {
+        let timer;
+        input.addEventListener('input', e => {
+            clearTimeout(timer);
+            const val = e.target.value.trim();
+            if (val.length < 2) { dropdown.classList.add('hidden'); return; }
+            timer = setTimeout(async () => {
+                const sug = await WikiAPI.searchSuggestions(val);
+                if (sug.length) {
+                    dropdown.innerHTML = sug.map(s => `
+                        <li style="padding:10px 14px; font-size:12px; cursor:pointer; color:var(--text-primary); font-family:'Plus Jakarta Sans',sans-serif; display:flex; align-items:center; gap:8px; transition:background 0.12s;"
+                            onmouseover="this.style.background='rgba(79,209,255,0.05)'"
+                            onmouseout="this.style.background=''"
+                            data-val="${s}">
+                            <i data-lucide="search" style="width:11px;height:11px;color:var(--text-dim);flex-shrink:0;"></i>
+                            ${s}
+                        </li>
+                    `).join('');
+                    dropdown.classList.remove('hidden');
+                    lucide.createIcons();
+                } else { dropdown.classList.add('hidden'); }
+            }, 270);
+        });
+        dropdown.addEventListener('mousedown', e => {
+            const li = e.target.closest('li');
+            if (li) {
+                input.value = li.dataset.val;
+                dropdown.classList.add('hidden');
+                document.getElementById(`btn-clear-${input.id.replace('input-','')}`).classList.remove('hidden');
+            }
+        });
+        document.addEventListener('click', e => { if (!dropdown.contains(e.target) && e.target !== input) dropdown.classList.add('hidden'); });
+    },
+
+    async handleRandom() {
+        Toast.show('Fetching random pair…','success');
+        const p = await WikiAPI.getRandomPairs();
+        this.el.startInput().value = p[0];
+        this.el.endInput().value   = p[1];
+        document.getElementById('btn-clear-start').classList.remove('hidden');
+        document.getElementById('btn-clear-end').classList.remove('hidden');
+    },
+
+    cancelSearch() {
+        if (this.state.isSearching) { this.state.cancelFlag = true; this.stopTimer(); Toast.show('Traversal aborted','error'); }
+    },
+
+    startTimer() {
+        this.state.startTime = Date.now();
+        const modeLabels = { shortest:'BFS', thematic:'Thematic', obscure:'Obscure' };
+        this.el.statMode().innerText = modeLabels[this.state.mode] || 'BFS';
+        
+        this.state.timerInterval = setInterval(() => {
+            const elapsed = ((Date.now() - this.state.startTime) / 1000).toFixed(1);
+            this.el.statTime().innerText = elapsed + 's';
+            const pct = Math.min(88, parseFloat(elapsed) * 5);
+            this.el.statusProg().style.width = pct + '%';
+            this.el.progressFill().style.width = pct + '%';
+            if (elapsed < 2)       this.el.statusMsg().innerText = 'Resolving titles…';
+            else if (elapsed < 5)  this.el.statusMsg().innerText = 'Fetching forward links…';
+            else if (elapsed < 10) this.el.statusMsg().innerText = 'Navigating graph…';
+            else                   this.el.statusMsg().innerText = 'Deep traversal…';
+        }, 100);
+    },
+
+    stopTimer() {
+        if (this.state.timerInterval) { clearInterval(this.state.timerInterval); this.state.timerInterval = null; }
+        this.state.finalTime = ((Date.now() - this.state.startTime) / 1000).toFixed(1);
+    },
+
+    setSearching(active) {
+        this.state.isSearching = active;
+        this.el.btnSearch().classList.toggle('hidden', active);
+        this.el.btnCancel().classList.toggle('hidden', !active);
+        this.el.btnRandom().disabled = active;
+        this.el.headerProg().classList.toggle('hidden', !active);
+        if (!active) { this.el.statusProg().style.width = '100%'; this.el.progressFill().style.width = '100%'; }
+    },
+
+    async handleSearch(e) {
+        e.preventDefault();
+        if (this.state.isSearching) return;
+        const startVal = this.el.startInput().value.trim();
+        const endVal   = this.el.endInput().value.trim();
+        if (!startVal || !endVal) return;
+
+        // Clear Path param safely so we force fresh search
+        try {
+            const url = new URL(window.location.href);
+            if (url.searchParams.has('path')) {
+                url.searchParams.delete('path');
+                window.history.replaceState({}, '', url);
+            }
+        } catch(err) {
+            // Silently fail in strict sandboxed environments (blob URLs)
+        }
+
+        this.state.isSearching = true;
+        this.state.cancelFlag  = false;
+        this.state.nodesExplored = 0;
+        this.setSearching(true);
+        this.el.statusPanel().classList.remove('hidden');
+        this.el.resultsPanel().classList.add('hidden');
+        this.el.statNodes().innerText = '0';
+        this.el.statTime().innerText  = '0.0s';
+        this.startTimer();
+
+        const algoState = {
+            cancelFlag: false,
+            onDepth: (d) => { this.el.statusDepth().innerText = `Depth: ${d}`; },
+            onNode: () => { this.state.nodesExplored++; this.el.statNodes().innerText = this.state.nodesExplored; },
+        };
+        Object.defineProperty(algoState, 'cancelFlag', {
+            get: () => this.state.cancelFlag,
+            set: (v) => { this.state.cancelFlag = v; }
+        });
+
+        try {
+            const s = await WikiAPI.getExactTitle(startVal);
+            const en = await WikiAPI.getExactTitle(endVal);
+            if (!s) { this.handleError(`"${startVal}" not found on Wikipedia.`); return; }
+            if (!en) { this.handleError(`"${endVal}" not found on Wikipedia.`); return; }
+            if (s === en) {
                 this.stopTimer();
-                Toast.show('Traversal aborted', 'error');
-            }
-        },
-
-        startTimer() {
-            this.state.startTime = Date.now();
-            this.state.timerInterval = setInterval(() => {
-                const elapsed = ((Date.now() - this.state.startTime) / 1000).toFixed(1);
-                this.el.statTime().innerText = elapsed + 's';
-                // Animate progress bar (indeterminate style)
-                const pct = Math.min(90, (parseFloat(elapsed) * 4));
-                this.el.statusProg().style.width = pct + '%';
-                this.el.progressFill().style.width = pct + '%';
-                // Update status messages
-                if (elapsed < 2) this.el.statusMsg().innerText = 'Resolving titles...';
-                else if (elapsed < 5) this.el.statusMsg().innerText = 'Fetching forward links...';
-                else if (elapsed < 10) this.el.statusMsg().innerText = 'Bidirectional traversal...';
-                else this.el.statusMsg().innerText = 'Deep traversal in progress...';
-            }, 100);
-        },
-
-        stopTimer() {
-            if (this.state.timerInterval) {
-                clearInterval(this.state.timerInterval);
-                this.state.timerInterval = null;
-            }
-            this.state.finalTime = ((Date.now() - this.state.startTime) / 1000).toFixed(1);
-        },
-
-        setSearching(active) {
-            this.state.isSearching = active;
-            this.el.btnSearch().classList.toggle('hidden', active);
-            this.el.btnCancel().classList.toggle('hidden', !active);
-            this.el.btnRandom().disabled = active;
-            this.el.headerProg().classList.toggle('hidden', !active);
-            if (!active) {
-                this.el.statusProg().style.width = '100%';
-                this.el.progressFill().style.width = '100%';
-            }
-        },
-
-        async handleSearch(e) {
-            e.preventDefault();
-            if (this.state.isSearching) return;
-            const startVal = this.el.startInput().value.trim();
-            const endVal   = this.el.endInput().value.trim();
-            if (!startVal || !endVal) return;
-
-            this.state.isSearching = true;
-            this.state.cancelFlag = false;
-            this.state.nodesExplored = 0;
-            this.setSearching(true);
-            this.el.statusPanel().classList.remove('hidden');
-            this.el.resultsPanel().classList.add('hidden');
-            this.el.statusMsg().innerText = 'Initialising traversal...';
-            this.el.statNodes().innerText = '0';
-            this.el.statTime().innerText = '0.0s';
-            this.startTimer();
-
-            try {
-                const result = await this.findShortestPath(startVal, endVal);
-                this.stopTimer();
-                if (!this.state.cancelFlag && !result.error) {
-                    const hops = result.path.length - 1;
-                    HistoryManager.add(result.path[0], result.path[result.path.length - 1], hops, this.state.finalTime);
-                    await this.graph.render(result.path, result.context);
-                    this.renderResults(result.path);
-                    this.el.statusMsg().innerText = `Found in ${this.state.finalTime}s · ${hops} hop${hops !== 1 ? 's' : ''}`;
-                } else if (result.error) {
-                    this.el.statusMsg().innerText = result.error;
-                    Toast.show(result.error, 'error');
-                }
-            } catch (err) {
-                this.stopTimer();
-                this.el.statusMsg().innerText = 'Unexpected error — try again';
-                Toast.show('An error occurred', 'error');
-                console.error(err);
+                await this.graph.render([s], {});
+                await this.renderResults([s]);
+                this.state.isSearching = false; this.setSearching(false);
+                return;
             }
 
-            this.state.isSearching = false;
-            this.setSearching(false);
-        },
-
-        async findShortestPath(sTitle, eTitle) {
-            const s = await WikiAPI.getExactTitle(sTitle), e = await WikiAPI.getExactTitle(eTitle);
-            if (!s) return { error: `"${sTitle}" not found on Wikipedia.` };
-            if (!e) return { error: `"${eTitle}" not found on Wikipedia.` };
-            if (s === e) return { path: [s], context: {} };
-
-            let fQ = [s], bQ = [e];
-            let fV = new Set([s]), bV = new Set([e]);
-            let fP = { [s]: [s] }, bP = { [e]: [e] };
-            let ctx = {}, depth = 0;
-
-            while (fQ.length && bQ.length) {
-                if (this.state.cancelFlag) return { error: 'Traversal aborted.' };
-                depth++;
-                this.el.statusDepth().innerText = `Depth: ${depth}`;
-
-                const currF = fQ.shift();
-                const fLinks = await WikiAPI.fetchLinks(currF);
-                ctx[currF] = fLinks;
-                this.state.nodesExplored++;
-                this.el.statNodes().innerText = this.state.nodesExplored;
-
-                for (const l of fLinks) {
-                    if (this.state.cancelFlag) return { error: 'Traversal aborted.' };
-                    if (bV.has(l)) return { path: fP[currF].concat([l], bP[l].slice(0, -1).reverse()), context: ctx };
-                    if (!fV.has(l)) { fV.add(l); fP[l] = fP[currF].concat([l]); fQ.push(l); }
-                }
-
-                if (this.state.cancelFlag) return { error: 'Traversal aborted.' };
-                const currB = bQ.shift();
-                const bLinks = await WikiAPI.fetchBacklinks(currB);
-                this.state.nodesExplored++;
-                this.el.statNodes().innerText = this.state.nodesExplored;
-
-                for (const l of bLinks) {
-                    if (this.state.cancelFlag) return { error: 'Traversal aborted.' };
-                    if (fV.has(l)) return { path: fP[l].concat(bP[currB].slice().reverse()), context: ctx };
-                    if (!bV.has(l)) { bV.add(l); bP[l] = bP[currB].concat([l]); bQ.push(l); }
-                }
+            let result;
+            if (this.state.mode === 'shortest') {
+                result = await AlgorithmRunner.runBidirectionalBFS(s, en, algoState);
+            } else {
+                result = await AlgorithmRunner.runGreedy(s, en, algoState, this.state.mode);
             }
-            return { error: 'No path found between these articles.' };
-        },
 
-        getDifficulty(hops) {
-            if (hops <= 3) return { label: 'Easy', cls: 'diff-easy' };
-            if (hops <= 5) return { label: 'Medium', cls: 'diff-medium' };
-            return { label: 'Hard', cls: 'diff-hard' };
-        },
+            this.stopTimer();
 
-        async renderResults(path) {
-            await WikiAPI.fetchContextForTitles(path);
-            const hops = path.length - 1;
-            const diff = this.getDifficulty(hops);
+            if (!this.state.cancelFlag && !result.error) {
+                HistoryManager.add(result.path[0], result.path[result.path.length-1], result.path.length-1, this.state.finalTime);
+                await this.graph.render(result.path, result.context);
+                await this.renderResults(result.path);
+            } else if (result.error) { 
+                this.handleError(result.error); 
+            }
+        } catch(err) {
+            this.stopTimer();
+            this.el.statusMsg().innerText = 'Unexpected error — try again';
+            Toast.show('An error occurred','error');
+            console.error(err);
+        }
 
-            document.getElementById('result-hops').innerText = hops;
-            document.getElementById('result-time').innerText = this.state.finalTime + 's';
-            document.getElementById('result-nodes-exp').innerText = this.state.nodesExplored;
+        this.state.isSearching = false;
+        this.setSearching(false);
+    },
 
-            const badge = document.getElementById('diff-badge');
-            badge.className = `badge ${diff.cls}`;
-            badge.innerText = diff.label;
+    handleError(msg) {
+        this.stopTimer();
+        this.el.statusMsg().innerText = msg;
+        Toast.show(msg,'error');
+        this.state.isSearching = false;
+        this.setSearching(false);
+    },
 
-            this.el.pathList().innerHTML = path.map((t, i) => {
-                const img = SessionCache.get('images', t);
-                const ext = SessionCache.get('extracts', t);
-                const isStart = i === 0, isEnd = i === path.length - 1;
-                const dotColor = isStart ? '#22d3ee' : isEnd ? '#f43f5e' : '#3b82f6';
-                return `
-                    <div class="path-step">
-                        <div class="rounded-xl p-3 transition-all group"
-                             style="background: var(--bg-surface); border: 1px solid var(--border-dim);"
-                             onmouseover="this.style.borderColor='rgba(34,211,238,0.2)'"
-                             onmouseout="this.style.borderColor='var(--border-dim)'">
-                            <div class="flex items-start gap-3">
-                                <div class="flex-shrink-0 mt-0.5">
-                                    ${img
-                                        ? `<img src="${img}" alt="${t}" class="w-10 h-10 rounded-lg object-cover" style="border: 1px solid var(--border-dim);">`
-                                        : `<div class="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-700" style="background:var(--bg-raised); color:${dotColor}; font-family:'Syne',sans-serif;">${i + 1}</div>`
-                                    }
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="text-sm font-600 truncate" style="color: var(--text-primary); font-family:'Plus Jakarta Sans',sans-serif;">${t}</span>
-                                        ${isStart ? `<span class="badge" style="background:rgba(34,211,238,0.1);color:var(--accent-cyan);border:1px solid rgba(34,211,238,0.2);">Start</span>` : ''}
-                                        ${isEnd   ? `<span class="badge" style="background:rgba(244,63,94,0.1);color:var(--accent-rose);border:1px solid rgba(244,63,94,0.2);">End</span>` : ''}
-                                    </div>
-                                    <p class="text-[10px] line-clamp-2" style="color: var(--text-secondary); font-family:'Plus Jakarta Sans',sans-serif;">${ext || ''}</p>
-                                </div>
-                                <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(t)}" target="_blank"
-                                   class="toolbar-btn flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                   title="Open Wikipedia" onclick="event.stopPropagation()">
-                                    <i data-lucide="external-link" style="width:13px;height:13px;"></i>
-                                </a>
-                            </div>
+    getDifficulty(hops) {
+        if (hops <= 2) return { label:'Easy', cls:'diff-easy' };
+        if (hops <= 4) return { label:'Medium', cls:'diff-medium' };
+        return { label:'Hard', cls:'diff-hard' };
+    },
+
+    async renderResults(path) {
+        await WikiAPI.fetchContextForTitles(path);
+        await WikiAPI.fetchCategories(path);
+
+        const hops = Math.max(0, path.length - 1);
+        const diff = this.getDifficulty(hops);
+
+        document.getElementById('result-hops').innerText      = hops;
+        document.getElementById('result-time').innerText      = this.state.finalTime + 's';
+        document.getElementById('result-nodes-exp').innerText = this.state.nodesExplored;
+
+        const badge = document.getElementById('diff-badge');
+        badge.className = `badge ${diff.cls}`;
+        badge.innerText = diff.label;
+
+        // Fetch snippets for explanations
+        const snippetPromises = path.slice(0,-1).map((t,i) => WikiAPI.fetchLinkSnippet(t, path[i+1]));
+        const snippets = await Promise.all(snippetPromises);
+        this._lastSnippets = snippets;
+        this._lastPath = path;
+
+        // Automatically update the URL safely for flawless sharing
+        try {
+            const url = new URL(window.location.href);
+            if (!url.protocol.startsWith('blob')) {
+                url.searchParams.set('from', path[0]);
+                url.searchParams.set('to', path[path.length - 1]);
+                url.searchParams.set('mode', this.state.mode);
+                url.searchParams.set('path', path.map(encodeURIComponent).join('|'));
+                window.history.replaceState({}, '', url);
+            }
+        } catch(err) {
+            // Silently fail in strict sandboxed environments (blob URLs)
+        }
+
+        // Store for export
+        PathExporter.setData(path, hops, this.state.finalTime, this.state.nodesExplored, snippets);
+
+        this.el.pathList().innerHTML = path.map((t, i) => {
+            const img = SessionCache.get('images', t);
+            const ext = SessionCache.get('extracts', t);
+            const cat = CategorySystem.nodeCategories.get(t);
+            const isStart = i === 0, isEnd = i === path.length-1;
+            const dotColor = isStart ? '#4fd1ff' : isEnd ? '#ff4f7b' : (cat?.color || '#3b82f6');
+
+            // "Why this connection" Explanation Block
+            let explanationHTML = '';
+            if (!isEnd && snippets[i]) {
+                const nextTitle = path[i+1];
+                const words = nextTitle.split(/[\s-]+/).filter(w => w.length > 1);
+                let sText = snippets[i];
+                
+                // Highlight matches
+                words.forEach(word => {
+                    const re = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+                    sText = sText.replace(re, '<span class="snippet-highlight">$1</span>');
+                });
+                
+                explanationHTML = `
+                    <div style="margin-top:8px; padding-left:10px; border-left:2px solid rgba(79,209,255,0.3);">
+                        <div style="font-size:11px; line-height:1.5; color:var(--text-secondary); font-family:'Plus Jakarta Sans',sans-serif; font-style:italic;">
+                            "${sText}"
                         </div>
                     </div>
                 `;
-            }).join('');
+            } else if (!isEnd) {
+                // Fallback for direct links that we couldn't easily parse a neat paragraph for
+                explanationHTML = `
+                    <div style="margin-top:8px; padding-left:10px; border-left:2px solid rgba(255,255,255,0.05);">
+                        <div style="font-size:10px; color:var(--text-dim); font-family:'Plus Jakarta Sans',sans-serif; font-style:italic;">
+                            Linked via a navigational box, list, or template.
+                        </div>
+                    </div>
+                `;
+            }
 
-            this.el.resultsPanel().classList.remove('hidden');
-            lucide.createIcons();
-            this._lastPath = path;
-        },
+            return `
+                <div class="path-step">
+                    <div style="border-radius:12px; padding:12px; background:var(--bg-surface); border:1px solid var(--border-dim); transition:all 0.15s; cursor:default;"
+                         onmouseover="this.style.borderColor='rgba(79,209,255,0.18)'; this.style.background='var(--bg-card)'"
+                         onmouseout="this.style.borderColor='var(--border-dim)'; this.style.background='var(--bg-surface)'">
+                        <div style="display:flex; align-items:flex-start; gap:12px;">
+                            <div style="flex-shrink:0; margin-top:2px;">
+                                ${img
+                                    ? `<img src="${img}" alt="${t}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;border:1px solid var(--border-dim);">`
+                                    : `<div style="width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;background:var(--bg-raised);color:${dotColor};border:1px solid var(--border-dim);">${i+1}</div>`
+                                }
+                            </div>
+                            <div style="flex:1; min-width:0;">
+                                <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px; flex-wrap:wrap;">
+                                    <span style="font-size:13px; font-weight:600; color:var(--text-primary); font-family:'Plus Jakarta Sans',sans-serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">${t}</span>
+                                    ${isStart ? `<span class="badge" style="background:rgba(79,209,255,0.1);color:var(--accent-primary);border:1px solid rgba(79,209,255,0.2);">Start</span>` : ''}
+                                    ${isEnd   ? `<span class="badge" style="background:rgba(255,79,123,0.1);color:var(--accent-rose);border:1px solid rgba(255,79,123,0.2);">End</span>` : ''}
+                                    ${cat ? `<span style="font-size:8px;padding:1px 5px;border-radius:99px;background:${cat.color}18;color:${cat.color};border:1px solid ${cat.color}33;flex-shrink:0;">${cat.label}</span>` : ''}
+                                </div>
+                                ${ext ? `<p style="font-size:11px; color:var(--text-secondary); line-height:1.55; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${ext}</p>` : ''}
+                                ${explanationHTML}
+                            </div>
+                            <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(t)}" target="_blank"
+                               style="flex-shrink:0; padding:6px; color:var(--text-dim); border-radius:8px; transition:all 0.12s; display:flex; align-items:center; text-decoration:none;"
+                               onmouseover="this.style.color='var(--accent-primary)'; this.style.background='rgba(79,209,255,0.08)'"
+                               onmouseout="this.style.color='var(--text-dim)'; this.style.background=''"
+                               title="Open Wikipedia" onclick="event.stopPropagation()">
+                                <i data-lucide="external-link" style="width:14px;height:14px;"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
 
-        shareResult() {
-            const start = this.el.startInput().value.trim();
-            const end   = this.el.endInput().value.trim();
-            if (!start || !end) { Toast.show('Nothing to share yet', 'error'); return; }
-            const url = new URL(window.location.href);
+        this.el.resultsPanel().classList.remove('hidden');
+        lucide.createIcons();
+
+        const hopsLabel = hops !== 1 ? `s` : '';
+        this.el.statusMsg().innerText = `Found in ${this.state.finalTime}s · ${hops} hop${hopsLabel}`;
+    },
+
+    shareResult() {
+        const start = this.el.startInput().value.trim(), end = this.el.endInput().value.trim();
+        if (!start || !end || !this._lastPath) { Toast.show('Nothing to share yet','error'); return; }
+        
+        try {
+            // Reconstruct the URL manually to ensure it works even if replaceState failed
+            let base = window.location.href;
+            if (base.startsWith('blob:')) base = 'https://wikirabbithole.example.com/'; // Fallback for blob sandboxes
+            
+            const url = new URL(base);
             url.searchParams.set('from', start);
             url.searchParams.set('to', end);
-            try {
-                navigator.clipboard.writeText(url.toString());
-                Toast.show('Share link copied to clipboard!', 'success');
-            } catch {
-                prompt('Copy this link:', url.toString());
-            }
-        },
+            url.searchParams.set('mode', this.state.mode);
+            url.searchParams.set('path', this._lastPath.map(encodeURIComponent).join('|'));
 
-        copyPath() {
-            if (!this._lastPath) { Toast.show('No path to copy', 'error'); return; }
-            const text = this._lastPath.join(' → ');
-            try {
-                navigator.clipboard.writeText(text);
-                Toast.show('Path copied to clipboard!', 'success');
-            } catch {
-                prompt('Copy path:', text);
-            }
-        },
-
-        swapInputs() {
-            const si = this.el.startInput(), ei = this.el.endInput();
-            [si.value, ei.value] = [ei.value, si.value];
-            document.getElementById('btn-clear-start').classList.toggle('hidden', !si.value);
-            document.getElementById('btn-clear-end').classList.toggle('hidden', !ei.value);
-        },
-
-        exportGraph()    { this.graph.exportPNG(); },
-        toggleEditMode() { this.graph.toggleEditMode(); },
-        toggleFocusMode(){ this.graph.toggleFocusMode(); },
-        zoomIn()         { this.graph.zoomIn(); },
-        zoomOut()        { this.graph.zoomOut(); },
-        fitGraph()       { this.graph.fitGraph(); },
-
-        loadHistory(s, e) {
-            this.el.startInput().value = s;
-            this.el.endInput().value = e;
-            document.getElementById('btn-clear-start').classList.remove('hidden');
-            document.getElementById('btn-clear-end').classList.remove('hidden');
-            this.handleSearch(new Event('submit'));
+            navigator.clipboard.writeText(url.toString())
+                .then(() => Toast.show('Share link copied! Context & path saved.','success'))
+                .catch(() => prompt('Copy this link:', url.toString()));
+        } catch (e) { 
+            Toast.show('Failed to generate link','error');
+            console.error(e);
         }
-    };
+    },
 
-    /* ══════════════════════════════════════════════════════════
-       BOOT
-    ══════════════════════════════════════════════════════════ */
-    function initApp() {
-        AppController.init();
-        lucide.createIcons();
+    copyPath() {
+        if (!this._lastPath) { Toast.show('No path to copy','error'); return; }
+        try {
+            navigator.clipboard.writeText(this._lastPath.join(' → '));
+            Toast.show('Path copied!','success');
+        } catch { prompt('Copy:', this._lastPath.join(' → ')); }
+    },
+
+    swapInputs() {
+        const si = this.el.startInput(), ei = this.el.endInput();
+        [si.value, ei.value] = [ei.value, si.value];
+        document.getElementById('btn-clear-start').classList.toggle('hidden', !si.value);
+        document.getElementById('btn-clear-end').classList.toggle('hidden', !ei.value);
+    },
+
+    exportGraph()    { this.graph.exportPNG(); },
+    toggleEditMode() { this.graph.toggleEditMode(); },
+    toggleFocusMode(){ this.graph.toggleFocusMode(); },
+    zoomIn()         { this.graph.zoomIn(); },
+    zoomOut()        { this.graph.zoomOut(); },
+    fitGraph()       { this.graph.fitGraph(); },
+
+    loadHistory(s, e) {
+        this.el.startInput().value = s;
+        this.el.endInput().value   = e;
+        document.getElementById('btn-clear-start').classList.remove('hidden');
+        document.getElementById('btn-clear-end').classList.remove('hidden');
+        this.handleSearch(new Event('submit'));
     }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-        initApp();
-    }
-    </script>
+};
+
+/* ══════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════ */
+function initApp() {
+    AppController.init();
+    lucide.createIcons();
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
+</script>
 </body>
 </html>
