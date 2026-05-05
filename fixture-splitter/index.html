@@ -338,9 +338,7 @@
             
             const FIXTURES_URL = 'https://www.football-data.co.uk/fixtures.csv';
             const PROXIES = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(FIXTURES_URL)}`,
-                `https://corsproxy.io/?${encodeURIComponent(FIXTURES_URL)}`,
-                `https://api.codetabs.com/v1/proxy?quest=${FIXTURES_URL}`
+                `https://thingproxy.freeboard.io/fetch/${FIXTURES_URL}`
             ];
 
             function showStatus(message, subMessage = '', isLoading = false) {
