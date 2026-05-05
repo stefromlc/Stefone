@@ -1,5 +1,23 @@
 [
   {
+    "title": "Prediction Merger",
+    "slug": "prediction-merger",
+    "description": "Prediction Merger is a browser-based tool that combines multiple football prediction JSON datasets into one unified file for easier analysis, comparison, and model evaluation, all processed locally in your browser for speed and privacy..",
+    "thumbnail": "assets/thumbs/prediction-merger.jpg",
+    "tags": [
+      "Data",
+      "File",
+      "Football",
+      "JSON",
+      "Merger"
+    ],
+    "category": "Experiments",
+    "featured": true,
+    "date": "2026-05-05",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "Fixture Splitter",
     "slug": "fixture-splitter",
     "description": "Fixture Splitter is a fast, browser-based tool that pulls or uploads data from football-data.co.uk and instantly splits fixtures into clean, league-specific CSV files for easy analysis and organization.",
