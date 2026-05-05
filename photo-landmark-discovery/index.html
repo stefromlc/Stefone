@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Landmark Discovery</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
+    <meta name="description" content="Upload photos to discover real-world locations via metadata and Wikipedia.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        apple: { blue: '#007AFF', gray: '#F5F5F7', dark: '#1D1D1F', text: '#86868B' }
+                    },
+                    boxShadow: {
+                        'apple': '0 4px 24px rgba(0, 0, 0, 0.04)',
+                        'apple-hover': '0 10px 40px rgba(0, 0, 0, 0.08)',
+                        'floating': '0 20px 40px -10px rgba(0,0,0,0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #F5F5F7; color: #1D1D1F; -webkit-font-smoothing: antialiased; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.5); }
+        .glass-nav { background: rgba(245, 245, 247, 0.8); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .upload-area { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .upload-area.dragover { transform: scale(1.02); border-color: #007AFF; background-color: rgba(0, 122, 255, 0.05); }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .hide { display: none !important; }
+        .thumb-active { border-color: #007AFF !important; opacity: 1 !important; transform: scale(1.05); }
+        .custom-scroll::-webkit-scrollbar { height: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #D2D2D7; border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative">
+
+    <nav class="glass-nav fixed top-0 w-full z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+            <a href="/projects/" class="flex items-center space-x-2 text-apple-blue hover:opacity-80 transition-opacity font-medium text-sm group">
+                <i class="ph ph-caret-left text-lg transition-transform group-hover:-translate-x-1"></i>
+                <span>Projects</span>
+            </a>
+            <div class="font-semibold text-sm tracking-tight text-apple-dark">Photo Discovery</div>
+            <div class="w-20"></div>
+        </div>
+    </nav>
+
+    <main class="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full flex flex-col">
+        
+        <section id="uploadSection" class="w-full max-w-2xl mx-auto animate-fade-up">
+            <header class="text-center mb-10">
+                <h1 class="text-4xl font-bold tracking-tight mb-4 text-apple-dark">Bulk Discovery</h1>
+                <p class="text-lg text-apple-text">Upload photos to find their locations. We'll automatically skip images without GPS data.</p>
+            </header>
+            <div id="dropzone" class="upload-area glass rounded-3xl p-10 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer min-h-[300px] shadow-apple hover:shadow-apple-hover">
+                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-6 pointer-events-none">
+                    <i class="ph ph-images text-4xl text-apple-blue"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2 text-center">Drop your photos here</h3>
+                <p class="text-apple-text text-sm mb-6 text-center">Supports hundreds of photos at once.</p>
+                <button class="bg-apple-blue text-white px-6 py-2.5 rounded-full font-medium text-sm hover:bg-blue-600 transition-colors shadow-sm pointer-events-none">
+                    Select Photos
+                </button>
+                <input type="file" id="fileInput" class="hidden" accept="image/jpeg, image/png" multiple>
+            </div>
+        </section>
+
+        <!-- Dynamic Loading / Progress -->
+        <section id="loadingSection" class="hide w-full max-w-xl mx-auto flex flex-col items-center justify-center py-20 animate-fade-up">
+            <div class="relative w-24 h-24 mb-8">
+                <div class="absolute inset-0 border-4 border-apple-gray rounded-full"></div>
+                <div id="progressCircle" class="absolute inset-0 border-4 border-apple-blue rounded-full border-t-transparent animate-spin"></div>
+            </div>
+            <h3 id="loadingText" class="text-2xl font-bold text-apple-dark mb-2">Analyzing Photos...</h3>
+            <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden mb-4">
+                <div id="progressBar" class="bg-apple-blue h-full w-0 transition-all duration-300"></div>
+            </div>
+            <p id="loadingSubtext" class="text-apple-text text-sm">Processing batch 1 of ...</p>
+        </section>
+
+        <!-- Results UI -->
+        <section id="resultsSection" class="hide w-full animate-fade-up">
+            <!-- Filter Bar -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="glass px-4 py-2 rounded-full text-xs font-semibold text-apple-text">
+                        <span id="validCount" class="text-apple-blue">0</span> Mapable Photos
+                    </div>
+                    <div id="skippedTag" class="hidden px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
+                        <span id="skippedCount">0</span> Skipped (No GPS)
+                    </div>
+                </div>
+                <button onclick="resetApp()" class="text-apple-blue text-sm font-medium hover:underline flex items-center">
+                    <i class="ph ph-plus-circle mr-1.5"></i> Add More
+                </button>
+            </div>
+
+            <!-- Thumbnail Strip -->
+            <div id="thumbnailStrip" class="bg-white/70 backdrop-blur-md rounded-2xl p-3 shadow-apple flex items-center space-x-3 mb-6 overflow-x-auto border border-white custom-scroll">
+                <div id="thumbnailContainer" class="flex space-x-3 items-center pb-2"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- Left: Visuals -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="glass rounded-3xl p-2 shadow-apple overflow-hidden">
+                        <img id="userImage" src="" alt="Photo" class="w-full h-auto rounded-2xl object-cover max-h-[500px]">
+                    </div>
+                    <div class="glass rounded-3xl p-2 shadow-apple overflow-hidden">
+                        <div class="w-full h-48 rounded-2xl overflow-hidden bg-apple-gray" id="mapContainer"></div>
+                        <div class="pt-3 pb-1 px-3 flex justify-between items-center">
+                            <span id="coordsDisplay" class="text-[10px] font-mono text-apple-text"></span>
+                            <a id="mapsLink" href="#" target="_blank" class="text-xs text-apple-blue font-semibold">Google Maps</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Discovery Info -->
+                <div class="lg:col-span-7 bg-white rounded-3xl p-8 shadow-floating">
+                    <div id="wikiLoader" class="hide flex items-center space-x-3 text-apple-text mb-4 animate-pulse">
+                        <div class="w-4 h-4 border-2 border-apple-blue border-t-transparent rounded-full animate-spin"></div>
+                        <span class="text-sm">Fetching Wikipedia context...</span>
+                    </div>
+                    
+                    <h2 id="locationTitle" class="text-3xl font-bold text-apple-dark mb-2 tracking-tight"></h2>
+                    <p id="locationAddress" class="text-apple-text text-sm mb-6 flex items-center"></p>
+
+                    <div class="w-full h-px bg-gray-100 mb-6"></div>
+
+                    <div id="wikiContent">
+                        <div id="wikiImageContainer" class="hidden mb-6 rounded-2xl overflow-hidden h-64 shadow-inner">
+                            <img id="wikiImage" src="" class="w-full h-full object-cover">
+                        </div>
+                        <p id="wikiExtract" class="text-gray-600 leading-relaxed text-[15px] mb-6"></p>
+                        <a id="wikiLink" href="#" target="_blank" class="text-apple-blue font-semibold text-sm flex items-center space-x-1">
+                            <span>Read on Wikipedia</span>
+                            <i class="ph ph-arrow-up-right"></i>
+                        </a>
+                    </div>
+                    <div id="noWikiFallback" class="hidden py-10 text-center bg-gray-50 rounded-2xl">
+                        <i class="ph ph-map-pin-line text-3xl text-gray-300 mb-2"></i>
+                        <p class="text-sm text-gray-500">Local coordinate data confirmed, but no specific landmark article exists on Wikipedia here.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const dropzone = document.getElementById('dropzone');
+        const loadingSection = document.getElementById('loadingSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const progressBar = document.getElementById('progressBar');
+        const thumbContainer = document.getElementById('thumbnailContainer');
+        
+        let validImages = [];
+        let currentIndex = -1;
+
+        // --- Core Events ---
+        dropzone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => startProcessing(e.target.files));
+        dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+        dropzone.addEventListener('drop', e => { e.preventDefault(); startProcessing(e.dataTransfer.files); });
+
+        async function startProcessing(filesList) {
+            const files = Array.from(filesList).filter(f => f.type.startsWith('image/'));
+            if (!files.length) return;
+
+            validImages = [];
+            let skippedCount = 0;
+            
+            document.getElementById('uploadSection').classList.add('hide');
+            loadingSection.classList.remove('hide');
+            
+            // Process in small batches to keep UI responsive
+            const BATCH_SIZE = 5;
+            for (let i = 0; i < files.length; i += BATCH_SIZE) {
+                const batch = files.slice(i, i + BATCH_SIZE);
+                const progress = Math.round((i / files.length) * 100);
+                progressBar.style.width = `${progress}%`;
+                document.getElementById('loadingSubtext').textContent = `Checking metadata: ${i} / ${files.length}`;
+
+                const batchResults = await Promise.all(batch.map(f => analyzeImage(f)));
+                
+                batchResults.forEach(res => {
+                    if (res) {
+                        validImages.push(res);
+                        // Stream results: show UI as soon as we have at least one valid image
+                        if (validImages.length === 1) {
+                            loadingSection.classList.add('hide');
+                            resultsSection.classList.remove('hide');
+                            selectImage(0);
+                        }
+                        updateUI(validImages.length, skippedCount);
+                    } else {
+                        skippedCount++;
+                    }
+                });
+            }
+
+            progressBar.style.width = '100%';
+            updateUI(validImages.length, skippedCount);
+            
+            if (validImages.length === 0) {
+                loadingSection.classList.add('hide');
+                document.getElementById('errorSection').classList.remove('hide');
+            }
+        }
+
+        function analyzeImage(file) {
+            return new Promise(resolve => {
+                EXIF.getData(file, function() {
+                    const lat = EXIF.getTag(this, "GPSLatitude");
+                    const lon = EXIF.getTag(this, "GPSLongitude");
+                    if (!lat || !lon) return resolve(null);
+
+                    const ddLat = convertToDD(lat, EXIF.getTag(this, "GPSLatitudeRef"));
+                    const ddLon = convertToDD(lon, EXIF.getTag(this, "GPSLongitudeRef"));
+                    
+                    const reader = new FileReader();
+                    reader.onload = e => resolve({ lat: ddLat, lon: ddLon, src: e.target.result, name: file.name });
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+
+        function convertToDD(dms, ref) {
+            const dd = dms[0] + dms[1]/60 + dms[2]/3600;
+            return (ref === "S" || ref === "W") ? dd * -1 : dd;
+        }
+
+        function updateUI(valid, skipped) {
+            document.getElementById('validCount').textContent = valid;
+            if (skipped > 0) {
+                document.getElementById('skippedTag').classList.remove('hide');
+                document.getElementById('skippedCount').textContent = skipped;
+            }
+            renderThumbnails();
+        }
+
+        function renderThumbnails() {
+            // Only add new thumbnails to avoid flickering
+            const existingCount = thumbContainer.children.length;
+            for (let i = existingCount; i < validImages.length; i++) {
+                const img = document.createElement('img');
+                img.src = validImages[i].src;
+                img.className = "w-12 h-12 rounded-lg object-cover cursor-pointer opacity-40 border-2 border-transparent hover:opacity-100 transition-all";
+                img.onclick = () => selectImage(i);
+                thumbContainer.appendChild(img);
+            }
+        }
+
+        async function selectImage(index) {
+            if (index === currentIndex) return;
+            currentIndex = index;
+            const data = validImages[index];
+
+            // Update active thumb
+            Array.from(thumbContainer.children).forEach((t, i) => {
+                t.classList.toggle('thumb-active', i === index);
+            });
+
+            // Update Primary View
+            document.getElementById('userImage').src = data.src;
+            document.getElementById('coordsDisplay').textContent = `${data.lat.toFixed(5)}, ${data.lon.toFixed(5)}`;
+            document.getElementById('mapsLink').href = `https://www.google.com/maps?q=${data.lat},${data.lon}`;
+            document.getElementById('mapContainer').innerHTML = `<iframe width="100%" height="100%" frameborder="0" src="https://www.openstreetmap.org/export/embed.html?bbox=${data.lon-0.005},${data.lat-0.005},${data.lon+0.005},${data.lat+0.005}&layer=mapnik&marker=${data.lat},${data.lon}" style="border:0"></iframe>`;
+
+            // Reset Wiki UI
+            document.getElementById('wikiLoader').classList.remove('hide');
+            document.getElementById('wikiContent').classList.add('hide');
+            document.getElementById('noWikiFallback').classList.add('hide');
+            document.getElementById('locationTitle').textContent = "Scanning Landmark...";
+            document.getElementById('locationAddress').textContent = "...";
+
+            // Fetch Data
+            try {
+                const [wiki, geo] = await Promise.all([
+                    fetchWiki(data.lat, data.lon),
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${data.lat}&lon=${data.lon}&zoom=10`).then(r => r.json())
+                ]);
+
+                document.getElementById('wikiLoader').classList.add('hide');
+                document.getElementById('locationAddress').textContent = geo.display_name || "Unknown Region";
+
+                if (wiki) {
+                    document.getElementById('locationTitle').textContent = wiki.title;
+                    document.getElementById('wikiExtract').textContent = wiki.extract;
+                    document.getElementById('wikiLink').href = `https://en.wikipedia.org/?curid=${wiki.pageid}`;
+                    if (wiki.thumbnail) {
+                        document.getElementById('wikiImageContainer').classList.remove('hidden');
+                        document.getElementById('wikiImage').src = wiki.thumbnail.source;
+                    } else {
+                        document.getElementById('wikiImageContainer').classList.add('hidden');
+                    }
+                    document.getElementById('wikiContent').classList.remove('hide');
+                } else {
+                    document.getElementById('locationTitle').textContent = geo.address?.city || geo.address?.town || "Isolated Location";
+                    document.getElementById('noWikiFallback').classList.remove('hide');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function fetchWiki(lat, lon) {
+            const r = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=geosearch&ggscoord=${lat}|${lon}&ggsradius=1000&prop=extracts|pageimages&exintro=1&explaintext=1&pithumbsize=600&format=json&origin=*`);
+            const d = await r.json();
+            return d.query ? Object.values(d.query.pages)[0] : null;
+        }
+
+        function resetApp() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
