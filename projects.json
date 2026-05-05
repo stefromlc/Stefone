@@ -1,5 +1,23 @@
 [
   {
+    "title": "Fixture Splitter",
+    "slug": "fixture-splitter",
+    "description": "Fixture Splitter is a fast, browser-based tool that pulls or uploads data from football-data.co.uk and instantly splits fixtures into clean, league-specific CSV files for easy analysis and organization.",
+    "thumbnail": "assets/thumbs/fixture-splitter.jpg",
+    "tags": [
+      "CSV",
+      "Data",
+      "Football",
+      "League",
+      "Splitter"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-05-05",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "Wiki Rabbit Hole",
     "slug": "wiki-rabbit-hole",
     "description": "Wiki Rabbit Hole is an interactive tool that maps the shortest path between any two Wikipedia topics via bidirectional traversal. It features a dynamic knowledge graph, node expansion, and search suggestions, helping users visualize connections within human knowledge.",

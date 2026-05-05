@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A commercial-grade tool to separate upcoming football fixtures from football-data.co.uk into separate CSV files based on Division.">
+    <title>Fixture Separator Pro | football-data.co.uk</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Flag Icons for beautiful real country flags -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css"/>
+
+    <!-- Code-based Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        
+        /* Custom Scrollbar for tables/modals */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .loader {
+            border: 4px solid #f1f5f9;
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-enter {
+            animation: modalEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes modalEnter {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 font-sans min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="/projects/" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors group py-2 px-3 rounded-lg hover:bg-slate-50">
+                <svg class="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Back to Projects
+            </a>
+            <div class="flex items-center gap-2 text-slate-400">
+                <span class="text-xl">⚽</span>
+                <span class="font-bold tracking-tight text-slate-800 hidden sm:block">FixturePro</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+        <div class="max-w-7xl mx-auto px-6 py-14 relative z-10">
+            <div class="max-w-3xl">
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+                    Data Separation, <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-teal-300">Simplified.</span>
+                </h1>
+                <p class="text-slate-300 text-lg md:text-xl leading-relaxed">
+                    Instantly process and categorize upcoming football fixtures into clean, country-specific CSV files ready for analysis.
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-6 py-10 w-full relative -mt-8 z-20">
+        
+        <!-- Action Area -->
+        <div class="grid md:grid-cols-2 gap-6 mb-12">
+            
+            <!-- Fetch Option -->
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-8 flex flex-col text-left group hover:border-brand-300 transition-all duration-300 hover:shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-6 opacity-5 transform group-hover:scale-110 transition-transform">
+                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg>
+                </div>
+                <div class="w-14 h-14 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center mb-6 ring-4 ring-brand-50">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                </div>
+                <h3 class="text-2xl font-bold mb-2 text-slate-800">Live Data Sync</h3>
+                <p class="text-slate-500 mb-8 leading-relaxed flex-grow">Automatically pull and parse the latest <code class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-sm">fixtures.csv</code> directly from the football-data.co.uk servers.</p>
+                <button id="fetchBtn" class="w-full bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-200 text-white font-bold py-3.5 px-8 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Fetch Latest Fixtures
+                </button>
+            </div>
+
+            <!-- Upload Option -->
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-8 flex flex-col text-left group hover:border-blue-300 transition-all duration-300 hover:shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-6 opacity-5 transform group-hover:scale-110 transition-transform">
+                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"></path></svg>
+                </div>
+                <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6 ring-4 ring-blue-50">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <h3 class="text-2xl font-bold mb-2 text-slate-800">Local File Upload</h3>
+                <p class="text-slate-500 mb-8 leading-relaxed flex-grow">Already have the file? Upload a previously downloaded CSV file from your computer for instant processing.</p>
+                
+                <label for="fileInput" class="cursor-pointer w-full bg-slate-800 hover:bg-slate-900 focus-within:ring-4 focus-within:ring-slate-200 text-white font-bold py-3.5 px-8 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Browse Local CSV
+                    <input type="file" id="fileInput" accept=".csv" class="hidden">
+                </label>
+            </div>
+
+        </div>
+
+        <!-- Status Area -->
+        <div id="statusArea" class="hidden bg-white border border-slate-200 shadow-md rounded-2xl p-10 text-center mb-12 fade-in max-w-2xl mx-auto">
+            <div id="loader" class="loader mx-auto mb-5"></div>
+            <p id="statusText" class="text-slate-800 font-semibold text-lg"></p>
+            <p id="statusSubText" class="text-slate-500 text-sm mt-2 hidden"></p>
+        </div>
+
+        <!-- Results Area -->
+        <div id="resultsArea" class="hidden fade-in">
+            <!-- Toolbar: Title & Search -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-slate-200 gap-4">
+                <div>
+                    <h3 class="text-3xl font-extrabold text-slate-800 tracking-tight">Separated Leagues</h3>
+                    <p class="text-slate-500 text-sm mt-1 flex items-center gap-2">
+                        <span id="resultsCount" class="bg-brand-100 text-brand-800 text-xs font-bold px-2 py-0.5 rounded-md"></span>
+                        ready for download or preview
+                    </p>
+                </div>
+                <div class="relative w-full md:w-72">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="searchInput" class="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors sm:text-sm shadow-sm" placeholder="Search country or league...">
+                </div>
+            </div>
+            
+            <!-- Grid for download cards -->
+            <div id="downloadGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Cards will be injected here via JS -->
+            </div>
+
+            <!-- Empty Search State -->
+            <div id="emptySearchState" class="hidden text-center py-12">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 text-slate-400 mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">No leagues found</h3>
+                <p class="text-slate-500 text-sm mt-1">Try adjusting your search terminology.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal for Previewing Data -->
+    <div id="previewModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Background backdrop -->
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" id="modalBackdrop"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <!-- Modal panel -->
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-4xl modal-enter">
+                    
+                    <!-- Header -->
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center sticky top-0 z-10">
+                        <div class="flex items-center gap-3">
+                            <div id="modalFlagContainer" class="flex-shrink-0 w-12 flex items-center justify-center"></div>
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-800 leading-none" id="modalTitle">League Name</h3>
+                                <p class="text-sm text-slate-500 mt-1" id="modalSubtitle">Country • Div</p>
+                            </div>
+                        </div>
+                        <button type="button" id="closeModalBtn" class="rounded-full bg-white p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors shadow-sm border border-slate-200">
+                            <span class="sr-only">Close</span>
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+
+                    <!-- Table Content -->
+                    <div class="bg-white px-6 py-4 overflow-x-auto max-h-[60vh]">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50 sticky top-0">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Time</th>
+                                    <th scope="col" class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Home Team</th>
+                                    <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">vs</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Away Team</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalTableBody" class="bg-white divide-y divide-slate-100">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-row-reverse">
+                        <a href="#" id="modalDownloadBtn" class="inline-flex w-full justify-center rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-500 sm:ml-3 sm:w-auto items-center gap-2 focus:ring-2 focus:ring-brand-500 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Download CSV
+                        </a>
+                        <button type="button" id="closeModalFooterBtn" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // Dictionary mapping DIV codes to human-readable info & ISO codes (for flag-icons)
+        const leagueMapping = {
+            'E0': { country: 'England', name: 'Premiership', iso: 'gb-eng', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f2/Premier_League_Logo.svg/250px-Premier_League_Logo.svg.png' },
+            'E1': { country: 'England', name: 'Championship (Div 1)', iso: 'gb-eng', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/5/5c/EFL_Championship_logo.svg/250px-EFL_Championship_logo.svg.png' },
+            'E2': { country: 'England', name: 'League One (Div 2)', iso: 'gb-eng', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e0/EFL_League_One_logo.svg/250px-EFL_League_One_logo.svg.png' },
+            'E3': { country: 'England', name: 'League Two (Div 3)', iso: 'gb-eng', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b4/EFL_League_Two_logo.svg/250px-EFL_League_Two_logo.svg.png' },
+            'EC': { country: 'England', name: 'National League', iso: 'gb-eng', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/c/cd/National_League_logo_%282015%29.png/200px-National_League_logo_%282015%29.png' },
+            'SC0': { country: 'Scotland', name: 'Premiership', iso: 'gb-sct', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/0/06/Scottish_Premiership_logo.svg/250px-Scottish_Premiership_logo.svg.png' },
+            'SC1': { country: 'Scotland', name: 'Championship', iso: 'gb-sct', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/76/Scottish_Championship_logo.svg/250px-Scottish_Championship_logo.svg.png' },
+            'SC2': { country: 'Scotland', name: 'League One', iso: 'gb-sct', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/71/Scottish_League_One_logo.svg/250px-Scottish_League_One_logo.svg.png' },
+            'SC3': { country: 'Scotland', name: 'League Two', iso: 'gb-sct', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f6/Scottish_League_Two_logo.svg/250px-Scottish_League_Two_logo.svg.png' },
+            'D1': { country: 'Germany', name: 'Bundesliga 1', iso: 'de', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/df/Bundesliga_logo_%282017%29.svg/250px-Bundesliga_logo_%282017%29.svg.png' },
+            'D2': { country: 'Germany', name: 'Bundesliga 2', iso: 'de', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b7/2._Bundesliga_logo_%282017%29.svg/250px-2._Bundesliga_logo_%282017%29.svg.png' },
+            'I1': { country: 'Italy', name: 'Serie A', iso: 'it', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e1/Serie_A_logo_%282022%29.svg/250px-Serie_A_logo_%282022%29.svg.png' },
+            'I2': { country: 'Italy', name: 'Serie B', iso: 'it', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/e8/Serie_B_Logo_%282021%29.svg/250px-Serie_B_Logo_%282021%29.svg.png' },
+            'SP1': { country: 'Spain', name: 'La Liga', iso: 'es', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_logo_2023.svg/250px-LaLiga_logo_2023.svg.png' },
+            'SP2': { country: 'Spain', name: 'Segunda Division', iso: 'es', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/LaLiga_Hypermotion_logo_2023.svg/250px-LaLiga_Hypermotion_logo_2023.svg.png' },
+            'F1': { country: 'France', name: 'Ligue 1', iso: 'fr', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Ligue1.svg/250px-Ligue1.svg.png' },
+            'F2': { country: 'France', name: 'Ligue 2', iso: 'fr', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/14/Ligue_2_BKT_logo.svg/250px-Ligue_2_BKT_logo.svg.png' },
+            'N1': { country: 'Netherlands', name: 'Eredivisie', iso: 'nl', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Eredivisie_nuovo_logo.svg/250px-Eredivisie_nuovo_logo.svg.png' },
+            'B1': { country: 'Belgium', name: 'Pro League', iso: 'be', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/f/f6/Jupiler_Pro_League_Logo.svg/250px-Jupiler_Pro_League_Logo.svg.png' },
+            'P1': { country: 'Portugal', name: 'Primeira Liga', iso: 'pt', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/a2/Liga_Portugal_logo.png/250px-Liga_Portugal_logo.png' },
+            'T1': { country: 'Turkey', name: 'Süper Lig', iso: 'tr', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/2/20/S%C3%BCper_Lig_logo.svg/250px-S%C3%BCper_Lig_logo.svg.png' },
+            'G1': { country: 'Greece', name: 'Super League', iso: 'gr', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/2/23/Super_League_Greece_logo.svg/250px-Super_League_Greece_logo.svg.png' },
+            'ARG': { country: 'Argentina', name: 'Primera Division', iso: 'ar', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/1d/Liga_Profesional_de_F%C3%BAtbol_%28Argentina%29_logo.svg/250px-Liga_Profesional_de_F%C3%BAtbol_%28Argentina%29_logo.svg.png' },
+            'AUT': { country: 'Austria', name: 'Bundesliga', iso: 'at', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b3/Austrian_Football_Bundesliga_logo.svg/250px-Austrian_Football_Bundesliga_logo.svg.png' },
+            'BRA': { country: 'Brazil', name: 'Serie A', iso: 'br', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/4/42/Campeonato_Brasileiro_S%C3%A9rie_A_logo.png/250px-Campeonato_Brasileiro_S%C3%A9rie_A_logo.png' },
+            'CHN': { country: 'China', name: 'Super League', iso: 'cn', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/Chinese_Super_League.svg/250px-Chinese_Super_League.svg.png' },
+            'DNK': { country: 'Denmark', name: 'Superliga', iso: 'dk', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7d/Danish_Superliga_logo.svg/250px-Danish_Superliga_logo.svg.png' },
+            'FIN': { country: 'Finland', name: 'Veikkausliiga', iso: 'fi', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/4/46/Veikkausliiga_logo.svg/250px-Veikkausliiga_logo.svg.png' },
+            'IRL': { country: 'Ireland', name: 'Premier Division', iso: 'ie', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/ae/League_of_Ireland_Premier_Division_logo.svg/250px-League_of_Ireland_Premier_Division_logo.svg.png' },
+            'JPN': { country: 'Japan', name: 'J1 League', iso: 'jp', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/75/J1_League_logo.svg/250px-J1_League_logo.svg.png' },
+            'MEX': { country: 'Mexico', name: 'Liga MX', iso: 'mx', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7e/Liga_MX_logo.svg/250px-Liga_MX_logo.svg.png' },
+            'NOR': { country: 'Norway', name: 'Eliteserien', iso: 'no', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/df/Eliteserien_logo_%282017%29.svg/250px-Eliteserien_logo_%282017%29.svg.png' },
+            'POL': { country: 'Poland', name: 'Ekstraklasa', iso: 'pl', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/4/46/Ekstraklasa_logo_%282015%29.svg/250px-Ekstraklasa_logo_%282015%29.svg.png' },
+            'ROU': { country: 'Romania', name: 'Liga 1', iso: 'ro', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/30/SuperLiga_Rom%C3%A2niei.svg/250px-SuperLiga_Rom%C3%A2niei.svg.png' },
+            'RUS': { country: 'Russia', name: 'Premier League', iso: 'ru', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/c/cd/Russian_Premier_League_logo.svg/250px-Russian_Premier_League_logo.svg.png' },
+            'SWE': { country: 'Sweden', name: 'Allsvenskan', iso: 'se', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/0/05/Allsvenskan_logo.svg/250px-Allsvenskan_logo.svg.png' },
+            'SWZ': { country: 'Switzerland', name: 'Super League', iso: 'ch', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/78/Swiss_Super_League_logo.svg/250px-Swiss_Super_League_logo.svg.png' },
+            'USA': { country: 'USA', name: 'MLS', iso: 'us', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/MLS_crest_logo_RGB_gradient.svg/250px-MLS_crest_logo_RGB_gradient.svg.png' }
+        };
+
+        // State to hold data for the modal
+        let currentProcessedData = [];
+        let currentHeader = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchBtn = document.getElementById('fetchBtn');
+            const fileInput = document.getElementById('fileInput');
+            const statusArea = document.getElementById('statusArea');
+            const statusText = document.getElementById('statusText');
+            const statusSubText = document.getElementById('statusSubText');
+            const loader = document.getElementById('loader');
+            const resultsArea = document.getElementById('resultsArea');
+            const downloadGrid = document.getElementById('downloadGrid');
+            const resultsCount = document.getElementById('resultsCount');
+            const searchInput = document.getElementById('searchInput');
+            const emptySearchState = document.getElementById('emptySearchState');
+
+            // Modal elements
+            const modal = document.getElementById('previewModal');
+            const modalBackdrop = document.getElementById('modalBackdrop');
+            const btnCloseModal1 = document.getElementById('closeModalBtn');
+            const btnCloseModal2 = document.getElementById('closeModalFooterBtn');
+            
+            const FIXTURES_URL = 'https://www.football-data.co.uk/fixtures.csv';
+            const PROXIES = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(FIXTURES_URL)}`,
+                `https://corsproxy.io/?${encodeURIComponent(FIXTURES_URL)}`,
+                `https://api.codetabs.com/v1/proxy?quest=${FIXTURES_URL}`
+            ];
+
+            function showStatus(message, subMessage = '', isLoading = false) {
+                statusArea.classList.remove('hidden');
+                resultsArea.classList.add('hidden');
+                statusText.innerHTML = message;
+                statusText.className = isLoading ? 'text-brand-600 font-bold text-xl' : 'text-red-600 font-bold text-xl';
+                
+                if (subMessage) {
+                    statusSubText.innerHTML = subMessage;
+                    statusSubText.classList.remove('hidden');
+                } else {
+                    statusSubText.classList.add('hidden');
+                }
+                
+                loader.style.display = isLoading ? 'block' : 'none';
+            }
+
+            function clearStatus() {
+                statusArea.classList.add('hidden');
+            }
+
+            // robust CSV Parser
+            function parseCSV(str) {
+                const arr = [];
+                let quote = false;
+                let row = 0, col = 0;
+                str = str.trim() + '\n'; 
+
+                for (let c = 0; c < str.length; c++) {
+                    let cc = str[c], nc = str[c+1];
+                    arr[row] = arr[row] || [];
+                    arr[row][col] = arr[row][col] || '';
+
+                    if (cc === '"' && quote && nc === '"') { arr[row][col] += cc; ++c; continue; }
+                    if (cc === '"') { quote = !quote; continue; }
+                    if (cc === ',' && !quote) { ++col; continue; }
+                    if (cc === '\r' && nc === '\n' && !quote) { ++row; col = 0; ++c; continue; }
+                    if ((cc === '\n' || cc === '\r') && !quote) { ++row; col = 0; continue; }
+                    
+                    arr[row][col] += cc;
+                }
+                while(arr.length > 0 && arr[arr.length-1].length === 1 && arr[arr.length-1][0].trim() === '') {
+                    arr.pop();
+                }
+                return arr;
+            }
+
+            function buildCSVString(header, rows) {
+                const csvArray = [header, ...rows];
+                return csvArray.map(row => 
+                    row.map(cell => {
+                        let c = cell !== undefined && cell !== null ? String(cell) : '';
+                        if (c.includes(',') || c.includes('"') || c.includes('\n') || c.includes('\r')) {
+                            c = `"${c.replace(/"/g, '""')}"`;
+                        }
+                        return c;
+                    }).join(',')
+                ).join('\n');
+            }
+
+            function processCSVData(csvText) {
+                showStatus('Analyzing League Data...', 'Mapping divisions and generating individual datasets.', true);
+
+                setTimeout(() => {
+                    try {
+                        const rows = parseCSV(csvText);
+                        if (rows.length < 2) throw new Error('The CSV file is empty or missing data rows.');
+
+                        const header = rows[0];
+                        currentHeader = header;
+                        const divIndex = header.findIndex(col => col.trim().toLowerCase() === 'div');
+
+                        if (divIndex === -1) throw new Error('Could not find the "Div" column required for sorting.');
+
+                        const divGroups = {};
+                        for (let i = 1; i < rows.length; i++) {
+                            const row = rows[i];
+                            if (!row || row.length === 0 || (row.length === 1 && row[0] === '')) continue;
+                            
+                            let divValue = row[divIndex] ? row[divIndex].trim() : 'Unknown';
+                            if (divValue === '') divValue = 'Unknown';
+
+                            if (!divGroups[divValue]) divGroups[divValue] = [];
+                            divGroups[divValue].push(row);
+                        }
+
+                        renderResults(header, divGroups);
+                        clearStatus();
+                    } catch (error) {
+                        console.error(error);
+                        showStatus('Error processing file', error.message, false);
+                    }
+                }, 600); 
+            }
+
+            function renderResults(header, divGroups) {
+                downloadGrid.innerHTML = ''; 
+                searchInput.value = ''; // Reset search
+                
+                const divKeys = Object.keys(divGroups);
+                if (divKeys.length === 0) {
+                    showStatus('No valid data rows found.', '', false);
+                    return;
+                }
+
+                currentProcessedData = divKeys.map(div => {
+                    const info = leagueMapping[div] || { country: 'Other', name: 'Unknown League', iso: 'un' };
+                    return {
+                        div: div,
+                        country: info.country,
+                        leagueName: info.name,
+                        iso: info.iso,
+                        logo: info.logo,
+                        rows: divGroups[div]
+                    };
+                });
+
+                // Sort: By Country alphabetically, then by League Name
+                currentProcessedData.sort((a, b) => {
+                    if (a.country === 'Other' && b.country !== 'Other') return 1;
+                    if (a.country !== 'Other' && b.country === 'Other') return -1;
+                    
+                    const countryCmp = a.country.localeCompare(b.country);
+                    if (countryCmp !== 0) return countryCmp;
+                    return a.leagueName.localeCompare(b.leagueName);
+                });
+
+                resultsCount.innerText = `${currentProcessedData.length} leagues`;
+
+                currentProcessedData.forEach((data, index) => {
+                    const csvString = buildCSVString(header, data.rows);
+                    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Search string
+                    const searchStr = `${data.country} ${data.leagueName} ${data.div}`.toLowerCase();
+
+                    const card = document.createElement('div');
+                    card.className = 'league-card bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-lg overflow-hidden flex flex-col transition-all duration-300 transform hover:-translate-y-1 group';
+                    card.dataset.search = searchStr;
+                    
+                    // Logo or Flag fallback logic
+                    const logoHtml = data.logo 
+                        ? `<img src="${data.logo}" alt="${data.leagueName} Logo" class="h-10 object-contain drop-shadow-sm max-w-[80px]" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">` 
+                        : ``;
+                    const flagHtml = data.iso !== 'un' 
+                        ? `<span class="fi fi-${data.iso} text-3xl shadow-sm rounded-sm" style="${data.logo ? 'display:none;' : ''}"></span>`
+                        : `<span class="text-3xl border border-slate-200 rounded-sm w-10 h-7 flex items-center justify-center bg-slate-50" style="${data.logo ? 'display:none;' : ''}">🌐</span>`;
+
+                    card.innerHTML = `
+                        <div class="p-6 flex-grow flex flex-col">
+                            <div class="flex justify-between items-start mb-4 h-10">
+                                <div class="flex-shrink-0 flex items-center justify-start w-24">
+                                    ${logoHtml}
+                                    ${flagHtml}
+                                </div>
+                                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-md border border-slate-200 tracking-wider">
+                                    ${data.div}
+                                </span>
+                            </div>
+                            <h4 class="text-[11px] uppercase tracking-widest text-brand-600 font-bold mb-1">${data.country}</h4>
+                            <h3 class="text-xl font-extrabold text-slate-800 mb-2 leading-tight">${data.leagueName}</h3>
+                            <div class="mt-auto pt-4 flex items-center justify-between">
+                                <span class="text-sm text-slate-500 font-medium flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    ${data.rows.length} Matches
+                                </span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 bg-slate-50 border-t border-slate-100 divide-x divide-slate-100">
+                            <button onclick="openPreview(${index}, '${url}')" class="flex flex-col items-center justify-center gap-1 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                Preview
+                            </button>
+                            <a href="${url}" download="${data.country.replace(/\s+/g, '')}_${data.leagueName.replace(/\s+/g, '')}_(${data.div}).csv" class="flex flex-col items-center justify-center gap-1 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Download
+                            </a>
+                        </div>
+                    `;
+                    downloadGrid.appendChild(card);
+                });
+
+                resultsArea.classList.remove('hidden');
+            }
+
+            // Search functionality
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const cards = document.querySelectorAll('.league-card');
+                let visibleCount = 0;
+
+                cards.forEach(card => {
+                    if (card.dataset.search.includes(term)) {
+                        card.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (visibleCount === 0) {
+                    emptySearchState.classList.remove('hidden');
+                } else {
+                    emptySearchState.classList.add('hidden');
+                }
+            });
+
+            // Proxy Fetching Logic
+            fetchBtn.addEventListener('click', async () => {
+                showStatus('Connecting to Server...', 'Fetching the latest live fixtures from football-data.co.uk', true);
+                let text = null;
+                let lastError = null;
+
+                for (const proxyUrl of PROXIES) {
+                    try {
+                        const response = await fetch(proxyUrl);
+                        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                        
+                        const responseText = await response.text();
+                        if (responseText.includes('<html') || !responseText.includes('Div')) {
+                             throw new Error("Proxy returned invalid HTML wrapper instead of raw CSV.");
+                        }
+                        text = responseText;
+                        break; 
+                    } catch (error) {
+                        console.warn(`Proxy ${proxyUrl} failed:`, error);
+                        lastError = error;
+                    }
+                }
+
+                if (text) {
+                    processCSVData(text);
+                } else {
+                    console.error("All fetch attempts failed:", lastError);
+                    showStatus('Connection Failed', 'The external proxies are currently blocked. Please manually download the file and use the "Local File Upload" button.', false);
+                }
+            });
+
+            // Local File Upload
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+                    showStatus('Invalid File Format', 'Please upload a file ending in .csv', false);
+                    return;
+                }
+
+                showStatus('Reading Local File...', `Parsing data from ${file.name}`, true);
+
+                const reader = new FileReader();
+                reader.onload = (e) => processCSVData(e.target.result);
+                reader.onerror = () => showStatus('File Read Error', 'Unable to read the selected file.', false);
+                reader.readAsText(file);
+                
+                fileInput.value = '';
+            });
+
+            // Modal Logic (Global exposure for onclick events)
+            window.openPreview = function(index, downloadUrl) {
+                const data = currentProcessedData[index];
+                if (!data) return;
+
+                // Set headers
+                document.getElementById('modalTitle').innerText = data.leagueName;
+                document.getElementById('modalSubtitle').innerText = `${data.country} • Division ${data.div}`;
+                
+                const modalFlagContainer = document.getElementById('modalFlagContainer');
+                if (modalFlagContainer) {
+                    const logoHtml = data.logo 
+                        ? `<img src="${data.logo}" alt="Logo" class="max-h-10 object-contain drop-shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">` 
+                        : ``;
+                    const flagHtml = data.iso !== 'un' 
+                        ? `<span class="fi fi-${data.iso} text-3xl shadow-sm rounded-sm" style="${data.logo ? 'display:none;' : ''}"></span>`
+                        : ``;
+                    modalFlagContainer.innerHTML = `${logoHtml}${flagHtml}`;
+                }
+
+                // Find key columns
+                const dateIdx = currentHeader.findIndex(h => h.trim().toLowerCase() === 'date');
+                const timeIdx = currentHeader.findIndex(h => h.trim().toLowerCase() === 'time');
+                const homeIdx = currentHeader.findIndex(h => h.trim().toLowerCase() === 'hometeam');
+                const awayIdx = currentHeader.findIndex(h => h.trim().toLowerCase() === 'awayteam');
+
+                const tbody = document.getElementById('modalTableBody');
+                tbody.innerHTML = '';
+
+                data.rows.forEach(row => {
+                    const date = dateIdx !== -1 && row[dateIdx] ? row[dateIdx] : '-';
+                    const time = timeIdx !== -1 && row[timeIdx] ? row[timeIdx] : '-';
+                    const home = homeIdx !== -1 && row[homeIdx] ? row[homeIdx] : 'Unknown Home';
+                    const away = awayIdx !== -1 && row[awayIdx] ? row[awayIdx] : 'Unknown Away';
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50 transition-colors';
+                    tr.innerHTML = `
+                        <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-500">${date}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-500">${time}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-slate-900 text-right w-2/5">${home}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-xs font-bold text-slate-300 text-center w-[10%]">VS</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-slate-900 text-left w-2/5">${away}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Update download button in modal
+                const dlBtn = document.getElementById('modalDownloadBtn');
+                dlBtn.href = downloadUrl;
+                dlBtn.download = `${data.country.replace(/\s+/g, '')}_${data.leagueName.replace(/\s+/g, '')}_(${data.div}).csv`;
+
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            };
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+
+            btnCloseModal1.addEventListener('click', closeModal);
+            btnCloseModal2.addEventListener('click', closeModal);
+            modalBackdrop.addEventListener('click', closeModal);
+            
+            // Close on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
