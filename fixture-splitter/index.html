@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A commercial-grade tool to separate upcoming football fixtures from football-data.co.uk into separate CSV files based on Division.">
+    <meta name="description" content="A commercial-grade tool to separate upcoming football fixtures from football-data.co.uk into separate CSV files based on Division. R£">
     <title>Fixture Separator Pro | football-data.co.uk</title>
     
     <!-- Fonts -->
@@ -337,13 +337,8 @@
             const btnCloseModal2 = document.getElementById('closeModalFooterBtn');
             
             const FIXTURES_URL = 'https://www.football-data.co.uk/fixtures.csv';
-            const PROXIES = [
-                `https://thingproxy.freeboard.io/fetch/${FIXTURES_URL}`,
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(FIXTURES_URL)}`,
-                `https://corsproxy.io/?${encodeURIComponent(FIXTURES_URL)}`,
-                `https://api.codetabs.com/v1/proxy?quest=${FIXTURES_URL}`,
-                `https://proxy.cors.sh/${FIXTURES_URL}`
-            ];
+
+            const PROXY = `https://api.allorigins.win/raw?url=${encodeURIComponent(FIXTURES_URL)}`;
 
             function showStatus(message, subMessage = '', isLoading = false) {
                 statusArea.classList.remove('hidden');
