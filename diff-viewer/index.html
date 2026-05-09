@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diff Viewer - Compare Files Side-by-Side</title>
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="A simple, fast, and secure in-browser file difference viewer. Compare JSON, TXT, HTML, PDF, and more side-by-side.">
+    <meta name="keywords" content="diff tool, file comparison, text diff, json diff, pdf diff, side-by-side comparison">
+    <meta name="author" content="Codebase">
+    
+    <!-- Favicon (using a generic SVG for the prompt, ideally replace with actual codebase favicon) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
+
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PDF.js for PDF extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
+    <!-- jsdiff for difference calculation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.1.0/diff.min.js"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .diff-container {
+            display: flex;
+            width: 100%;
+            height: calc(100vh - 200px); /* Adjust based on header/footer */
+            min-height: 500px;
+            gap: 1rem;
+        }
+
+        .diff-pane {
+            flex: 1;
+            background: white;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            overflow: auto;
+            position: relative;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pane-header {
+            position: sticky;
+            top: 0;
+            background: #f1f5f9;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #475569;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pane-content {
+            padding: 1rem;
+            font-family: 'ui-monospace', 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            white-space: pre-wrap; /* Essential for showing differences properly */
+            word-break: break-all;
+            flex-grow: 1;
+        }
+
+        /* Diff Highlight Styles */
+        .diff-added {
+            background-color: #dcfce7; /* Tailwind green-100 */
+            color: #166534; /* Tailwind green-800 */
+            text-decoration: none;
+            display: inline-block;
+            min-width: 100%;
+        }
+
+        .diff-removed {
+            background-color: #fee2e2; /* Tailwind red-100 */
+            color: #991b1b; /* Tailwind red-800 */
+            text-decoration: line-through;
+            display: inline-block;
+            min-width: 100%;
+            opacity: 0.7;
+        }
+        
+        .diff-unchanged {
+            color: #475569;
+            display: inline-block;
+            min-width: 100%;
+        }
+
+        /* Line numbers (optional enhancement) */
+        .line-wrapper {
+            display: flex;
+            min-width: fit-content;
+        }
+
+        .line-number {
+            user-select: none;
+            color: #94a3b8;
+            padding-right: 1rem;
+            text-align: right;
+            min-width: 3rem;
+            border-right: 1px solid #e2e8f0;
+            margin-right: 1rem;
+            background-color: #f8fafc;
+        }
+
+        .line-content {
+            flex-grow: 1;
+        }
+
+        /* File Upload Area Styling */
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.2s ease;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #3b82f6; /* Tailwind blue-500 */
+            background-color: #eff6ff; /* Tailwind blue-50 */
+        }
+        
+        /* Loader */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar styling for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo & Back Button -->
+                <div class="flex items-center space-x-4">
+                    <a href="/projects/" class="text-slate-500 hover:text-slate-800 transition-colors flex items-center group">
+                        <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform"></i>
+                        <span class="text-sm font-medium">Back to Projects</span>
+                    </a>
+                    <div class="h-6 w-px bg-slate-200"></div>
+                    <div class="flex items-center">
+                        <div class="bg-blue-600 text-white p-2 rounded-lg mr-3 shadow-sm">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-slate-800 tracking-tight">Diff Viewer</h1>
+                    </div>
+                </div>
+
+                <!-- Header Actions -->
+                <div class="flex items-center space-x-3">
+                    <button id="resetBtn" class="hidden px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <i class="fas fa-undo mr-2"></i>Reset
+                    </button>
+                    <a href="https://github.com" target="_blank" class="text-slate-400 hover:text-slate-600">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
+        
+        <!-- Intro / Upload Section -->
+        <div id="uploadSection" class="max-w-3xl mx-auto w-full mb-8 text-center">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4">Compare Files Instantly</h2>
+            <p class="text-slate-600 mb-8">Upload two files to see the differences highlighted side-by-side. Supports JSON, TXT, HTML, PDF, and more. Processing happens securely in your browser.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- File 1 Upload -->
+                <div class="upload-area rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer relative bg-white" id="dropzone1">
+                    <input type="file" id="fileInput1" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".json,.txt,.html,.htm,.md,.csv,.xml,.js,.css,.pdf">
+                    <div class="bg-blue-100 text-blue-600 p-4 rounded-full mb-4 shadow-inner">
+                        <i class="fas fa-file-upload text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-slate-700 mb-1">Original File</h3>
+                    <p class="text-sm text-slate-500 text-center mb-4">Drag & drop or click to browse</p>
+                    <div id="file1Info" class="hidden w-full p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between z-10 relative">
+                        <div class="flex items-center overflow-hidden">
+                            <i class="fas fa-file-alt text-slate-400 mr-2"></i>
+                            <span id="file1Name" class="text-sm font-medium text-slate-700 truncate">filename.txt</span>
+                        </div>
+                        <button type="button" id="removeFile1" class="text-slate-400 hover:text-red-500 px-2">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File 2 Upload -->
+                <div class="upload-area rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer relative bg-white" id="dropzone2">
+                    <input type="file" id="fileInput2" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".json,.txt,.html,.htm,.md,.csv,.xml,.js,.css,.pdf">
+                    <div class="bg-emerald-100 text-emerald-600 p-4 rounded-full mb-4 shadow-inner">
+                        <i class="fas fa-file-upload text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-slate-700 mb-1">Modified File</h3>
+                    <p class="text-sm text-slate-500 text-center mb-4">Drag & drop or click to browse</p>
+                    <div id="file2Info" class="hidden w-full p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between z-10 relative">
+                        <div class="flex items-center overflow-hidden">
+                            <i class="fas fa-file-alt text-slate-400 mr-2"></i>
+                            <span id="file2Name" class="text-sm font-medium text-slate-700 truncate">filename.txt</span>
+                        </div>
+                        <button type="button" id="removeFile2" class="text-slate-400 hover:text-red-500 px-2">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compare Button Area -->
+            <div class="mt-8 flex flex-col items-center">
+                <button id="compareBtn" disabled class="px-8 py-3 text-base font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md flex items-center">
+                    <i class="fas fa-not-equal mr-2"></i> Compare Files
+                </button>
+                <div id="loadingIndicator" class="mt-4 flex items-center text-slate-500 hidden">
+                    <div class="loader mr-3"></div>
+                    <span id="loadingText">Processing files...</span>
+                </div>
+                <!-- Add a progress bar container -->
+                <div id="progressContainer" class="w-full max-w-md mt-4 hidden">
+                    <div class="w-full bg-slate-200 rounded-full h-2.5">
+                      <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div id="errorMessage" class="mt-4 text-red-500 text-sm hidden bg-red-50 p-3 rounded-lg border border-red-200"></div>
+            </div>
+        </div>
+
+        <!-- Comparison Section (Hidden initially) -->
+        <div id="diffSection" class="hidden flex-col h-full flex-grow">
+            <!-- Controls above diff -->
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex space-x-2">
+                    <button class="diff-mode-btn px-3 py-1.5 text-sm font-medium rounded-md bg-blue-100 text-blue-700 border border-blue-200" data-mode="words">Word Diff</button>
+                    <button class="diff-mode-btn px-3 py-1.5 text-sm font-medium rounded-md bg-white text-slate-600 border border-slate-300 hover:bg-slate-50" data-mode="lines">Line Diff</button>
+                    <button class="diff-mode-btn px-3 py-1.5 text-sm font-medium rounded-md bg-white text-slate-600 border border-slate-300 hover:bg-slate-50" data-mode="chars">Char Diff</button>
+                </div>
+                
+                <div class="flex items-center space-x-4 text-sm text-slate-600">
+                    <span class="flex items-center"><span class="w-3 h-3 bg-red-100 border border-red-200 inline-block mr-1 rounded-sm"></span> Removed</span>
+                    <span class="flex items-center"><span class="w-3 h-3 bg-green-100 border border-green-200 inline-block mr-1 rounded-sm"></span> Added</span>
+                </div>
+            </div>
+
+            <!-- Side by Side Panes -->
+            <div class="diff-container" id="syncScrollContainer">
+                <!-- Left Pane (Original) -->
+                <div class="diff-pane" id="leftPane">
+                    <div class="pane-header">
+                        <div class="flex items-center overflow-hidden">
+                            <span class="w-2 h-2 rounded-full bg-red-400 mr-2 flex-shrink-0"></span>
+                            <span id="pane1Title" class="truncate">Original</span>
+                        </div>
+                        <span id="pane1Stats" class="text-xs text-slate-500 ml-2 whitespace-nowrap"></span>
+                    </div>
+                    <div class="pane-content" id="originalContent"></div>
+                </div>
+
+                <!-- Right Pane (Modified) -->
+                <div class="diff-pane" id="rightPane">
+                    <div class="pane-header">
+                        <div class="flex items-center overflow-hidden">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 flex-shrink-0"></span>
+                            <span id="pane2Title" class="truncate">Modified</span>
+                        </div>
+                        <span id="pane2Stats" class="text-xs text-slate-500 ml-2 whitespace-nowrap"></span>
+                    </div>
+                    <div class="pane-content" id="modifiedContent"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <p class="text-center text-sm text-slate-500">
+                &copy; <script>document.write(new Date().getFullYear())</script> Codebase. All files are processed locally in your browser.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // State
+        const state = {
+            file1: { file: null, text: null, name: '' },
+            file2: { file: null, text: null, name: '' },
+            diffMode: 'lines', // Default to lines as it's usually faster for large files
+            isComparing: false,
+            worker: null // Store worker reference
+        };
+
+        // DOM Elements
+        const DOM = {
+            uploadSection: document.getElementById('uploadSection'),
+            diffSection: document.getElementById('diffSection'),
+            
+            // File 1 Inputs
+            input1: document.getElementById('fileInput1'),
+            drop1: document.getElementById('dropzone1'),
+            info1: document.getElementById('file1Info'),
+            name1: document.getElementById('file1Name'),
+            remove1: document.getElementById('removeFile1'),
+            
+            // File 2 Inputs
+            input2: document.getElementById('fileInput2'),
+            drop2: document.getElementById('dropzone2'),
+            info2: document.getElementById('file2Info'),
+            name2: document.getElementById('file2Name'),
+            remove2: document.getElementById('removeFile2'),
+            
+            // Controls
+            compareBtn: document.getElementById('compareBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            loadingIndicator: document.getElementById('loadingIndicator'),
+            loadingText: document.getElementById('loadingText'),
+            progressContainer: document.getElementById('progressContainer'),
+            progressBar: document.getElementById('progressBar'),
+            errorMessage: document.getElementById('errorMessage'),
+            modeBtns: document.querySelectorAll('.diff-mode-btn'),
+            
+            // Panes
+            pane1Title: document.getElementById('pane1Title'),
+            pane2Title: document.getElementById('pane2Title'),
+            pane1Stats: document.getElementById('pane1Stats'),
+            pane2Stats: document.getElementById('pane2Stats'),
+            originalContent: document.getElementById('originalContent'),
+            modifiedContent: document.getElementById('modifiedContent'),
+            leftPane: document.getElementById('leftPane'),
+            rightPane: document.getElementById('rightPane')
+        };
+
+        // Initialization
+        function init() {
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // File Input Listeners
+            DOM.input1.addEventListener('change', (e) => handleFileSelect(e, 1));
+            DOM.input2.addEventListener('change', (e) => handleFileSelect(e, 2));
+
+            // Drag and Drop
+            setupDragAndDrop(DOM.drop1, DOM.input1, 1);
+            setupDragAndDrop(DOM.drop2, DOM.input2, 2);
+
+            // Remove File Listeners
+            DOM.remove1.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); removeFile(1); });
+            DOM.remove2.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); removeFile(2); });
+
+            // Action Buttons
+            DOM.compareBtn.addEventListener('click', performComparison);
+            DOM.resetBtn.addEventListener('click', resetApp);
+
+            // Mode Toggle
+            DOM.modeBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const mode = e.target.dataset.mode;
+                    changeMode(mode);
+                });
+            });
+
+            // Synchronized Scrolling
+            DOM.leftPane.addEventListener('scroll', () => {
+                DOM.rightPane.scrollTop = DOM.leftPane.scrollTop;
+                DOM.rightPane.scrollLeft = DOM.leftPane.scrollLeft;
+            });
+            DOM.rightPane.addEventListener('scroll', () => {
+                DOM.leftPane.scrollTop = DOM.rightPane.scrollTop;
+                DOM.leftPane.scrollLeft = DOM.rightPane.scrollLeft;
+            });
+        }
+
+        function setupDragAndDrop(dropzone, input, fileNum) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length) {
+                    input.files = files; // Assign to hidden input
+                    handleFileObject(files[0], fileNum);
+                }
+            }, false);
+        }
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleFileSelect(event, fileNum) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFileObject(file, fileNum);
+            }
+        }
+
+        function handleFileObject(file, fileNum) {
+            const stateObj = fileNum === 1 ? state.file1 : state.file2;
+            const infoEl = fileNum === 1 ? DOM.info1 : DOM.info2;
+            const nameEl = fileNum === 1 ? DOM.name1 : DOM.name2;
+            
+            stateObj.file = file;
+            stateObj.name = file.name;
+            
+            nameEl.textContent = file.name;
+            infoEl.classList.remove('hidden');
+            
+            // Hide the placeholder text/icon somewhat by bringing info to front
+            
+            checkReadyState();
+        }
+
+        function removeFile(fileNum) {
+            const stateObj = fileNum === 1 ? state.file1 : state.file2;
+            const input = fileNum === 1 ? DOM.input1 : DOM.input2;
+            const infoEl = fileNum === 1 ? DOM.info1 : DOM.info2;
+            
+            stateObj.file = null;
+            stateObj.text = null;
+            stateObj.name = '';
+            
+            input.value = ''; // Clear input
+            infoEl.classList.add('hidden');
+            
+            checkReadyState();
+        }
+
+        function checkReadyState() {
+            if (state.file1.file && state.file2.file) {
+                DOM.compareBtn.disabled = false;
+            } else {
+                DOM.compareBtn.disabled = true;
+            }
+        }
+
+        async function extractText(file) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    
+                    if (ext === 'pdf') {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const typedarray = new Uint8Array(arrayBuffer);
+                        
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        let fullText = '';
+                        
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(' ');
+                            fullText += pageText + '\n\n';
+                        }
+                        resolve(fullText);
+                        
+                    } else if (ext === 'json') {
+                        const text = await file.text();
+                        try {
+                            // Format JSON to be pretty for better diffing
+                            const obj = JSON.parse(text);
+                            resolve(JSON.stringify(obj, null, 2));
+                        } catch (e) {
+                            // If invalid JSON, just return raw text
+                            resolve(text);
+                        }
+                    } else {
+                        // Standard text files (txt, html, csv, etc.)
+                        const text = await file.text();
+                        resolve(text);
+                    }
+                } catch (error) {
+                    console.error("Extraction error:", error);
+                    reject(`Error reading ${file.name}: ${error.message}`);
+                }
+            });
+        }
+
+        function changeMode(mode) {
+            state.diffMode = mode;
+            
+            // Update UI buttons
+            DOM.modeBtns.forEach(btn => {
+                if (btn.dataset.mode === mode) {
+                    btn.className = "diff-mode-btn px-3 py-1.5 text-sm font-medium rounded-md bg-blue-100 text-blue-700 border border-blue-200";
+                } else {
+                    btn.className = "diff-mode-btn px-3 py-1.5 text-sm font-medium rounded-md bg-white text-slate-600 border border-slate-300 hover:bg-slate-50";
+                }
+            });
+            
+            // Re-render if we have data and we are in diff view
+            if (!DOM.diffSection.classList.contains('hidden') && state.file1.text !== null && state.file2.text !== null) {
+                // If files are large, show loading state again
+                if (state.file1.text.length > 50000 || state.file2.text.length > 50000) {
+                     DOM.diffSection.style.opacity = '0.5';
+                     DOM.loadingText.textContent = "Recalculating differences...";
+                     DOM.loadingIndicator.classList.remove('hidden');
+                     DOM.loadingIndicator.classList.add('flex');
+                }
+                
+                // Use setTimeout to allow UI to update before starting worker
+                setTimeout(() => {
+                    calculateDiffWithWorker(state.file1.text, state.file2.text, state.diffMode);
+                }, 50);
+            }
+        }
+
+        function showError(msg) {
+            DOM.errorMessage.textContent = msg;
+            DOM.errorMessage.classList.remove('hidden');
+            setLoading(false);
+        }
+
+        function hideError() {
+            DOM.errorMessage.classList.add('hidden');
+        }
+
+        function setLoading(isLoading, text = "Processing files...") {
+            state.isComparing = isLoading;
+            DOM.compareBtn.disabled = isLoading;
+            
+            if (isLoading) {
+                DOM.loadingText.textContent = text;
+                DOM.loadingIndicator.classList.remove('hidden');
+                DOM.loadingIndicator.classList.add('flex');
+            } else {
+                DOM.loadingIndicator.classList.add('hidden');
+                DOM.loadingIndicator.classList.remove('flex');
+                DOM.progressContainer.classList.add('hidden');
+                DOM.diffSection.style.opacity = '1'; // Restore opacity if it was dimmed
+            }
+        }
+
+        function calculateDiffWithWorker(text1, text2, mode) {
+            return new Promise((resolve, reject) => {
+                // If an old worker exists, terminate it to free resources
+                if (state.worker) {
+                    state.worker.terminate();
+                }
+
+                // Create a blob containing the worker script
+                const workerScript = `
+                    importScripts('https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.1.0/diff.min.js');
+                    
+                    self.onmessage = function(e) {
+                        const { text1, text2, mode } = e.data;
+                        let diff;
+                        
+                        try {
+                            if (mode === 'chars') {
+                                diff = self.Diff.diffChars(text1, text2);
+                            } else if (mode === 'words') {
+                                diff = self.Diff.diffWords(text1, text2);
+                            } else {
+                                // Default to lines - much safer for large JSON files
+                                diff = self.Diff.diffLines(text1, text2);
+                            }
+                            
+                            // Send result back
+                            self.postMessage({ status: 'success', diff: diff });
+                        } catch (error) {
+                            self.postMessage({ status: 'error', error: error.message });
+                        }
+                    };
+                `;
+
+                const blob = new Blob([workerScript], { type: 'application/javascript' });
+                const worker = new Worker(URL.createObjectURL(blob));
+                state.worker = worker;
+
+                worker.onmessage = function(e) {
+                    const result = e.data;
+                    if (result.status === 'success') {
+                        resolve(result.diff);
+                    } else {
+                        reject(new Error(result.error || "Unknown worker error"));
+                    }
+                    worker.terminate();
+                    state.worker = null;
+                };
+
+                worker.onerror = function(error) {
+                    reject(new Error("Worker error during calculation"));
+                    worker.terminate();
+                    state.worker = null;
+                };
+
+                // Send data to worker
+                worker.postMessage({ text1, text2, mode });
+            });
+        }
+
+        async function performComparison() {
+            hideError();
+            setLoading(true, "Reading files...");
+            
+            try {
+                // Extract text if not already done
+                if (!state.file1.text) {
+                    DOM.loadingText.textContent = `Extracting text from ${state.file1.name}...`;
+                    state.file1.text = await extractText(state.file1.file);
+                }
+                
+                if (!state.file2.text) {
+                    DOM.loadingText.textContent = `Extracting text from ${state.file2.name}...`;
+                    state.file2.text = await extractText(state.file2.file);
+                }
+
+                // Check file sizes. If they are very large (> 1MB), force Line diff mode to prevent memory exhaustion
+                const totalSize = state.file1.text.length + state.file2.text.length;
+                if (totalSize > 1000000 && state.diffMode !== 'lines') {
+                    console.warn("Files are large, forcing Line Diff mode for performance.");
+                    // Update UI silently
+                    state.diffMode = 'lines';
+                    DOM.modeBtns.forEach(btn => {
+                        if (btn.dataset.mode === 'lines') {
+                            btn.className = "diff-mode-btn px-3 py-1.5 text-sm font-medium rounded-md bg-blue-100 text-blue-700 border border-blue-200";
+                        } else {
+                            btn.className = "diff-mode-btn px-3 py-1.5 text-sm font-medium rounded-md bg-white text-slate-600 border border-slate-300 hover:bg-slate-50";
+                        }
+                    });
+                }
+
+                DOM.loadingText.textContent = "Calculating differences (this might take a moment for large files)...";
+                DOM.progressContainer.classList.remove('hidden');
+                DOM.progressBar.style.width = '50%'; // Indicate progress
+                
+                // Calculate diff using Web Worker
+                const diffResult = await calculateDiffWithWorker(state.file1.text, state.file2.text, state.diffMode);
+                
+                DOM.progressBar.style.width = '90%';
+                DOM.loadingText.textContent = "Rendering view...";
+
+                // Yield to main thread briefly before heavy rendering
+                await new Promise(resolve => setTimeout(resolve, 10));
+                
+                renderDiffFromData(diffResult);
+                
+                DOM.progressBar.style.width = '100%';
+                
+                // Switch UI view
+                DOM.uploadSection.classList.add('hidden');
+                DOM.diffSection.classList.remove('hidden');
+                DOM.diffSection.classList.add('flex');
+                DOM.resetBtn.classList.remove('hidden');
+                
+                DOM.pane1Title.textContent = state.file1.name;
+                DOM.pane2Title.textContent = state.file2.name;
+                
+                setLoading(false);
+                
+            } catch (error) {
+                console.error(error);
+                showError("Error during comparison. Files might be too complex or large for this diff mode. Try 'Line Diff'. " + error.message);
+                setLoading(false);
+            }
+        }
+
+        function renderDiffFromData(diff) {
+            let leftHtml = [];
+            let rightHtml = [];
+            let leftLineNum = 1;
+            let rightLineNum = 1;
+
+            let leftStats = { removed: 0 };
+            let rightStats = { added: 0 };
+
+            diff.forEach((part) => {
+                const spanClass = part.added ? 'diff-added' : part.removed ? 'diff-removed' : 'diff-unchanged';
+                const escapedValue = escapeHtml(part.value);
+                const lines = escapedValue.split('\n');
+                
+                // Remove trailing empty line from split
+                if (lines.length > 0 && lines[lines.length - 1] === '') {
+                    lines.pop(); 
+                }
+
+                lines.forEach((line) => {
+                    if (part.removed) {
+                        leftHtml.push(`<div class="line-wrapper"><div class="line-number">${leftLineNum++}</div><div class="line-content ${spanClass}">${line || ' '}</div></div>`);
+                        leftStats.removed++;
+                    } else if (part.added) {
+                        rightHtml.push(`<div class="line-wrapper"><div class="line-number">${rightLineNum++}</div><div class="line-content ${spanClass}">${line || ' '}</div></div>`);
+                        rightStats.added++;
+                    } else {
+                        // Unchanged lines appear in both panes
+                        leftHtml.push(`<div class="line-wrapper"><div class="line-number">${leftLineNum++}</div><div class="line-content ${spanClass}">${line || ' '}</div></div>`);
+                        rightHtml.push(`<div class="line-wrapper"><div class="line-number">${rightLineNum++}</div><div class="line-content ${spanClass}">${line || ' '}</div></div>`);
+                    }
+                });
+            });
+
+            // Using join('') is significantly faster for large strings than += string concatenation
+            DOM.originalContent.innerHTML = leftHtml.join('');
+            DOM.modifiedContent.innerHTML = rightHtml.join('');
+
+            DOM.pane1Stats.innerHTML = `<span class="text-red-500">-${leftStats.removed} lines</span>`;
+            DOM.pane2Stats.innerHTML = `<span class="text-emerald-500">+${rightStats.added} lines</span>`;
+        }
+
+        function escapeHtml(unsafe) {
+            return (unsafe || '').toString()
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        function resetApp() {
+            // Clear State
+            state.file1 = { file: null, text: null, name: '' };
+            state.file2 = { file: null, text: null, name: '' };
+            
+            // Clear DOM inputs
+            DOM.input1.value = '';
+            DOM.input2.value = '';
+            
+            // Reset UI
+            DOM.info1.classList.add('hidden');
+            DOM.info2.classList.add('hidden');
+            DOM.compareBtn.disabled = true;
+            
+            DOM.uploadSection.classList.remove('hidden');
+            DOM.diffSection.classList.add('hidden');
+            DOM.diffSection.classList.remove('flex');
+            DOM.resetBtn.classList.add('hidden');
+            hideError();
+            
+            // Clear panes
+            DOM.originalContent.innerHTML = '';
+            DOM.modifiedContent.innerHTML = '';
+        }
+
+        // Initialize App
+        init();
+    </script>
+</body>
+</html>
