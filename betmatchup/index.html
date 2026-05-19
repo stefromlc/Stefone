@@ -1047,17 +1047,13 @@
         // Server Fetch Functions
         async function fetchResultsData() {
             try {
-                // Using relative path since it's in the same folder
                 const response = await fetch('results.json', { cache: 'no-store' });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
                 const data = await response.json();
-                console.log("Results Data Fetched:", data);
                 
-                // TODO: Connect to your existing rendering logic
+                // Send the fetched data straight into your existing engine!
+                processRawData(data);
                 
             } catch (error) {
                 console.error("Error fetching results:", error);
@@ -1068,15 +1064,12 @@
         async function fetchPendingData() {
             try {
                 const response = await fetch('pending.json', { cache: 'no-store' });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
                 const data = await response.json();
-                console.log("Pending Data Fetched:", data);
                 
-                // TODO: Connect to your existing rendering logic
+                // Send the fetched data straight into your existing engine!
+                processPendingData(data);
                 
             } catch (error) {
                 console.error("Error fetching pending data:", error);
