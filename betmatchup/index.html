@@ -1581,17 +1581,35 @@
         }
 
         function applyFilters() {
-            const lFilter = DOM.leagueFilter.value;
-            const tFilter = DOM.typeFilter.value;
-            const sFilter = DOM.statusFilter.value;
-            const dFrom = DOM.dateFrom.value;
-            const dTo = DOM.dateTo.value;
-            const oMin = parseFloat(DOM.oddsMin.value) || 0;
-            const oMax = parseFloat(DOM.oddsMax.value) || 9999;
-            const searchTerm = DOM.searchInput.value.toLowerCase().trim();
+            // 1. Safely grab values directly from the document (bypasses any DOM object mapping issues)
+            const elLeague = document.getElementById('leagueFilter');
+            const elType = document.getElementById('typeFilter');
+            const elStatus = document.getElementById('statusFilter');
+            const elDateFrom = document.getElementById('dateFrom');
+            const elDateTo = document.getElementById('dateTo');
+            const elOddsMin = document.getElementById('oddsMin');
+            const elOddsMax = document.getElementById('oddsMax');
+            const elSearch = document.getElementById('searchInput');
 
+            const lFilter = elLeague ? elLeague.value : 'all';
+            const tFilter = elType ? elType.value : 'all';
+            const sFilter = elStatus ? elStatus.value : 'all';
+            const dFrom = elDateFrom ? elDateFrom.value : '';
+            const dTo = elDateTo ? elDateTo.value : '';
+            
+            // Safely parse odds
+            const minVal = elOddsMin && elOddsMin.value !== '' ? parseFloat(elOddsMin.value) : 0;
+            const maxVal = elOddsMax && elOddsMax.value !== '' ? parseFloat(elOddsMax.value) : 9999;
+            const oMin = isNaN(minVal) ? 0 : minVal;
+            const oMax = isNaN(maxVal) ? 9999 : maxVal;
+            
+            const searchTerm = elSearch ? elSearch.value.toLowerCase().trim() : '';
+
+            // 2. Base criteria (League, Date, Search)
             const checkBaseCriteria = (item) => {
+                if (!item) return false;
                 let passLeague = lFilter === 'all' || item.league === lFilter;
+                
                 let passDate = true;
                 if (dFrom) passDate = passDate && (item.date >= dFrom);
                 if (dTo) passDate = passDate && (item.date <= dTo);
@@ -1603,38 +1621,91 @@
                     const mId = (item.match_id || "").toLowerCase();
                     passSearch = hTeam.includes(searchTerm) || aTeam.includes(searchTerm) || mId.includes(searchTerm);
                 }
-
                 return passLeague && passDate && passSearch;
             };
 
+            // 3. Bet criteria (Type, Odds)
             const checkBetCriteria = (bet) => {
+                if (!bet) return false;
                 let passType = tFilter === 'all' || bet.selection === tFilter;
-                let passOdds = bet.odds >= oMin && bet.odds <= oMax;
+                let betOdds = parseFloat(bet.odds) || 0;
+                let passOdds = betOdds >= oMin && betOdds <= oMax;
                 return passType && passOdds;
             };
 
-            filteredBets = flattenedBets.filter(bet => {
-                let passStatus = sFilter === 'all' || 
-                                 (sFilter === 'won' && bet.won === true) || 
-                                 (sFilter === 'lost' && bet.won === false);
-                return checkBaseCriteria(bet) && checkBetCriteria(bet) && passStatus;
-            });
+            // Check if a bet-specific filter is currently active
+            const betFiltersActive = tFilter !== 'all' || sFilter !== 'all' || (elOddsMin && elOddsMin.value !== '') || (elOddsMax && elOddsMax.value !== '');
 
-            filteredMatches = matchesList.filter(m => checkBaseCriteria(m));
+            // 4. Safely filter Historical Data (with fallback empty arrays to prevent crashes)
+            if (typeof flattenedBets !== 'undefined' && Array.isArray(flattenedBets)) {
+                filteredBets = flattenedBets.filter(bet => {
+                    let passStatus = sFilter === 'all' || 
+                                    (sFilter === 'won' && bet.won === true) || 
+                                    (sFilter === 'lost' && bet.won === false);
+                    return checkBaseCriteria(bet) && checkBetCriteria(bet) && passStatus;
+                });
+            } else {
+                filteredBets = [];
+            }
 
-            filteredPendingBets = pendingFlattenedBets.filter(bet => {
-                return checkBaseCriteria(bet) && checkBetCriteria(bet);
-            });
+            if (typeof matchesList !== 'undefined' && Array.isArray(matchesList)) {
+                filteredMatches = matchesList.filter(m => {
+                    if (!checkBaseCriteria(m)) return false;
+                    // Only show the match if it contains a bet that passed our filters
+                    if (betFiltersActive) return filteredBets.some(b => b.match_id === m.match_id);
+                    return true;
+                });
+            } else {
+                filteredMatches = [];
+            }
 
-            filteredPendingMatches = pendingMatchesList.filter(m => checkBaseCriteria(m));
+            // 5. Safely filter Pending Data
+            if (typeof pendingFlattenedBets !== 'undefined' && Array.isArray(pendingFlattenedBets)) {
+                filteredPendingBets = pendingFlattenedBets.filter(bet => {
+                    return checkBaseCriteria(bet) && checkBetCriteria(bet);
+                });
+            } else {
+                filteredPendingBets = [];
+            }
 
-            applySorting('bets');
-            applySorting('matches');
-            applySorting('pendingBets');
-            applySorting('pendingMatches');
+            if (typeof pendingMatchesList !== 'undefined' && Array.isArray(pendingMatchesList)) {
+                filteredPendingMatches = pendingMatchesList.filter(m => {
+                    if (!checkBaseCriteria(m)) return false;
+                    if (betFiltersActive) return filteredPendingBets.some(b => b.match_id === m.match_id);
+                    return true;
+                });
+            } else {
+                filteredPendingMatches = [];
+            }
 
-            updateDashboard();
+            // 6. Push updates to the UI
+            if (typeof applySorting === 'function') {
+                applySorting('bets');
+                applySorting('matches');
+                applySorting('pendingBets');
+                applySorting('pendingMatches');
+            }
+            
+            if (typeof updateDashboard === 'function') {
+                updateDashboard();
+            }
         }
+
+        // Force all filter inputs to trigger the applyFilters function on change/typing
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterIds = [
+                'searchInput', 'dateFrom', 'dateTo', 'oddsMin', 
+                'oddsMax', 'leagueFilter', 'typeFilter', 'statusFilter'
+            ];
+            
+            filterIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', applyFilters);  // Triggers while typing
+                    el.addEventListener('change', applyFilters); // Triggers on dropdown selection
+                }
+            });
+        });
 
         function updateDashboard() {
             if (rawData.length === 0 && rawPendingData.length === 0) {
