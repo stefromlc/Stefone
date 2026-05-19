@@ -1,5 +1,23 @@
 [
   {
+    "title": "BetMatchUp",
+    "slug": "betmatchup",
+    "description": "BetMatchUp is a football prediction dashboard that tracks upcoming match predictions and past results in one place. Analyze forecasts, monitor prediction performance, and explore football insights through a fast, data-driven interface.",
+    "thumbnail": "assets/thumbs/betmatchup.jpg",
+    "tags": [
+      "Analyze",
+      "BetMatchUp",
+      "Data",
+      "Football",
+      "Prediction"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-05-19",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "Diff Viewer",
     "slug": "diff-viewer",
     "description": "Diff Viewer is a browser-based tool that compares two files side-by-side in real time, highlighting differences across text, JSON, PDF, and code formats with fast in-browser processing and multiple diff modes for precise visual comparison.",
