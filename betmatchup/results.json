@@ -2577,70 +2577,60 @@
         "total_profit": 0.7549999999999999
     },
     {
-        "match_id": "2026-05-19_Bournemouth_Man City",
+        "match_id": "2026-05-19_Chelsea_Tottenham",
         "date": "2026-05-19",
-        "time": "19:30",
+        "time": "20:15",
         "league": "E0",
-        "home_team": "Bournemouth",
-        "away_team": "Man City",
+        "home_team": "Chelsea",
+        "away_team": "Tottenham",
         "status": "completed",
         "market_odds": {
-            "H": 4.5,
-            "D": 4.33,
-            "A": 1.67,
-            "O25": 1.44,
-            "U25": 2.75
+            "H": 1.91,
+            "D": 3.7,
+            "A": 3.9,
+            "O25": 1.73,
+            "U25": 2.1
         },
         "model_probs": {
-            "H": 0.302,
-            "D": 0.266,
-            "A": 0.438,
-            "U25": 0.416,
-            "O25": 0.59
+            "H": 0.354,
+            "D": 0.296,
+            "A": 0.355,
+            "U25": 0.453,
+            "O25": 0.552
         },
         "value_bets": [
             {
-                "selection": "H",
-                "odds": 4.5,
-                "model_prob": 0.302,
-                "implied_prob": 0.222,
-                "edge": 0.079,
-                "stake": 1.88,
+                "selection": "A",
+                "odds": 3.9,
+                "model_prob": 0.355,
+                "implied_prob": 0.256,
+                "edge": 0.099,
+                "stake": 2.43,
                 "won": false,
-                "profit": -1.88
-            },
-            {
-                "selection": "U25",
-                "odds": 2.75,
-                "model_prob": 0.416,
-                "implied_prob": 0.364,
-                "edge": 0.052,
-                "stake": 1.51,
-                "won": true,
-                "profit": 2.6425
+                "profit": -2.43
             }
         ],
         "debug_info": {
-            "home_elo": 1592.4,
-            "away_elo": 1731.9,
+            "home_elo": 1560.2,
+            "away_elo": 1461.6,
             "ml_probs": {
-                "H": 0.327,
-                "D": 0.305,
-                "A": 0.368,
-                "U25": 0.443,
-                "O25": 0.557
+                "H": 0.363,
+                "D": 0.322,
+                "A": 0.316,
+                "U25": 0.45,
+                "O25": 0.55
             },
             "poisson_probs": {
-                "H": 0.279,
-                "D": 0.204,
-                "A": 0.517,
-                "O25": 0.77,
-                "U25": 0.23
+                "H": 0.284,
+                "D": 0.256,
+                "A": 0.46,
+                "O25": 0.545,
+                "U25": 0.455
             }
         },
-        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/AFC Bournemouth.png",
-        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Manchester City FC.png",
-        "actual_score": "1-1",
-        "total_profit": 0.7625000000000002
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Chelsea FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Tottenham Hotspur FC.png",
+        "actual_score": "2-1",
+        "total_profit": -2.43
     }
 ]
