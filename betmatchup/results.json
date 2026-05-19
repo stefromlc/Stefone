@@ -42,8 +42,8 @@
         },
         "actual_score": "4-2",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Aston Villa FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Liverpool FC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Aston Villa FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Liverpool FC.png"
     },
     {
         "match_id": "2026-05-16_Bayern Munich_FC Koln",
@@ -99,8 +99,8 @@
         },
         "actual_score": "5-1",
         "total_profit": -2.02,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\FC Bayern Munchen.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\FC Crotone.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/FC Bayern Munchen.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/FC Crotone.png"
     },
     {
         "match_id": "2026-05-16_Ein Frankfurt_Stuttgart",
@@ -145,8 +145,8 @@
         },
         "actual_score": "2-2",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\Eintracht Frankfurt.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\SV Stuttgarter Kickers.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/Eintracht Frankfurt.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/SV Stuttgarter Kickers.png"
     },
     {
         "match_id": "2026-05-16_Freiburg_RB Leipzig",
@@ -202,8 +202,8 @@
         },
         "actual_score": "4-1",
         "total_profit": -1.6,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\SC Freiburg II.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\RB Leipzig.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/SC Freiburg II.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/RB Leipzig.png"
     },
     {
         "match_id": "2026-05-16_Leverkusen_Hamburg",
@@ -269,8 +269,8 @@
         },
         "actual_score": "1-1",
         "total_profit": 12.775,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\Bayer Leverkusen.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\ETSV Hamburg.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/Bayer Leverkusen.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/ETSV Hamburg.png"
     },
     {
         "match_id": "2026-05-16_Heidenheim_Mainz",
@@ -326,8 +326,8 @@
         },
         "actual_score": "0-2",
         "total_profit": 6.384,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\1 FC Heidenheim 1846.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\1 FSV Mainz 05 II.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/1 FC Heidenheim 1846.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/1 FSV Mainz 05 II.png"
     },
     {
         "match_id": "2026-05-16_St Pauli_Wolfsburg",
@@ -372,8 +372,8 @@
         },
         "actual_score": "1-3",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\FC St Pauli 1910 II.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\USI Lupo-Martini Wolfsburg.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/FC St Pauli 1910 II.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/USI Lupo-Martini Wolfsburg.png"
     },
     {
         "match_id": "2026-05-16_Union Berlin_Augsburg",
@@ -418,8 +418,8 @@
         },
         "actual_score": "4-0",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\1 FC Union Berlin.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\FC Augsburg 1907 II.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/1 FC Union Berlin.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/FC Augsburg 1907 II.png"
     },
     {
         "match_id": "2026-05-16_Werder Bremen_Dortmund",
@@ -475,8 +475,8 @@
         },
         "actual_score": "0-2",
         "total_profit": 2.58,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\SV Werder Bremen II.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\ASC 09 Dortmund.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/SV Werder Bremen II.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/ASC 09 Dortmund.png"
     },
     {
         "match_id": "2026-05-16_M'gladbach_Hoffenheim",
@@ -521,8 +521,8 @@
         },
         "actual_score": "4-0",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\Borussia Monchengladbach.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\TSG 1899 Hoffenheim II.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/Borussia Monchengladbach.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/TSG 1899 Hoffenheim II.png"
     },
     {
         "match_id": "2026-05-17_Man United_Nott'm Forest",
@@ -578,8 +578,8 @@
         },
         "actual_score": "3-2",
         "total_profit": -1.51,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Manchester United FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Nottingham Forest FC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Manchester United FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Nottingham Forest FC.png"
     },
     {
         "match_id": "2026-05-17_Roma_Lazio",
@@ -635,8 +635,8 @@
         },
         "actual_score": "2-0",
         "total_profit": -1.34,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\AS Roma.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\SS Lazio.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/AS Roma.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/SS Lazio.png"
     },
     {
         "match_id": "2026-05-17_Pisa_Napoli",
@@ -702,8 +702,8 @@
         },
         "actual_score": "0-3",
         "total_profit": -3.16,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\Pisa Sporting Club.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\SSC Napoli.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Pisa Sporting Club.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/SSC Napoli.png"
     },
     {
         "match_id": "2026-05-17_Genoa_Milan",
@@ -759,8 +759,8 @@
         },
         "actual_score": "1-2",
         "total_profit": -1.29,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\Genoa CFC 1893.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\AC Milan.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Genoa CFC 1893.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/AC Milan.png"
     },
     {
         "match_id": "2026-05-17_Como_Parma",
@@ -826,8 +826,8 @@
         },
         "actual_score": "1-0",
         "total_profit": 0.374000000000001,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\ASD Como 1907.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\Parma Calcio 1913.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/ASD Como 1907.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Parma Calcio 1913.png"
     },
     {
         "match_id": "2026-05-17_Juventus_Fiorentina",
@@ -883,8 +883,8 @@
         },
         "actual_score": "0-2",
         "total_profit": 2.106,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\Juventus FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\ACF Fiorentina.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Juventus FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/ACF Fiorentina.png"
     },
     {
         "match_id": "2026-05-17_Inter_Verona",
@@ -950,8 +950,8 @@
         },
         "actual_score": "1-1",
         "total_profit": 2.5579,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Germany\\Inter Turkspur Kiel.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\AC Chievo Verona.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/Inter Turkspur Kiel.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/AC Chievo Verona.png"
     },
     {
         "match_id": "2026-05-17_Wolves_Fulham",
@@ -1017,8 +1017,8 @@
         },
         "actual_score": "1-1",
         "total_profit": 4.666,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Wolverhampton Wanderers FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Fulham FC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Wolverhampton Wanderers FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Fulham FC.png"
     },
     {
         "match_id": "2026-05-17_Leeds_Brighton",
@@ -1063,8 +1063,8 @@
         },
         "actual_score": "1-0",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Leeds United FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Brighton  Hove Albion FC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Leeds United FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Brighton  Hove Albion FC.png"
     },
     {
         "match_id": "2026-05-17_Everton_Sunderland",
@@ -1120,8 +1120,8 @@
         },
         "actual_score": "1-3",
         "total_profit": 5.028300000000001,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Everton FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Sunderland AFC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Everton FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Sunderland AFC.png"
     },
     {
         "match_id": "2026-05-17_Brentford_Crystal Palace",
@@ -1177,8 +1177,8 @@
         },
         "actual_score": "2-2",
         "total_profit": -2.44,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Brentford FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Crystal Palace FC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Brentford FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Crystal Palace FC.png"
     },
     {
         "match_id": "2026-05-17_Atalanta_Bologna",
@@ -1234,8 +1234,8 @@
         },
         "actual_score": "0-1",
         "total_profit": 1.2480000000000002,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\Atalanta Bergamesca Calcio U23.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\Bologna FC 1909.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Atalanta Bergamesca Calcio U23.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Bologna FC 1909.png"
     },
     {
         "match_id": "2026-05-17_Newcastle_West Ham",
@@ -1291,8 +1291,8 @@
         },
         "actual_score": "3-1",
         "total_profit": -1.64,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Newcastle Town FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\West Ham United FC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Newcastle Town FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/West Ham United FC.png"
     },
     {
         "match_id": "2026-05-17_Ath Bilbao_Celta",
@@ -1337,8 +1337,8 @@
         },
         "actual_score": "1-1",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Atletic Bilbao B.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\RC Celta de Vigo.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Atletic Bilbao B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/RC Celta de Vigo.png"
     },
     {
         "match_id": "2026-05-17_Vallecano_Villarreal",
@@ -1383,8 +1383,8 @@
         },
         "actual_score": "2-0",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Rayo Vallecano de Madrid B.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Villareal CF.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Rayo Vallecano de Madrid B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Villareal CF.png"
     },
     {
         "match_id": "2026-05-17_Sevilla_Real Madrid",
@@ -1429,8 +1429,8 @@
         },
         "actual_score": "0-1",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Sevilla Atletico.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Real Madrid.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Sevilla Atletico.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Real Madrid.png"
     },
     {
         "match_id": "2026-05-17_Oviedo_Alaves",
@@ -1486,8 +1486,8 @@
         },
         "actual_score": "0-1",
         "total_profit": -2.25,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Real Oviedo Vetusta.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Deportivo Alaves B.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Real Oviedo Vetusta.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Deportivo Alaves B.png"
     },
     {
         "match_id": "2026-05-17_Osasuna_Espanol",
@@ -1532,8 +1532,8 @@
         },
         "actual_score": "1-2",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\CA Osasuna B.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\RCD Espanyol B.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/CA Osasuna B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/RCD Espanyol B.png"
     },
     {
         "match_id": "2026-05-17_Elche_Getafe",
@@ -1589,8 +1589,8 @@
         },
         "actual_score": "1-0",
         "total_profit": -1.26,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Elche CdF B.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Getafe CF B.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Elche CdF B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Getafe CF B.png"
     },
     {
         "match_id": "2026-05-17_Ath Madrid_Girona",
@@ -1635,8 +1635,8 @@
         },
         "actual_score": "1-0",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Club Atletico Madrid B.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Girona FC B.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Club Atletico Madrid B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Girona FC B.png"
     },
     {
         "match_id": "2026-05-17_Levante_Mallorca",
@@ -1702,8 +1702,8 @@
         },
         "actual_score": "2-0",
         "total_profit": 1.1940000000000006,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\US Sestri Levante.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\RCD Mallorca.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/US Sestri Levante.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/RCD Mallorca.png"
     },
     {
         "match_id": "2026-05-17_Sociedad_Valencia",
@@ -1748,8 +1748,8 @@
         },
         "actual_score": "3-4",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Real Sociedad.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Valencia CF B.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Real Sociedad.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Valencia CF B.png"
     },
     {
         "match_id": "2026-05-17_Cagliari_Torino",
@@ -1794,8 +1794,8 @@
         },
         "actual_score": "2-1",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\Cagliari Calcio.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\Torino FC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Cagliari Calcio.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Torino FC.png"
     },
     {
         "match_id": "2026-05-17_Udinese_Cremonese",
@@ -1861,8 +1861,8 @@
         },
         "actual_score": "0-1",
         "total_profit": -2.59,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\Udinese Calcio.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\US Cremonese 1903.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Udinese Calcio.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/US Cremonese 1903.png"
     },
     {
         "match_id": "2026-05-17_Sassuolo_Lecce",
@@ -1918,8 +1918,8 @@
         },
         "actual_score": "2-3",
         "total_profit": -1.97,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\US Sassuolo.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Italy\\US Lecce 1908.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/US Sassuolo.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/US Lecce 1908.png"
     },
     {
         "match_id": "2026-05-17_Brest_Angers",
@@ -1985,8 +1985,8 @@
         },
         "actual_score": "1-1",
         "total_profit": 6.710000000000001,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\Stade Brestois 29.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Concord Rangers FC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/France/Stade Brestois 29.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Concord Rangers FC.png"
     },
     {
         "match_id": "2026-05-17_Lille_Auxerre",
@@ -2042,8 +2042,8 @@
         },
         "actual_score": "0-2",
         "total_profit": 6.5,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\Lille OSC B.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\AJ Auxerre B.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/France/Lille OSC B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/France/AJ Auxerre B.png"
     },
     {
         "match_id": "2026-05-17_Lyon_Lens",
@@ -2099,8 +2099,8 @@
         },
         "actual_score": "0-4",
         "total_profit": 6.013999999999999,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\Gran Ouest Association Lyonnaise FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\Racing Club de Lens.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/France/Gran Ouest Association Lyonnaise FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/France/Racing Club de Lens.png"
     },
     {
         "match_id": "2026-05-17_Marseille_Rennes",
@@ -2145,8 +2145,8 @@
         },
         "actual_score": "3-1",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\Olympique de Marseille.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\Stade Rennais FC B.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/France/Olympique de Marseille.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/France/Stade Rennais FC B.png"
     },
     {
         "match_id": "2026-05-17_Nice_Metz",
@@ -2212,8 +2212,8 @@
         },
         "actual_score": "0-0",
         "total_profit": 11.803,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\OGC Nice Cote dAzur.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\FC Metz B.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/France/OGC Nice Cote dAzur.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/France/FC Metz B.png"
     },
     {
         "match_id": "2026-05-17_Lorient_Le Havre",
@@ -2258,8 +2258,8 @@
         },
         "actual_score": "0-2",
         "total_profit": 0.0,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\FC Lorient Bretagne Sud B.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\Le Havre AC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/France/FC Lorient Bretagne Sud B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/France/Le Havre AC.png"
     },
     {
         "match_id": "2026-05-17_Paris FC_Paris SG",
@@ -2315,8 +2315,8 @@
         },
         "actual_score": "2-1",
         "total_profit": -0.91,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\Paris FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\Paris Saint-Germain FC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/France/Paris FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/France/Paris Saint-Germain FC.png"
     },
     {
         "match_id": "2026-05-17_Strasbourg_Monaco",
@@ -2372,8 +2372,8 @@
         },
         "actual_score": "5-4",
         "total_profit": 1.8612,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\Racing Club Strasbourg Alsace B.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\France\\AS Monaco FC.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/France/Racing Club Strasbourg Alsace B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/France/AS Monaco FC.png"
     },
     {
         "match_id": "2026-05-17_Barcelona_Betis",
@@ -2439,8 +2439,8 @@
         },
         "actual_score": "3-1",
         "total_profit": -4.08,
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\FC Barcelona B.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\Spain\\Real Betis Balompie.png"
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/FC Barcelona B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Real Betis Balompie.png"
     },
     {
         "match_id": "2026-05-18_Arsenal_Burnley",
@@ -2504,8 +2504,8 @@
                 "U25": 0.412
             }
         },
-        "home_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Arsenal FC.png",
-        "away_crest": "C:\\Users\\user\\OneDrive\\Python Projects\\Fully Auto Predictions\\Auto\\football_crests\\England\\Burnley FC.png",
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Arsenal FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Burnley FC.png",
         "actual_score": "1-0",
         "total_profit": 2.6920000000000006
     }
