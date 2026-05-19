@@ -3838,6 +3838,10 @@
         window.onload = () => {
             switchTab('bets');
             updateBetslipUI();
+            
+            // Auto-fetch data on page load
+            fetchResultsData();
+            fetchPendingData();
         };
 
     </script>
