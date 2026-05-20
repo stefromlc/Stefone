@@ -1,7 +1,9 @@
 [
   {
-    "title": "RetrCcast",
-    "slug": "retrccast",
+    "demoUrl": "",
+    "repoUrl": "",
+    "title": "RetroCast",
+    "slug": "retrocast",
     "description": "RetroCast is a multi-theme web radio experience that combines vintage radio design with modern streaming. Explore live stations, tune frequencies, save presets, and enjoy a visually immersive listening interface.",
     "thumbnail": "assets/thumbs/retrocast.jpg",
     "tags": [
@@ -12,9 +14,7 @@
     ],
     "category": "Art",
     "featured": false,
-    "date": "2026-05-20",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-05-20"
   },
   {
     "title": "BetMatchUp",
