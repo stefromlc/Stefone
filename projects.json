@@ -1,5 +1,22 @@
 [
   {
+    "title": "RetrCcast",
+    "slug": "retrccast",
+    "description": "RetroCast is a multi-theme web radio experience that combines vintage radio design with modern streaming. Explore live stations, tune frequencies, save presets, and enjoy a visually immersive listening interface.",
+    "thumbnail": "assets/thumbs/retrocast.jpg",
+    "tags": [
+      "Live",
+      "Music",
+      "Radio",
+      "Tools"
+    ],
+    "category": "Art",
+    "featured": false,
+    "date": "2026-05-20",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "BetMatchUp",
     "slug": "betmatchup",
     "description": "BetMatchUp is a football prediction dashboard that tracks upcoming match predictions and past results in one place. Analyze forecasts, monitor prediction performance, and explore football insights through a fast, data-driven interface.",

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="classic">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A beautiful retro-styled web radio player featuring live streams, multiple themes, and actual station logos.">
+    <meta name="theme-color" content="#5c2e16">
+    <title>RetroCast Web Radio</title>
+    
+    <!-- Code-based Favicon (SVG) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>📻</text></svg>">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=VT323&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* Theme Variables */
+        :root {
+            --app-bg: radial-gradient(circle at center, #2c3e50 0%, #050b14 100%);
+            --radio-casing: #5d4037;
+            --radio-casing-img: linear-gradient(45deg, rgba(0,0,0,0.4) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.4)), linear-gradient(45deg, rgba(0,0,0,0.4) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.4));
+            --radio-border: #3e2723;
+            --radio-face: linear-gradient(135deg, #eceff1 0%, #b0bec5 100%);
+            --radio-face-border: #9e9e9e;
+            --screen-bg: #0a110a;
+            --screen-text: #8bc34a;
+            --screen-shadow: inset 0 0 20px rgba(0,255,0,0.1);
+            --screen-glow: drop-shadow(0 0 10px rgba(139, 195, 74, 0.4));
+            --accent: #ff3b30;
+            --text-main: #222;
+            --knob-bg: radial-gradient(circle at 30% 30%, #666, #111);
+            --speaker-bg: #1a1a1a;
+            --preset-bg: linear-gradient(to bottom, #f0f0f0, #c0c0c0);
+            --preset-border: #999;
+            --preset-text: #333;
+            --preset-active: linear-gradient(to bottom, #d0d0d0, #a0a0a0);
+            --preset-active-text: #000;
+            --led-off: #4a1111;
+            --led-on: #ff3b30;
+            --led-glow: 0 0 8px #ff3b30;
+        }
+
+        [data-theme="cyber"] {
+            --app-bg: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%);
+            --radio-casing: #111;
+            --radio-casing-img: repeating-linear-gradient(45deg, #1a1a1a 0px, #1a1a1a 10px, #222 10px, #222 20px);
+            --radio-border: #e94560;
+            --radio-face: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+            --radio-face-border: #0f3460;
+            --screen-bg: #050510;
+            --screen-text: #0ff;
+            --screen-shadow: inset 0 0 20px rgba(0, 255, 255, 0.2);
+            --screen-glow: drop-shadow(0 0 12px rgba(0, 255, 255, 0.6));
+            --accent: #e94560;
+            --text-main: #e0e0e0;
+            --knob-bg: radial-gradient(circle at 30% 30%, #444, #000);
+            --speaker-bg: #050505;
+            --preset-bg: linear-gradient(to bottom, #1a1a2e, #16213e);
+            --preset-border: #e94560;
+            --preset-text: #0ff;
+            --preset-active: linear-gradient(to bottom, #e94560, #900c3f);
+            --preset-active-text: #fff;
+            --led-off: #113;
+            --led-on: #0ff;
+            --led-glow: 0 0 10px #0ff;
+        }
+
+        [data-theme="modern"] {
+            --app-bg: radial-gradient(circle at center, #e0e5ec 0%, #a3b1c6 100%);
+            --radio-casing: #e0e5ec;
+            --radio-casing-img: none;
+            --radio-border: #ffffff;
+            --radio-face: #f0f3f6;
+            --radio-face-border: #d1d9e6;
+            --screen-bg: #d1d9e6;
+            --screen-text: #333333;
+            --screen-shadow: inset 3px 3px 6px #b8c1d1, inset -3px -3px 6px #ffffff;
+            --screen-glow: none;
+            --accent: #4a90e2;
+            --text-main: #555;
+            --knob-bg: #e0e5ec;
+            --speaker-bg: #d1d9e6;
+            --preset-bg: #e0e5ec;
+            --preset-border: transparent;
+            --preset-text: #555;
+            --preset-active: #d1d9e6;
+            --preset-active-text: #4a90e2;
+            --led-off: #b8c1d1;
+            --led-on: #4a90e2;
+            --led-glow: 0 0 8px #4a90e2;
+        }
+
+        [data-theme="vintage"] {
+            --app-bg: radial-gradient(circle at center, #8a5a44 0%, #3e2723 100%);
+            --radio-casing: #e07a5f;
+            --radio-casing-img: none;
+            --radio-border: #3d405b;
+            --radio-face: #f4f1de;
+            --radio-face-border: #e07a5f;
+            --screen-bg: #3d405b;
+            --screen-text: #f2cc8f;
+            --screen-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            --screen-glow: drop-shadow(0 0 8px rgba(242, 204, 143, 0.3));
+            --accent: #81b29a;
+            --text-main: #3d405b;
+            --knob-bg: radial-gradient(circle at 30% 30%, #f4f1de, #d4c19e);
+            --speaker-bg: #3d405b;
+            --preset-bg: linear-gradient(to bottom, #f4f1de, #e0d9b4);
+            --preset-border: #d4c19e;
+            --preset-text: #3d405b;
+            --preset-active: linear-gradient(to bottom, #81b29a, #5f8f78);
+            --preset-active-text: #fff;
+            --led-off: #5f4a44;
+            --led-on: #f2cc8f;
+            --led-glow: 0 0 8px #f2cc8f;
+        }
+
+        body {
+            background: var(--app-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            transition: background 0.5s ease;
+        }
+
+        .heading-font { font-family: 'Righteous', cursive; }
+        .digital-font { font-family: 'VT323', monospace; }
+
+        .radio-casing {
+            background-color: var(--radio-casing);
+            background-image: var(--radio-casing-img);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.2);
+            border: 4px solid var(--radio-border);
+            transition: all 0.5s ease;
+        }
+
+        .radio-face {
+            background: var(--radio-face);
+            border: 2px solid var(--radio-face-border);
+            color: var(--text-main);
+            transition: all 0.5s ease;
+        }
+        
+        .digital-screen {
+            background: var(--screen-bg);
+            color: var(--screen-text);
+            text-shadow: 0 0 8px var(--screen-text), 0 0 2px var(--screen-text);
+            box-shadow: var(--screen-shadow);
+            border: 3px solid #111;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            filter: var(--screen-glow);
+        }
+        [data-theme="modern"] .digital-screen { border: none; text-shadow: none; filter: none; }
+
+        .digital-screen::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        [data-theme="modern"] .digital-screen::after { display: none; }
+
+        .speaker-grill {
+            background-color: var(--speaker-bg);
+            background-image: radial-gradient(rgba(0,0,0,0.8) 35%, transparent 40%);
+            background-size: 8px 8px;
+            box-shadow: inset 0 0 20px #000;
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+
+        .tuning-dial-bg {
+            background: repeating-linear-gradient(90deg, rgba(150,150,150,0.2), rgba(150,150,150,0.2) 2px, transparent 2px, transparent 20px), var(--screen-bg);
+            box-shadow: var(--screen-shadow);
+            border: 2px solid var(--text-main);
+            transition: all 0.5s ease;
+            cursor: pointer;
+        }
+        .tuning-needle {
+            position: absolute;
+            top: -2px; bottom: -2px; width: 4px;
+            background: var(--accent);
+            box-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent);
+            transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .knob {
+            background: var(--knob-bg);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .knob:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+        }
+
+        .preset-btn {
+            background: var(--preset-bg);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2), 0 5px 10px rgba(0,0,0,0.2);
+            border: 1px solid var(--preset-border);
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--preset-text);
+            position: relative;
+        }
+        .preset-btn:active, .preset-btn.active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.2);
+            background: var(--preset-active);
+            color: var(--preset-active-text);
+            border-color: rgba(0,0,0,0.3);
+        }
+        .led-indicator {
+            background: var(--led-off);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+        .preset-btn.active .led-indicator {
+            background: var(--led-on);
+            box-shadow: var(--led-glow);
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .animate-blink { animation: blink 1.5s infinite; }
+        
+        .marquee-container { overflow: hidden; white-space: nowrap; position: relative; width: 100%; }
+        .marquee-content { display: inline-block; animation: marquee 12s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .marquee-paused { animation: none !important; transform: none !important; }
+
+        .visualizer {
+            display: flex; align-items: flex-end; justify-content: space-between; gap: 2px; height: 24px; width: 100%;
+        }
+        .visualizer-bar {
+            flex: 1; background-color: var(--screen-text); height: 2px;
+            transition: height 0.05s ease; opacity: 0.8;
+            border-top-left-radius: 2px; border-top-right-radius: 2px;
+        }
+    </style>
+</head>
+<body class="text-white antialiased p-4 md:p-8 relative">
+
+    <!-- Back to Projects Button -->
+    <a href="/projects/" class="absolute top-4 left-4 md:top-8 md:left-8 z-50 flex items-center gap-2 px-4 py-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-sm font-semibold tracking-wide text-white transition-all border border-white/20 shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Projects
+    </a>
+
+    <!-- Theme Selector -->
+    <div class="absolute top-4 right-4 md:top-8 md:right-8 z-50 flex gap-2">
+        <button onclick="setTheme('classic')" class="w-8 h-8 rounded-full bg-[#5d4037] border-2 border-white/50 shadow-lg hover:scale-110 transition-transform" title="Classic Wood"></button>
+        <button onclick="setTheme('cyber')" class="w-8 h-8 rounded-full bg-[#111] border-2 border-[#e94560] shadow-lg hover:scale-110 transition-transform" title="Cyberpunk"></button>
+        <button onclick="setTheme('modern')" class="w-8 h-8 rounded-full bg-[#e0e5ec] border-2 border-gray-400 shadow-lg hover:scale-110 transition-transform" title="Modern Minimal"></button>
+        <button onclick="setTheme('vintage')" class="w-8 h-8 rounded-full bg-[#e07a5f] border-2 border-white/50 shadow-lg hover:scale-110 transition-transform" title="70s Vintage"></button>
+    </div>
+
+    <header class="text-center mt-16 md:mt-4 mb-8">
+        <h1 class="text-5xl md:text-6xl heading-font tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 drop-shadow-lg">
+            RETROCAST
+        </h1>
+        <p class="font-sans tracking-[0.3em] text-xs mt-2 uppercase opacity-70">Multiband Web Receiver</p>
+    </header>
+
+    <main id="radio-hardware" class="w-full max-w-5xl mx-auto radio-casing p-4 md:p-6 lg:p-8 rounded-[2rem]">
+        
+        <div class="radio-face w-full rounded-2xl p-4 md:p-8 flex flex-col md:flex-row gap-8 relative overflow-hidden shadow-inner">
+            
+            <div class="w-full md:w-1/2 flex flex-col gap-4">
+                
+                <div class="flex justify-between items-center mb-1">
+                    
+                    <span class="digital-font text-xl opacity-50 tracking-wider">RC-2000X</span>
+                </div>
+
+                <div class="digital-screen rounded-xl h-44 p-4 flex flex-row gap-4 items-center">
+                    <div class="w-1/3 h-full bg-black/40 rounded-lg p-2 border border-white/10 flex items-center justify-center relative z-20">
+                        <img id="station-logo" src="https://placehold.co/150x150/111/444?text=READY" alt="Radio Logo" class="station-logo-img rounded" onerror="this.src='https://placehold.co/150x150/111/444?text=RADIO'">
+                    </div>
+
+                    <div class="w-2/3 h-full flex flex-col justify-between z-20 py-1 overflow-hidden">
+                        <div class="flex justify-between items-start text-sm digital-font">
+                            <span id="status-text" class="font-bold text-lg">READY</span>
+                            <div class="flex flex-col items-end">
+                                <span id="freq-text" class="text-3xl tracking-widest leading-none">---.-</span>
+                                <span class="text-[10px] opacity-70 mt-1">MHz FM</span>
+                            </div>
+                        </div>
+                        
+                        <div class="marquee-container w-full h-12 flex items-center mt-2">
+                            <span id="station-name" class="text-2xl font-bold tracking-wider digital-font marquee-paused">SELECT A STATION</span>
+                        </div>
+
+                        <div id="visualizer" class="visualizer mt-2 opacity-80">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tuning-dial" class="relative w-full h-14 tuning-dial-bg rounded-lg overflow-hidden flex items-center px-4 mt-2" title="Click to seek frequency">
+                    <div id="tuning-needle" class="tuning-needle" style="left: 0%;"></div>
+                    <div class="w-full flex justify-between text-sm font-bold opacity-60 z-0 digital-font text-[var(--screen-text)] pointer-events-none">
+                        <span>88</span><span>92</span><span>96</span><span>100</span><span>104</span><span>108</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full md:w-1/2 flex flex-col justify-between gap-6 pt-2">
+                
+                <div class="flex justify-between items-center gap-6">
+                    <div class="w-32 h-32 md:w-40 md:h-40 flex-shrink-0 flex items-center justify-center">
+                        <div id="speaker-element" class="speaker-grill w-full h-full rounded-full border-4 border-[var(--radio-border)] flex items-center justify-center relative shadow-lg">
+                            <div class="absolute w-1/3 h-1/3 bg-black/60 rounded-full blur-[3px]"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 flex flex-col items-center gap-4">
+                        <div class="flex items-center gap-4">
+                            <button id="prev-btn" class="w-12 h-12 knob flex items-center justify-center text-[var(--text-main)] hover:text-[var(--accent)]" title="Previous Station">
+                                <svg class="w-6 h-6 pointer-events-none" fill="currentColor" viewBox="0 0 256 256"><path d="M208,42.88V213.12a15.82,15.82,0,0,1-24.5,13.22L72,155.67V208a16,16,0,0,1-32,0V48a16,16,0,0,1,32,0V100.33l111.5-70.67A15.82,15.82,0,0,1,208,42.88Z"></path></svg>
+                            </button>
+                            <button id="play-btn" class="w-20 h-20 knob flex items-center justify-center text-[var(--text-main)] transition-colors border-2 border-black/20" title="Play / Pause">
+                                <svg id="play-icon" class="w-8 h-8 pointer-events-none" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-92.66-64-40A8,8,0,0,0,96,88v80a8,8,0,0,0,12.34,6.66l64-40a8,8,0,0,0,0-13.32ZM112,151.05V105l36.85,23Z"></path></svg>
+                            </button>
+                            <button id="next-btn" class="w-12 h-12 knob flex items-center justify-center text-[var(--text-main)] hover:text-[var(--accent)]" title="Next Station">
+                                <svg class="w-6 h-6 pointer-events-none" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48V208a16,16,0,0,1-32,0V155.67L72.5,226.34A15.82,15.82,0,0,1,48,213.12V42.88A15.82,15.82,0,0,1,72.5,29.66L184,100.33V48a16,16,0,0,1,32,0Z"></path></svg>
+                            </button>
+                        </div>
+                        <span class="text-[10px] font-bold tracking-widest uppercase opacity-70 bg-black/10 px-3 py-1 rounded-full">Seek / Control</span>
+                    </div>
+                </div>
+
+                <div class="w-full bg-black/5 rounded-xl p-4 border border-black/10 shadow-inner">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-widest opacity-70">Volume</span>
+                        <span id="vol-readout" class="text-xs font-bold digital-font text-lg">50%</span>
+                    </div>
+                    <div class="w-full flex items-center gap-3">
+                        <button id="mute-btn" class="text-[var(--text-main)] outline-none" title="Mute/Unmute">
+                            <svg id="vol-icon" class="w-5 h-5 opacity-80 pointer-events-none" fill="currentColor" viewBox="0 0 256 256"><path d="M160,51.64V204.36a8,8,0,0,1-13.66,5.65L96,160H32a16,16,0,0,1-16-16V112A16,16,0,0,1,32,96H96l50.34-50.05A8,8,0,0,1,160,51.64ZM240,128a71.24,71.24,0,0,1-17.15,46.59,8,8,0,1,1-12.06-10.42,55.26,55.26,0,0,0,13.21-36.17,56,56,0,0,0-13.25-36.21,8,8,0,1,1,12.1-10.38A71.3,71.3,0,0,1,240,128Zm-40,0a31.37,31.37,0,0,1-7.25,20.19,8,8,0,1,1-12.24-10.23,15.42,15.42,0,0,0,3.49-9.96,15.48,15.48,0,0,0-3.51-10,8,8,0,1,1,12.28-10.2A31.42,31.42,0,0,1,200,128Z"></path></svg>
+                        </button>
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" class="w-full">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 border-t border-black/10 pt-6 relative">
+            <div class="flex items-center justify-between mb-4 px-2">
+                <span class="text-xs font-bold uppercase tracking-widest text-white/70 drop-shadow-md">Station Memory Presets</span>
+            </div>
+            <div id="presets-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-3"></div>
+        </div>
+    </main>
+
+    <footer class="mt-auto py-6 text-center text-white/50 text-sm">
+        <p>Built with <span class="text-red-500">♥</span>. Streams and logos are property of their respective owners.</p>
+    </footer>
+
+    <script>
+        const stations = [
+            { id: 1, name: "Capital UK", frequency: "95.8", stream: "https://icecast.thisisdax.com/CapitalUKMP3", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/b/b8/Capital_2022.svg/250px-Capital_2022.svg.png", shortName: "CAPITAL" },
+            { id: 2, name: "Heart UK", frequency: "102.7", stream: "https://icecast.thisisdax.com/HeartUKMP3", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/0/05/The_Heart_Network_logo.svg/250px-The_Heart_Network_logo.svg.png", shortName: "HEART" },
+            { id: 3, name: "Smooth Radio", frequency: "97.3", stream: "https://icecast.thisisdax.com/SmoothUKMP3", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/SMOOTH-LARGE.png/250px-SMOOTH-LARGE.png", shortName: "SMOOTH" },
+            { id: 4, name: "Radio X", frequency: "106.1", stream: "https://icecast.thisisdax.com/RadioXUKMP3", logo: "https://herald.musicradio.com/media/04af66b9-6a22-47b5-a96a-a6156bc4bd5e.png", shortName: "RADIO X" },
+            { id: 5, name: "Classic FM", frequency: "100.9", stream: "https://icecast.thisisdax.com/ClassicFMMP3", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Classic_FM_logo.svg/250px-Classic_FM_logo.svg.png", shortName: "CLASSIC" },
+            { id: 6, name: "LBC News", frequency: "97.3", stream: "https://icecast.thisisdax.com/LBCUKMP3", logo: "https://upload.wikimedia.org/wikipedia/en/2/2b/LBC_News_station_logo.png", shortName: "LBC" },
+            { id: 7, name: "Groove Salad", frequency: "101.4", stream: "https://ice1.somafm.com/groovesalad-128-mp3", logo: "https://cdn-profiles.tunein.com/s2591/images/logog.jpg", shortName: "GRVSLD" },
+            { id: 8, name: "Smooth Jazz", frequency: "92.3", stream: "https://strm112.1.fm/smoothjazz_mobile_mp3", logo: "https://static.vecteezy.com/system/resources/thumbnails/046/323/171/small/golden-saxophone-isolated-on-transparent-background-png.png", shortName: "JAZZ" },
+            { id: 9, name: "Secret Agent", frequency: "94.6", stream: "https://ice1.somafm.com/secretagent-128-mp3", logo: "https://somafm.com/img300/secretagent.jpg", shortName: "AGENT" },
+            { id: 10, name: "Drone Zone", frequency: "99.2", stream: "https://ice1.somafm.com/dronezone-128-mp3", logo: "https://somafm.com/img300/dronezone.jpg", shortName: "DRONE" }
+        ];
+
+        let currentStationIndex = -1;
+        let isPlaying = false;
+        let isMuted = false;
+        let previousVolume = 0.5;
+        const audioPlayer = new Audio();
+        audioPlayer.crossOrigin = "anonymous";
+        let audioCtx = null;
+
+        const playBtn = document.getElementById('play-btn');
+        const playIcon = document.getElementById('play-icon');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const muteBtn = document.getElementById('mute-btn');
+        const volIcon = document.getElementById('vol-icon');
+        const volumeSlider = document.getElementById('volume-slider');
+        const volReadout = document.getElementById('vol-readout');
+        const statusText = document.getElementById('status-text');
+        const freqText = document.getElementById('freq-text');
+        const stationName = document.getElementById('station-name');
+        const stationLogo = document.getElementById('station-logo');
+        const tuningDial = document.getElementById('tuning-dial');
+        const tuningNeedle = document.getElementById('tuning-needle');
+        const presetsGrid = document.getElementById('presets-grid');
+        const visualizer = document.getElementById('visualizer');
+
+        const iconPlay = `<path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-92.66-64-40A8,8,0,0,0,96,88v80a8,8,0,0,0,12.34,6.66l64-40a8,8,0,0,0,0-13.32ZM112,151.05V105l36.85,23Z"></path>`;
+        const iconPause = `<path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM112,104v48a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v48a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path>`;
+        const iconVolHigh = `<path d="M160,51.64V204.36a8,8,0,0,1-13.66,5.65L96,160H32a16,16,0,0,1-16-16V112A16,16,0,0,1,32,96H96l50.34-50.05A8,8,0,0,1,160,51.64ZM240,128a71.24,71.24,0,0,1-17.15,46.59,8,8,0,1,1-12.06-10.42,55.26,55.26,0,0,0,13.21-36.17,56,56,0,0,0-13.25-36.21,8,8,0,1,1,12.1-10.38A71.3,71.3,0,0,1,240,128Zm-40,0a31.37,31.37,0,0,1-7.25,20.19,8,8,0,1,1-12.24-10.23,15.42,15.42,0,0,0,3.49-9.96,15.48,15.48,0,0,0-3.51-10,8,8,0,1,1,12.28-10.2A31.42,31.42,0,0,1,200,128Z"></path>`;
+        const iconVolMuted = `<path d="M213.92,216a8,8,0,0,1-11.31-11.31l18.34-18.35a71.43,71.43,0,0,0,19-46.12,8,8,0,1,0-16,0,55.33,55.33,0,0,1-13.66,35.63l-16.15-16.15A31.54,31.54,0,0,0,200,128a8,8,0,1,0-16,0,15.54,15.54,0,0,1-3.66,10.08L160,117.76V51.64a8,8,0,0,0-13.66-5.65L96,96H32a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16H91.13L42.6,224.69a8,8,0,1,0,11.31,11.31ZM32,112H96v48H32ZM144,70.52v36l-32.48-32.48Z"></path>`;
+
+        function setTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
+
+        const numBars = 16;
+        let visualizerInterval = null;
+        for (let i = 0; i < numBars; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'visualizer-bar';
+            visualizer.appendChild(bar);
+        }
+
+        function animateVisualizer() {
+            if (!isPlaying) return;
+            document.querySelectorAll('.visualizer-bar').forEach(bar => {
+                bar.style.height = `${Math.random() * 90 + 10}%`;
+            });
+        }
+
+        function startVisualizer() {
+            if (visualizerInterval) clearInterval(visualizerInterval);
+            visualizerInterval = setInterval(animateVisualizer, 100);
+        }
+
+        function stopVisualizer() {
+            clearInterval(visualizerInterval);
+            document.querySelectorAll('.visualizer-bar').forEach(bar => bar.style.height = '2px');
+        }
+
+        function initPresets() {
+            presetsGrid.innerHTML = '';
+            stations.forEach((station, index) => {
+                const btn = document.createElement('button');
+                btn.className = `preset-btn flex flex-col items-center justify-center p-2 rounded-lg gap-1`;
+                btn.onclick = () => selectStation(index);
+                const led = document.createElement('div');
+                led.className = 'led-indicator absolute top-2 left-2 w-2 h-2 rounded-full';
+                const label = document.createElement('span');
+                label.className = 'text-xs md:text-sm font-bold tracking-wider truncate w-full text-center mt-2';
+                label.innerText = station.shortName;
+                const freq = document.createElement('span');
+                freq.className = 'text-[10px] opacity-70 digital-font text-sm';
+                freq.innerText = station.frequency;
+                btn.appendChild(led);
+                btn.appendChild(label);
+                btn.appendChild(freq);
+                presetsGrid.appendChild(btn);
+            });
+        }
+
+        function checkMarquee(forceScroll = false) {
+            stationName.classList.remove('marquee-paused', 'marquee-content');
+            if (stationName.innerText.length > 12 || forceScroll) {
+                void stationName.offsetWidth; 
+                stationName.classList.add('marquee-content');
+            } else {
+                stationName.classList.add('marquee-paused');
+            }
+        }
+
+        function playStaticNoise() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const bufferSize = audioCtx.sampleRate * 0.4;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 800;
+                const gain = audioCtx.createGain();
+                gain.gain.value = volumeSlider.value * 0.15;
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                noise.start();
+            } catch(e) {}
+        }
+
+        function selectStation(index) {
+            currentStationIndex = index;
+            const station = stations[index];
+            playStaticNoise();
+            updateActivePreset(index);
+            freqText.innerText = station.frequency;
+            stationName.innerText = station.name;
+            stationLogo.src = station.logo;
+            checkMarquee(true);
+            statusText.innerText = "TUNING...";
+            statusText.classList.add('animate-blink');
+            stopVisualizer();
+            const percentage = Math.max(0, Math.min(100, ((parseFloat(station.frequency) - 88) / 20) * 100));
+            tuningNeedle.style.left = `${percentage}%`;
+            audioPlayer.src = station.stream;
+            audioPlayer.volume = isMuted ? 0 : volumeSlider.value;
+            playAudio();
+        }
+
+        function updateActivePreset(activeIndex) {
+            document.querySelectorAll('.preset-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === activeIndex);
+            });
+        }
+
+        function togglePlay() {
+            if (currentStationIndex === -1) { selectStation(0); return; }
+            if (isPlaying) pauseAudio(); else playAudio();
+        }
+
+        function playAudio() {
+            audioPlayer.play().then(() => {
+                isPlaying = true;
+                playIcon.innerHTML = iconPause;
+                playBtn.style.color = 'var(--accent)';
+                statusText.innerText = "LIVE // FM";
+                statusText.classList.remove('animate-blink');
+                startVisualizer();
+            }).catch(() => {
+                statusText.innerText = "ERR";
+                isPlaying = false;
+                playIcon.innerHTML = iconPlay;
+                stopVisualizer();
+            });
+        }
+
+        function pauseAudio() {
+            audioPlayer.pause();
+            isPlaying = false;
+            playIcon.innerHTML = iconPlay;
+            playBtn.style.color = 'var(--text-main)';
+            statusText.innerText = "PAUSED";
+            statusText.classList.add('animate-blink');
+            stopVisualizer();
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            if (isMuted) {
+                previousVolume = volumeSlider.value;
+                audioPlayer.volume = 0;
+                volumeSlider.value = 0;
+                volReadout.innerText = "MUTED";
+                volIcon.innerHTML = iconVolMuted;
+            } else {
+                volumeSlider.value = previousVolume > 0 ? previousVolume : 0.5;
+                audioPlayer.volume = volumeSlider.value;
+                volReadout.innerText = Math.round(volumeSlider.value * 100) + '%';
+                volIcon.innerHTML = iconVolHigh;
+            }
+        }
+
+        playBtn.addEventListener('click', togglePlay);
+        nextBtn.addEventListener('click', () => { let n = currentStationIndex + 1; if (n >= stations.length) n = 0; selectStation(n); });
+        prevBtn.addEventListener('click', () => { let p = currentStationIndex - 1; if (p < 0) p = stations.length - 1; selectStation(p); });
+        muteBtn.addEventListener('click', toggleMute);
+        volumeSlider.addEventListener('input', (e) => {
+            isMuted = false;
+            volIcon.innerHTML = iconVolHigh;
+            audioPlayer.volume = e.target.value;
+            previousVolume = e.target.value;
+            volReadout.innerText = Math.round(e.target.value * 100) + '%';
+        });
+
+        tuningDial.addEventListener('click', (e) => {
+            const rect = tuningDial.getBoundingClientRect();
+            const clickX = Math.max(0, Math.min(e.clientX - rect.left - 16, rect.width - 32));
+            const percentage = (clickX / (rect.width - 32)) * 100;
+            const targetFreq = 88 + (percentage / 100) * 20;
+            let closestIdx = 0, minDiff = Infinity;
+            stations.forEach((s, idx) => {
+                const diff = Math.abs(parseFloat(s.frequency) - targetFreq);
+                if (diff < minDiff) { minDiff = diff; closestIdx = idx; }
+            });
+            selectStation(closestIdx);
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initPresets();
+            stationName.classList.add('marquee-paused');
+            setTheme('classic');
+        });
+    </script>
+</body>
+</html>
