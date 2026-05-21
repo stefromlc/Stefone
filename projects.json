@@ -4,7 +4,7 @@
     "repoUrl": "",
     "title": "RetroCast",
     "slug": "retrocast",
-    "description": "RetroCast is a multi-theme web radio experience that combines vintage radio design with modern streaming. Explore live stations, tune frequencies, save presets, and enjoy a visually immersive listening interface.",
+    "description": "RetroCast is a multi-theme web radio and recorder experience with vintage design and modern streaming. Tune live stations, save presets, trim exports, add your own stations, and enjoy an immersive listening experience.",
     "thumbnail": "assets/thumbs/retrocast.jpg",
     "tags": [
       "Live",
