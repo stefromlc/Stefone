@@ -35,14 +35,16 @@
             --text-main: #222;
             --knob-bg: radial-gradient(circle at 30% 30%, #666, #111);
             --speaker-bg: #1a1a1a;
-            --preset-bg: linear-gradient(to bottom, #f0f0f0, #c0c0c0);
-            --preset-border: #999;
-            --preset-text: #333;
-            --preset-active: linear-gradient(to bottom, #d0d0d0, #a0a0a0);
+            --preset-bg: linear-gradient(to bottom, #e0e0e0, #b0b0b0);
+            --preset-border: #888;
+            --preset-text: #222;
+            --preset-active: linear-gradient(to bottom, #cfcfcf, #909090);
             --preset-active-text: #000;
             --led-off: #4a1111;
             --led-on: #ff3b30;
             --led-glow: 0 0 8px #ff3b30;
+            --tape-casing: #2a2a2a;
+            --tape-face: #111;
         }
 
         [data-theme="cyber"] {
@@ -68,6 +70,8 @@
             --led-off: #113;
             --led-on: #0ff;
             --led-glow: 0 0 10px #0ff;
+            --tape-casing: #16213e;
+            --tape-face: #050510;
         }
 
         [data-theme="modern"] {
@@ -85,14 +89,16 @@
             --text-main: #555;
             --knob-bg: #e0e5ec;
             --speaker-bg: #d1d9e6;
-            --preset-bg: #e0e5ec;
-            --preset-border: transparent;
+            --preset-bg: linear-gradient(to bottom, #e0e5ec, #d1d9e6);
+            --preset-border: #b8c1d1;
             --preset-text: #555;
             --preset-active: #d1d9e6;
             --preset-active-text: #4a90e2;
             --led-off: #b8c1d1;
             --led-on: #4a90e2;
             --led-glow: 0 0 8px #4a90e2;
+            --tape-casing: #d1d9e6;
+            --tape-face: #e0e5ec;
         }
 
         [data-theme="vintage"] {
@@ -118,6 +124,8 @@
             --led-off: #5f4a44;
             --led-on: #f2cc8f;
             --led-glow: 0 0 8px #f2cc8f;
+            --tape-casing: #d4c19e;
+            --tape-face: #3d405b;
         }
 
         body {
@@ -213,17 +221,27 @@
             box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
         }
 
+        /* Enhanced Preset Buttons */
         .preset-btn {
             background: var(--preset-bg);
-            box-shadow: 0 4px 0 rgba(0,0,0,0.2), 0 5px 10px rgba(0,0,0,0.2);
-            border: 1px solid var(--preset-border);
+            box-shadow: 0 4px 0 var(--preset-border), 0 6px 10px rgba(0,0,0,0.3), inset 0 2px 3px rgba(255,255,255,0.4);
+            border: 1px solid rgba(0,0,0,0.1);
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             color: var(--preset-text);
             position: relative;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .preset-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 40%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.2), transparent);
+            pointer-events: none;
         }
         .preset-btn:active, .preset-btn.active {
             transform: translateY(4px);
-            box-shadow: 0 0 0 rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 0 0 var(--preset-border), 0 2px 4px rgba(0,0,0,0.2), inset 0 3px 6px rgba(0,0,0,0.2);
             background: var(--preset-active);
             color: var(--preset-active-text);
             border-color: rgba(0,0,0,0.3);
@@ -238,6 +256,49 @@
             box-shadow: var(--led-glow);
         }
 
+        /* Tape Deck Elements */
+        .tape-casing {
+            background: var(--tape-casing);
+            border: 2px solid var(--radio-face-border);
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.5s ease;
+        }
+        .tape-face {
+            background: var(--tape-face);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+            border: 2px solid #222;
+        }
+        .tape-reel {
+            transform-origin: center;
+        }
+        .tape-reel.spinning {
+            animation: spin 3s linear infinite;
+        }
+
+        /* Modals & Notifications */
+        .modal-overlay {
+            backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.6);
+        }
+        .search-result:hover {
+            background: var(--preset-active);
+            color: var(--preset-active-text);
+            cursor: pointer;
+        }
+
+        /* Corrected Notification Visibility & Positioning */
+        .notification {
+            translate: -50% 150%;
+            opacity: 0;
+            pointer-events: none;
+            transition: translate 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+        .notification.show {
+            translate: -50% 0;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         .animate-blink { animation: blink 1.5s infinite; }
         
@@ -245,6 +306,7 @@
         .marquee-content { display: inline-block; animation: marquee 12s linear infinite; }
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
         .marquee-paused { animation: none !important; transform: none !important; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .visualizer {
             display: flex; align-items: flex-end; justify-content: space-between; gap: 2px; height: 24px; width: 100%;
@@ -254,9 +316,36 @@
             transition: height 0.05s ease; opacity: 0.8;
             border-top-left-radius: 2px; border-top-right-radius: 2px;
         }
+
+        /* Custom Range Slider for Trimmer */
+        input[type=range].trim-slider {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range].trim-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        input[type=range].trim-slider::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body class="text-white antialiased p-4 md:p-8 relative">
+
+    <!-- Notification Toast -->
+    <div id="notification-toast" onclick="this.classList.remove('show')" class="notification cursor-pointer fixed bottom-4 left-1/2 z-[200] bg-black/90 border-2 border-[var(--accent)] text-white px-6 py-3 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.5)] flex items-center gap-3" title="Click to dismiss">
+        <span id="notification-icon">⚠️</span>
+        <span id="notification-text" class="font-bold tracking-wide text-sm digital-font text-lg">Notification</span>
+    </div>
 
     <!-- Back to Projects Button -->
     <a href="/projects/" class="absolute top-4 left-4 md:top-8 md:left-8 z-50 flex items-center gap-2 px-4 py-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-sm font-semibold tracking-wide text-white transition-all border border-white/20 shadow-lg">
@@ -278,23 +367,22 @@
         <h1 class="text-5xl md:text-6xl heading-font tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 drop-shadow-lg">
             RETROCAST
         </h1>
-        <p class="font-sans tracking-[0.3em] text-xs mt-2 uppercase opacity-70">Multiband Web Receiver</p>
+        <p class="font-sans tracking-[0.3em] text-xs mt-2 uppercase opacity-70">Multiband Web Receiver & Recorder</p>
     </header>
 
-    <main id="radio-hardware" class="w-full max-w-5xl mx-auto radio-casing p-4 md:p-6 lg:p-8 rounded-[2rem]">
+    <main id="radio-hardware" class="w-full max-w-5xl mx-auto radio-casing p-4 md:p-6 lg:p-8 rounded-[2rem] flex flex-col gap-6">
         
         <div class="radio-face w-full rounded-2xl p-4 md:p-8 flex flex-col md:flex-row gap-8 relative overflow-hidden shadow-inner">
             
             <div class="w-full md:w-1/2 flex flex-col gap-4">
                 
                 <div class="flex justify-between items-center mb-1">
-                    
-                    <span class="digital-font text-xl opacity-50 tracking-wider">RC-2000X</span>
+                    <span class="digital-font text-xl opacity-50 tracking-wider text-[var(--text-main)]">RC-2000X</span>
                 </div>
 
                 <div class="digital-screen rounded-xl h-44 p-4 flex flex-row gap-4 items-center">
                     <div class="w-1/3 h-full bg-black/40 rounded-lg p-2 border border-white/10 flex items-center justify-center relative z-20">
-                        <img id="station-logo" src="https://placehold.co/150x150/111/444?text=READY" alt="Radio Logo" class="station-logo-img rounded" onerror="this.src='https://placehold.co/150x150/111/444?text=RADIO'">
+                        <img id="station-logo" src="https://placehold.co/150x150/111/444?text=READY" alt="Radio Logo" class="station-logo-img rounded max-h-full object-contain" onerror="this.src='https://placehold.co/150x150/111/444?text=RADIO'">
                     </div>
 
                     <div class="w-2/3 h-full flex flex-col justify-between z-20 py-1 overflow-hidden">
@@ -344,11 +432,11 @@
                                 <svg class="w-6 h-6 pointer-events-none" fill="currentColor" viewBox="0 0 256 256"><path d="M216,48V208a16,16,0,0,1-32,0V155.67L72.5,226.34A15.82,15.82,0,0,1,48,213.12V42.88A15.82,15.82,0,0,1,72.5,29.66L184,100.33V48a16,16,0,0,1,32,0Z"></path></svg>
                             </button>
                         </div>
-                        <span class="text-[10px] font-bold tracking-widest uppercase opacity-70 bg-black/10 px-3 py-1 rounded-full">Seek / Control</span>
+                        <span class="text-[10px] font-bold tracking-widest uppercase opacity-70 bg-black/10 px-3 py-1 rounded-full text-[var(--text-main)]">Seek / Control</span>
                     </div>
                 </div>
 
-                <div class="w-full bg-black/5 rounded-xl p-4 border border-black/10 shadow-inner">
+                <div class="w-full bg-black/5 rounded-xl p-4 border border-black/10 shadow-inner text-[var(--text-main)]">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-bold uppercase tracking-widest opacity-70">Volume</span>
                         <span id="vol-readout" class="text-xs font-bold digital-font text-lg">50%</span>
@@ -363,20 +451,175 @@
             </div>
         </div>
 
-        <div class="mt-8 border-t border-black/10 pt-6 relative">
+        <div class="border-t border-black/20 pt-4 relative z-10">
             <div class="flex items-center justify-between mb-4 px-2">
                 <span class="text-xs font-bold uppercase tracking-widest text-white/70 drop-shadow-md">Station Memory Presets</span>
+                <button onclick="openEditModal()" class="text-xs bg-black/30 hover:bg-black/50 text-white px-3 py-1 rounded border border-white/20 transition-colors flex items-center gap-1 font-bold">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    EDIT / SEARCH
+                </button>
             </div>
-            <div id="presets-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-3"></div>
+            <div id="presets-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-4"></div>
         </div>
+
+        <!-- TAPE DECK RECORDER SECTION -->
+        <div class="tape-casing rounded-xl p-4 border border-black/20 shadow-inner flex flex-col md:flex-row gap-6 mt-2 relative overflow-hidden">
+            <div class="flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-white/50">Tape Deck / Recorder</span>
+                    <span id="rec-status-text" class="text-xs digital-font text-gray-400">TAPE STOPPED</span>
+                </div>
+                
+                <div class="tape-face h-20 rounded-lg flex items-center justify-between px-8 relative border border-white/10">
+                    <!-- Left Reel -->
+                    <svg class="tape-reel w-12 h-12 text-gray-400" id="tape-reel-left" viewBox="0 0 100 100" fill="currentColor">
+                        <circle cx="50" cy="50" r="45" fill="transparent" stroke="currentColor" stroke-width="4"/>
+                        <circle cx="50" cy="50" r="10" fill="currentColor"/>
+                        <line x1="50" y1="10" x2="50" y2="40" stroke="currentColor" stroke-width="4"/>
+                        <line x1="50" y1="60" x2="50" y2="90" stroke="currentColor" stroke-width="4"/>
+                        <line x1="10" y1="50" x2="40" y2="50" stroke="currentColor" stroke-width="4"/>
+                        <line x1="60" y1="50" x2="90" y2="50" stroke="currentColor" stroke-width="4"/>
+                    </svg>
+                    <!-- Window / Tape Line -->
+                    <div class="flex-1 h-12 mx-4 border border-white/5 bg-black/50 relative overflow-hidden flex items-center justify-center">
+                        <div class="w-full h-[2px] bg-white/20 absolute top-1/2 -translate-y-1/2"></div>
+                        <span id="rec-timer" class="digital-font text-red-500 text-xl z-10 bg-black/80 px-2 rounded opacity-0 transition-opacity">00:00</span>
+                    </div>
+                    <!-- Right Reel -->
+                    <svg class="tape-reel w-12 h-12 text-gray-400" id="tape-reel-right" viewBox="0 0 100 100" fill="currentColor">
+                        <circle cx="50" cy="50" r="45" fill="transparent" stroke="currentColor" stroke-width="4"/>
+                        <circle cx="50" cy="50" r="10" fill="currentColor"/>
+                        <line x1="50" y1="10" x2="50" y2="40" stroke="currentColor" stroke-width="4"/>
+                        <line x1="50" y1="60" x2="50" y2="90" stroke="currentColor" stroke-width="4"/>
+                        <line x1="10" y1="50" x2="40" y2="50" stroke="currentColor" stroke-width="4"/>
+                        <line x1="60" y1="50" x2="90" y2="50" stroke="currentColor" stroke-width="4"/>
+                    </svg>
+                </div>
+
+                <!-- Transport Controls -->
+                <div class="flex justify-center gap-3 mt-4">
+                    <button id="btn-record" class="w-10 h-10 rounded bg-gray-800 border-2 border-gray-600 hover:border-red-500 hover:bg-gray-700 flex items-center justify-center transition-all group shadow-lg" title="Record">
+                        <div class="w-3 h-3 rounded-full bg-red-600 group-hover:shadow-[0_0_8px_#dc2626]"></div>
+                    </button>
+                    <button id="btn-stop-rec" class="w-10 h-10 rounded bg-gray-800 border-2 border-gray-600 hover:border-white hover:bg-gray-700 flex items-center justify-center transition-all shadow-lg opacity-50 pointer-events-none" title="Stop">
+                        <div class="w-3 h-3 bg-gray-300"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Trimmer Unit (hidden by default until a recording exists) -->
+            <div id="trimmer-panel" class="flex-1 border-l border-white/10 pl-6 flex flex-col justify-center opacity-30 pointer-events-none transition-opacity">
+                <span class="text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Trimmer / Export</span>
+                
+                <div class="flex flex-col gap-2 mb-3">
+                    <div class="flex justify-between text-xs digital-font text-white/70">
+                        <span>Start: <span id="trim-start-val">0</span>s</span>
+                        <span>End: <span id="trim-end-val">0</span>s</span>
+                    </div>
+                    <input type="range" id="trim-start" class="trim-slider w-full" min="0" max="10" value="0" step="0.1">
+                    <input type="range" id="trim-end" class="trim-slider w-full" min="0" max="10" value="10" step="0.1">
+                </div>
+
+                <div class="flex gap-2">
+                    <button id="btn-preview-trim" class="flex-1 bg-blue-600/80 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded shadow transition-colors">
+                        ▶ PREVIEW
+                    </button>
+                    <button id="btn-download-wav" class="flex-1 bg-green-600/80 hover:bg-green-500 text-white text-xs font-bold py-2 rounded shadow transition-colors">
+                        ⬇ WAV
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <footer class="mt-auto py-6 text-center text-white/50 text-sm">
         <p>Built with <span class="text-red-500">♥</span>. Streams and logos are property of their respective owners.</p>
+        <p class="text-xs opacity-50 mt-1">Note: Recording uses Web Audio API. Streams lacking proper CORS headers cannot be recorded.</p>
     </footer>
 
+    <!-- Edit Presets Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-4">
+        <div class="bg-[#1a1a1a] border border-[#333] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
+            
+            <div class="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 bg-[#1a1a1a] z-10">
+                <h2 class="text-xl font-bold tracking-wider text-white">Station Memory Programmer</h2>
+                <button onclick="closeEditModal()" class="text-white/50 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-6 flex flex-col gap-6">
+                <!-- Search Section -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Search Radio Directory</label>
+                    <div class="relative">
+                        <input type="text" id="api-search-input" placeholder="E.g., BBC Radio 1, Synthwave..." class="w-full bg-black/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent)] transition-colors">
+                        <div id="search-spinner" class="hidden absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 border-2 border-gray-500 border-t-[var(--accent)] rounded-full animate-spin"></div>
+                    </div>
+                    <ul id="search-results" class="max-h-40 overflow-y-auto bg-black/30 rounded border border-white/5 empty:hidden mt-1 text-sm">
+                        <!-- JS injected results -->
+                    </ul>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="h-px bg-white/10 flex-1"></div>
+                    <span class="text-xs font-bold text-gray-500">OR MANUAL ENTRY</span>
+                    <div class="h-px bg-white/10 flex-1"></div>
+                </div>
+
+                <!-- Manual Entry Form -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-gray-400">Station Name (Full)</label>
+                        <input type="text" id="edit-name" class="w-full bg-black/50 border border-gray-600 rounded p-2 text-white text-sm" placeholder="My Cool Station">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-gray-400">Short Name (LED Display)</label>
+                        <input type="text" id="edit-shortname" maxlength="8" class="w-full bg-black/50 border border-gray-600 rounded p-2 text-white text-sm uppercase" placeholder="COOL FM">
+                    </div>
+                    <div class="flex flex-col gap-1 md:col-span-2">
+                        <label class="text-xs font-bold text-gray-400">Stream URL (Icecast/Shoutcast/MP3/AAC)</label>
+                        <input type="url" id="edit-stream" class="w-full bg-black/50 border border-gray-600 rounded p-2 text-white text-sm" placeholder="https://stream.server.com/mount">
+                    </div>
+                    <div class="flex flex-col gap-1 md:col-span-2">
+                        <label class="text-xs font-bold text-gray-400">Logo Image URL</label>
+                        <input type="url" id="edit-logo" class="w-full bg-black/50 border border-gray-600 rounded p-2 text-white text-sm" placeholder="https://domain.com/logo.png">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-gray-400">Frequency Display (e.g. 95.5)</label>
+                        <input type="text" id="edit-freq" class="w-full bg-black/50 border border-gray-600 rounded p-2 text-white text-sm" placeholder="95.5">
+                    </div>
+                </div>
+
+                <!-- Preset Selection & Save -->
+                <div class="bg-black/40 p-4 rounded-lg border border-[var(--accent)] mt-2">
+                    <label class="text-xs font-bold text-[var(--accent)] uppercase tracking-wider block mb-2">Target Preset Slot to Overwrite</label>
+                    <div class="flex gap-4 items-center">
+                        <select id="edit-slot" class="flex-1 bg-black border border-gray-600 rounded p-2 text-white font-bold cursor-pointer outline-none">
+                            <!-- Populated by JS -->
+                        </select>
+                        <button onclick="saveCustomPreset()" class="bg-[var(--accent)] hover:brightness-110 text-white font-bold py-2 px-6 rounded transition-all shadow-[0_0_10px_var(--accent)]">
+                            BURN TO MEMORY
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Clear Memory Button -->
+                <div class="mt-4 flex justify-end">
+                    <button onclick="clearPresetsMemory()" class="text-[10px] text-gray-500 hover:text-red-500 transition-colors uppercase tracking-widest font-bold flex items-center gap-1" title="Restore Default Presets">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Factory Reset Memory
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <script>
-        const stations = [
+        // Default Stations Fallback
+        const defaultStations = [
             { id: 1, name: "Capital UK", frequency: "95.8", stream: "https://icecast.thisisdax.com/CapitalUKMP3", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/b/b8/Capital_2022.svg/250px-Capital_2022.svg.png", shortName: "CAPITAL" },
             { id: 2, name: "Heart UK", frequency: "102.7", stream: "https://icecast.thisisdax.com/HeartUKMP3", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/0/05/The_Heart_Network_logo.svg/250px-The_Heart_Network_logo.svg.png", shortName: "HEART" },
             { id: 3, name: "Smooth Radio", frequency: "97.3", stream: "https://icecast.thisisdax.com/SmoothUKMP3", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/SMOOTH-LARGE.png/250px-SMOOTH-LARGE.png", shortName: "SMOOTH" },
@@ -389,14 +632,39 @@
             { id: 10, name: "Drone Zone", frequency: "99.2", stream: "https://ice1.somafm.com/dronezone-128-mp3", logo: "https://somafm.com/img300/dronezone.jpg", shortName: "DRONE" }
         ];
 
+        let stations = [...defaultStations];
+
+        // Load custom stations from local storage
+        try {
+            const saved = JSON.parse(localStorage.getItem('retrocast_presets'));
+            if (saved && Array.isArray(saved)) {
+                saved.forEach((s, i) => { if(s) stations[i] = s; });
+            }
+        } catch(e) { console.error("Error loading presets", e); }
+
         let currentStationIndex = -1;
         let isPlaying = false;
         let isMuted = false;
         let previousVolume = 0.5;
+        
+        // Setup Audio Core
         const audioPlayer = new Audio();
-        audioPlayer.crossOrigin = "anonymous";
+        audioPlayer.crossOrigin = "anonymous"; // CRITICAL for recording attempt
         let audioCtx = null;
+        let sourceNode = null;
+        let streamDest = null;
 
+        // Recording Variables
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordedBlob = null;
+        let isRecording = false;
+        let recStartTime = 0;
+        let recInterval = null;
+        let decodedAudioBuffer = null;
+        let trimPreviewNode = null;
+
+        // UI Elements Cache
         const playBtn = document.getElementById('play-btn');
         const playIcon = document.getElementById('play-icon');
         const prevBtn = document.getElementById('prev-btn');
@@ -414,12 +682,43 @@
         const presetsGrid = document.getElementById('presets-grid');
         const visualizer = document.getElementById('visualizer');
 
+        // Tape Elements
+        const btnRecord = document.getElementById('btn-record');
+        const btnStopRec = document.getElementById('btn-stop-rec');
+        const reelLeft = document.getElementById('tape-reel-left');
+        const reelRight = document.getElementById('tape-reel-right');
+        const recTimerText = document.getElementById('rec-timer');
+        const recStatusText = document.getElementById('rec-status-text');
+        const trimmerPanel = document.getElementById('trimmer-panel');
+        const trimStart = document.getElementById('trim-start');
+        const trimEnd = document.getElementById('trim-end');
+        const trimStartVal = document.getElementById('trim-start-val');
+        const trimEndVal = document.getElementById('trim-end-val');
+        const btnPreviewTrim = document.getElementById('btn-preview-trim');
+        const btnDownloadWav = document.getElementById('btn-download-wav');
+
+        // Icons
         const iconPlay = `<path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-92.66-64-40A8,8,0,0,0,96,88v80a8,8,0,0,0,12.34,6.66l64-40a8,8,0,0,0,0-13.32ZM112,151.05V105l36.85,23Z"></path>`;
         const iconPause = `<path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM112,104v48a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v48a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path>`;
         const iconVolHigh = `<path d="M160,51.64V204.36a8,8,0,0,1-13.66,5.65L96,160H32a16,16,0,0,1-16-16V112A16,16,0,0,1,32,96H96l50.34-50.05A8,8,0,0,1,160,51.64ZM240,128a71.24,71.24,0,0,1-17.15,46.59,8,8,0,1,1-12.06-10.42,55.26,55.26,0,0,0,13.21-36.17,56,56,0,0,0-13.25-36.21,8,8,0,1,1,12.1-10.38A71.3,71.3,0,0,1,240,128Zm-40,0a31.37,31.37,0,0,1-7.25,20.19,8,8,0,1,1-12.24-10.23,15.42,15.42,0,0,0,3.49-9.96,15.48,15.48,0,0,0-3.51-10,8,8,0,1,1,12.28-10.2A31.42,31.42,0,0,1,200,128Z"></path>`;
         const iconVolMuted = `<path d="M213.92,216a8,8,0,0,1-11.31-11.31l18.34-18.35a71.43,71.43,0,0,0,19-46.12,8,8,0,1,0-16,0,55.33,55.33,0,0,1-13.66,35.63l-16.15-16.15A31.54,31.54,0,0,0,200,128a8,8,0,1,0-16,0,15.54,15.54,0,0,1-3.66,10.08L160,117.76V51.64a8,8,0,0,0-13.66-5.65L96,96H32a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16H91.13L42.6,224.69a8,8,0,1,0,11.31,11.31ZM32,112H96v48H32ZM144,70.52v36l-32.48-32.48Z"></path>`;
 
         function setTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
+
+        let notificationTimeout;
+        function showNotification(msg, isError = false) {
+            const toast = document.getElementById('notification-toast');
+            const icon = document.getElementById('notification-icon');
+            const text = document.getElementById('notification-text');
+            
+            icon.innerText = isError ? "❌" : "📼";
+            text.innerText = msg;
+            toast.style.borderColor = isError ? "#ef4444" : "var(--accent)";
+            
+            toast.classList.add('show');
+            clearTimeout(notificationTimeout);
+            notificationTimeout = setTimeout(() => toast.classList.remove('show'), 3500);
+        }
 
         const numBars = 16;
         let visualizerInterval = null;
@@ -450,17 +749,32 @@
             presetsGrid.innerHTML = '';
             stations.forEach((station, index) => {
                 const btn = document.createElement('button');
-                btn.className = `preset-btn flex flex-col items-center justify-center p-2 rounded-lg gap-1`;
+                btn.className = `preset-btn flex flex-col items-center justify-center py-2 px-1 gap-1`;
                 btn.onclick = () => selectStation(index);
+                
+                // Enhanced layout with slot number
+                const topRow = document.createElement('div');
+                topRow.className = "flex w-full justify-between px-2 items-center mb-1";
+                
+                const slotNum = document.createElement('span');
+                slotNum.className = "digital-font text-xs opacity-60 bg-black/20 px-1 rounded";
+                slotNum.innerText = (index + 1).toString().padStart(2, '0');
+                
                 const led = document.createElement('div');
-                led.className = 'led-indicator absolute top-2 left-2 w-2 h-2 rounded-full';
+                led.className = 'led-indicator w-2 h-2 rounded-full';
+                
+                topRow.appendChild(slotNum);
+                topRow.appendChild(led);
+
                 const label = document.createElement('span');
-                label.className = 'text-xs md:text-sm font-bold tracking-wider truncate w-full text-center mt-2';
+                label.className = 'text-xs md:text-sm font-bold tracking-wider truncate w-full text-center px-1';
                 label.innerText = station.shortName;
+                
                 const freq = document.createElement('span');
                 freq.className = 'text-[10px] opacity-70 digital-font text-sm';
                 freq.innerText = station.frequency;
-                btn.appendChild(led);
+                
+                btn.appendChild(topRow);
                 btn.appendChild(label);
                 btn.appendChild(freq);
                 presetsGrid.appendChild(btn);
@@ -477,9 +791,25 @@
             }
         }
 
+        // Initialize Audio Routing for Recording
+        function setupAudioContext() {
+            if (audioCtx) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                sourceNode = audioCtx.createMediaElementSource(audioPlayer);
+                streamDest = audioCtx.createMediaStreamDestination();
+                
+                sourceNode.connect(audioCtx.destination);
+                sourceNode.connect(streamDest);
+            } catch (e) {
+                console.error("Web Audio API routing failed (CORS likely):", e);
+            }
+        }
+
         function playStaticNoise() {
             try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (!audioCtx) setupAudioContext();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 const bufferSize = audioCtx.sampleRate * 0.4;
                 const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
@@ -501,6 +831,8 @@
         }
 
         function selectStation(index) {
+            if (isRecording) stopRecording();
+            
             currentStationIndex = index;
             const station = stations[index];
             playStaticNoise();
@@ -514,6 +846,7 @@
             stopVisualizer();
             const percentage = Math.max(0, Math.min(100, ((parseFloat(station.frequency) - 88) / 20) * 100));
             tuningNeedle.style.left = `${percentage}%`;
+            
             audioPlayer.src = station.stream;
             audioPlayer.volume = isMuted ? 0 : volumeSlider.value;
             playAudio();
@@ -531,6 +864,9 @@
         }
 
         function playAudio() {
+            setupAudioContext(); // ensure context exists
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
             audioPlayer.play().then(() => {
                 isPlaying = true;
                 playIcon.innerHTML = iconPause;
@@ -538,16 +874,19 @@
                 statusText.innerText = "LIVE // FM";
                 statusText.classList.remove('animate-blink');
                 startVisualizer();
-            }).catch(() => {
+            }).catch((e) => {
+                console.error(e);
                 statusText.innerText = "ERR";
                 isPlaying = false;
                 playIcon.innerHTML = iconPlay;
                 stopVisualizer();
+                showNotification("Stream blocked or unavailable.", true);
             });
         }
 
         function pauseAudio() {
             audioPlayer.pause();
+            if (isRecording) stopRecording();
             isPlaying = false;
             playIcon.innerHTML = iconPlay;
             playBtn.style.color = 'var(--text-main)';
@@ -597,6 +936,317 @@
             selectStation(closestIdx);
         });
 
+        // Record Logic
+        btnRecord.addEventListener('click', startRecording);
+        btnStopRec.addEventListener('click', stopRecording);
+        
+        function updateRecTimer() {
+            const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+            const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const s = String(elapsed % 60).padStart(2, '0');
+            recTimerText.innerText = `${m}:${s}`;
+        }
+
+        function startRecording() {
+            if (!isPlaying || !streamDest) {
+                showNotification("Play a station first to record.", true);
+                return;
+            }
+            try {
+                // If streamDest is empty because CORS blocked createMediaElementSource, captureStream is fallback
+                let stream = streamDest.stream;
+                if (!stream || stream.getAudioTracks().length === 0) {
+                    stream = audioPlayer.captureStream ? audioPlayer.captureStream() : (audioPlayer.mozCaptureStream ? audioPlayer.mozCaptureStream() : null);
+                }
+                
+                if (!stream) throw new Error("No stream capture available");
+
+                mediaRecorder = new MediaRecorder(stream);
+                recordedChunks = [];
+                
+                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = processRecording;
+                
+                mediaRecorder.start();
+                isRecording = true;
+                recStartTime = Date.now();
+                recTimerText.classList.remove('opacity-0');
+                recInterval = setInterval(updateRecTimer, 1000);
+                
+                // UI Updates
+                btnRecord.classList.add('bg-red-900', 'border-red-500');
+                btnStopRec.classList.remove('opacity-50', 'pointer-events-none');
+                reelLeft.classList.add('spinning');
+                reelRight.classList.add('spinning');
+                recStatusText.innerText = "● RECORDING";
+                recStatusText.classList.add('text-red-500', 'animate-blink');
+                trimmerPanel.classList.add('opacity-30', 'pointer-events-none'); // Disable trimmer while recording
+
+            } catch(e) {
+                console.error("Recording error:", e);
+                showNotification("Cannot record this stream (CORS block).", true);
+            }
+        }
+
+        function stopRecording() {
+            if (!isRecording || !mediaRecorder) return;
+            mediaRecorder.stop();
+            isRecording = false;
+            clearInterval(recInterval);
+            
+            // UI Updates
+            btnRecord.classList.remove('bg-red-900', 'border-red-500');
+            btnStopRec.classList.add('opacity-50', 'pointer-events-none');
+            reelLeft.classList.remove('spinning');
+            reelRight.classList.remove('spinning');
+            recStatusText.innerText = "■ STOPPED";
+            recStatusText.classList.remove('text-red-500', 'animate-blink');
+        }
+
+        async function processRecording() {
+            showNotification("Decoding recording for trimmer...");
+            recordedBlob = new Blob(recordedChunks, { type: 'audio/webm' }); // Browsers usually record to webm/ogg
+            
+            try {
+                const arrayBuffer = await recordedBlob.arrayBuffer();
+                decodedAudioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                
+                const duration = decodedAudioBuffer.duration;
+                trimStart.max = duration;
+                trimEnd.max = duration;
+                trimStart.value = 0;
+                trimEnd.value = duration;
+                
+                updateTrimValues();
+                trimmerPanel.classList.remove('opacity-30', 'pointer-events-none');
+                showNotification("Tape ready for trim/export.");
+            } catch(e) {
+                console.error("Decoding failed", e);
+                showNotification("Could not decode audio. Stream might be protected.", true);
+            }
+        }
+
+        // Trimmer UI logic
+        trimStart.addEventListener('input', () => {
+            if (parseFloat(trimStart.value) >= parseFloat(trimEnd.value)) trimEnd.value = parseFloat(trimStart.value) + 0.1;
+            updateTrimValues();
+        });
+        trimEnd.addEventListener('input', () => {
+            if (parseFloat(trimEnd.value) <= parseFloat(trimStart.value)) trimStart.value = parseFloat(trimEnd.value) - 0.1;
+            updateTrimValues();
+        });
+
+        function updateTrimValues() {
+            trimStartVal.innerText = parseFloat(trimStart.value).toFixed(1);
+            trimEndVal.innerText = parseFloat(trimEnd.value).toFixed(1);
+        }
+
+        btnPreviewTrim.addEventListener('click', () => {
+            if (!decodedAudioBuffer) return;
+            if (trimPreviewNode) { trimPreviewNode.stop(); trimPreviewNode.disconnect(); }
+            
+            let sTime = parseFloat(trimStart.value);
+            let eTime = parseFloat(trimEnd.value);
+            
+            trimPreviewNode = audioCtx.createBufferSource();
+            trimPreviewNode.buffer = decodedAudioBuffer;
+            trimPreviewNode.connect(audioCtx.destination);
+            trimPreviewNode.start(0, sTime, eTime - sTime);
+            
+            btnPreviewTrim.innerText = "■ STOP PREVIEW";
+            trimPreviewNode.onended = () => { btnPreviewTrim.innerText = "▶ PREVIEW"; };
+        });
+
+        function bufferToWav(abuffer, offsetSamples, lengthSamples) {
+            const numOfChan = abuffer.numberOfChannels;
+            const length = lengthSamples * numOfChan * 2 + 44;
+            const buffer = new ArrayBuffer(length);
+            const view = new DataView(buffer);
+            const channels = [];
+            let i, sample, pos = 0;
+
+            // write WAVE header
+            setUint32(0x46464952); // "RIFF"
+            setUint32(length - 8); // file length - 8
+            setUint32(0x45564157); // "WAVE"
+            setUint32(0x20746d66); // "fmt " chunk
+            setUint32(16);         // length = 16
+            setUint16(1);          // PCM (uncompressed)
+            setUint16(numOfChan);
+            setUint32(abuffer.sampleRate);
+            setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+            setUint16(numOfChan * 2);                      // block-align
+            setUint16(16);                                 // 16-bit
+
+            setUint32(0x61746164);                         // "data" - chunk
+            setUint32(length - pos - 4);                   // chunk length
+
+            for(i = 0; i < abuffer.numberOfChannels; i++) {
+                channels.push(abuffer.getChannelData(i));
+            }
+
+            let currentOffset = offsetSamples;
+            let written = 0;
+            while(written < lengthSamples) {
+                for(i = 0; i < numOfChan; i++) {
+                    sample = Math.max(-1, Math.min(1, channels[i][currentOffset]));
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+                currentOffset++;
+                written++;
+            }
+
+            return new Blob([buffer], {type: "audio/wav"});
+
+            function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+            function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+        }
+
+        btnDownloadWav.addEventListener('click', () => {
+            if (!decodedAudioBuffer) return;
+            showNotification("Processing WAV file...");
+            
+            const sTime = parseFloat(trimStart.value);
+            const eTime = parseFloat(trimEnd.value);
+            const sampleRate = decodedAudioBuffer.sampleRate;
+            const startSample = Math.floor(sTime * sampleRate);
+            const lengthSamples = Math.floor((eTime - sTime) * sampleRate);
+            
+            // Allow slight UI unblock before heavy processing
+            setTimeout(() => {
+                const wavBlob = bufferToWav(decodedAudioBuffer, startSample, lengthSamples);
+                const url = URL.createObjectURL(wavBlob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `RetroCast_Record_${new Date().getTime()}.wav`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+                showNotification("Download Complete!");
+            }, 100);
+        });
+
+        const editModal = document.getElementById('edit-modal');
+        const searchInput = document.getElementById('api-search-input');
+        const searchResults = document.getElementById('search-results');
+        const spinner = document.getElementById('search-spinner');
+        let searchTimeout = null;
+
+        function openEditModal() {
+            editModal.classList.remove('hidden');
+            // Populate Dropdown
+            const slotSelect = document.getElementById('edit-slot');
+            slotSelect.innerHTML = '';
+            stations.forEach((s, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.innerText = `Slot ${idx + 1} - ${s.name}`;
+                slotSelect.appendChild(opt);
+            });
+        }
+        function closeEditModal() { editModal.classList.add('hidden'); }
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const val = e.target.value.trim();
+            if(val.length < 3) { searchResults.innerHTML = ''; return; }
+            spinner.classList.remove('hidden');
+            searchTimeout = setTimeout(() => { performSearch(val); }, 600);
+        });
+
+        async function performSearch(query) {
+            try {
+                // Radio Browser API is free and doesn't require keys. We use de1 server as default.
+                const res = await fetch(`https://de1.api.radio-browser.info/json/stations/search?name=${encodeURIComponent(query)}&limit=15&hidebroken=true`);
+                const data = await res.json();
+                renderSearchResults(data);
+            } catch(e) {
+                console.error("Search failed", e);
+                searchResults.innerHTML = '<li class="p-3 text-red-400">Search API unavailable. Try manual entry.</li>';
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        }
+
+        function renderSearchResults(data) {
+            searchResults.innerHTML = '';
+            if(data.length === 0) {
+                searchResults.innerHTML = '<li class="p-3 text-gray-500">No stations found.</li>';
+                return;
+            }
+            data.forEach(st => {
+                const li = document.createElement('li');
+                li.className = "p-3 border-b border-white/5 search-result flex items-center justify-between";
+                li.innerHTML = `
+                    <div class="flex flex-col overflow-hidden">
+                        <span class="font-bold truncate">${st.name}</span>
+                        <span class="text-[10px] text-gray-400 truncate">${st.tags || 'General'} | ${st.countrycode}</span>
+                    </div>
+                    <span class="text-xs bg-[var(--accent)] text-white px-2 py-1 rounded ml-2 whitespace-nowrap">SELECT</span>
+                `;
+                li.onclick = () => autofillForm(st);
+                searchResults.appendChild(li);
+            });
+        }
+
+        function autofillForm(stationData) {
+            document.getElementById('edit-name').value = stationData.name;
+            // Generate a shortname
+            document.getElementById('edit-shortname').value = stationData.name.substring(0,8).toUpperCase();
+            document.getElementById('edit-stream').value = stationData.url_resolved || stationData.url;
+            document.getElementById('edit-logo').value = stationData.favicon || `https://placehold.co/150x150/111/444?text=${stationData.name.substring(0,3).toUpperCase()}`;
+            document.getElementById('edit-freq').value = "100.0"; // Default
+            showNotification("Station autofilled. Select slot and save.");
+        }
+
+        function saveCustomPreset() {
+            const slotIdx = parseInt(document.getElementById('edit-slot').value);
+            const name = document.getElementById('edit-name').value || "Custom Radio";
+            const shortName = document.getElementById('edit-shortname').value || name.substring(0,8);
+            const stream = document.getElementById('edit-stream').value;
+            const logo = document.getElementById('edit-logo').value || 'https://placehold.co/150x150/111/444?text=RAD';
+            const freq = document.getElementById('edit-freq').value || "88.0";
+
+            if (!stream) { showNotification("Stream URL is required!", true); return; }
+
+            stations[slotIdx] = { id: Date.now(), name, shortName, stream, logo, frequency: freq };
+            
+            // Save to LocalStorage
+            localStorage.setItem('retrocast_presets', JSON.stringify(stations));
+            
+            initPresets();
+            closeEditModal();
+            showNotification(`Slot ${slotIdx + 1} Saved!`);
+            
+            // If current station was replaced, play it
+            if(currentStationIndex === slotIdx) selectStation(slotIdx);
+        }
+
+        function clearPresetsMemory() {
+            // Remove from local storage
+            localStorage.removeItem('retrocast_presets');
+            
+            // Reset to defaults
+            stations = [...defaultStations];
+            
+            // Update UI
+            initPresets();
+            closeEditModal();
+            showNotification("Memory wiped. Factory defaults restored.", true);
+            
+            // Reselect active station if one was active
+            if (currentStationIndex !== -1) {
+                selectStation(currentStationIndex);
+            }
+        }
+
+        // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
             initPresets();
             stationName.classList.add('marquee-paused');
