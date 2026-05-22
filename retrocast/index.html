@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A beautiful retro-styled web radio player featuring live streams, multiple themes, and actual station logos.">
+    <meta name="description" content="A beautiful retro-styled web radio player featuring live streams, EQ, tape recording, and memory presets.">
     <meta name="theme-color" content="#5c2e16">
     <title>RetroCast Web Radio</title>
     
@@ -128,6 +128,33 @@
             --tape-face: #3d405b;
         }
 
+        [data-theme="silver"] {
+            --app-bg: radial-gradient(circle at center, #78909c 0%, #263238 100%);
+            --radio-casing: #cfd8dc;
+            --radio-casing-img: repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 10px);
+            --radio-border: #90a4ae;
+            --radio-face: linear-gradient(180deg, #eceff1 0%, #b0bec5 100%);
+            --radio-face-border: #78909c;
+            --screen-bg: #819ca9;
+            --screen-text: #263238;
+            --screen-shadow: inset 2px 2px 6px rgba(0,0,0,0.3), inset -2px -2px 6px rgba(255,255,255,0.3);
+            --screen-glow: none;
+            --accent: #f44336;
+            --text-main: #37474f;
+            --knob-bg: radial-gradient(circle at 30% 30%, #eceff1, #78909c);
+            --speaker-bg: #cfd8dc;
+            --preset-bg: linear-gradient(to bottom, #eceff1, #cfd8dc);
+            --preset-border: #90a4ae;
+            --preset-text: #37474f;
+            --preset-active: linear-gradient(to bottom, #b0bec5, #78909c);
+            --preset-active-text: #000;
+            --led-off: #546e7a;
+            --led-on: #f44336;
+            --led-glow: 0 0 8px #f44336;
+            --tape-casing: #b0bec5;
+            --tape-face: #eceff1;
+        }
+
         body {
             background: var(--app-bg);
             min-height: 100vh;
@@ -171,16 +198,27 @@
         }
         [data-theme="modern"] .digital-screen { border: none; text-shadow: none; filter: none; }
 
+        /* Authentic Scanline Overlay */
+        .digital-screen::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 20;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
         .digital-screen::after {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
-            background-size: 100% 4px;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
             pointer-events: none;
             z-index: 10;
         }
-        [data-theme="modern"] .digital-screen::after { display: none; }
+        [data-theme="modern"] .digital-screen::after, [data-theme="modern"] .digital-screen::before { display: none; }
 
         .speaker-grill {
             background-color: var(--speaker-bg);
@@ -188,7 +226,7 @@
             background-size: 8px 8px;
             box-shadow: inset 0 0 20px #000;
             border-radius: 50%;
-            transition: all 0.5s ease;
+            transition: all 0.5s ease, transform 0.05s ease-out; /* Added transform for pulse */
         }
 
         .tuning-dial-bg {
@@ -221,22 +259,45 @@
             box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
         }
 
-        /* Enhanced Preset Buttons */
+        /* EQ Sliders Custom Style */
+        input[type=range].eq-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range].eq-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 14px; width: 8px;
+            border-radius: 2px;
+            background: var(--text-main);
+            cursor: pointer;
+            margin-top: -5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        input[type=range].eq-slider::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: rgba(0,0,0,0.2);
+            border-radius: 2px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+        }
+
         .preset-btn {
             background: var(--preset-bg);
             box-shadow: 0 4px 0 var(--preset-border), 0 6px 10px rgba(0,0,0,0.3), inset 0 2px 3px rgba(255,255,255,0.4);
-            border: 1px solid rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.2);
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             color: var(--preset-text);
             position: relative;
             border-radius: 0.5rem;
             overflow: hidden;
+            padding: 0.5rem;
         }
         .preset-btn::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; height: 40%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.2), transparent);
+            background: linear-gradient(to bottom, rgba(255,255,255,0.25), transparent);
             pointer-events: none;
         }
         .preset-btn:active, .preset-btn.active {
@@ -244,7 +305,7 @@
             box-shadow: 0 0 0 var(--preset-border), 0 2px 4px rgba(0,0,0,0.2), inset 0 3px 6px rgba(0,0,0,0.2);
             background: var(--preset-active);
             color: var(--preset-active-text);
-            border-color: rgba(0,0,0,0.3);
+            border-color: rgba(0,0,0,0.4);
         }
         .led-indicator {
             background: var(--led-off);
@@ -255,8 +316,17 @@
             background: var(--led-on);
             box-shadow: var(--led-glow);
         }
+        
+        .preset-logo-container {
+            background: #fff;
+            border: 2px solid rgba(0,0,0,0.1);
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        }
+        .preset-btn.active .preset-logo-container {
+            border-color: var(--preset-active-text);
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
+        }
 
-        /* Tape Deck Elements */
         .tape-casing {
             background: var(--tape-casing);
             border: 2px solid var(--radio-face-border);
@@ -268,39 +338,18 @@
             box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
             border: 2px solid #222;
         }
-        .tape-reel {
-            transform-origin: center;
-        }
-        .tape-reel.spinning {
-            animation: spin 3s linear infinite;
-        }
+        .tape-reel { transform-origin: center; }
+        .tape-reel.spinning { animation: spin 3s linear infinite; }
 
-        /* Modals & Notifications */
-        .modal-overlay {
-            backdrop-filter: blur(5px);
-            background: rgba(0,0,0,0.8);
-        }
-        .search-result:hover {
-            background: var(--accent);
-            color: white;
-            cursor: pointer;
-        }
-        .search-result:hover .text-gray-400 {
-            color: rgba(255,255,255,0.8);
-        }
+        .modal-overlay { backdrop-filter: blur(5px); background: rgba(0,0,0,0.8); }
+        .search-result:hover { background: var(--accent); color: white; cursor: pointer; }
+        .search-result:hover .text-gray-400 { color: rgba(255,255,255,0.8); }
 
-        /* Corrected Notification Visibility & Positioning */
         .notification {
-            translate: -50% 150%;
-            opacity: 0;
-            pointer-events: none;
+            translate: -50% 150%; opacity: 0; pointer-events: none;
             transition: translate 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
         }
-        .notification.show {
-            translate: -50% 0;
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .notification.show { translate: -50% 0; opacity: 1; pointer-events: auto; }
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         .animate-blink { animation: blink 1.5s infinite; }
@@ -311,51 +360,37 @@
         .marquee-paused { animation: none !important; transform: none !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .visualizer {
-            display: flex; align-items: flex-end; justify-content: space-between; gap: 2px; height: 24px; width: 100%;
-        }
+        .visualizer { display: flex; align-items: flex-end; justify-content: space-between; gap: 2px; height: 24px; width: 100%; }
         .visualizer-bar {
             flex: 1; background-color: var(--screen-text); height: 2px;
             transition: height 0.05s ease; opacity: 0.8;
             border-top-left-radius: 2px; border-top-right-radius: 2px;
         }
 
-        /* Custom Range Slider for Trimmer */
-        input[type=range].trim-slider {
-            -webkit-appearance: none;
-            background: transparent;
-        }
+        input[type=range].trim-slider { -webkit-appearance: none; background: transparent; }
         input[type=range].trim-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px; width: 16px;
-            border-radius: 50%;
-            background: var(--accent);
-            cursor: pointer;
-            margin-top: -6px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: var(--accent); cursor: pointer; margin-top: -6px; box-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
         input[type=range].trim-slider::-webkit-slider-runnable-track {
-            width: 100%; height: 4px;
-            cursor: pointer;
-            background: rgba(255,255,255,0.2);
-            border-radius: 2px;
+            width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px;
         }
 
-        /* Modal specific retro styling */
-        .modal-body-bg {
-            background: radial-gradient(circle at top right, #2a2a35, #111);
-        }
+        .modal-body-bg { background: radial-gradient(circle at top right, #2a2a35, #111); }
         .input-led {
-            background: #0a0a0a;
-            border: 1px solid #333;
-            color: #4ade80;
-            font-family: 'VT323', monospace;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+            background: #0a0a0a; border: 1px solid #333; color: #4ade80;
+            font-family: 'VT323', monospace; box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
         }
         .input-led:focus {
-            outline: none;
-            border-color: var(--accent);
+            outline: none; border-color: var(--accent);
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.8), 0 0 8px rgba(255,59,48,0.4);
+        }
+
+        /* Active state for theme buttons */
+        .theme-btn { transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .theme-btn.active {
+            box-shadow: 0 0 0 3px var(--app-bg), 0 0 0 5px var(--accent), 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            transform: scale(1.15); z-index: 10;
         }
     </style>
 </head>
@@ -376,11 +411,12 @@
     </a>
 
     <!-- Theme Selector -->
-    <div class="absolute top-4 right-4 md:top-8 md:right-8 z-50 flex gap-2">
-        <button onclick="setTheme('classic')" class="w-8 h-8 rounded-full bg-[#5d4037] border-2 border-white/50 shadow-lg hover:scale-110 transition-transform" title="Classic Wood"></button>
-        <button onclick="setTheme('cyber')" class="w-8 h-8 rounded-full bg-[#111] border-2 border-[#e94560] shadow-lg hover:scale-110 transition-transform" title="Cyberpunk"></button>
-        <button onclick="setTheme('modern')" class="w-8 h-8 rounded-full bg-[#e0e5ec] border-2 border-gray-400 shadow-lg hover:scale-110 transition-transform" title="Modern Minimal"></button>
-        <button onclick="setTheme('vintage')" class="w-8 h-8 rounded-full bg-[#e07a5f] border-2 border-white/50 shadow-lg hover:scale-110 transition-transform" title="70s Vintage"></button>
+    <div class="absolute top-4 right-4 md:top-8 md:right-8 z-50 flex gap-3">
+        <button onclick="setTheme('classic')" id="theme-btn-classic" class="theme-btn w-8 h-8 rounded-full bg-[#5d4037] border-2 border-white/50 shadow-lg hover:scale-110" title="Classic Wood"></button>
+        <button onclick="setTheme('cyber')" id="theme-btn-cyber" class="theme-btn w-8 h-8 rounded-full bg-[#111] border-2 border-[#e94560] shadow-lg hover:scale-110" title="Cyberpunk"></button>
+        <button onclick="setTheme('modern')" id="theme-btn-modern" class="theme-btn w-8 h-8 rounded-full bg-[#e0e5ec] border-2 border-gray-400 shadow-lg hover:scale-110" title="Modern Minimal"></button>
+        <button onclick="setTheme('vintage')" id="theme-btn-vintage" class="theme-btn w-8 h-8 rounded-full bg-[#e07a5f] border-2 border-white/50 shadow-lg hover:scale-110" title="70s Vintage"></button>
+        <button onclick="setTheme('silver')" id="theme-btn-silver" class="theme-btn w-8 h-8 rounded-full bg-[#cfd8dc] border-2 border-gray-500 shadow-lg hover:scale-110" title="80s Boombox"></button>
     </div>
 
     <header class="text-center mt-16 md:mt-4 mb-8">
@@ -398,10 +434,14 @@
                 
                 <div class="flex justify-between items-center mb-1">
                     <span class="digital-font text-xl opacity-50 tracking-wider text-[var(--text-main)]">RC-2000X</span>
+                    <button onclick="toggleSleepTimer()" id="sleep-timer-btn" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded bg-black/10 hover:bg-black/20 text-[var(--text-main)] transition-colors border border-black/10">
+                        Sleep: <span id="sleep-timer-text">OFF</span>
+                    </button>
                 </div>
 
                 <div class="digital-screen rounded-xl h-44 p-4 flex flex-row gap-4 items-center">
-                    <div class="w-1/3 h-full bg-black/40 rounded-lg p-2 border border-white/10 flex items-center justify-center relative z-20">
+                    <div id="lcd-clock" class="absolute top-3 right-4 text-xs sm:text-sm font-bold digital-font opacity-60 tracking-widest z-30">--:--</div>
+                    <div class="w-1/3 h-full bg-black/40 rounded-lg p-2 border border-white/10 flex items-center justify-center relative z-20 shadow-inner">
                         <img id="station-logo" src="https://placehold.co/150x150/111/444?text=READY" alt="Radio Logo" class="station-logo-img rounded max-h-full object-contain" onerror="this.src='https://placehold.co/150x150/111/444?text=RADIO'">
                     </div>
 
@@ -419,6 +459,7 @@
                         </div>
 
                         <div id="visualizer" class="visualizer mt-2 opacity-80">
+                            <!-- Bars appended via JS -->
                         </div>
                     </div>
                 </div>
@@ -456,17 +497,41 @@
                     </div>
                 </div>
 
-                <div class="w-full bg-black/5 rounded-xl p-4 border border-black/10 shadow-inner text-[var(--text-main)]">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold uppercase tracking-widest opacity-70">Volume</span>
-                        <span id="vol-readout" class="text-xs font-bold digital-font text-lg">50%</span>
+                <!-- Combined Audio Controls Box -->
+                <div class="w-full bg-black/5 rounded-xl p-4 border border-black/10 shadow-inner text-[var(--text-main)] flex flex-col gap-3">
+                    
+                    <!-- Volume -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-bold uppercase tracking-widest opacity-70">Volume</span>
+                            <span id="vol-readout" class="text-[10px] font-bold digital-font text-sm">50%</span>
+                        </div>
+                        <div class="w-full flex items-center gap-3">
+                            <button id="mute-btn" class="text-[var(--text-main)] outline-none" title="Mute/Unmute">
+                                <svg id="vol-icon" class="w-4 h-4 opacity-80 pointer-events-none" fill="currentColor" viewBox="0 0 256 256"><path d="M160,51.64V204.36a8,8,0,0,1-13.66,5.65L96,160H32a16,16,0,0,1-16-16V112A16,16,0,0,1,32,96H96l50.34-50.05A8,8,0,0,1,160,51.64ZM240,128a71.24,71.24,0,0,1-17.15,46.59,8,8,0,1,1-12.06-10.42,55.26,55.26,0,0,0,13.21-36.17,56,56,0,0,0-13.25-36.21,8,8,0,1,1,12.1-10.38A71.3,71.3,0,0,1,240,128Zm-40,0a31.37,31.37,0,0,1-7.25,20.19,8,8,0,1,1-12.24-10.23,15.42,15.42,0,0,0,3.49-9.96,15.48,15.48,0,0,0-3.51-10,8,8,0,1,1,12.28-10.2A31.42,31.42,0,0,1,200,128Z"></path></svg>
+                            </button>
+                            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" class="w-full eq-slider">
+                        </div>
                     </div>
-                    <div class="w-full flex items-center gap-3">
-                        <button id="mute-btn" class="text-[var(--text-main)] outline-none" title="Mute/Unmute">
-                            <svg id="vol-icon" class="w-5 h-5 opacity-80 pointer-events-none" fill="currentColor" viewBox="0 0 256 256"><path d="M160,51.64V204.36a8,8,0,0,1-13.66,5.65L96,160H32a16,16,0,0,1-16-16V112A16,16,0,0,1,32,96H96l50.34-50.05A8,8,0,0,1,160,51.64ZM240,128a71.24,71.24,0,0,1-17.15,46.59,8,8,0,1,1-12.06-10.42,55.26,55.26,0,0,0,13.21-36.17,56,56,0,0,0-13.25-36.21,8,8,0,1,1,12.1-10.38A71.3,71.3,0,0,1,240,128Zm-40,0a31.37,31.37,0,0,1-7.25,20.19,8,8,0,1,1-12.24-10.23,15.42,15.42,0,0,0,3.49-9.96,15.48,15.48,0,0,0-3.51-10,8,8,0,1,1,12.28-10.2A31.42,31.42,0,0,1,200,128Z"></path></svg>
-                        </button>
-                        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" class="w-full">
+
+                    <!-- Tone Controls (EQ) -->
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold uppercase tracking-widest opacity-60">Bass</span>
+                                <span id="bass-readout" class="text-[10px] font-bold digital-font">0</span>
+                            </div>
+                            <input type="range" id="bass-slider" min="-15" max="15" step="1" value="0" class="w-full eq-slider">
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold uppercase tracking-widest opacity-60">Treble</span>
+                                <span id="treble-readout" class="text-[10px] font-bold digital-font">0</span>
+                            </div>
+                            <input type="range" id="treble-slider" min="-15" max="15" step="1" value="0" class="w-full eq-slider">
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -474,24 +539,26 @@
         <div class="border-t border-black/20 pt-4 relative z-10">
             <div class="flex items-center justify-between mb-4 px-2">
                 <span class="text-xs font-bold uppercase tracking-widest text-white/70 drop-shadow-md">Station Memory Presets</span>
-                <button onclick="openEditModal()" class="text-xs bg-black/30 hover:bg-black/50 text-white px-4 py-2 rounded-lg border border-white/20 transition-all flex items-center gap-2 font-bold shadow-md hover:shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <button onclick="openEditModal()" class="text-[10px] sm:text-xs bg-black/30 hover:bg-black/50 text-white px-3 sm:px-4 py-2 rounded-lg border border-white/20 transition-all flex items-center gap-2 font-bold shadow-md hover:shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+                    <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     PROGRAM MEMORY
                 </button>
             </div>
-            <div id="presets-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-4"></div>
+            <!-- Expanded to 5 columns on mid/large screens, 2 on small -->
+            <div id="presets-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4"></div>
         </div>
 
-        <!-- TAPE DECK RECORDER SECTION -->
         <div class="tape-casing rounded-xl p-4 border border-black/20 shadow-inner flex flex-col md:flex-row gap-6 mt-2 relative overflow-hidden">
             <div class="flex-1 flex flex-col">
                 <div class="flex justify-between items-center mb-2">
                     <span class="text-xs font-bold uppercase tracking-widest text-white/50">Tape Deck / Recorder</span>
-                    <span id="rec-status-text" class="text-xs digital-font text-gray-400">TAPE STOPPED</span>
+                    <div class="flex items-center gap-3">
+                        <span id="tape-counter" class="digital-font text-xs bg-black text-gray-300 px-2 py-0.5 rounded border border-gray-600 shadow-inner tracking-widest">000</span>
+                        <span id="rec-status-text" class="text-xs digital-font text-gray-400">TAPE STOPPED</span>
+                    </div>
                 </div>
                 
                 <div class="tape-face h-20 rounded-lg flex items-center justify-between px-8 relative border border-white/10">
-                    <!-- Left Reel -->
                     <svg class="tape-reel w-12 h-12 text-gray-400" id="tape-reel-left" viewBox="0 0 100 100" fill="currentColor">
                         <circle cx="50" cy="50" r="45" fill="transparent" stroke="currentColor" stroke-width="4"/>
                         <circle cx="50" cy="50" r="10" fill="currentColor"/>
@@ -500,12 +567,12 @@
                         <line x1="10" y1="50" x2="40" y2="50" stroke="currentColor" stroke-width="4"/>
                         <line x1="60" y1="50" x2="90" y2="50" stroke="currentColor" stroke-width="4"/>
                     </svg>
-                    <!-- Window / Tape Line -->
                     <div class="flex-1 h-12 mx-4 border border-white/5 bg-black/50 relative overflow-hidden flex items-center justify-center">
+                        <!-- Tape path visual -->
+                        <div class="w-full h-[6px] bg-[#222] absolute top-1/2 -translate-y-1/2 shadow-sm"></div>
                         <div class="w-full h-[2px] bg-white/20 absolute top-1/2 -translate-y-1/2"></div>
-                        <span id="rec-timer" class="digital-font text-red-500 text-xl z-10 bg-black/80 px-2 rounded opacity-0 transition-opacity">00:00</span>
+                        <span id="rec-timer" class="digital-font text-red-500 text-xl z-10 bg-black/80 px-2 rounded opacity-0 transition-opacity border border-red-900/50">00:00</span>
                     </div>
-                    <!-- Right Reel -->
                     <svg class="tape-reel w-12 h-12 text-gray-400" id="tape-reel-right" viewBox="0 0 100 100" fill="currentColor">
                         <circle cx="50" cy="50" r="45" fill="transparent" stroke="currentColor" stroke-width="4"/>
                         <circle cx="50" cy="50" r="10" fill="currentColor"/>
@@ -516,7 +583,6 @@
                     </svg>
                 </div>
 
-                <!-- Transport Controls -->
                 <div class="flex justify-center gap-3 mt-4">
                     <button id="btn-record" class="w-10 h-10 rounded bg-gray-800 border-2 border-gray-600 hover:border-red-500 hover:bg-gray-700 flex items-center justify-center transition-all group shadow-lg" title="Record">
                         <div class="w-3 h-3 rounded-full bg-red-600 group-hover:shadow-[0_0_8px_#dc2626]"></div>
@@ -527,7 +593,6 @@
                 </div>
             </div>
 
-            <!-- Trimmer Unit (hidden by default until a recording exists) -->
             <div id="trimmer-panel" class="flex-1 border-l border-white/10 pl-6 flex flex-col justify-center opacity-30 pointer-events-none transition-opacity">
                 <span class="text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Trimmer / Export</span>
                 
@@ -555,16 +620,19 @@
 
     <footer class="mt-auto py-6 text-center text-white/50 text-sm">
         <p>Built with <span class="text-red-500">♥</span>. Streams and logos are property of their respective owners.</p>
-        <p class="text-xs opacity-50 mt-1">Note: Recording uses Web Audio API. Streams lacking proper CORS headers cannot be recorded.</p>
+        <p class="text-xs opacity-50 mt-1">Note: EQ and Recording uses Web Audio API. Streams lacking proper CORS headers bypass these features.</p>
+        <div class="mt-4 flex flex-wrap justify-center items-center gap-4 text-[10px] uppercase font-bold tracking-widest opacity-40">
+            <span>[SPACE] Play/Pause</span>
+            <span>[←/→] Tune</span>
+            <span>[↑/↓] Volume</span>
+            <span>[M] Mute</span>
+        </div>
     </footer>
 
-    <!-- REVAMPED Edit Presets Modal -->
     <div id="edit-modal" class="hidden fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-4 sm:p-6">
         <div class="modal-body-bg border-2 border-[#444] rounded-2xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden">
             
-            <!-- Modal Header -->
             <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-black/60 relative overflow-hidden">
-                <!-- Scanline effect for header -->
                 <div class="absolute inset-0 pointer-events-none" style="background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px);"></div>
                 <h2 class="text-xl font-bold tracking-widest text-[var(--accent)] flex items-center gap-3 relative z-10">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
@@ -575,11 +643,9 @@
                 </button>
             </div>
 
-            <!-- Modal Body (Two Columns on Desktop) -->
             <div class="p-6 overflow-y-auto flex-1 custom-scrollbar">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     
-                    <!-- LEFT COLUMN: Search -->
                     <div class="flex flex-col gap-4">
                         <div class="flex items-center gap-2 mb-1">
                             <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
@@ -600,7 +666,6 @@
                         </div>
                     </div>
 
-                    <!-- RIGHT COLUMN: Manual Entry -->
                     <div class="flex flex-col gap-4">
                         <div class="flex items-center gap-2 mb-1">
                             <div class="w-2 h-2 rounded-full bg-green-500"></div>
@@ -641,7 +706,6 @@
                 </div>
             </div>
 
-            <!-- Modal Footer (Command Deck) -->
             <div class="px-6 py-4 bg-[#111] border-t-2 border-[#333] flex flex-col md:flex-row justify-between items-center gap-4 shadow-[inset_0_10px_20px_rgba(0,0,0,0.5)]">
                 
                 <div class="flex items-center gap-3 w-full md:w-auto bg-black/50 p-2 rounded-lg border border-white/10">
@@ -649,6 +713,16 @@
                     <select id="edit-slot" class="bg-[#222] border border-[#444] rounded px-4 py-2 text-white font-bold cursor-pointer focus:outline-none focus:border-[var(--accent)] shadow-inner">
                         <!-- Populated by JS -->
                     </select>
+                </div>
+
+                <div class="flex items-center justify-center w-full md:w-auto gap-2 border-y md:border-y-0 md:border-x border-white/10 py-3 md:py-0 md:px-4">
+                    <input type="file" id="import-file" accept=".json" class="hidden">
+                    <button onclick="document.getElementById('import-file').click()" class="text-gray-400 hover:text-white transition-colors p-2 bg-black/30 rounded border border-white/10 hover:border-white/30 shadow-inner" title="Import Presets (JSON)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    </button>
+                    <button onclick="exportPresets()" class="text-gray-400 hover:text-white transition-colors p-2 bg-black/30 rounded border border-white/10 hover:border-white/30 shadow-inner" title="Export Presets (JSON)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    </button>
                 </div>
 
                 <div class="flex items-center gap-3 w-full md:w-auto">
@@ -681,6 +755,21 @@
 
         let stations = [...defaultStations];
 
+        // SETTINGS MANAGER
+        function loadSettings() {
+            const defaults = { theme: 'classic', volume: 0.5, isMuted: false, lastStationIndex: -1, bass: 0, treble: 0 };
+            try {
+                const saved = JSON.parse(localStorage.getItem('retrocast_settings'));
+                return { ...defaults, ...saved };
+            } catch (e) { return defaults; }
+        }
+        
+        let appSettings = loadSettings();
+
+        function saveSettings() {
+            localStorage.setItem('retrocast_settings', JSON.stringify(appSettings));
+        }
+
         // Load custom stations from local storage
         try {
             const saved = JSON.parse(localStorage.getItem('retrocast_presets'));
@@ -696,19 +785,24 @@
         
         // Setup Audio Core
         const audioPlayer = new Audio();
-        audioPlayer.crossOrigin = "anonymous"; // CRITICAL for recording & True Analyser
+        audioPlayer.crossOrigin = "anonymous"; 
+        
         let audioCtx = null;
         let sourceNode = null;
         let streamDest = null;
+        let bassNode = null;
+        let trebleNode = null;
         
         // True Analyser Variables
         let analyser = null;
         let dataArray = null;
         let visualizerAnimFrame = null;
         
-        // Metadata Variables
+        // Metadata & Sleep Timer
         let metadataInterval = null;
         let lastFetchedTitle = null;
+        let sleepTimerMinutes = 0;
+        let sleepInterval = null;
 
         // Recording Variables
         let mediaRecorder = null;
@@ -719,6 +813,7 @@
         let recInterval = null;
         let decodedAudioBuffer = null;
         let trimPreviewNode = null;
+        let mechanicalCounter = 0;
 
         // UI Elements Cache
         const playBtn = document.getElementById('play-btn');
@@ -729,6 +824,10 @@
         const volIcon = document.getElementById('vol-icon');
         const volumeSlider = document.getElementById('volume-slider');
         const volReadout = document.getElementById('vol-readout');
+        const bassSlider = document.getElementById('bass-slider');
+        const bassReadout = document.getElementById('bass-readout');
+        const trebleSlider = document.getElementById('treble-slider');
+        const trebleReadout = document.getElementById('treble-readout');
         const statusText = document.getElementById('status-text');
         const freqText = document.getElementById('freq-text');
         const stationName = document.getElementById('station-name');
@@ -737,6 +836,7 @@
         const tuningNeedle = document.getElementById('tuning-needle');
         const presetsGrid = document.getElementById('presets-grid');
         const visualizer = document.getElementById('visualizer');
+        const speakerElement = document.getElementById('speaker-element');
 
         // Tape Elements
         const btnRecord = document.getElementById('btn-record');
@@ -744,6 +844,7 @@
         const reelLeft = document.getElementById('tape-reel-left');
         const reelRight = document.getElementById('tape-reel-right');
         const recTimerText = document.getElementById('rec-timer');
+        const tapeCounter = document.getElementById('tape-counter');
         const recStatusText = document.getElementById('rec-status-text');
         const trimmerPanel = document.getElementById('trimmer-panel');
         const trimStart = document.getElementById('trim-start');
@@ -759,7 +860,18 @@
         const iconVolHigh = `<path d="M160,51.64V204.36a8,8,0,0,1-13.66,5.65L96,160H32a16,16,0,0,1-16-16V112A16,16,0,0,1,32,96H96l50.34-50.05A8,8,0,0,1,160,51.64ZM240,128a71.24,71.24,0,0,1-17.15,46.59,8,8,0,1,1-12.06-10.42,55.26,55.26,0,0,0,13.21-36.17,56,56,0,0,0-13.25-36.21,8,8,0,1,1,12.1-10.38A71.3,71.3,0,0,1,240,128Zm-40,0a31.37,31.37,0,0,1-7.25,20.19,8,8,0,1,1-12.24-10.23,15.42,15.42,0,0,0,3.49-9.96,15.48,15.48,0,0,0-3.51-10,8,8,0,1,1,12.28-10.2A31.42,31.42,0,0,1,200,128Z"></path>`;
         const iconVolMuted = `<path d="M213.92,216a8,8,0,0,1-11.31-11.31l18.34-18.35a71.43,71.43,0,0,0,19-46.12,8,8,0,1,0-16,0,55.33,55.33,0,0,1-13.66,35.63l-16.15-16.15A31.54,31.54,0,0,0,200,128a8,8,0,1,0-16,0,15.54,15.54,0,0,1-3.66,10.08L160,117.76V51.64a8,8,0,0,0-13.66-5.65L96,96H32a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16H91.13L42.6,224.69a8,8,0,1,0,11.31,11.31ZM32,112H96v48H32ZM144,70.52v36l-32.48-32.48Z"></path>`;
 
-        function setTheme(theme) { document.documentElement.setAttribute('data-theme', theme); }
+        function setTheme(theme) { 
+            document.documentElement.setAttribute('data-theme', theme); 
+            
+            // Update active styling on buttons
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`theme-btn-${theme}`);
+            if(activeBtn) activeBtn.classList.add('active');
+
+            // Save to settings
+            appSettings.theme = theme;
+            saveSettings();
+        }
 
         let notificationTimeout;
         function showNotification(msg, isError = false) {
@@ -791,20 +903,30 @@
             if (analyser && dataArray) {
                 analyser.getByteFrequencyData(dataArray);
                 let sum = 0;
+                let lowEndSum = 0;
                 const bars = document.querySelectorAll('.visualizer-bar');
                 
                 for (let i = 0; i < bars.length; i++) {
-                    // Grab frequency bin (offset slightly to skip sub-bass rumble on lower end streams)
                     const value = dataArray[i + 1] || 0; 
                     sum += value;
+                    if(i < 4) lowEndSum += value; // Calculate bass for speaker pulse
                     const percent = Math.max(5, (value / 255) * 100);
                     bars[i].style.height = `${percent}%`;
                 }
 
-                // Fallback logic: If stream blocks CORS, dataArray returns all 0s.
-                // We fallback to a simulated visualizer so the radio doesn't look broken.
+                // Speaker Pulse Logic based on low end
+                if (lowEndSum > 400 && !isMuted) {
+                    const scale = 1 + ((lowEndSum - 400) / 1000) * 0.05;
+                    speakerElement.style.transform = `scale(${Math.min(scale, 1.05)})`;
+                } else {
+                    speakerElement.style.transform = `scale(1)`;
+                }
+
+                // Fallback logic for CORS blocked streams
                 if (sum === 0 && !isMuted) {
                     bars.forEach(bar => { bar.style.height = `${Math.random() * 90 + 10}%`; });
+                    if(Math.random() > 0.8) speakerElement.style.transform = `scale(${1 + Math.random()*0.02})`;
+                    else speakerElement.style.transform = `scale(1)`;
                 }
             }
         }
@@ -817,37 +939,50 @@
         function stopVisualizer() {
             if (visualizerAnimFrame) cancelAnimationFrame(visualizerAnimFrame);
             document.querySelectorAll('.visualizer-bar').forEach(bar => bar.style.height = '2px');
+            speakerElement.style.transform = `scale(1)`;
         }
 
         function initPresets() {
             presetsGrid.innerHTML = '';
             stations.forEach((station, index) => {
                 const btn = document.createElement('button');
-                btn.className = `preset-btn flex flex-col items-center justify-center py-2 px-1 gap-1`;
+                btn.className = `preset-btn flex flex-col items-center justify-between p-2 gap-1 group`;
                 btn.onclick = () => selectStation(index);
                 
                 const topRow = document.createElement('div');
-                topRow.className = "flex w-full justify-between px-2 items-center mb-1";
+                topRow.className = "flex w-full justify-between items-center mb-1 relative z-10";
                 
                 const slotNum = document.createElement('span');
-                slotNum.className = "digital-font text-xs opacity-60 bg-black/20 px-1 rounded";
+                slotNum.className = "digital-font text-[10px] opacity-60 bg-black/20 px-1 rounded border border-black/10";
                 slotNum.innerText = (index + 1).toString().padStart(2, '0');
                 
                 const led = document.createElement('div');
-                led.className = 'led-indicator w-2 h-2 rounded-full';
+                led.className = 'led-indicator w-2 h-2 rounded-full absolute right-0 top-0.5';
                 
                 topRow.appendChild(slotNum);
                 topRow.appendChild(led);
 
+                // Image Logo Container
+                const imgContainer = document.createElement('div');
+                imgContainer.className = "preset-logo-container w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden flex items-center justify-center mb-1 relative z-10 transition-colors";
+                
+                const img = document.createElement('img');
+                img.src = station.logo;
+                img.className = "max-w-full max-h-full object-contain p-0.5 mix-blend-multiply";
+                img.onerror = function() { this.src = `https://placehold.co/100x100/111/444?text=${station.shortName.substring(0,3)}`; this.className = "w-full h-full object-cover"; };
+                
+                imgContainer.appendChild(img);
+
                 const label = document.createElement('span');
-                label.className = 'text-xs md:text-sm font-bold tracking-wider truncate w-full text-center px-1';
+                label.className = 'text-[10px] sm:text-xs font-bold tracking-wider truncate w-full text-center relative z-10';
                 label.innerText = station.shortName;
                 
                 const freq = document.createElement('span');
-                freq.className = 'text-[10px] opacity-70 digital-font text-sm';
+                freq.className = 'text-[9px] opacity-70 digital-font relative z-10';
                 freq.innerText = station.frequency;
                 
                 btn.appendChild(topRow);
+                btn.appendChild(imgContainer);
                 btn.appendChild(label);
                 btn.appendChild(freq);
                 presetsGrid.appendChild(btn);
@@ -864,7 +999,6 @@
             }
         }
 
-        // Initialize Audio Routing for Analyser and Recording
         function setupAudioContext() {
             if (audioCtx) return;
             try {
@@ -875,13 +1009,33 @@
                 streamDest = audioCtx.createMediaStreamDestination();
                 analyser = audioCtx.createAnalyser();
                 
-                // FFT Size 64 gives 32 frequency bins, perfect for our 16 bars
+                // EQ Nodes
+                bassNode = audioCtx.createBiquadFilter();
+                bassNode.type = "lowshelf";
+                bassNode.frequency.value = 250;
+                bassNode.gain.value = appSettings.bass;
+
+                trebleNode = audioCtx.createBiquadFilter();
+                trebleNode.type = "highshelf";
+                trebleNode.frequency.value = 4000;
+                trebleNode.gain.value = appSettings.treble;
+                
                 analyser.fftSize = 64; 
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
                 
-                sourceNode.connect(analyser);
+                // Route: Source -> Bass -> Treble -> Analyser -> Dest (and Recorder Dest)
+                sourceNode.connect(bassNode);
+                bassNode.connect(trebleNode);
+                trebleNode.connect(analyser);
                 analyser.connect(audioCtx.destination);
                 analyser.connect(streamDest);
+
+                // Update UI to match loaded settings
+                bassSlider.value = appSettings.bass;
+                trebleSlider.value = appSettings.treble;
+                bassReadout.innerText = appSettings.bass > 0 ? `+${appSettings.bass}` : appSettings.bass;
+                trebleReadout.innerText = appSettings.treble > 0 ? `+${appSettings.treble}` : appSettings.treble;
+
             } catch (e) {
                 console.error("Web Audio API routing failed (CORS likely):", e);
             }
@@ -916,7 +1070,6 @@
             const station = stations[currentStationIndex];
             
             try {
-                // Determine base URL to fetch standard Icecast status JSON
                 const urlObj = new URL(station.stream);
                 const icecastUrl = `${urlObj.protocol}//${urlObj.host}/status-json.xsl`;
                 
@@ -928,7 +1081,6 @@
                 
                 if (data.icestats && data.icestats.source) {
                     const sources = Array.isArray(data.icestats.source) ? data.icestats.source : [data.icestats.source];
-                    // Try to match specific mountpoint stream
                     const match = sources.find(s => station.stream.includes(s.listenurl) || station.stream.endsWith(s.listenurl));
                     if (match && match.title && match.title.trim() !== "") {
                         title = match.title;
@@ -941,41 +1093,96 @@
                     lastFetchedTitle = title;
                     stationName.innerText = `${station.name} // NOW PLAYING: ${title}`;
                     checkMarquee(true);
+                    updateMediaSession(title, station.name, station.logo);
                 }
-            } catch(e) {
-                // Fails silently if stream doesn't expose CORS or is not an Icecast JSON standard format.
-                // Will retain default preset station name.
+            } catch(e) { }
+        }
+
+        // Native OS Media Control API
+        function updateMediaSession(title, artist, artwork) {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: title || 'RetroCast Radio',
+                    artist: artist || 'Live Stream',
+                    album: 'Web Radio',
+                    artwork: [{ src: artwork || 'https://placehold.co/512x512/111/444?text=RADIO', sizes: '512x512', type: 'image/png' }]
+                });
             }
         }
 
-        function selectStation(index) {
+        function toggleSleepTimer() {
+            const btn = document.getElementById('sleep-timer-btn');
+            const txt = document.getElementById('sleep-timer-text');
+            
+            clearInterval(sleepInterval);
+            
+            if (sleepTimerMinutes === 0) sleepTimerMinutes = 15;
+            else if (sleepTimerMinutes === 15) sleepTimerMinutes = 30;
+            else if (sleepTimerMinutes === 30) sleepTimerMinutes = 60;
+            else sleepTimerMinutes = 0;
+
+            if (sleepTimerMinutes === 0) {
+                txt.innerText = "OFF";
+                btn.classList.remove('text-[var(--accent)]', 'border-[var(--accent)]');
+                showNotification("Sleep Timer Disabled");
+            } else {
+                txt.innerText = `${sleepTimerMinutes}M`;
+                btn.classList.add('text-[var(--accent)]', 'border-[var(--accent)]');
+                showNotification(`Radio will turn off in ${sleepTimerMinutes} minutes.`);
+                
+                let secondsLeft = sleepTimerMinutes * 60;
+                sleepInterval = setInterval(() => {
+                    secondsLeft--;
+                    if(secondsLeft % 60 === 0) txt.innerText = `${secondsLeft/60}M`;
+                    if (secondsLeft <= 0) {
+                        clearInterval(sleepInterval);
+                        sleepTimerMinutes = 0;
+                        txt.innerText = "OFF";
+                        btn.classList.remove('text-[var(--accent)]', 'border-[var(--accent)]');
+                        if (isPlaying) pauseAudio();
+                    }
+                }, 1000);
+            }
+        }
+
+        function selectStation(index, autoPlay = true) {
             if (isRecording) stopRecording();
             
-            // Clear prior metadata polling state
             clearInterval(metadataInterval);
             lastFetchedTitle = null;
 
             currentStationIndex = index;
             const station = stations[index];
             
-            playStaticNoise();
+            // Save state
+            appSettings.lastStationIndex = index;
+            saveSettings();
+            
             updateActivePreset(index);
             freqText.innerText = station.frequency;
             stationName.innerText = station.name;
             stationLogo.src = station.logo;
             checkMarquee(true);
-            statusText.innerText = "TUNING...";
-            statusText.classList.add('animate-blink');
-            stopVisualizer();
             
             const percentage = Math.max(0, Math.min(100, ((parseFloat(station.frequency) - 88) / 20) * 100));
             tuningNeedle.style.left = `${percentage}%`;
             
             audioPlayer.src = station.stream;
             audioPlayer.volume = isMuted ? 0 : volumeSlider.value;
-            playAudio();
             
-            // Initiate polling loop for Metadata every 15 seconds
+            updateMediaSession(station.name, 'Connecting...', station.logo);
+
+            if (autoPlay) {
+                playStaticNoise();
+                statusText.innerText = "TUNING...";
+                statusText.classList.add('animate-blink');
+                stopVisualizer();
+                playAudio();
+            } else {
+                statusText.innerText = "STANDBY";
+                statusText.classList.remove('animate-blink');
+            }
+            
             metadataInterval = setInterval(fetchStreamMetadata, 15000);
         }
 
@@ -1001,7 +1208,7 @@
                 statusText.innerText = "LIVE // FM";
                 statusText.classList.remove('animate-blink');
                 startVisualizer();
-                fetchStreamMetadata(); // Trigger an immediate metadata check
+                fetchStreamMetadata(); 
             }).catch((e) => {
                 console.error(e);
                 statusText.innerText = "ERR";
@@ -1009,7 +1216,7 @@
                 playIcon.innerHTML = iconPlay;
                 stopVisualizer();
                 clearInterval(metadataInterval);
-                showNotification("Stream blocked or unavailable.", true);
+                showNotification("Stream blocked or user interaction required.", true);
             });
         }
 
@@ -1030,7 +1237,6 @@
             if (isMuted) {
                 previousVolume = volumeSlider.value;
                 audioPlayer.volume = 0;
-                volumeSlider.value = 0;
                 volReadout.innerText = "MUTED";
                 volIcon.innerHTML = iconVolMuted;
             } else {
@@ -1039,18 +1245,44 @@
                 volReadout.innerText = Math.round(volumeSlider.value * 100) + '%';
                 volIcon.innerHTML = iconVolHigh;
             }
+            appSettings.isMuted = isMuted;
+            appSettings.volume = parseFloat(volumeSlider.value);
+            saveSettings();
         }
 
+        // Input Listeners for Volume & EQ
         playBtn.addEventListener('click', togglePlay);
         nextBtn.addEventListener('click', () => { let n = currentStationIndex + 1; if (n >= stations.length) n = 0; selectStation(n); });
         prevBtn.addEventListener('click', () => { let p = currentStationIndex - 1; if (p < 0) p = stations.length - 1; selectStation(p); });
         muteBtn.addEventListener('click', toggleMute);
+        
         volumeSlider.addEventListener('input', (e) => {
             isMuted = false;
             volIcon.innerHTML = iconVolHigh;
-            audioPlayer.volume = e.target.value;
-            previousVolume = e.target.value;
-            volReadout.innerText = Math.round(e.target.value * 100) + '%';
+            const val = parseFloat(e.target.value);
+            audioPlayer.volume = val;
+            previousVolume = val;
+            volReadout.innerText = Math.round(val * 100) + '%';
+            
+            appSettings.volume = val;
+            appSettings.isMuted = false;
+            saveSettings();
+        });
+
+        bassSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            if(bassNode) bassNode.gain.value = val;
+            bassReadout.innerText = val > 0 ? `+${val}` : val;
+            appSettings.bass = val;
+            saveSettings();
+        });
+
+        trebleSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            if(trebleNode) trebleNode.gain.value = val;
+            trebleReadout.innerText = val > 0 ? `+${val}` : val;
+            appSettings.treble = val;
+            saveSettings();
         });
 
         tuningDial.addEventListener('click', (e) => {
@@ -1066,7 +1298,6 @@
             selectStation(closestIdx);
         });
 
-        // Record Logic
         btnRecord.addEventListener('click', startRecording);
         btnStopRec.addEventListener('click', stopRecording);
         
@@ -1075,6 +1306,9 @@
             const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
             const s = String(elapsed % 60).padStart(2, '0');
             recTimerText.innerText = `${m}:${s}`;
+            
+            mechanicalCounter++;
+            tapeCounter.innerText = String(mechanicalCounter).padStart(3, '0');
         }
 
         function startRecording() {
@@ -1083,12 +1317,10 @@
                 return;
             }
             try {
-                // If streamDest is empty because CORS blocked createMediaElementSource, captureStream is fallback
                 let stream = streamDest.stream;
                 if (!stream || stream.getAudioTracks().length === 0) {
                     stream = audioPlayer.captureStream ? audioPlayer.captureStream() : (audioPlayer.mozCaptureStream ? audioPlayer.mozCaptureStream() : null);
                 }
-                
                 if (!stream) throw new Error("No stream capture available");
 
                 mediaRecorder = new MediaRecorder(stream);
@@ -1099,11 +1331,11 @@
                 
                 mediaRecorder.start();
                 isRecording = true;
+                mechanicalCounter = 0;
                 recStartTime = Date.now();
                 recTimerText.classList.remove('opacity-0');
                 recInterval = setInterval(updateRecTimer, 1000);
                 
-                // UI Updates
                 btnRecord.classList.add('bg-red-900', 'border-red-500');
                 btnStopRec.classList.remove('opacity-50', 'pointer-events-none');
                 reelLeft.classList.add('spinning');
@@ -1124,7 +1356,6 @@
             isRecording = false;
             clearInterval(recInterval);
             
-            // UI Updates
             btnRecord.classList.remove('bg-red-900', 'border-red-500');
             btnStopRec.classList.add('opacity-50', 'pointer-events-none');
             reelLeft.classList.remove('spinning');
@@ -1195,25 +1426,12 @@
             const channels = [];
             let i, sample, pos = 0;
 
-            // write WAVE header
-            setUint32(0x46464952); // "RIFF"
-            setUint32(length - 8); // file length - 8
-            setUint32(0x45564157); // "WAVE"
-            setUint32(0x20746d66); // "fmt " chunk
-            setUint32(16);         // length = 16
-            setUint16(1);          // PCM (uncompressed)
-            setUint16(numOfChan);
-            setUint32(abuffer.sampleRate);
-            setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-            setUint16(numOfChan * 2);                      // block-align
-            setUint16(16);                                 // 16-bit
+            setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157); setUint32(0x20746d66); 
+            setUint32(16); setUint16(1); setUint16(numOfChan); setUint32(abuffer.sampleRate);
+            setUint32(abuffer.sampleRate * 2 * numOfChan); setUint16(numOfChan * 2); setUint16(16);
+            setUint32(0x61746164); setUint32(length - pos - 4); 
 
-            setUint32(0x61746164);                         // "data" - chunk
-            setUint32(length - pos - 4);                   // chunk length
-
-            for(i = 0; i < abuffer.numberOfChannels; i++) {
-                channels.push(abuffer.getChannelData(i));
-            }
+            for(i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
 
             let currentOffset = offsetSamples;
             let written = 0;
@@ -1221,15 +1439,12 @@
                 for(i = 0; i < numOfChan; i++) {
                     sample = Math.max(-1, Math.min(1, channels[i][currentOffset]));
                     sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
-                    view.setInt16(pos, sample, true);
-                    pos += 2;
+                    view.setInt16(pos, sample, true); pos += 2;
                 }
-                currentOffset++;
-                written++;
+                currentOffset++; written++;
             }
 
             return new Blob([buffer], {type: "audio/wav"});
-
             function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
             function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
         }
@@ -1269,7 +1484,6 @@
 
         function openEditModal() {
             editModal.classList.remove('hidden');
-            // Populate Dropdown
             const slotSelect = document.getElementById('edit-slot');
             slotSelect.innerHTML = '';
             stations.forEach((s, idx) => {
@@ -1291,7 +1505,6 @@
 
         async function performSearch(query) {
             try {
-                // Radio Browser API is free and doesn't require keys. We use de1 server as default.
                 const res = await fetch(`https://de1.api.radio-browser.info/json/stations/search?name=${encodeURIComponent(query)}&limit=15&hidebroken=true`);
                 const data = await res.json();
                 renderSearchResults(data);
@@ -1325,28 +1538,21 @@
         }
 
         function getUnusedFrequency() {
-            // Find a frequency between 88.1 and 107.9 that isn't currently assigned
             const usedFreqs = stations.map(s => parseFloat(s.frequency));
             for (let f = 88.1; f <= 107.9; f += 0.2) {
                 let freqStr = (Math.round(f * 10) / 10).toFixed(1);
-                if (!usedFreqs.includes(parseFloat(freqStr))) {
-                    return freqStr;
-                }
+                if (!usedFreqs.includes(parseFloat(freqStr))) return freqStr;
             }
-            return "100.0"; // Safe fallback
+            return "100.0";
         }
 
         function autofillForm(stationData) {
             document.getElementById('edit-name').value = stationData.name;
-            // Generate a shortname
             document.getElementById('edit-shortname').value = stationData.name.substring(0,8).toUpperCase();
             document.getElementById('edit-stream').value = stationData.url_resolved || stationData.url;
             document.getElementById('edit-logo').value = stationData.favicon || `https://placehold.co/150x150/111/444?text=${stationData.name.substring(0,3).toUpperCase()}`;
-            
-            // Auto-assign unused frequency
             document.getElementById('edit-freq').value = getUnusedFrequency();
             
-            // Visual feedback loop
             document.getElementById('edit-name').focus();
             showNotification("Station parameters loaded. Ready to burn.");
         }
@@ -1362,43 +1568,137 @@
             if (!stream) { showNotification("Audio Stream URL is required!", true); return; }
 
             stations[slotIdx] = { id: Date.now(), name, shortName, stream, logo, frequency: freq };
-            
-            // Save to LocalStorage
             localStorage.setItem('retrocast_presets', JSON.stringify(stations));
             
             initPresets();
             closeEditModal();
             showNotification(`Slot ${String(slotIdx + 1).padStart(2,'0')} Burned to Memory!`);
             
-            // If current station was replaced, play it
-            if(currentStationIndex === slotIdx) selectStation(slotIdx);
+            if(currentStationIndex === slotIdx) selectStation(slotIdx, isPlaying);
         }
+
+        function exportPresets() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(stations));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `retrocast_presets_${Date.now()}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            showNotification("Presets exported to JSON format.");
+        }
+
+        document.getElementById('import-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        stations = imported;
+                        localStorage.setItem('retrocast_presets', JSON.stringify(stations));
+                        initPresets();
+                        showNotification("Memory Presets restored successfully!");
+                        if (currentStationIndex !== -1) selectStation(currentStationIndex, isPlaying);
+                    } else { throw new Error("Format error"); }
+                } catch(err) {
+                    showNotification("Failed to import. Invalid file format.", true);
+                }
+                document.getElementById('import-file').value = ""; // Reset for re-use
+            };
+            reader.readAsText(file);
+        });
 
         function clearPresetsMemory() {
             if(!confirm("Are you sure you want to factory reset all memory presets? This cannot be undone.")) return;
             
-            // Remove from local storage
             localStorage.removeItem('retrocast_presets');
-            
-            // Reset to defaults
             stations = [...defaultStations];
-            
-            // Update UI
             initPresets();
             closeEditModal();
             showNotification("Memory wiped. Factory defaults restored.", true);
             
-            // Reselect active station if one was active
-            if (currentStationIndex !== -1) {
-                selectStation(currentStationIndex);
-            }
+            if (currentStationIndex !== -1) selectStation(currentStationIndex, isPlaying);
         }
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
             initPresets();
             stationName.classList.add('marquee-paused');
-            setTheme('classic');
+            
+            // Apply Saved Settings (Theme, Volume, EQ, Last Station)
+            setTheme(appSettings.theme);
+            
+            volumeSlider.value = appSettings.volume;
+            isMuted = appSettings.isMuted;
+            previousVolume = appSettings.volume;
+
+            if (isMuted) {
+                volReadout.innerText = "MUTED";
+                volIcon.innerHTML = iconVolMuted;
+                audioPlayer.volume = 0;
+            } else {
+                volReadout.innerText = Math.round(appSettings.volume * 100) + '%';
+                volIcon.innerHTML = iconVolHigh;
+                audioPlayer.volume = appSettings.volume;
+            }
+
+            // Tune UI to last station but don't autoplay
+            if (appSettings.lastStationIndex >= 0 && appSettings.lastStationIndex < stations.length) {
+                selectStation(appSettings.lastStationIndex, false);
+            } else {
+                statusText.innerText = "READY";
+            }
+
+            // Bind native OS media controls
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.setActionHandler('play', playAudio);
+                navigator.mediaSession.setActionHandler('pause', pauseAudio);
+                navigator.mediaSession.setActionHandler('previoustrack', () => prevBtn.click());
+                navigator.mediaSession.setActionHandler('nexttrack', () => nextBtn.click());
+            }
+
+            // Start LCD Clock
+            const clockElement = document.getElementById('lcd-clock');
+            const updateClock = () => { clockElement.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); };
+            setInterval(updateClock, 1000);
+            updateClock();
+        });
+
+        // Global Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ignore if modal is open or focusing an input slider/text field
+            if (!editModal.classList.contains('hidden') || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+            
+            switch(e.code) {
+                case 'Space': 
+                    e.preventDefault(); 
+                    togglePlay(); 
+                    break;
+                case 'ArrowRight': 
+                    e.preventDefault(); 
+                    nextBtn.click(); 
+                    break;
+                case 'ArrowLeft': 
+                    e.preventDefault(); 
+                    prevBtn.click(); 
+                    break;
+                case 'ArrowUp': 
+                    e.preventDefault(); 
+                    volumeSlider.value = Math.min(1, parseFloat(volumeSlider.value) + 0.05); 
+                    volumeSlider.dispatchEvent(new Event('input')); 
+                    break;
+                case 'ArrowDown': 
+                    e.preventDefault(); 
+                    volumeSlider.value = Math.max(0, parseFloat(volumeSlider.value) - 0.05); 
+                    volumeSlider.dispatchEvent(new Event('input')); 
+                    break;
+                case 'KeyM': 
+                    e.preventDefault(); 
+                    toggleMute(); 
+                    break;
+            }
         });
     </script>
 </body>
