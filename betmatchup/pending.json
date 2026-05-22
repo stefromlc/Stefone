@@ -1,1 +1,1584 @@
-[]
+[
+    {
+        "match_id": "2026-05-22_Fiorentina_Atalanta",
+        "date": "2026-05-22",
+        "time": "19:45",
+        "league": "I1",
+        "home_team": "Fiorentina",
+        "away_team": "Atalanta",
+        "status": "pending",
+        "market_odds": {
+            "H": 2.7,
+            "D": 3.5,
+            "A": 2.55,
+            "O25": 1.67,
+            "U25": 2.2
+        },
+        "model_probs": {
+            "H": 0.38,
+            "D": 0.238,
+            "A": 0.388,
+            "U25": 0.53,
+            "O25": 0.476
+        },
+        "value_bets": [
+            {
+                "selection": "U25",
+                "odds": 2.2,
+                "model_prob": 0.53,
+                "implied_prob": 0.455,
+                "edge": 0.075,
+                "stake": 2.49
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1545.6,
+            "away_elo": 1611.8,
+            "ml_probs": {
+                "H": 0.436,
+                "D": 0.201,
+                "A": 0.363,
+                "U25": 0.533,
+                "O25": 0.467
+            },
+            "poisson_probs": {
+                "H": 0.278,
+                "D": 0.289,
+                "A": 0.432,
+                "O25": 0.414,
+                "U25": 0.586
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/ACF Fiorentina.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Atalanta Bergamesca Calcio U23.png"
+    },
+    {
+        "match_id": "2026-05-23_Celta_Sevilla",
+        "date": "2026-05-23",
+        "time": "20:00",
+        "league": "SP1",
+        "home_team": "Celta",
+        "away_team": "Sevilla",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.73,
+            "D": 3.8,
+            "A": 4.75,
+            "O25": 1.91,
+            "U25": 1.91
+        },
+        "model_probs": {
+            "H": 0.461,
+            "D": 0.237,
+            "A": 0.307,
+            "U25": 0.477,
+            "O25": 0.528
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 4.75,
+                "model_prob": 0.307,
+                "implied_prob": 0.211,
+                "edge": 0.097,
+                "stake": 2.22
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1530.8,
+            "away_elo": 1469.0,
+            "ml_probs": {
+                "H": 0.555,
+                "D": 0.222,
+                "A": 0.223,
+                "U25": 0.47,
+                "O25": 0.53
+            },
+            "poisson_probs": {
+                "H": 0.248,
+                "D": 0.257,
+                "A": 0.496,
+                "O25": 0.517,
+                "U25": 0.483
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/RC Celta de Vigo.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Sevilla Atletico.png"
+    },
+    {
+        "match_id": "2026-05-23_Espanol_Sociedad",
+        "date": "2026-05-23",
+        "time": "20:00",
+        "league": "SP1",
+        "home_team": "Espanol",
+        "away_team": "Sociedad",
+        "status": "pending",
+        "market_odds": {
+            "H": 2.45,
+            "D": 3.5,
+            "A": 2.75,
+            "O25": 1.85,
+            "U25": 2.0
+        },
+        "model_probs": {
+            "H": 0.424,
+            "D": 0.32,
+            "A": 0.262,
+            "U25": 0.542,
+            "O25": 0.462
+        },
+        "value_bets": [
+            {
+                "selection": "U25",
+                "odds": 2.0,
+                "model_prob": 0.542,
+                "implied_prob": 0.5,
+                "edge": 0.042,
+                "stake": 1.51
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1464.0,
+            "away_elo": 1497.5,
+            "ml_probs": {
+                "H": 0.441,
+                "D": 0.349,
+                "A": 0.211,
+                "U25": 0.549,
+                "O25": 0.451
+            },
+            "poisson_probs": {
+                "H": 0.399,
+                "D": 0.276,
+                "A": 0.324,
+                "O25": 0.478,
+                "U25": 0.522
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/RCD Espanyol B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Real Sociedad.png"
+    },
+    {
+        "match_id": "2026-05-23_Getafe_Osasuna",
+        "date": "2026-05-23",
+        "time": "20:00",
+        "league": "SP1",
+        "home_team": "Getafe",
+        "away_team": "Osasuna",
+        "status": "pending",
+        "market_odds": {
+            "H": 2.45,
+            "D": 2.88,
+            "A": 3.4,
+            "O25": 2.75,
+            "U25": 1.44
+        },
+        "model_probs": {
+            "H": 0.373,
+            "D": 0.281,
+            "A": 0.351,
+            "U25": 0.562,
+            "O25": 0.443
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 3.4,
+                "model_prob": 0.351,
+                "implied_prob": 0.294,
+                "edge": 0.057,
+                "stake": 1.45
+            },
+            {
+                "selection": "O25",
+                "odds": 2.75,
+                "model_prob": 0.443,
+                "implied_prob": 0.364,
+                "edge": 0.08,
+                "stake": 2.27
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1485.6,
+            "away_elo": 1483.0,
+            "ml_probs": {
+                "H": 0.496,
+                "D": 0.307,
+                "A": 0.197,
+                "U25": 0.556,
+                "O25": 0.444
+            },
+            "poisson_probs": {
+                "H": 0.133,
+                "D": 0.214,
+                "A": 0.653,
+                "O25": 0.528,
+                "U25": 0.472
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Getafe CF B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/CA Osasuna B.png"
+    },
+    {
+        "match_id": "2026-05-23_Girona_Elche",
+        "date": "2026-05-23",
+        "time": "20:00",
+        "league": "SP1",
+        "home_team": "Girona",
+        "away_team": "Elche",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.8,
+            "D": 3.9,
+            "A": 4.2,
+            "O25": 1.73,
+            "U25": 2.1
+        },
+        "model_probs": {
+            "H": 0.562,
+            "D": 0.23,
+            "A": 0.213,
+            "U25": 0.497,
+            "O25": 0.508
+        },
+        "value_bets": [],
+        "debug_info": {
+            "home_elo": 1479.1,
+            "away_elo": 1449.9,
+            "ml_probs": {
+                "H": 0.547,
+                "D": 0.237,
+                "A": 0.216,
+                "U25": 0.517,
+                "O25": 0.483
+            },
+            "poisson_probs": {
+                "H": 0.591,
+                "D": 0.21,
+                "A": 0.199,
+                "O25": 0.659,
+                "U25": 0.341
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Girona FC B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Elche CdF B.png"
+    },
+    {
+        "match_id": "2026-05-23_Lazio_Pisa",
+        "date": "2026-05-23",
+        "time": "19:45",
+        "league": "I1",
+        "home_team": "Lazio",
+        "away_team": "Pisa",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.55,
+            "D": 4.2,
+            "A": 6.0,
+            "O25": 1.8,
+            "U25": 2.0
+        },
+        "model_probs": {
+            "H": 0.576,
+            "D": 0.211,
+            "A": 0.218,
+            "U25": 0.554,
+            "O25": 0.451
+        },
+        "value_bets": [
+            {
+                "selection": "U25",
+                "odds": 2.0,
+                "model_prob": 0.554,
+                "implied_prob": 0.5,
+                "edge": 0.054,
+                "stake": 1.97
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1575.4,
+            "away_elo": 1374.1,
+            "ml_probs": {
+                "H": 0.633,
+                "D": 0.161,
+                "A": 0.206,
+                "U25": 0.554,
+                "O25": 0.446
+            },
+            "poisson_probs": {
+                "H": 0.448,
+                "D": 0.295,
+                "A": 0.257,
+                "O25": 0.384,
+                "U25": 0.616
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/SS Lazio.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Pisa Sporting Club.png"
+    },
+    {
+        "match_id": "2026-05-23_Bologna_Inter",
+        "date": "2026-05-23",
+        "time": "17:00",
+        "league": "I1",
+        "home_team": "Bologna",
+        "away_team": "Inter",
+        "status": "pending",
+        "market_odds": {
+            "H": 3.1,
+            "D": 3.6,
+            "A": 2.2,
+            "O25": 1.57,
+            "U25": 2.38
+        },
+        "model_probs": {
+            "H": 0.302,
+            "D": 0.198,
+            "A": 0.505,
+            "U25": 0.524,
+            "O25": 0.481
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 2.2,
+                "model_prob": 0.505,
+                "implied_prob": 0.455,
+                "edge": 0.051,
+                "stake": 1.69
+            },
+            {
+                "selection": "U25",
+                "odds": 2.38,
+                "model_prob": 0.524,
+                "implied_prob": 0.42,
+                "edge": 0.104,
+                "stake": 3.25
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1568.9,
+            "away_elo": 1759.7,
+            "ml_probs": {
+                "H": 0.314,
+                "D": 0.167,
+                "A": 0.519,
+                "U25": 0.556,
+                "O25": 0.444
+            },
+            "poisson_probs": {
+                "H": 0.273,
+                "D": 0.231,
+                "A": 0.496,
+                "O25": 0.645,
+                "U25": 0.355
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Bologna FC 1909.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Germany/Inter Turkspur Kiel.png"
+    },
+    {
+        "match_id": "2026-05-23_Mallorca_Oviedo",
+        "date": "2026-05-23",
+        "time": "20:00",
+        "league": "SP1",
+        "home_team": "Mallorca",
+        "away_team": "Oviedo",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.44,
+            "D": 4.5,
+            "A": 7.0,
+            "O25": 1.88,
+            "U25": 1.98
+        },
+        "model_probs": {
+            "H": 0.537,
+            "D": 0.248,
+            "A": 0.221,
+            "U25": 0.535,
+            "O25": 0.469
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 7.0,
+                "model_prob": 0.221,
+                "implied_prob": 0.143,
+                "edge": 0.078,
+                "stake": 1.66
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1463.5,
+            "away_elo": 1433.7,
+            "ml_probs": {
+                "H": 0.532,
+                "D": 0.231,
+                "A": 0.237,
+                "U25": 0.529,
+                "O25": 0.471
+            },
+            "poisson_probs": {
+                "H": 0.495,
+                "D": 0.288,
+                "A": 0.217,
+                "O25": 0.381,
+                "U25": 0.619
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/RCD Mallorca.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Real Oviedo Vetusta.png"
+    },
+    {
+        "match_id": "2026-05-23_Real Madrid_Ath Bilbao",
+        "date": "2026-05-23",
+        "time": "20:00",
+        "league": "SP1",
+        "home_team": "Real Madrid",
+        "away_team": "Ath Bilbao",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.5,
+            "D": 4.75,
+            "A": 5.75,
+            "O25": 1.5,
+            "U25": 2.63
+        },
+        "model_probs": {
+            "H": 0.588,
+            "D": 0.15,
+            "A": 0.267,
+            "U25": 0.469,
+            "O25": 0.535
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 5.75,
+                "model_prob": 0.267,
+                "implied_prob": 0.174,
+                "edge": 0.094,
+                "stake": 2.05
+            },
+            {
+                "selection": "U25",
+                "odds": 2.63,
+                "model_prob": 0.469,
+                "implied_prob": 0.38,
+                "edge": 0.089,
+                "stake": 2.6
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1733.6,
+            "away_elo": 1520.3,
+            "ml_probs": {
+                "H": 0.744,
+                "D": 0.101,
+                "A": 0.155,
+                "U25": 0.498,
+                "O25": 0.502
+            },
+            "poisson_probs": {
+                "H": 0.273,
+                "D": 0.221,
+                "A": 0.506,
+                "O25": 0.688,
+                "U25": 0.312
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Real Madrid.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Atletic Bilbao B.png"
+    },
+    {
+        "match_id": "2026-05-23_Valencia_Barcelona",
+        "date": "2026-05-23",
+        "time": "20:00",
+        "league": "SP1",
+        "home_team": "Valencia",
+        "away_team": "Barcelona",
+        "status": "pending",
+        "market_odds": {
+            "H": 3.6,
+            "D": 4.2,
+            "A": 1.85,
+            "O25": 1.44,
+            "U25": 2.75
+        },
+        "model_probs": {
+            "H": 0.338,
+            "D": 0.181,
+            "A": 0.487,
+            "U25": 0.454,
+            "O25": 0.552
+        },
+        "value_bets": [
+            {
+                "selection": "H",
+                "odds": 3.6,
+                "model_prob": 0.338,
+                "implied_prob": 0.278,
+                "edge": 0.06,
+                "stake": 1.5
+            },
+            {
+                "selection": "U25",
+                "odds": 2.75,
+                "model_prob": 0.454,
+                "implied_prob": 0.364,
+                "edge": 0.09,
+                "stake": 2.56
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1510.5,
+            "away_elo": 1787.3,
+            "ml_probs": {
+                "H": 0.386,
+                "D": 0.144,
+                "A": 0.47,
+                "U25": 0.474,
+                "O25": 0.526
+            },
+            "poisson_probs": {
+                "H": 0.267,
+                "D": 0.233,
+                "A": 0.501,
+                "O25": 0.632,
+                "U25": 0.368
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Valencia CF B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/FC Barcelona B.png"
+    },
+    {
+        "match_id": "2026-05-23_Betis_Levante",
+        "date": "2026-05-23",
+        "time": "20:00",
+        "league": "SP1",
+        "home_team": "Betis",
+        "away_team": "Levante",
+        "status": "pending",
+        "market_odds": {
+            "H": 2.25,
+            "D": 3.2,
+            "A": 3.4,
+            "O25": 1.73,
+            "U25": 2.1
+        },
+        "model_probs": {
+            "H": 0.486,
+            "D": 0.231,
+            "A": 0.288,
+            "U25": 0.478,
+            "O25": 0.528
+        },
+        "value_bets": [],
+        "debug_info": {
+            "home_elo": 1586.3,
+            "away_elo": 1483.9,
+            "ml_probs": {
+                "H": 0.58,
+                "D": 0.216,
+                "A": 0.204,
+                "U25": 0.493,
+                "O25": 0.507
+            },
+            "poisson_probs": {
+                "H": 0.323,
+                "D": 0.234,
+                "A": 0.443,
+                "O25": 0.66,
+                "U25": 0.34
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Real Betis Balompie.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/US Sestri Levante.png"
+    },
+    {
+        "match_id": "2026-05-23_Alaves_Vallecano",
+        "date": "2026-05-23",
+        "time": "20:00",
+        "league": "SP1",
+        "home_team": "Alaves",
+        "away_team": "Vallecano",
+        "status": "pending",
+        "market_odds": {
+            "H": 2.45,
+            "D": 3.4,
+            "A": 2.8,
+            "O25": 1.98,
+            "U25": 1.88
+        },
+        "model_probs": {
+            "H": 0.41,
+            "D": 0.236,
+            "A": 0.36,
+            "U25": 0.548,
+            "O25": 0.455
+        },
+        "value_bets": [],
+        "debug_info": {
+            "home_elo": 1491.0,
+            "away_elo": 1523.8,
+            "ml_probs": {
+                "H": 0.518,
+                "D": 0.224,
+                "A": 0.258,
+                "U25": 0.561,
+                "O25": 0.439
+            },
+            "poisson_probs": {
+                "H": 0.21,
+                "D": 0.239,
+                "A": 0.551,
+                "O25": 0.548,
+                "U25": 0.452
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Deportivo Alaves B.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Rayo Vallecano de Madrid B.png"
+    },
+    {
+        "match_id": "2026-05-24_Villarreal_Ath Madrid",
+        "date": "2026-05-24",
+        "time": "20:00",
+        "league": "SP1",
+        "home_team": "Villarreal",
+        "away_team": "Ath Madrid",
+        "status": "pending",
+        "market_odds": {
+            "H": 2.45,
+            "D": 3.6,
+            "A": 2.75,
+            "O25": 1.5,
+            "U25": 2.63
+        },
+        "model_probs": {
+            "H": 0.441,
+            "D": 0.255,
+            "A": 0.309,
+            "U25": 0.484,
+            "O25": 0.52
+        },
+        "value_bets": [
+            {
+                "selection": "U25",
+                "odds": 2.63,
+                "model_prob": 0.484,
+                "implied_prob": 0.38,
+                "edge": 0.104,
+                "stake": 3.04
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1617.6,
+            "away_elo": 1635.3,
+            "ml_probs": {
+                "H": 0.507,
+                "D": 0.25,
+                "A": 0.243,
+                "U25": 0.502,
+                "O25": 0.498
+            },
+            "poisson_probs": {
+                "H": 0.328,
+                "D": 0.258,
+                "A": 0.415,
+                "O25": 0.555,
+                "U25": 0.445
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Villareal CF.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Spain/Club Atletico Madrid B.png"
+    },
+    {
+        "match_id": "2026-05-24_Milan_Cagliari",
+        "date": "2026-05-24",
+        "time": "19:45",
+        "league": "I1",
+        "home_team": "Milan",
+        "away_team": "Cagliari",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.29,
+            "D": 5.5,
+            "A": 11.0,
+            "O25": 1.67,
+            "U25": 2.2
+        },
+        "model_probs": {
+            "H": 0.551,
+            "D": 0.205,
+            "A": 0.248,
+            "U25": 0.568,
+            "O25": 0.438
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 11.0,
+                "model_prob": 0.248,
+                "implied_prob": 0.091,
+                "edge": 0.157,
+                "stake": 2.99
+            },
+            {
+                "selection": "U25",
+                "odds": 2.2,
+                "model_prob": 0.568,
+                "implied_prob": 0.455,
+                "edge": 0.113,
+                "stake": 3.76
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1638.6,
+            "away_elo": 1453.3,
+            "ml_probs": {
+                "H": 0.579,
+                "D": 0.183,
+                "A": 0.238,
+                "U25": 0.597,
+                "O25": 0.403
+            },
+            "poisson_probs": {
+                "H": 0.428,
+                "D": 0.254,
+                "A": 0.317,
+                "O25": 0.568,
+                "U25": 0.432
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/AC Milan.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Cagliari Calcio.png"
+    },
+    {
+        "match_id": "2026-05-24_Torino_Juventus",
+        "date": "2026-05-24",
+        "time": "19:45",
+        "league": "I1",
+        "home_team": "Torino",
+        "away_team": "Juventus",
+        "status": "pending",
+        "market_odds": {
+            "H": 7.5,
+            "D": 4.5,
+            "A": 1.42,
+            "O25": 1.73,
+            "U25": 2.1
+        },
+        "model_probs": {
+            "H": 0.232,
+            "D": 0.17,
+            "A": 0.604,
+            "U25": 0.542,
+            "O25": 0.463
+        },
+        "value_bets": [
+            {
+                "selection": "H",
+                "odds": 7.5,
+                "model_prob": 0.232,
+                "implied_prob": 0.133,
+                "edge": 0.098,
+                "stake": 2.05
+            },
+            {
+                "selection": "U25",
+                "odds": 2.1,
+                "model_prob": 0.542,
+                "implied_prob": 0.476,
+                "edge": 0.066,
+                "stake": 2.28
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1491.9,
+            "away_elo": 1655.8,
+            "ml_probs": {
+                "H": 0.3,
+                "D": 0.153,
+                "A": 0.547,
+                "U25": 0.572,
+                "O25": 0.428
+            },
+            "poisson_probs": {
+                "H": 0.136,
+                "D": 0.186,
+                "A": 0.679,
+                "O25": 0.654,
+                "U25": 0.346
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Torino FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Juventus FC.png"
+    },
+    {
+        "match_id": "2026-05-24_Brighton_Man United",
+        "date": "2026-05-24",
+        "time": "16:00",
+        "league": "E0",
+        "home_team": "Brighton",
+        "away_team": "Man United",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.85,
+            "D": 4.2,
+            "A": 3.6,
+            "O25": 1.5,
+            "U25": 2.63
+        },
+        "model_probs": {
+            "H": 0.467,
+            "D": 0.256,
+            "A": 0.282,
+            "U25": 0.419,
+            "O25": 0.585
+        },
+        "value_bets": [],
+        "debug_info": {
+            "home_elo": 1569.9,
+            "away_elo": 1615.4,
+            "ml_probs": {
+                "H": 0.457,
+                "D": 0.286,
+                "A": 0.257,
+                "U25": 0.447,
+                "O25": 0.553
+            },
+            "poisson_probs": {
+                "H": 0.464,
+                "D": 0.206,
+                "A": 0.33,
+                "O25": 0.788,
+                "U25": 0.212
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Brighton  Hove Albion FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Manchester United FC.png"
+    },
+    {
+        "match_id": "2026-05-24_Burnley_Wolves",
+        "date": "2026-05-24",
+        "time": "16:00",
+        "league": "E0",
+        "home_team": "Burnley",
+        "away_team": "Wolves",
+        "status": "pending",
+        "market_odds": {
+            "H": 2.35,
+            "D": 3.5,
+            "A": 2.9,
+            "O25": 1.73,
+            "U25": 2.1
+        },
+        "model_probs": {
+            "H": 0.354,
+            "D": 0.313,
+            "A": 0.339,
+            "U25": 0.471,
+            "O25": 0.535
+        },
+        "value_bets": [],
+        "debug_info": {
+            "home_elo": 1355.6,
+            "away_elo": 1401.3,
+            "ml_probs": {
+                "H": 0.372,
+                "D": 0.314,
+                "A": 0.314,
+                "U25": 0.447,
+                "O25": 0.553
+            },
+            "poisson_probs": {
+                "H": 0.297,
+                "D": 0.321,
+                "A": 0.382,
+                "O25": 0.321,
+                "U25": 0.679
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Burnley FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Wolverhampton Wanderers FC.png"
+    },
+    {
+        "match_id": "2026-05-24_Crystal Palace_Arsenal",
+        "date": "2026-05-24",
+        "time": "16:00",
+        "league": "E0",
+        "home_team": "Crystal Palace",
+        "away_team": "Arsenal",
+        "status": "pending",
+        "market_odds": {
+            "H": 4.2,
+            "D": 4.0,
+            "A": 1.75,
+            "O25": 1.67,
+            "U25": 2.2
+        },
+        "model_probs": {
+            "H": 0.282,
+            "D": 0.305,
+            "A": 0.418,
+            "U25": 0.447,
+            "O25": 0.559
+        },
+        "value_bets": [
+            {
+                "selection": "D",
+                "odds": 4.0,
+                "model_prob": 0.305,
+                "implied_prob": 0.25,
+                "edge": 0.055,
+                "stake": 1.34
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1522.2,
+            "away_elo": 1732.4,
+            "ml_probs": {
+                "H": 0.248,
+                "D": 0.342,
+                "A": 0.41,
+                "U25": 0.448,
+                "O25": 0.552
+            },
+            "poisson_probs": {
+                "H": 0.36,
+                "D": 0.255,
+                "A": 0.385,
+                "O25": 0.573,
+                "U25": 0.427
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Crystal Palace FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Arsenal FC.png"
+    },
+    {
+        "match_id": "2026-05-24_Fulham_Newcastle",
+        "date": "2026-05-24",
+        "time": "16:00",
+        "league": "E0",
+        "home_team": "Fulham",
+        "away_team": "Newcastle",
+        "status": "pending",
+        "market_odds": {
+            "H": 2.88,
+            "D": 3.8,
+            "A": 2.25,
+            "O25": 1.62,
+            "U25": 2.3
+        },
+        "model_probs": {
+            "H": 0.366,
+            "D": 0.274,
+            "A": 0.366,
+            "U25": 0.439,
+            "O25": 0.566
+        },
+        "value_bets": [],
+        "debug_info": {
+            "home_elo": 1523.9,
+            "away_elo": 1553.6,
+            "ml_probs": {
+                "H": 0.426,
+                "D": 0.298,
+                "A": 0.276,
+                "U25": 0.447,
+                "O25": 0.553
+            },
+            "poisson_probs": {
+                "H": 0.261,
+                "D": 0.233,
+                "A": 0.506,
+                "O25": 0.627,
+                "U25": 0.373
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Fulham FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Newcastle Town FC.png"
+    },
+    {
+        "match_id": "2026-05-24_Liverpool_Brentford",
+        "date": "2026-05-24",
+        "time": "16:00",
+        "league": "E0",
+        "home_team": "Liverpool",
+        "away_team": "Brentford",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.8,
+            "D": 4.2,
+            "A": 3.8,
+            "O25": 1.5,
+            "U25": 2.63
+        },
+        "model_probs": {
+            "H": 0.489,
+            "D": 0.265,
+            "A": 0.252,
+            "U25": 0.44,
+            "O25": 0.565
+        },
+        "value_bets": [
+            {
+                "selection": "U25",
+                "odds": 2.63,
+                "model_prob": 0.44,
+                "implied_prob": 0.38,
+                "edge": 0.059,
+                "stake": 1.73
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1631.4,
+            "away_elo": 1547.9,
+            "ml_probs": {
+                "H": 0.5,
+                "D": 0.276,
+                "A": 0.224,
+                "U25": 0.447,
+                "O25": 0.553
+            },
+            "poisson_probs": {
+                "H": 0.448,
+                "D": 0.253,
+                "A": 0.299,
+                "O25": 0.564,
+                "U25": 0.436
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Liverpool FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Brentford FC.png"
+    },
+    {
+        "match_id": "2026-05-24_Verona_Roma",
+        "date": "2026-05-24",
+        "time": "19:45",
+        "league": "I1",
+        "home_team": "Verona",
+        "away_team": "Roma",
+        "status": "pending",
+        "market_odds": {
+            "H": 10.0,
+            "D": 5.5,
+            "A": 1.3,
+            "O25": 1.8,
+            "U25": 2.0
+        },
+        "model_probs": {
+            "H": 0.214,
+            "D": 0.193,
+            "A": 0.598,
+            "U25": 0.501,
+            "O25": 0.505
+        },
+        "value_bets": [
+            {
+                "selection": "H",
+                "odds": 10.0,
+                "model_prob": 0.214,
+                "implied_prob": 0.1,
+                "edge": 0.114,
+                "stake": 2.29
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1376.8,
+            "away_elo": 1653.3,
+            "ml_probs": {
+                "H": 0.226,
+                "D": 0.183,
+                "A": 0.591,
+                "U25": 0.52,
+                "O25": 0.48
+            },
+            "poisson_probs": {
+                "H": 0.227,
+                "D": 0.216,
+                "A": 0.558,
+                "O25": 0.669,
+                "U25": 0.331
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/AC Chievo Verona.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/AS Roma.png"
+    },
+    {
+        "match_id": "2026-05-24_Man City_Aston Villa",
+        "date": "2026-05-24",
+        "time": "16:00",
+        "league": "E0",
+        "home_team": "Man City",
+        "away_team": "Aston Villa",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.29,
+            "D": 6.0,
+            "A": 9.0,
+            "O25": 1.3,
+            "U25": 3.5
+        },
+        "model_probs": {
+            "H": 0.533,
+            "D": 0.238,
+            "A": 0.234,
+            "U25": 0.41,
+            "O25": 0.595
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 9.0,
+                "model_prob": 0.234,
+                "implied_prob": 0.111,
+                "edge": 0.123,
+                "stake": 2.5
+            },
+            {
+                "selection": "U25",
+                "odds": 3.5,
+                "model_prob": 0.41,
+                "implied_prob": 0.286,
+                "edge": 0.124,
+                "stake": 3.15
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1729.3,
+            "away_elo": 1598.6,
+            "ml_probs": {
+                "H": 0.552,
+                "D": 0.267,
+                "A": 0.181,
+                "U25": 0.447,
+                "O25": 0.553
+            },
+            "poisson_probs": {
+                "H": 0.421,
+                "D": 0.208,
+                "A": 0.371,
+                "O25": 0.788,
+                "U25": 0.212
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Manchester City FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Aston Villa FC.png"
+    },
+    {
+        "match_id": "2026-05-24_Sunderland_Chelsea",
+        "date": "2026-05-24",
+        "time": "16:00",
+        "league": "E0",
+        "home_team": "Sunderland",
+        "away_team": "Chelsea",
+        "status": "pending",
+        "market_odds": {
+            "H": 3.6,
+            "D": 3.6,
+            "A": 2.0,
+            "O25": 1.73,
+            "U25": 2.1
+        },
+        "model_probs": {
+            "H": 0.376,
+            "D": 0.29,
+            "A": 0.339,
+            "U25": 0.458,
+            "O25": 0.547
+        },
+        "value_bets": [
+            {
+                "selection": "H",
+                "odds": 3.6,
+                "model_prob": 0.376,
+                "implied_prob": 0.278,
+                "edge": 0.099,
+                "stake": 2.47
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1530.5,
+            "away_elo": 1566.3,
+            "ml_probs": {
+                "H": 0.407,
+                "D": 0.296,
+                "A": 0.298,
+                "U25": 0.447,
+                "O25": 0.553
+            },
+            "poisson_probs": {
+                "H": 0.352,
+                "D": 0.282,
+                "A": 0.366,
+                "O25": 0.46,
+                "U25": 0.54
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Sunderland AFC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Chelsea FC.png"
+    },
+    {
+        "match_id": "2026-05-24_Tottenham_Everton",
+        "date": "2026-05-24",
+        "time": "16:00",
+        "league": "E0",
+        "home_team": "Tottenham",
+        "away_team": "Everton",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.91,
+            "D": 3.75,
+            "A": 3.8,
+            "O25": 1.73,
+            "U25": 2.1
+        },
+        "model_probs": {
+            "H": 0.37,
+            "D": 0.286,
+            "A": 0.349,
+            "U25": 0.444,
+            "O25": 0.561
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 3.8,
+                "model_prob": 0.349,
+                "implied_prob": 0.263,
+                "edge": 0.086,
+                "stake": 2.11
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1455.6,
+            "away_elo": 1531.5,
+            "ml_probs": {
+                "H": 0.371,
+                "D": 0.312,
+                "A": 0.317,
+                "U25": 0.447,
+                "O25": 0.553
+            },
+            "poisson_probs": {
+                "H": 0.32,
+                "D": 0.244,
+                "A": 0.436,
+                "O25": 0.615,
+                "U25": 0.385
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Tottenham Hotspur FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Everton FC.png"
+    },
+    {
+        "match_id": "2026-05-24_West Ham_Leeds",
+        "date": "2026-05-24",
+        "time": "16:00",
+        "league": "E0",
+        "home_team": "West Ham",
+        "away_team": "Leeds",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.85,
+            "D": 4.0,
+            "A": 3.75,
+            "O25": 1.67,
+            "U25": 2.2
+        },
+        "model_probs": {
+            "H": 0.375,
+            "D": 0.298,
+            "A": 0.333,
+            "U25": 0.446,
+            "O25": 0.559
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 3.75,
+                "model_prob": 0.333,
+                "implied_prob": 0.267,
+                "edge": 0.066,
+                "stake": 1.64
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1473.2,
+            "away_elo": 1504.0,
+            "ml_probs": {
+                "H": 0.307,
+                "D": 0.331,
+                "A": 0.362,
+                "U25": 0.447,
+                "O25": 0.553
+            },
+            "poisson_probs": {
+                "H": 0.448,
+                "D": 0.251,
+                "A": 0.301,
+                "O25": 0.575,
+                "U25": 0.425
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/West Ham United FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Leeds United FC.png"
+    },
+    {
+        "match_id": "2026-05-24_Parma_Sassuolo",
+        "date": "2026-05-24",
+        "time": "14:00",
+        "league": "I1",
+        "home_team": "Parma",
+        "away_team": "Sassuolo",
+        "status": "pending",
+        "market_odds": {
+            "H": 2.7,
+            "D": 3.4,
+            "A": 2.63,
+            "O25": 1.9,
+            "U25": 1.95
+        },
+        "model_probs": {
+            "H": 0.297,
+            "D": 0.286,
+            "A": 0.421,
+            "U25": 0.519,
+            "O25": 0.485
+        },
+        "value_bets": [],
+        "debug_info": {
+            "home_elo": 1490.5,
+            "away_elo": 1480.3,
+            "ml_probs": {
+                "H": 0.348,
+                "D": 0.302,
+                "A": 0.35,
+                "U25": 0.516,
+                "O25": 0.484
+            },
+            "poisson_probs": {
+                "H": 0.18,
+                "D": 0.254,
+                "A": 0.566,
+                "O25": 0.454,
+                "U25": 0.546
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Parma Calcio 1913.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/US Sassuolo.png"
+    },
+    {
+        "match_id": "2026-05-24_Napoli_Udinese",
+        "date": "2026-05-24",
+        "time": "17:00",
+        "league": "I1",
+        "home_team": "Napoli",
+        "away_team": "Udinese",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.48,
+            "D": 4.0,
+            "A": 8.0,
+            "O25": 1.9,
+            "U25": 1.95
+        },
+        "model_probs": {
+            "H": 0.545,
+            "D": 0.202,
+            "A": 0.258,
+            "U25": 0.547,
+            "O25": 0.457
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 8.0,
+                "model_prob": 0.258,
+                "implied_prob": 0.125,
+                "edge": 0.133,
+                "stake": 2.75
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1671.0,
+            "away_elo": 1504.1,
+            "ml_probs": {
+                "H": 0.611,
+                "D": 0.173,
+                "A": 0.216,
+                "U25": 0.571,
+                "O25": 0.429
+            },
+            "poisson_probs": {
+                "H": 0.382,
+                "D": 0.241,
+                "A": 0.378,
+                "O25": 0.639,
+                "U25": 0.361
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/SSC Napoli.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Udinese Calcio.png"
+    },
+    {
+        "match_id": "2026-05-24_Cremonese_Como",
+        "date": "2026-05-24",
+        "time": "19:45",
+        "league": "I1",
+        "home_team": "Cremonese",
+        "away_team": "Como",
+        "status": "pending",
+        "market_odds": {
+            "H": 5.25,
+            "D": 4.33,
+            "A": 1.57,
+            "O25": 1.67,
+            "U25": 2.2
+        },
+        "model_probs": {
+            "H": 0.28,
+            "D": 0.202,
+            "A": 0.523,
+            "U25": 0.527,
+            "O25": 0.478
+        },
+        "value_bets": [
+            {
+                "selection": "H",
+                "odds": 5.25,
+                "model_prob": 0.28,
+                "implied_prob": 0.19,
+                "edge": 0.089,
+                "stake": 2.0
+            },
+            {
+                "selection": "U25",
+                "odds": 2.2,
+                "model_prob": 0.527,
+                "implied_prob": 0.455,
+                "edge": 0.073,
+                "stake": 2.42
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1414.7,
+            "away_elo": 1615.5,
+            "ml_probs": {
+                "H": 0.279,
+                "D": 0.185,
+                "A": 0.537,
+                "U25": 0.56,
+                "O25": 0.44
+            },
+            "poisson_probs": {
+                "H": 0.311,
+                "D": 0.226,
+                "A": 0.463,
+                "O25": 0.688,
+                "U25": 0.312
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/US Cremonese 1903.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/ASD Como 1907.png"
+    },
+    {
+        "match_id": "2026-05-24_Lecce_Genoa",
+        "date": "2026-05-24",
+        "time": "19:45",
+        "league": "I1",
+        "home_team": "Lecce",
+        "away_team": "Genoa",
+        "status": "pending",
+        "market_odds": {
+            "H": 1.75,
+            "D": 3.5,
+            "A": 5.0,
+            "O25": 2.3,
+            "U25": 1.62
+        },
+        "model_probs": {
+            "H": 0.408,
+            "D": 0.266,
+            "A": 0.332,
+            "U25": 0.59,
+            "O25": 0.415
+        },
+        "value_bets": [
+            {
+                "selection": "A",
+                "odds": 5.0,
+                "model_prob": 0.332,
+                "implied_prob": 0.2,
+                "edge": 0.132,
+                "stake": 3.0
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1436.7,
+            "away_elo": 1492.8,
+            "ml_probs": {
+                "H": 0.351,
+                "D": 0.252,
+                "A": 0.397,
+                "U25": 0.587,
+                "O25": 0.413
+            },
+            "poisson_probs": {
+                "H": 0.46,
+                "D": 0.285,
+                "A": 0.255,
+                "O25": 0.418,
+                "U25": 0.582
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/US Lecce 1908.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Genoa CFC 1893.png"
+    },
+    {
+        "match_id": "2026-05-24_Nott'm Forest_Bournemouth",
+        "date": "2026-05-24",
+        "time": "16:00",
+        "league": "E0",
+        "home_team": "Nott'm Forest",
+        "away_team": "Bournemouth",
+        "status": "pending",
+        "market_odds": {
+            "H": 3.3,
+            "D": 3.75,
+            "A": 2.05,
+            "O25": 1.57,
+            "U25": 2.38
+        },
+        "model_probs": {
+            "H": 0.349,
+            "D": 0.287,
+            "A": 0.37,
+            "U25": 0.44,
+            "O25": 0.565
+        },
+        "value_bets": [],
+        "debug_info": {
+            "home_elo": 1526.7,
+            "away_elo": 1595.0,
+            "ml_probs": {
+                "H": 0.325,
+                "D": 0.31,
+                "A": 0.365,
+                "U25": 0.447,
+                "O25": 0.553
+            },
+            "poisson_probs": {
+                "H": 0.409,
+                "D": 0.25,
+                "A": 0.341,
+                "O25": 0.593,
+                "U25": 0.407
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/England/Nottingham Forest FC.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/AFC Bournemouth.png"
+    }
+]
