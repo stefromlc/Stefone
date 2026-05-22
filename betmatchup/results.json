@@ -2632,5 +2632,62 @@
         "away_crest": "https://www.stefone.com/betmatchup/football_crests/England/Tottenham Hotspur FC.png",
         "actual_score": "2-1",
         "total_profit": -2.43
+    },
+    {
+        "match_id": "2026-05-22_Fiorentina_Atalanta",
+        "date": "2026-05-22",
+        "time": "19:45",
+        "league": "I1",
+        "home_team": "Fiorentina",
+        "away_team": "Atalanta",
+        "status": "completed",
+        "market_odds": {
+            "H": 2.7,
+            "D": 3.5,
+            "A": 2.55,
+            "O25": 1.67,
+            "U25": 2.2
+        },
+        "model_probs": {
+            "H": 0.38,
+            "D": 0.238,
+            "A": 0.388,
+            "U25": 0.53,
+            "O25": 0.476
+        },
+        "value_bets": [
+            {
+                "selection": "U25",
+                "odds": 2.2,
+                "model_prob": 0.53,
+                "implied_prob": 0.455,
+                "edge": 0.075,
+                "stake": 2.49,
+                "won": true,
+                "profit": 2.9880000000000004
+            }
+        ],
+        "debug_info": {
+            "home_elo": 1545.6,
+            "away_elo": 1611.8,
+            "ml_probs": {
+                "H": 0.436,
+                "D": 0.201,
+                "A": 0.363,
+                "U25": 0.533,
+                "O25": 0.467
+            },
+            "poisson_probs": {
+                "H": 0.278,
+                "D": 0.289,
+                "A": 0.432,
+                "O25": 0.414,
+                "U25": 0.586
+            }
+        },
+        "home_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/ACF Fiorentina.png",
+        "away_crest": "https://www.stefone.com/betmatchup/football_crests/Italy/Atalanta Bergamesca Calcio U23.png",
+        "actual_score": "1-1",
+        "total_profit": 2.9880000000000004
     }
 ]
