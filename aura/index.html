@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura | Pro Image Upscaler & Editor</title>
+  <meta name="description" content="Professional high-fidelity image upscaling tool with built-in crop, adjustments, and DPI calculation.">
+  
+  <!-- Code-based Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234F46E5'/><path d='M30 65 L50 35 L70 65 M50 35 L50 85' stroke='white' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/><circle cx='70' cy='35' r='8' fill='white'/></svg>">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: { gray: { 950: '#0a0a0b', 900: '#121214', 850: '#1a1a1c', 800: '#27272a' } }
+        }
+      }
+    }
+  </script>
+
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- Babel for inline JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0a0a0b; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+    body { -webkit-font-smoothing: antialiased; }
+    
+    /* Range Slider Styling */
+    input[type=range] { -webkit-appearance: none; background: transparent; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #3f3f46; border-radius: 2px; }
+    input[type=range]:focus { outline: none; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen font-sans selection:bg-indigo-500/30">
+  
+  <div id="root">
+    <div class="flex items-center justify-center h-screen">
+      <svg class="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+    </div>
+  </div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    // --- Web Worker for Asynchronous High-Fidelity Sharpening ---
+    const workerTemplate = `
+      self.onmessage = function(e) {
+          const { imgData, w, h, amount } = e.data;
+          const data = imgData.data;
+          const tempData = new Uint8ClampedArray(data);
+          
+          for (let y = 1; y < h - 1; y++) {
+              for (let x = 1; x < w - 1; x++) {
+                  const dstOff = (y * w + x) * 4;
+                  let r = 0, g = 0, b = 0;
+                  
+                  r += tempData[((y-1)*w + x)*4] * -1;
+                  g += tempData[((y-1)*w + x)*4 + 1] * -1;
+                  b += tempData[((y-1)*w + x)*4 + 2] * -1;
+                  r += tempData[((y+1)*w + x)*4] * -1;
+                  g += tempData[((y+1)*w + x)*4 + 1] * -1;
+                  b += tempData[((y+1)*w + x)*4 + 2] * -1;
+                  r += tempData[(y*w + (x-1))*4] * -1;
+                  g += tempData[(y*w + (x-1))*4 + 1] * -1;
+                  b += tempData[(y*w + (x-1))*4 + 2] * -1;
+                  r += tempData[(y*w + (x+1))*4] * -1;
+                  g += tempData[(y*w + (x+1))*4 + 1] * -1;
+                  b += tempData[(y*w + (x+1))*4 + 2] * -1;
+                  r += tempData[dstOff] * 5;
+                  g += tempData[dstOff + 1] * 5;
+                  b += tempData[dstOff + 2] * 5;
+                  
+                  data[dstOff] = tempData[dstOff] + (r - tempData[dstOff]) * amount;
+                  data[dstOff + 1] = tempData[dstOff + 1] + (g - tempData[dstOff + 1]) * amount;
+                  data[dstOff + 2] = tempData[dstOff + 2] + (b - tempData[dstOff + 2]) * amount;
+              }
+          }
+          self.postMessage({ imgData }, [imgData.data.buffer]);
+      };
+    `;
+
+    // --- UI Icons ---
+    const IconArrowLeft = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>;
+    const IconUpload = () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
+    const IconDownload = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
+    const IconRefresh = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+    const IconCrop = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>;
+    const IconSliders = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>;
+    const IconWand = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>;
+
+    const formatSize = (bytes) => {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+
+    // --- Interactive Comparison Slider Component ---
+    const ComparisonSlider = ({ original, upscaled, aspect }) => {
+        const [pos, setPos] = useState(50);
+        const [isDragging, setIsDragging] = useState(false);
+        const containerRef = useRef(null);
+
+        const handleMove = (clientX) => {
+            if (!containerRef.current) return;
+            const rect = containerRef.current.getBoundingClientRect();
+            const x = clientX - rect.left;
+            const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+            setPos(percent);
+        };
+
+        useEffect(() => {
+            const onMouseUp = () => setIsDragging(false);
+            const onMouseMove = (e) => isDragging && handleMove(e.clientX);
+            const onTouchMove = (e) => isDragging && handleMove(e.touches[0].clientX);
+            
+            if (isDragging) {
+                window.addEventListener('mouseup', onMouseUp);
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('touchend', onMouseUp);
+                window.addEventListener('touchmove', onTouchMove, { passive: false });
+            }
+            return () => {
+                window.removeEventListener('mouseup', onMouseUp);
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('touchend', onMouseUp);
+                window.removeEventListener('touchmove', onTouchMove);
+            };
+        }, [isDragging]);
+
+        return (
+            <div ref={containerRef} className="relative shadow-2xl select-none group max-w-full max-h-full"
+                style={{ aspectRatio: aspect, width: aspect >= 1 ? '100%' : 'auto', height: aspect < 1 ? '100%' : 'auto' }}
+                onMouseDown={(e) => { setIsDragging(true); handleMove(e.clientX); }}
+                onTouchStart={(e) => { setIsDragging(true); handleMove(e.touches[0].clientX); }}
+            >
+                <img src={upscaled} className="absolute inset-0 w-full h-full object-cover pointer-events-none" alt="Upscaled" />
+                <div className="absolute inset-0 w-full h-full pointer-events-none" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
+                    <img src={original} className="absolute inset-0 w-full h-full object-cover" alt="Original" />
+                </div>
+                <div className="absolute top-0 bottom-0 w-[2px] bg-white shadow-[0_0_15px_rgba(0,0,0,0.8)] cursor-ew-resize flex items-center justify-center transform -translate-x-1/2 z-10" style={{ left: `${pos}%` }}>
+                    <div className={`w-8 h-8 bg-white text-gray-900 rounded-full shadow-lg flex items-center justify-center transition-transform ${isDragging ? 'scale-110' : 'scale-100 group-hover:scale-110'}`}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="m15 18 6-6-6-6"/><path d="m9 18-6-6 6-6"/>
+                        </svg>
+                    </div>
+                </div>
+                <div className="absolute top-4 left-4 bg-gray-900/70 backdrop-blur-md border border-white/10 px-3 py-1.5 text-xs text-gray-200 rounded-lg pointer-events-none shadow-lg">Base (Adjusted)</div>
+                <div className="absolute top-4 right-4 bg-indigo-600/90 backdrop-blur-md border border-indigo-400/30 px-3 py-1.5 text-xs text-white rounded-lg pointer-events-none shadow-lg font-medium tracking-wide">Enhanced</div>
+            </div>
+        );
+    };
+
+    // --- Main Application Component ---
+    const App = () => {
+        const [file, setFile] = useState(null);
+        const [originalUrl, setOriginalUrl] = useState('');
+        const [processedBaseUrl, setProcessedBaseUrl] = useState(''); // Cropped/filtered before upscale
+        const [upscaledUrl, setUpscaledUrl] = useState('');
+        const [imgObj, setImgObj] = useState(null);
+        
+        const [status, setStatus] = useState('idle');
+        const [progress, setProgress] = useState(0);
+        const [progressText, setProgressText] = useState('');
+        const [isDraggingOver, setIsDraggingOver] = useState(false);
+        const [activeTab, setActiveTab] = useState('upscale'); // upscale | adjust | crop
+        
+        // Settings State
+        const [scale, setScale] = useState(2);
+        const [enhanceEdges, setEnhanceEdges] = useState(true);
+        const [outputFormat, setOutputFormat] = useState('png');
+        const [targetDpi, setTargetDpi] = useState(300);
+        
+        // Adjustments State
+        const [brightness, setBrightness] = useState(100);
+        const [contrast, setContrast] = useState(100);
+        const [saturation, setSaturation] = useState(100);
+        const [rotation, setRotation] = useState(0);
+        
+        // Crop State (Percentages)
+        const [crop, setCrop] = useState({ top: 0, bottom: 0, left: 0, right: 0 });
+        const [upscaledSize, setUpscaledSize] = useState(0);
+
+        const workerRef = useRef(null);
+        const previewCanvasRef = useRef(null);
+        const canvasMaxDim = 8192; 
+
+        // Derived Dimensions
+        const baseWidth = useMemo(() => {
+            if (!imgObj) return 0;
+            const w = imgObj.width * (1 - (crop.left + crop.right) / 100);
+            const h = imgObj.height * (1 - (crop.top + crop.bottom) / 100);
+            return rotation % 180 === 0 ? w : h;
+        }, [imgObj, crop, rotation]);
+
+        const baseHeight = useMemo(() => {
+            if (!imgObj) return 0;
+            const w = imgObj.width * (1 - (crop.left + crop.right) / 100);
+            const h = imgObj.height * (1 - (crop.top + crop.bottom) / 100);
+            return rotation % 180 === 0 ? h : w;
+        }, [imgObj, crop, rotation]);
+
+        useEffect(() => {
+            const blob = new Blob([workerTemplate], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            workerRef.current = new Worker(url);
+            return () => {
+                if (workerRef.current) workerRef.current.terminate();
+                URL.revokeObjectURL(url);
+            };
+        }, []);
+
+        useEffect(() => {
+            return () => {
+                if (originalUrl) URL.revokeObjectURL(originalUrl);
+                if (upscaledUrl) URL.revokeObjectURL(upscaledUrl);
+                if (processedBaseUrl) URL.revokeObjectURL(processedBaseUrl);
+            };
+        }, [originalUrl, upscaledUrl, processedBaseUrl]);
+
+        // Live Preview rendering for Adjusted Canvas
+        useEffect(() => {
+            if (!imgObj || !previewCanvasRef.current || activeTab === 'crop' || status !== 'idle') return;
+            const canvas = previewCanvasRef.current;
+            const ctx = canvas.getContext('2d');
+            
+            const sx = (crop.left / 100) * imgObj.width;
+            const sy = (crop.top / 100) * imgObj.height;
+            const sw = imgObj.width - sx - ((crop.right / 100) * imgObj.width);
+            const sh = imgObj.height - sy - ((crop.bottom / 100) * imgObj.height);
+            
+            let fw = sw, fh = sh;
+            if (rotation % 180 !== 0) { fw = sh; fh = sw; }
+            
+            const maxPreviewDim = 1200;
+            let scaleFactor = 1;
+            if (fw > maxPreviewDim || fh > maxPreviewDim) scaleFactor = maxPreviewDim / Math.max(fw, fh);
+            
+            canvas.width = fw * scaleFactor;
+            canvas.height = fh * scaleFactor;
+            
+            ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.rotate((rotation * Math.PI) / 180);
+            ctx.drawImage(imgObj, sx, sy, sw, sh, (-sw/2) * scaleFactor, (-sh/2) * scaleFactor, sw * scaleFactor, sh * scaleFactor);
+        }, [imgObj, crop, brightness, contrast, saturation, rotation, activeTab, status]);
+
+        const handleFile = (selectedFile) => {
+            if (!selectedFile || !selectedFile.type.startsWith('image/')) return;
+            resetWorkspace(false);
+            setFile(selectedFile);
+            const url = URL.createObjectURL(selectedFile);
+            setOriginalUrl(url);
+
+            const img = new Image();
+            img.onload = () => {
+                setImgObj(img);
+                if (img.width * 2 > canvasMaxDim || img.height * 2 > canvasMaxDim) setScale(1);
+                else setScale(2);
+            };
+            img.src = url;
+        };
+
+        const onDragOver = (e) => { e.preventDefault(); setIsDraggingOver(true); };
+        const onDragLeave = (e) => { e.preventDefault(); setIsDraggingOver(false); };
+        const onDrop = (e) => { e.preventDefault(); setIsDraggingOver(false); handleFile(e.dataTransfer.files[0]); };
+
+        const getBaseCanvas = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const sx = (crop.left / 100) * imgObj.width;
+            const sy = (crop.top / 100) * imgObj.height;
+            const sw = imgObj.width - sx - ((crop.right / 100) * imgObj.width);
+            const sh = imgObj.height - sy - ((crop.bottom / 100) * imgObj.height);
+            
+            canvas.width = baseWidth;
+            canvas.height = baseHeight;
+            
+            ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.rotate((rotation * Math.PI) / 180);
+            ctx.drawImage(imgObj, sx, sy, sw, sh, -sw/2, -sh/2, sw, sh);
+            
+            return canvas;
+        };
+
+        const processImage = () => {
+            if (!imgObj) return;
+            setStatus('processing');
+            setProgress(5);
+            setProgressText('Preparing base adjustments and crop...');
+
+            setTimeout(() => {
+                try {
+                    // 1. Generate Base Adjusted Canvas (for slider original)
+                    const baseCanvas = getBaseCanvas();
+                    baseCanvas.toBlob((blob) => {
+                        if (processedBaseUrl) URL.revokeObjectURL(processedBaseUrl);
+                        setProcessedBaseUrl(URL.createObjectURL(blob));
+                        
+                        // 2. Perform Upscale
+                        setProgress(20);
+                        setProgressText('Applying high-fidelity native scaling...');
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = baseCanvas.width * scale;
+                        canvas.height = baseCanvas.height * scale;
+                        const ctx = canvas.getContext('2d', { willReadFrequently: enhanceEdges });
+                        
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(baseCanvas, 0, 0, canvas.width, canvas.height);
+
+                        setProgress(50);
+
+                        if (enhanceEdges && scale > 1) {
+                            setProgressText('Enhancing edge definition & micro-contrast...');
+                            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            
+                            workerRef.current.onmessage = (e) => {
+                                ctx.putImageData(e.data.imgData, 0, 0);
+                                setProgress(85);
+                                exportFinalBlob(canvas);
+                            };
+                            workerRef.current.postMessage({ imgData, w: canvas.width, h: canvas.height, amount: 0.25 }, [imgData.data.buffer]);
+                        } else {
+                            exportFinalBlob(canvas);
+                        }
+                    }, 'image/png');
+                } catch (err) {
+                    console.error(err);
+                    alert("Processing failed. The configuration might exceed your device's memory limits.");
+                    setStatus('idle');
+                }
+            }, 100);
+        };
+
+        const exportFinalBlob = (canvas) => {
+            setProgressText('Encoding final lossless asset...');
+            setProgress(90);
+            const mimeType = outputFormat === 'png' ? 'image/png' : 'image/jpeg';
+            const quality = outputFormat === 'png' ? undefined : 1.0;
+
+            canvas.toBlob((blob) => {
+                if (!blob) { alert("Export failed. Output exceeded memory constraints."); setStatus('idle'); return; }
+                if (upscaledUrl) URL.revokeObjectURL(upscaledUrl);
+                setUpscaledUrl(URL.createObjectURL(blob));
+                setUpscaledSize(blob.size);
+                setProgress(100);
+                setStatus('done');
+            }, mimeType, quality);
+        };
+
+        const resetWorkspace = (full = true) => {
+            if (full) {
+                setFile(null); setImgObj(null); setOriginalUrl('');
+                setBrightness(100); setContrast(100); setSaturation(100);
+                setRotation(0); setCrop({ top: 0, bottom: 0, left: 0, right: 0 });
+                setActiveTab('upscale');
+            }
+            if (upscaledUrl) URL.revokeObjectURL(upscaledUrl);
+            setUpscaledUrl('');
+            setStatus('idle');
+        };
+
+        const updateCrop = (edge, val) => {
+            let v = Math.max(0, Math.min(95, parseInt(val) || 0));
+            setCrop(prev => {
+                const nc = { ...prev, [edge]: v };
+                if (nc.left + nc.right > 95) nc[edge === 'left' ? 'right' : 'left'] = 95 - v;
+                if (nc.top + nc.bottom > 95) nc[edge === 'top' ? 'bottom' : 'top'] = 95 - v;
+                return nc;
+            });
+        };
+
+        const canScale = (s) => baseWidth > 0 && (baseWidth * s <= canvasMaxDim) && (baseHeight * s <= canvasMaxDim);
+        const finalWidth = Math.round(baseWidth * scale);
+        const finalHeight = Math.round(baseHeight * scale);
+
+        return (
+            <div className="h-screen w-full flex flex-col bg-gray-950 font-sans">
+                <header className="h-16 border-b border-gray-800 bg-gray-950/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-20">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-[0_0_15px_rgba(79,70,229,0.4)]">
+                            <IconWand />
+                        </div>
+                        <h1 className="text-xl font-bold tracking-tight text-white hidden sm:block">Aura Upscale</h1>
+                    </div>
+                    <a href="/projects/" className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-700 text-sm font-medium rounded-lg transition-all text-gray-300 hover:text-white">
+                        <IconArrowLeft /> <span>Back to Projects</span>
+                    </a>
+                </header>
+
+                <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+                    {/* LEFT PANEL: Canvas Preview Area */}
+                    <div className="flex-1 relative bg-gray-900/50 flex items-center justify-center p-6 lg:p-10 overflow-hidden" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #1a1a1c 0%, #0a0a0b 100%)' }}>
+                        
+                        {!file && (
+                            <div className={`w-full max-w-xl p-12 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center transition-all duration-300 ${isDraggingOver ? 'border-indigo-500 bg-indigo-500/10 scale-[1.02]' : 'border-gray-700 bg-gray-900/50 hover:border-gray-500 hover:bg-gray-800/50'}`} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
+                                <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mb-6 text-gray-400"><IconUpload /></div>
+                                <h3 className="text-2xl font-bold text-white mb-2">Upload Source Image</h3>
+                                <p className="text-gray-400 mb-8 max-w-sm">Drag and drop any image file here, or browse your device. PNG, JPEG, or WebP supported.</p>
+                                <label className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl cursor-pointer shadow-lg shadow-indigo-500/20 transition-all active:scale-95">
+                                    Browse Files
+                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFile(e.target.files[0])} />
+                                </label>
+                            </div>
+                        )}
+
+                        {file && status === 'idle' && (
+                            <div className="relative flex items-center justify-center w-full h-full">
+                                {activeTab === 'crop' ? (
+                                    <div className="relative max-w-full max-h-full shadow-2xl ring-1 ring-white/10 overflow-hidden bg-gray-900 flex" style={{ aspectRatio: `${imgObj?.width}/${imgObj?.height}` }}>
+                                        <img src={originalUrl} className="w-full h-full object-contain block pointer-events-none" />
+                                        {/* Dimmer Overlays */}
+                                        <div className="absolute top-0 left-0 right-0 bg-black/70 backdrop-blur-[2px] transition-all" style={{ height: `${crop.top}%` }} />
+                                        <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-[2px] transition-all" style={{ height: `${crop.bottom}%` }} />
+                                        <div className="absolute top-0 bottom-0 left-0 bg-black/70 backdrop-blur-[2px] transition-all" style={{ top: `${crop.top}%`, bottom: `${crop.bottom}%`, width: `${crop.left}%` }} />
+                                        <div className="absolute top-0 bottom-0 right-0 bg-black/70 backdrop-blur-[2px] transition-all" style={{ top: `${crop.top}%`, bottom: `${crop.bottom}%`, width: `${crop.right}%` }} />
+                                        {/* Crop Border */}
+                                        <div className="absolute border-[2px] border-indigo-500 shadow-[0_0_0_1px_rgba(0,0,0,0.5),inset_0_0_0_1px_rgba(0,0,0,0.5)] transition-all flex flex-col justify-between" style={{ top: `${crop.top}%`, bottom: `${crop.bottom}%`, left: `${crop.left}%`, right: `${crop.right}%` }}>
+                                            <div className="flex w-full h-full"><div className="border-r border-white/20 w-1/3 h-full"/><div className="border-r border-white/20 w-1/3 h-full"/></div>
+                                            <div className="absolute inset-0 flex flex-col w-full h-full pointer-events-none"><div className="border-b border-white/20 h-1/3 w-full"/><div className="border-b border-white/20 h-1/3 w-full"/></div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <canvas ref={previewCanvasRef} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl ring-1 ring-white/10" />
+                                )}
+                            </div>
+                        )}
+
+                        {status === 'processing' && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-950/80 backdrop-blur-sm z-30">
+                                <div className="relative mb-8">
+                                    <div className="w-20 h-20 border-4 border-gray-800 rounded-full"></div>
+                                    <div className="w-20 h-20 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin absolute top-0 left-0"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center text-indigo-400 font-medium">{progress}%</div>
+                                </div>
+                                <div className="w-72 h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
+                                    <div className="h-full bg-indigo-500 shadow-[0_0_10px_#6366f1] transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
+                                </div>
+                                <p className="text-gray-300 font-medium tracking-wide animate-pulse">{progressText}</p>
+                            </div>
+                        )}
+
+                        {status === 'done' && imgObj && (
+                            <ComparisonSlider original={processedBaseUrl} upscaled={upscaledUrl} aspect={finalWidth / finalHeight} />
+                        )}
+                    </div>
+
+                    {/* RIGHT PANEL: Settings Sidebar */}
+                    <div className={`w-full lg:w-[400px] bg-gray-950 border-t lg:border-t-0 lg:border-l border-gray-800 flex flex-col transition-all duration-500 ${file ? 'translate-x-0 opacity-100' : 'translate-x-full lg:translate-x-0 opacity-0 lg:opacity-100 absolute lg:relative hidden lg:flex'}`}>
+                        {file && (
+                            <div className="flex flex-col h-full overflow-hidden">
+                                
+                                {/* Top Toolbar / Tabs */}
+                                <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900/50">
+                                    <div className="flex bg-gray-950 rounded-lg p-1 border border-gray-800 w-full mr-4">
+                                        <button onClick={() => setActiveTab('upscale')} className={`flex-1 py-1.5 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-all ${activeTab === 'upscale' ? 'bg-indigo-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}><IconWand /> Upscale</button>
+                                        <button onClick={() => setActiveTab('adjust')} className={`flex-1 py-1.5 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-all ${activeTab === 'adjust' ? 'bg-indigo-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}><IconSliders /> Adjust</button>
+                                        <button onClick={() => setActiveTab('crop')} className={`flex-1 py-1.5 flex items-center justify-center gap-2 text-sm font-medium rounded-md transition-all ${activeTab === 'crop' ? 'bg-indigo-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}><IconCrop /> Crop</button>
+                                    </div>
+                                    <button onClick={() => resetWorkspace(true)} className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0" title="Start Over"><IconRefresh /></button>
+                                </div>
+
+                                {/* Tab Content Area */}
+                                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                                    
+                                    {/* --- UPSCALE TAB --- */}
+                                    <div className={activeTab === 'upscale' ? 'block' : 'hidden'}>
+                                        <div className="space-y-4 mb-8">
+                                            <div className="p-4 bg-gray-900 border border-gray-800 rounded-xl">
+                                                <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Base Dimensions</div>
+                                                <div className="flex justify-between items-end">
+                                                    <div className="text-lg font-medium text-gray-200">{Math.round(baseWidth)} × {Math.round(baseHeight)}</div>
+                                                    <div className="text-sm text-gray-400">{formatSize(file.size)}</div>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 bg-indigo-900/10 border border-indigo-500/20 rounded-xl relative overflow-hidden">
+                                                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                                                <div className="text-xs text-indigo-400 font-medium uppercase tracking-wider mb-2">Target Output</div>
+                                                <div className="flex justify-between items-end">
+                                                    <div className="text-lg font-bold text-white">{finalWidth} × {finalHeight}</div>
+                                                    <div className="text-sm text-indigo-300">{status === 'done' ? formatSize(upscaledSize) : `~${formatSize(file.size * Math.pow(scale, 1.8))}`}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className={`transition-opacity duration-300 ${status === 'done' ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                                            <div className="mb-6">
+                                                <label className="block text-sm font-medium text-gray-300 mb-3">Scale Multiplier</label>
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {[2, 4, 8].map(val => {
+                                                        const disabled = !canScale(val);
+                                                        return (
+                                                            <button key={val} disabled={disabled} onClick={() => setScale(val)}
+                                                                className={`py-3 rounded-xl border font-semibold transition-all ${scale === val ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/25' : disabled ? 'bg-gray-900/50 border-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-900 border-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-800'}`}>
+                                                                {val}x
+                                                            </button>
+                                                        )
+                                                    })}
+                                                </div>
+                                                {!canScale(8) && <p className="text-xs text-amber-500/80 mt-2">Max resolution capped for stability.</p>}
+                                            </div>
+
+                                            <div className="mb-6 p-4 bg-gray-900 rounded-xl border border-gray-800">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <label className="text-sm font-medium text-gray-300">Preserve Edge Clarity</label>
+                                                    <button onClick={() => setEnhanceEdges(!enhanceEdges)} className={`w-11 h-6 rounded-full transition-colors relative focus:outline-none ${enhanceEdges ? 'bg-indigo-500' : 'bg-gray-700'}`}>
+                                                        <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${enhanceEdges ? 'translate-x-5' : 'translate-x-0'}`} />
+                                                    </button>
+                                                </div>
+                                                <p className="text-xs text-gray-500 leading-relaxed">Applies precision Unsharp Mask to eliminate softness.</p>
+                                            </div>
+
+                                            <div className="mb-6">
+                                                <label className="block text-sm font-medium text-gray-300 mb-3">Target Print DPI</label>
+                                                <div className="flex bg-gray-900 rounded-lg p-3 border border-gray-800 justify-between items-center">
+                                                    <input type="number" min="72" max="1200" value={targetDpi} onChange={e => setTargetDpi(e.target.value)} className="bg-gray-950 border border-gray-700 rounded-md w-20 px-2 py-1 text-white focus:outline-none focus:border-indigo-500" />
+                                                    <span className="text-sm text-gray-400 font-medium">
+                                                        {(finalWidth / (targetDpi || 300)).toFixed(1)}" × {(finalHeight / (targetDpi || 300)).toFixed(1)}"
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="mb-6">
+                                                <label className="block text-sm font-medium text-gray-300 mb-3">Export Format</label>
+                                                <div className="flex bg-gray-900 rounded-lg p-1 border border-gray-800">
+                                                    <button onClick={() => setOutputFormat('png')} className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${outputFormat === 'png' ? 'bg-gray-800 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}>PNG (Lossless)</button>
+                                                    <button onClick={() => setOutputFormat('jpeg')} className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${outputFormat === 'jpeg' ? 'bg-gray-800 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}>JPEG</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* --- ADJUST TAB --- */}
+                                    <div className={activeTab === 'adjust' ? 'block' : 'hidden'}>
+                                        <div className="space-y-6">
+                                            <div>
+                                                <div className="flex justify-between text-sm mb-2"><span className="text-gray-300">Brightness</span><span className="text-indigo-400">{brightness}%</span></div>
+                                                <input type="range" min="0" max="200" value={brightness} onChange={(e) => setBrightness(e.target.value)} className="w-full" />
+                                            </div>
+                                            <div>
+                                                <div className="flex justify-between text-sm mb-2"><span className="text-gray-300">Contrast</span><span className="text-indigo-400">{contrast}%</span></div>
+                                                <input type="range" min="0" max="200" value={contrast} onChange={(e) => setContrast(e.target.value)} className="w-full" />
+                                            </div>
+                                            <div>
+                                                <div className="flex justify-between text-sm mb-2"><span className="text-gray-300">Saturation</span><span className="text-indigo-400">{saturation}%</span></div>
+                                                <input type="range" min="0" max="200" value={saturation} onChange={(e) => setSaturation(e.target.value)} className="w-full" />
+                                            </div>
+                                            <div className="pt-4 border-t border-gray-800">
+                                                <label className="block text-sm font-medium text-gray-300 mb-3">Rotation</label>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => setRotation(r => (r - 90) % 360)} className="flex-1 py-2 bg-gray-900 border border-gray-700 hover:border-gray-500 rounded-lg text-white font-medium text-sm">↺ 90° L</button>
+                                                    <button onClick={() => setRotation(r => (r + 90) % 360)} className="flex-1 py-2 bg-gray-900 border border-gray-700 hover:border-gray-500 rounded-lg text-white font-medium text-sm">↻ 90° R</button>
+                                                    <button onClick={() => setRotation(0)} className="py-2 px-4 bg-gray-900 border border-gray-700 hover:border-gray-500 rounded-lg text-gray-400 text-sm">Reset</button>
+                                                </div>
+                                            </div>
+                                            <button onClick={() => { setBrightness(100); setContrast(100); setSaturation(100); }} className="w-full py-2 text-sm text-gray-400 hover:text-white transition-colors">Reset Adjustments</button>
+                                        </div>
+                                    </div>
+
+                                    {/* --- CROP TAB --- */}
+                                    <div className={activeTab === 'crop' ? 'block' : 'hidden'}>
+                                        <p className="text-sm text-gray-400 mb-6 bg-gray-900 p-3 rounded-lg border border-gray-800">Use the sliders to define the precise crop boundaries for your upscale.</p>
+                                        <div className="space-y-6">
+                                            <div>
+                                                <div className="flex justify-between text-sm mb-2"><span className="text-gray-300">Top Trim</span><span className="text-indigo-400">{crop.top}%</span></div>
+                                                <input type="range" min="0" max="95" value={crop.top} onChange={(e) => updateCrop('top', e.target.value)} className="w-full" />
+                                            </div>
+                                            <div>
+                                                <div className="flex justify-between text-sm mb-2"><span className="text-gray-300">Bottom Trim</span><span className="text-indigo-400">{crop.bottom}%</span></div>
+                                                <input type="range" min="0" max="95" value={crop.bottom} onChange={(e) => updateCrop('bottom', e.target.value)} className="w-full" />
+                                            </div>
+                                            <div>
+                                                <div className="flex justify-between text-sm mb-2"><span className="text-gray-300">Left Trim</span><span className="text-indigo-400">{crop.left}%</span></div>
+                                                <input type="range" min="0" max="95" value={crop.left} onChange={(e) => updateCrop('left', e.target.value)} className="w-full" />
+                                            </div>
+                                            <div>
+                                                <div className="flex justify-between text-sm mb-2"><span className="text-gray-300">Right Trim</span><span className="text-indigo-400">{crop.right}%</span></div>
+                                                <input type="range" min="0" max="95" value={crop.right} onChange={(e) => updateCrop('right', e.target.value)} className="w-full" />
+                                            </div>
+                                            <button onClick={() => setCrop({ top: 0, bottom: 0, left: 0, right: 0 })} className="w-full py-2 text-sm text-gray-400 hover:text-white transition-colors mt-4">Reset Crop Box</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                {/* Action Buttons Area */}
+                                <div className="p-6 border-t border-gray-800 bg-gray-950/80 backdrop-blur shrink-0">
+                                    {status !== 'done' ? (
+                                        <button onClick={processImage} disabled={status === 'processing'} className="w-full py-4 bg-white text-gray-950 hover:bg-gray-200 font-bold rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2">
+                                            {status === 'processing' ? 'Processing...' : 'Enhance & Upscale Image'}
+                                        </button>
+                                    ) : (
+                                        <div className="flex flex-col gap-3">
+                                            <a href={upscaledUrl} download={`${file.name.split('.')[0]}_Aura_${scale}x.${outputFormat}`} className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                                                <IconDownload /> Download High-Res Output
+                                            </a>
+                                            <button onClick={() => resetWorkspace(false)} className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-xl transition-all">
+                                                Adjust Settings
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </main>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

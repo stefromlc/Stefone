@@ -1,5 +1,23 @@
 [
   {
+    "title": "aura",
+    "slug": "aura",
+    "description": "A browser-based tool that allows users to professionally upscale, crop, and enhance images for high-resolution, lossless downloads.",
+    "thumbnail": "assets/thumbs/aura.jpg",
+    "tags": [
+      "Art",
+      "Enhance",
+      "Image",
+      "Tool",
+      "Upscaler"
+    ],
+    "category": "Art",
+    "featured": true,
+    "date": "2026-06-06",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "RetroCast",
