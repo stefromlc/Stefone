@@ -1892,48 +1892,45 @@
                 const container = document.getElementById('marketplace-dynamic-grid');
                 if(!container) return;
                 
-                try {
-                    // Try to fetch directory listing
-                    const response = await fetch('/recipes/');
-                    if (response.ok) {
-                        const html = await response.text();
-                        // Parse HTML for .nwxrecipe links
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const links = Array.from(doc.querySelectorAll('a'))
-                                          .map(a => a.getAttribute('href'))
-                                          .filter(href => href && href.endsWith('.nwxrecipe'));
-                        
-                        if (links.length > 0) {
-                            // Clear and load
-                            container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8"><i class="ph ph-spinner animate-spin text-3xl text-brand-500 mb-2"></i><br>Loading discovered recipes...</div>';
-                            
-                            const fetchedRecipes = [];
-                            for (const link of links) {
-                                try {
-                                    // Make sure URL is correctly formatted
-                                    const fileUrl = link.startsWith('http') || link.startsWith('/') ? link : `/recipes/${link}`;
-                                    const fileRes = await fetch(fileUrl);
-                                    if(fileRes.ok) {
-                                        const fileData = await fileRes.json();
-                                        if (fileData.type === 'NWX_Single_Recipe' && fileData.recipe) {
-                                            fileData.recipe._sourceUrl = fileUrl; // keep track
-                                            fetchedRecipes.push(fileData.recipe);
-                                        }
-                                    }
-                                } catch(err) { console.warn("Failed to parse " + link, err); }
+                container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8"><i class="ph ph-spinner animate-spin text-3xl text-brand-500 mb-2"></i><br>Loading community recipes...</div>';
+                
+                // Define the explicit list of known files in the /recipes/ folder
+                const recipeFiles = [
+                    'KFC_Style_Chicken (1).nwxrecipe',
+                    'Spicy_Chicken_Pizza.nwxrecipe'
+                ];
+                
+                const fetchedRecipes = [];
+                let hasErrors = false;
+                
+                for (const filename of recipeFiles) {
+                    try {
+                        const fileUrl = `./recipes/${encodeURIComponent(filename)}`;
+                        const fileRes = await fetch(fileUrl);
+                        if(fileRes.ok) {
+                            const fileData = await fileRes.json();
+                            if (fileData.type === 'NWX_Single_Recipe' && fileData.recipe) {
+                                fileData.recipe._sourceUrl = fileUrl; // keep track
+                                fetchedRecipes.push(fileData.recipe);
                             }
-                            
-                            this.renderMarketplaceRecipes(fetchedRecipes, container);
                         } else {
-                            container.innerHTML = '<div class="col-span-full py-8 text-center text-gray-500">No .nwxrecipe files found in /recipes/ directory.</div>';
+                            hasErrors = true;
+                            console.warn("Could not fetch " + filename + " (Status: " + fileRes.status + ")");
                         }
-                    } else {
-                        container.innerHTML = '<div class="col-span-full py-8 text-center text-gray-500">Could not read /recipes/ directory. (Requires server to allow directory listing)</div>';
+                    } catch(err) { 
+                        hasErrors = true;
+                        console.warn("Failed to parse " + filename, err); 
                     }
-                } catch (e) {
-                    console.error(e);
-                    container.innerHTML = '<div class="col-span-full py-8 text-center text-red-500">Error loading marketplace data. Note: Directory listing fetching only works if served from a compatible web server.</div>';
+                }
+                
+                if (fetchedRecipes.length > 0) {
+                    this.renderMarketplaceRecipes(fetchedRecipes, container);
+                    if (hasErrors) {
+                        // Append a subtle warning if some files failed but others succeeded
+                        container.insertAdjacentHTML('beforeend', '<div class="col-span-full mt-2 text-xs text-center text-gray-400">Some community recipes failed to load.</div>');
+                    }
+                } else {
+                    container.innerHTML = '<div class="col-span-full py-8 text-center text-gray-500 bg-white dark:bg-woodfire-panel rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">No valid recipes found in the /recipes/ directory.<br><span class="text-xs mt-2 block opacity-70">Make sure the files exist and are valid .nwxrecipe JSON files.</span></div>';
                 }
             },
             
@@ -2848,26 +2845,21 @@
                 },
                 
                 async deleteLog(logId) {
-                    app.showConfirmModal(
-                        'Delete Note', 
-                        'Delete this timeline note?', 
-                        async () => {
-                            try {
-                                const session = await DB.get('cook_sessions', this.currentSessionId);
-                                if (session && session.logs) {
-                                    session.logs = session.logs.filter(l => l.id !== logId);
-                                    await DB.put('cook_sessions', session);
-                                    await this.renderList();
-                                    
-                                    if (app.cookingMode.isActive && this.currentSessionId === app.cookingMode.currentSessionId) {
-                                        app.cookingMode.updateNotesBadge(session.logs.length);
-                                    }
-                                }
-                            } catch (e) {
-                                app.showToast("Error deleting note", "error");
+                    if(!confirm("Delete this timeline note?")) return;
+                    try {
+                        const session = await DB.get('cook_sessions', this.currentSessionId);
+                        if (session && session.logs) {
+                            session.logs = session.logs.filter(l => l.id !== logId);
+                            await DB.put('cook_sessions', session);
+                            await this.renderList();
+                            
+                            if (app.cookingMode.isActive && this.currentSessionId === app.cookingMode.currentSessionId) {
+                                app.cookingMode.updateNotesBadge(session.logs.length);
                             }
                         }
-                    );
+                    } catch (e) {
+                        app.showToast("Error deleting note", "error");
+                    }
                 },
                 
                 async renderList() {
@@ -3068,10 +3060,8 @@
             },
 
             async confirmClearData() {
-                this.showConfirmModal(
-                    'Factory Reset', 
-                    'WARNING: This will permanently delete ALL recipes and settings. Are you absolutely sure?', 
-                    async () => {
+                if (confirm('WARNING: This will permanently delete ALL recipes and settings. Are you absolutely sure?')) {
+                    if (confirm('Final confirmation: Delete everything?')) {
                         try {
                             await DB.clear('recipes');
                             await DB.clear('settings');
@@ -3084,7 +3074,7 @@
                             this.showToast('Error clearing data.', 'error');
                         }
                     }
-                );
+                }
             },
 
             setupEventListeners() {
