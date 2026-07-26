@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "type": "NWX_Single_Recipe",
+  "recipe": {
+    "id": "id-001da7e389ae0665",
+    "title": "KFC Style Chicken",
+    "description": "Crispy, juicy fried-style chicken cooked in the Ninja Woodfire XL Pro with a light smoky finish and classic KFC-inspired seasoning.",
+    "heroImage": "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?auto=format&fit=crop&w=1200&q=80",
+    "category": "Chicken",
+    "difficulty": "Easy",
+    "servings": 4,
+    "tags": [
+      "chicken",
+      "kfc style",
+      "crispy",
+      "woodfire"
+    ],
+    "prepTime": 20,
+    "cookTime": 30,
+    "restTime": 5,
+    "ingredients": [
+      {
+        "amount": "8",
+        "unit": "pieces",
+        "name": "Chicken thighs and drumsticks (bone-in, skin-on)"
+      },
+      {
+        "amount": "2",
+        "unit": "cups",
+        "name": "Buttermilk"
+      },
+      {
+        "amount": "2",
+        "unit": "cups",
+        "name": "Plain Flour"
+      },
+      {
+        "amount": "1",
+        "unit": "tbsp",
+        "name": "Paprika"
+      },
+      {
+        "amount": "2",
+        "unit": "tsp",
+        "name": "Garlic Powder"
+      },
+      {
+        "amount": "2",
+        "unit": "tsp",
+        "name": "Onion Powder"
+      },
+      {
+        "amount": "2",
+        "unit": "tsp",
+        "name": "White Pepper"
+      },
+      {
+        "amount": "1",
+        "unit": "tsp",
+        "name": "Black Pepper"
+      },
+      {
+        "amount": "2",
+        "unit": "tsp",
+        "name": "Salt"
+      },
+      {
+        "amount": "1",
+        "unit": "tsp",
+        "name": "Dried Oregano"
+      },
+      {
+        "amount": "1",
+        "unit": "tsp",
+        "name": "Dried Thyme"
+      },
+      {
+        "amount": "1",
+        "unit": "tbsp",
+        "name": "Cooking Oil Spray"
+      }
+    ],
+    "steps": [
+      {
+        "text": "Pat the chicken dry. Place it in a bowl with the buttermilk and refrigerate for at least 2 hours, or overnight for best results."
+      },
+      {
+        "text": "Mix the flour, paprika, garlic powder, onion powder, white pepper, black pepper, salt, oregano and thyme in a large bowl."
+      },
+      {
+        "text": "Remove one piece of chicken from the buttermilk at a time and coat well in the seasoned flour. Press the coating firmly onto each piece."
+      },
+      {
+        "text": "Lightly spray all coated chicken pieces with cooking oil on both sides."
+      },
+      {
+        "text": "Fill the pellet box with All-Purpose Blend pellets."
+      },
+      {
+        "text": "Set the Ninja Woodfire XL Pro to Air Crisp, 190\u00b0C, turn on Woodfire Flavor, and set the timer for 30 minutes."
+      },
+      {
+        "text": "Once preheated, arrange the chicken in a single layer. Cook for 15 minutes."
+      },
+      {
+        "text": "Open the lid, flip every piece, lightly spray again with oil if any dry flour remains, then cook for another 15 minutes."
+      },
+      {
+        "text": "Check the thickest piece reaches at least 75\u00b0C internally. If needed, cook for an extra 3-5 minutes."
+      },
+      {
+        "text": "Rest for 5 minutes before serving for the crispiest coating."
+      }
+    ],
+    "ninjaSettings": {
+      "function": "Air Crisp",
+      "woodfireFlavor": true,
+      "temp": "190",
+      "pelletType": "All-Purpose Blend",
+      "probeTarget": "75\u00b0C",
+      "doneness": "Well Done"
+    },
+    "notes": "For the best KFC-style flavour, marinate overnight and avoid overcrowding the basket. Cook in batches if necessary.",
+    "isFavorite": true,
+    "updatedAt": 1785020958645
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "type": "NWX_Single_Recipe",
+  "recipe": {
+    "id": "id-n4cvte3eawa8gqmvc",
+    "title": "Spicy Chicken Pizza",
+    "description": "Crispy spicy chicken pizza with melted mozzarella and smoky flavour, cooked on the Ninja Woodfire XL Pro.",
+    "heroImage": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80",
+    "category": "Pizza",
+    "difficulty": "Easy",
+    "servings": 2,
+    "tags": [
+      "pizza",
+      "chicken",
+      "spicy",
+      "woodfire"
+    ],
+    "prepTime": 15,
+    "cookTime": 12,
+    "restTime": 2,
+    "ingredients": [
+      {
+        "amount": "1",
+        "unit": "",
+        "name": "12-inch pizza base"
+      },
+      {
+        "amount": "4",
+        "unit": "tbsp",
+        "name": "Pizza sauce"
+      },
+      {
+        "amount": "200",
+        "unit": "g",
+        "name": "Cooked spicy chicken, sliced"
+      },
+      {
+        "amount": "200",
+        "unit": "g",
+        "name": "Grated mozzarella"
+      },
+      {
+        "amount": "50",
+        "unit": "g",
+        "name": "Red onion, thinly sliced"
+      },
+      {
+        "amount": "50",
+        "unit": "g",
+        "name": "Sliced jalape\u00f1os"
+      },
+      {
+        "amount": "1",
+        "unit": "tsp",
+        "name": "Chilli flakes (optional)"
+      },
+      {
+        "amount": "1",
+        "unit": "tbsp",
+        "name": "Olive oil"
+      }
+    ],
+    "steps": [
+      {
+        "text": "Preheat the Ninja Woodfire XL Pro on Pizza at 220\u00b0C with Woodfire Flavor turned on."
+      },
+      {
+        "text": "Spread the pizza sauce evenly over the pizza base, leaving a 1 cm border."
+      },
+      {
+        "text": "Sprinkle over half of the mozzarella."
+      },
+      {
+        "text": "Top with the spicy chicken, red onion and jalape\u00f1os."
+      },
+      {
+        "text": "Add the remaining mozzarella and sprinkle with chilli flakes if you like extra heat."
+      },
+      {
+        "text": "Lightly drizzle the edges with olive oil."
+      },
+      {
+        "text": "Cook for 10 to 12 minutes until the cheese is bubbling and the crust is golden."
+      },
+      {
+        "text": "Carefully remove the pizza, rest for 2 minutes, then slice and serve."
+      }
+    ],
+    "ninjaSettings": {
+      "function": "Pizza",
+      "woodfireFlavor": true,
+      "temp": "220",
+      "pelletType": "All-Purpose Blend",
+      "doneness": "Golden"
+    },
+    "notes": "If using raw chicken, cook it fully before adding it to the pizza.",
+    "isFavorite": true,
+    "updatedAt": 1785021102034
+  }
+}

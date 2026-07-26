@@ -1,5 +1,22 @@
 [
   {
+    "title": "ninja",
+    "slug": "ninja",
+    "description": "Ninja is a recipe manager and cooking companion for the Ninja Woodfire XL Pro, featuring smart recipes, timers, shopping lists, pantry tracking, and cooking tools.",
+    "thumbnail": "assets/thumbs/ninja.jpg",
+    "tags": [
+      "Cooking",
+      "Food",
+      "Ninja",
+      "Tool"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-07-26",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "aura",
     "slug": "aura",
     "description": "A browser-based tool that allows users to professionally upscale, crop, and enhance images for high-resolution, lossless downloads.",
