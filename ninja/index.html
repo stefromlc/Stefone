@@ -1942,11 +1942,27 @@
                 
                 container.innerHTML = recipes.map(r => {
                     const bgImg = r.heroImage || 'https://placehold.co/600x400/ea580c/ffffff?text=Recipe';
+                    
+                    // Check if recipe is already installed by comparing titles
+                    const isInstalled = this.state.recipes.find(rx => rx.title === r.title);
+                    
+                    let actionButton = '';
+                    if (isInstalled) {
+                        actionButton = `
+                            <button onclick="app.uninstallFromMarketplace('${isInstalled.id}')" class="bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center shadow-sm">
+                                <i class="ph ph-trash mr-2"></i> Uninstall
+                            </button>
+                        `;
+                    } else {
+                        actionButton = `
+                            <button onclick="app.importFromMarketplace('${r._sourceUrl}')" class="bg-brand-500 text-white hover:bg-brand-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center shadow-sm">
+                                <i class="ph ph-download-simple mr-2"></i> Install
+                            </button>
+                        `;
+                    }
+
                     return `
-                    <div class="bg-white dark:bg-woodfire-panel rounded-2xl border border-brand-200 dark:border-brand-800/50 overflow-hidden shadow-sm hover:shadow-lg transition-shadow flex flex-col h-full relative group">
-                        <div class="absolute top-3 left-3 z-10">
-                            <span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">LOCAL</span>
-                        </div>
+                    <div class="bg-white dark:bg-woodfire-panel rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm hover:shadow-lg transition-shadow flex flex-col h-full relative group">
                         <div class="h-48 bg-gray-200 dark:bg-gray-700 bg-cover bg-center relative" style="background-image: url('${bgImg}')">
                             <div class="absolute bottom-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent flex items-end">
                                 <span class="text-white text-sm font-medium text-shadow">${this.utils.escapeHtml(r.author || 'Community File')}</span>
@@ -1957,9 +1973,7 @@
                             <p class="text-sm text-gray-500 line-clamp-2 mb-4">${this.utils.escapeHtml(r.description || '')}</p>
                             <div class="mt-auto flex justify-between items-center">
                                 <span class="text-sm font-bold text-gray-900 dark:text-white flex items-center uppercase tracking-wider text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">${r.ninjaSettings?.function || 'Recipe'}</span>
-                                <button onclick="app.importFromMarketplace('${r._sourceUrl}')" class="bg-brand-500 text-white hover:bg-brand-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center shadow-sm">
-                                    <i class="ph ph-download-simple mr-2"></i> Install
-                                </button>
+                                ${actionButton}
                             </div>
                         </div>
                     </div>
@@ -1974,18 +1988,37 @@
                         const data = await res.json();
                         if (data.type === 'NWX_Single_Recipe' && data.recipe) {
                             const existing = this.state.recipes.find(rx => rx.title === data.recipe.title);
-                            if (existing) {
-                                data.recipe.id = this.utils.generateId();
-                                data.recipe.title = data.recipe.title + ' (Imported)';
+                            if (!existing) {
+                                // Only install if it doesn't already exist to prevent duplicates
+                                await DB.put('recipes', data.recipe);
+                                await this.loadData();
+                                this.showToast(`Installed ${data.recipe.title}!`, 'success');
+                                this.loadMarketplace(); // Refresh view to show Uninstall button
+                            } else {
+                                this.showToast('Recipe is already installed', 'info');
                             }
-                            await DB.put('recipes', data.recipe);
-                            await this.loadData();
-                            this.showToast(`Installed ${data.recipe.title}!`, 'success');
                         }
                     }
                 } catch(e) {
                     this.showToast('Failed to install recipe', 'error');
                 }
+            },
+
+            async uninstallFromMarketplace(recipeId) {
+                this.showConfirmModal(
+                    'Uninstall Recipe', 
+                    'Are you sure you want to remove this recipe from your collection?',
+                    async () => {
+                        try {
+                            await DB.delete('recipes', recipeId);
+                            this.state.recipes = this.state.recipes.filter(r => r.id !== recipeId);
+                            this.showToast('Recipe uninstalled', 'success');
+                            this.loadMarketplace(); // Refresh view to show Install button
+                        } catch (e) {
+                            this.showToast('Error uninstalling recipe', 'error');
+                        }
+                    }
+                );
             },
 
             renderLibrary(forceFavFilter = false) {
