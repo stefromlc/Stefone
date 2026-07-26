@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "type": "NWX_Single_Recipe",
+  "recipe": {
+    "id": "id-sweetheatfrostieschicken",
+    "title": "Sweet Heat Frosties Chicken Sandwich",
+    "description": "Ultra-crispy Frosties-coated chicken glazed with a sticky sweet and spicy honey sriracha sauce, served on toasted brioche buns.",
+    "heroImage": "",
+    "category": "Chicken",
+    "difficulty": "Intermediate",
+    "servings": 2,
+    "tags": [
+      "chicken",
+      "sandwich",
+      "frosties",
+      "sweet",
+      "spicy",
+      "air fryer",
+      "ninja woodfire",
+      "bbq"
+    ],
+    "prepTime": 60,
+    "cookTime": 12,
+    "restTime": 0,
+    "ingredients": [
+      {
+        "amount": "2",
+        "unit": "",
+        "name": "Chicken breasts, pounded to even thickness"
+      },
+      {
+        "amount": "125",
+        "unit": "ml",
+        "name": "Milk"
+      },
+      {
+        "amount": "1",
+        "unit": "tbsp",
+        "name": "Lemon juice"
+      },
+      {
+        "amount": "2",
+        "unit": "tbsp",
+        "name": "Soy sauce"
+      },
+      {
+        "amount": "1",
+        "unit": "tbsp",
+        "name": "Honey or maple syrup"
+      },
+      {
+        "amount": "1",
+        "unit": "tbsp",
+        "name": "Sriracha"
+      },
+      {
+        "amount": "1",
+        "unit": "tsp",
+        "name": "Garlic paste"
+      },
+      {
+        "amount": "1",
+        "unit": "tsp",
+        "name": "Ginger paste"
+      },
+      {
+        "amount": "",
+        "unit": "",
+        "name": "Salt and pepper to taste"
+      },
+      {
+        "amount": "2",
+        "unit": "cups",
+        "name": "Kellogg's Frosties, crushed"
+      },
+      {
+        "amount": "1",
+        "unit": "",
+        "name": "Egg, beaten"
+      },
+      {
+        "amount": "2",
+        "unit": "tbsp",
+        "name": "Milk"
+      },
+      {
+        "amount": "5",
+        "unit": "tbsp",
+        "name": "Honey"
+      },
+      {
+        "amount": "2",
+        "unit": "tbsp",
+        "name": "Soy sauce"
+      },
+      {
+        "amount": "1",
+        "unit": "tbsp",
+        "name": "Sriracha"
+      },
+      {
+        "amount": "1",
+        "unit": "tsp",
+        "name": "Garlic paste"
+      },
+      {
+        "amount": "1",
+        "unit": "tsp",
+        "name": "Ginger paste"
+      },
+      {
+        "amount": "1",
+        "unit": "tsp",
+        "name": "Sesame oil"
+      },
+      {
+        "amount": "2",
+        "unit": "",
+        "name": "Brioche buns, toasted"
+      },
+      {
+        "amount": "",
+        "unit": "",
+        "name": "Sriracha mayo"
+      },
+      {
+        "amount": "",
+        "unit": "",
+        "name": "Lettuce or slaw"
+      },
+      {
+        "amount": "",
+        "unit": "",
+        "name": "Pickled jalapeños (optional)"
+      }
+    ],
+    "steps": [
+      {
+        "text": "Combine the milk and lemon juice and leave for 3 minutes to create a quick buttermilk substitute."
+      },
+      {
+        "text": "Mix in the soy sauce, honey, sriracha, garlic paste, ginger paste, salt and pepper."
+      },
+      {
+        "text": "Coat the chicken breasts in the marinade and refrigerate for 1 to 2 hours."
+      },
+      {
+        "text": "Crush the Frosties into small crunchy pieces and place in a shallow dish."
+      },
+      {
+        "text": "Whisk together the egg and milk in a second shallow dish."
+      },
+      {
+        "text": "Remove the chicken from the marinade, dip into the egg mixture, then firmly coat with the crushed Frosties."
+      },
+      {
+        "text": "Preheat the Ninja Woodfire Grill or Air Fryer to 180°C. Lightly oil the basket or crisper plate."
+      },
+      {
+        "text": "Cook the chicken for 12 minutes, turning halfway through, until golden and the internal temperature reaches 75°C."
+      },
+      {
+        "text": "Meanwhile, combine the honey, soy sauce, sriracha, garlic paste, ginger paste and sesame oil in a saucepan. Simmer for 3 to 4 minutes until thickened."
+      },
+      {
+        "text": "Brush the cooked chicken generously with the warm glaze."
+      },
+      {
+        "text": "Spread sriracha mayo over the toasted brioche buns, add lettuce or slaw, top with the glazed chicken, sprinkle over a few extra crushed Frosties and finish with pickled jalapeños if desired."
+      },
+      {
+        "text": "Serve immediately while hot and crispy."
+      }
+    ],
+    "ninjaSettings": {
+      "function": "Air Fry",
+      "woodfireFlavor": false,
+      "temp": "180",
+      "pelletType": "",
+      "doneness": "Chicken cooked to 75°C"
+    },
+    "notes": "Adjust the sriracha to suit your preferred spice level. The glaze also works brilliantly on chicken wings. Leftover chicken slices make excellent wraps or salads.",
+    "isFavorite": true,
+    "updatedAt": 1785021102034
+  }
+}
