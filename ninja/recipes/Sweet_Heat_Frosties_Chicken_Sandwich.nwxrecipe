@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "type": "NWX_Single_Recipe",
+  "recipe": {
+    "id": "id-296ac0a3eb9440668",
+    "title": "Sweet Heat Frosties Chicken Sandwich",
+    "description": "Ultra-crispy Frosties-crusted chicken glazed with a sticky sweet and spicy honey sriracha sauce, served in toasted brioche buns.",
+    "heroImage": "https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=1200&q=80",
+    "category": "Chicken Sandwich",
+    "difficulty": "Intermediate",
+    "servings": 2,
+    "tags": [
+      "chicken",
+      "sandwich",
+      "air fryer",
+      "sweet",
+      "spicy",
+      "bbq",
+      "frosties"
+    ],
+    "prepTime": 60,
+    "cookTime": 12,
+    "restTime": 0,
+    "ingredients": [
+      {
+        "amount": "2",
+        "unit": "",
+        "name": "Chicken breasts, pounded evenly"
+      },
+      {
+        "amount": "125",
+        "unit": "ml",
+        "name": "Milk"
+      },
+      {
+        "amount": "1",
+        "unit": "tbsp",
+        "name": "Lemon juice"
+      },
+      {
+        "amount": "2",
+        "unit": "tbsp",
+        "name": "Soy sauce"
+      },
+      {
+        "amount": "6",
+        "unit": "tbsp",
+        "name": "Honey (divided)"
+      },
+      {
+        "amount": "2",
+        "unit": "tbsp",
+        "name": "Sriracha (divided, adjust to taste)"
+      },
+      {
+        "amount": "2",
+        "unit": "tsp",
+        "name": "Garlic paste (divided)"
+      },
+      {
+        "amount": "2",
+        "unit": "tsp",
+        "name": "Ginger paste (divided)"
+      },
+      {
+        "amount": "",
+        "unit": "",
+        "name": "Salt and pepper"
+      },
+      {
+        "amount": "2",
+        "unit": "cups",
+        "name": "Kellogg's Frosties, crushed"
+      },
+      {
+        "amount": "1",
+        "unit": "",
+        "name": "Egg, beaten"
+      },
+      {
+        "amount": "2",
+        "unit": "tbsp",
+        "name": "Milk (for egg wash)"
+      },
+      {
+        "amount": "1",
+        "unit": "tsp",
+        "name": "Sesame oil"
+      },
+      {
+        "amount": "2",
+        "unit": "",
+        "name": "Brioche buns, toasted"
+      },
+      {
+        "amount": "",
+        "unit": "",
+        "name": "Sriracha mayo"
+      },
+      {
+        "amount": "",
+        "unit": "",
+        "name": "Lettuce or slaw"
+      },
+      {
+        "amount": "",
+        "unit": "",
+        "name": "Pickled jalape\u00f1os (optional)"
+      }
+    ],
+    "steps": [
+      {
+        "text": "Combine milk and lemon juice and leave for 3 minutes to create a quick buttermilk substitute."
+      },
+      {
+        "text": "Mix in soy sauce, 1 tbsp honey, 1 tbsp sriracha, 1 tsp garlic paste, 1 tsp ginger paste, salt and pepper. Marinate the chicken for 1 to 2 hours."
+      },
+      {
+        "text": "Crush the Frosties into small crunchy pieces and place in a shallow dish."
+      },
+      {
+        "text": "Whisk the egg with 2 tbsp milk. Dip marinated chicken into the egg mixture then coat firmly with the crushed Frosties."
+      },
+      {
+        "text": "Preheat the air fryer or Ninja Woodfire Grill Air Fry function to 180\u00b0C. Lightly oil the basket and cook for 12 minutes, flipping halfway, until the chicken reaches 75\u00b0C."
+      },
+      {
+        "text": "Meanwhile heat 5 tbsp honey, 2 tbsp soy sauce, 1 tbsp sriracha, 1 tsp garlic paste, 1 tsp ginger paste and sesame oil until thickened, about 3 to 4 minutes."
+      },
+      {
+        "text": "Brush the cooked chicken generously with the warm glaze."
+      },
+      {
+        "text": "Spread sriracha mayo on toasted brioche buns, add lettuce or slaw, top with glazed chicken, sprinkle with extra crushed Frosties, add pickled jalape\u00f1os if desired and serve immediately."
+      }
+    ],
+    "ninjaSettings": {
+      "function": "Air Fry",
+      "woodfireFlavor": false,
+      "temp": "180",
+      "pelletType": "None",
+      "doneness": "75\u00b0C Internal"
+    },
+    "notes": "Adjust the sriracha to your preferred heat level. Leftover glazed chicken is excellent sliced into wraps or salads.",
+    "isFavorite": true,
+    "updatedAt": 1785075996242
+  }
+}
