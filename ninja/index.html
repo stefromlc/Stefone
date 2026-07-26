@@ -309,28 +309,26 @@
                     </div>
                 </div>
                 
-                <div class="hidden md:flex items-center space-x-3 ml-4 bg-white dark:bg-gray-800 rounded-full py-1.5 px-3 border border-gray-200 dark:border-gray-700 shadow-sm cursor-pointer hover:border-brand-500 transition" onclick="radioApp.toggleRadioPanel()">
-                    <div id="radio-eq" class="flex items-end space-x-1 h-5 w-6 equalizer-paused">
-                        <div class="equalizer-bar"></div>
-                        <div class="equalizer-bar"></div>
-                        <div class="equalizer-bar"></div>
-                        <div class="equalizer-bar"></div>
-                    </div>
-                    <div class="flex flex-col justify-center w-32">
-                        <span id="radio-mini-title" class="text-xs font-bold truncate text-gray-900 dark:text-white">Radio Off</span>
-                        <span id="radio-mini-status" class="text-[10px] text-gray-500 truncate">Click to tune in</span>
-                    </div>
-                    <button id="radio-mini-play" class="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-500 flex items-center justify-center hover:bg-brand-100 transition" onclick="event.stopPropagation(); radioApp.togglePlay()">
-                        <i class="ph-fill ph-play"></i>
-                    </button>
-                </div>
 
                 <div class="ml-4 flex items-center space-x-3">
-                    <span id="connection-status" class="hidden lg:flex items-center text-xs font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full">
-                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
-                        Offline Ready
-                    </span>
-                    
+
+                    <div class="hidden md:flex items-center space-x-3 ml-4 bg-white dark:bg-gray-800 rounded-full py-1.5 px-3 border border-gray-200 dark:border-gray-700 shadow-sm cursor-pointer hover:border-brand-500 transition" onclick="radioApp.toggleRadioPanel()">
+                        <div id="radio-eq" class="flex items-end space-x-1 h-5 w-6 equalizer-paused">
+                            <div class="equalizer-bar"></div>
+                            <div class="equalizer-bar"></div>
+                            <div class="equalizer-bar"></div>
+                            <div class="equalizer-bar"></div>
+                        </div>
+                        <div class="flex flex-col justify-center w-32">
+                            <span id="radio-mini-title" class="text-xs font-bold truncate text-gray-900 dark:text-white">Radio Off</span>
+                            <span id="radio-mini-status" class="text-[10px] text-gray-500 truncate">Click to tune in</span>
+                        </div>
+                        <button id="radio-mini-play" class="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-500 flex items-center justify-center hover:bg-brand-100 transition" onclick="event.stopPropagation(); radioApp.togglePlay()">
+                            <i class="ph-fill ph-play"></i>
+                        </button>
+                    </div>
+
+
                     <!-- Timers Button -->
                     <div class="relative">
                         <button class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center border border-gray-200 dark:border-gray-700 text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition shadow-sm" onclick="timerApp.togglePanel()" title="Timers">
