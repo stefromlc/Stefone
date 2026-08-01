@@ -1,0 +1,150 @@
+{
+"version": 1,
+"type": "NWX_Single_Recipe",
+"recipe": {
+"id": "id-5a9ec0a3eb9440671",
+"title": "Cannabutter Chocolate Chip Cookies",
+"description": "The ultimate guide to making infused chocolate chip cookies, starting from raw cannabis flower. This comprehensive recipe walks you through safely decarboxylating your flower, infusing a rich butter base, and baking soft, chewy, perfectly elevated cookies with gooey chocolate centers.",
+"heroImage": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=1200&q=80](https://www.google.com/search?q=https://images.unsplash.com/photo-1499636136210-6f4ee915583e%3Fauto%3Dformat%26fit%3Dcrop%26w%3D1200%26q%3D80",
+"category": "Cookies",
+"difficulty": "Advanced",
+"servings": 12,
+"tags": [
+"cookies",
+"weed",
+"edibles",
+"cannabutter",
+"baking",
+"infusion",
+"chocolate"
+],
+"prepTime": 35,
+"cookTime": 177,
+"restTime": 150,
+"ingredients": [
+{
+"amount": "7-10",
+"unit": "g",
+"name": "Cannabis flower, roughly ground (for butter)"
+},
+{
+"amount": "1",
+"unit": "cup",
+"name": "Unsalted butter (2 sticks, for butter)"
+},
+{
+"amount": "1",
+"unit": "cup",
+"name": "Water (plus extra as needed, for butter)"
+},
+{
+"amount": "1/2",
+"unit": "cup",
+"name": "Cannabutter (from yield below), melted and cooled"
+},
+{
+"amount": "1/2",
+"unit": "cup",
+"name": "Brown sugar, packed"
+},
+{
+"amount": "1/3",
+"unit": "cup",
+"name": "Granulated sugar"
+},
+{
+"amount": "1",
+"unit": "",
+"name": "Egg, room temperature"
+},
+{
+"amount": "2",
+"unit": "tsp",
+"name": "Vanilla extract"
+},
+{
+"amount": "1 1/2",
+"unit": "cups",
+"name": "All-purpose flour"
+},
+{
+"amount": "1/2",
+"unit": "tsp",
+"name": "Baking soda"
+},
+{
+"amount": "1/2",
+"unit": "tsp",
+"name": "Salt"
+},
+{
+"amount": "1",
+"unit": "cup",
+"name": "Chocolate chips (semi-sweet or milk)"
+},
+{
+"amount": "",
+"unit": "",
+"name": "Flaky sea salt (optional, for topping)"
+}
+],
+"steps": [
+{
+"text": "First, decarboxylate the cannabis. Preheat your oven or Ninja Woodfire Grill on the Bake function to 115°C (240°F). Line a baking sheet with parchment paper and spread the roughly ground cannabis flower evenly."
+},
+{
+"text": "Bake the flower for 30 to 40 minutes, gently shaking the pan every 15 minutes to ensure an even toast. The flower should look slightly browned and smell fragrant. Remove and let cool."
+},
+{
+"text": "In a medium saucepan, combine 1 cup of water and 1 cup of unsalted butter. Heat on low until melted, then stir in the decarboxylated cannabis. Keep the heat on low to maintain a gentle simmer (around 70°C to 90°C). Never let it boil."
+},
+{
+"text": "Allow the mixture to simmer gently for 2 to 3 hours, stirring occasionally. Add a splash of warm water if the liquid level gets too low to prevent burning."
+},
+{
+"text": "Place a fine mesh strainer lined with cheesecloth over a large glass bowl. Carefully pour the hot butter mixture through the strainer. Let it drain and gently press the plant material with a spoon to extract the liquid. Discard the leftover plant matter."
+},
+{
+"text": "Let the liquid cool at room temperature for 30 minutes, then refrigerate it for at least 2 hours until the butter solidifies. Lift the solid disc of cannabutter out, discard the water underneath, and pat the bottom of the butter dry."
+},
+{
+"text": "Measure out 1/2 cup of your freshly made cannabutter. Melt it, let it cool slightly, and add it to a large mixing bowl. (Store any leftover butter in the fridge for up to a month)."
+},
+{
+"text": "Whisk the 1/2 cup of melted cannabutter together with the brown sugar and granulated sugar until smooth and well combined."
+},
+{
+"text": "Add the egg and vanilla extract to the butter and sugar mixture, whisking vigorously for about 1 minute until the mixture lightens in color and falls off the whisk in ribbons."
+},
+{
+"text": "In a separate bowl, whisk together the all-purpose flour, baking soda, and salt. Gently fold the dry ingredients into the wet ingredients using a rubber spatula just until no streaks of flour remain."
+},
+{
+"text": "Fold in the chocolate chips until evenly distributed. Cover the bowl and chill the cookie dough in the refrigerator for at least 30 minutes to firm up."
+},
+{
+"text": "Preheat your oven or Ninja Woodfire Grill using the Bake function to 175°C (350°F). Line a fresh baking sheet with parchment paper."
+},
+{
+"text": "Scoop the chilled dough into 2-tablespoon-sized balls and place them on the baking sheet, leaving about 2 inches of space between each cookie."
+},
+{
+"text": "Bake for 10-12 minutes, or until the edges are golden brown but the centers are still soft and slightly underbaked."
+},
+{
+"text": "Remove from the heat and immediately sprinkle with flaky sea salt. Allow the cookies to cool on the baking sheet for 5 minutes before transferring to a wire rack to cool completely."
+}
+],
+"ninjaSettings": {
+"function": "Bake",
+"woodfireFlavor": false,
+"temp": "175",
+"pelletType": "None",
+"probeTarget": "",
+"doneness": "Golden brown edges"
+},
+"notes": "The potency of these cookies depends on the strength of your starting flower and the infusion efficiency. Always start by consuming a small portion (e.g., half a cookie) and wait 90-120 minutes to gauge the effects. Keep these clearly labeled and stored safely away from children and pets.",
+"isFavorite": true,
+"updatedAt": 1785536125000
+}
+}

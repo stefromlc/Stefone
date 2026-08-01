@@ -1,0 +1,84 @@
+{
+"version": 1,
+"type": "NWX_Single_Recipe",
+"recipe": {
+"id": "id-498dc0a3eb9440670",
+"title": "Homemade Cannabutter",
+"description": "The foundational ingredient for all your favorite baked edibles. This slow-infusion method covers the essential steps of decarboxylating your flower and gently simmering it with butter and water to prevent burning, resulting in a potent and versatile base.",
+"heroImage": "https://hips.hearstapps.com/hmg-prod/images/gettyimages-140239437-1541504450.jpg?resize=640:*",
+"category": "Infusions",
+"difficulty": "Intermediate",
+"servings": 16,
+"tags": [
+"weed",
+"cannabutter",
+"edibles",
+"infusion",
+"basics",
+"butter"
+],
+"prepTime": 15,
+"cookTime": 165,
+"restTime": 120,
+"ingredients": [
+{
+"amount": "7-10",
+"unit": "g",
+"name": "Cannabis flower, roughly ground"
+},
+{
+"amount": "1",
+"unit": "cup",
+"name": "Unsalted butter (2 sticks)"
+},
+{
+"amount": "1",
+"unit": "cup",
+"name": "Water (plus extra as needed)"
+}
+],
+"steps": [
+{
+"text": "First, decarboxylate the cannabis to activate it. Preheat your oven or Ninja Woodfire Grill on the Bake function to 115°C (240°F). Line a baking sheet with parchment paper."
+},
+{
+"text": "Spread the roughly ground cannabis flower evenly across the parchment paper. Avoid grinding it into a fine powder, as this will make it harder to strain later."
+},
+{
+"text": "Bake for 30 to 40 minutes, gently shaking the pan every 15 minutes to ensure an even toast. The flower should look slightly browned and smell fragrant. Remove and let cool."
+},
+{
+"text": "In a medium saucepan, combine 1 cup of water and 1 cup of butter. Heat on low until the butter is completely melted. The water helps regulate the temperature and prevents the butter from scorching."
+},
+{
+"text": "Stir the decarboxylated cannabis into the melted butter and water mixture. Keep the heat on low to maintain a gentle simmer (around 70°C to 90°C). Never let it come to a rolling boil."
+},
+{
+"text": "Allow the mixture to simmer gently for 2 to 3 hours, stirring occasionally. If the liquid level gets too low, add a splash of warm water to prevent burning."
+},
+{
+"text": "Place a fine mesh strainer lined with cheesecloth over a large glass bowl or measuring cup. Carefully pour the hot butter mixture through the strainer to separate the plant material."
+},
+{
+"text": "Allow the plant material to drain, gently pressing it with the back of a spoon to extract the remaining liquid. Do not squeeze the cheesecloth too hard, or your butter will become cloudy and bitter. Discard the leftover plant matter."
+},
+{
+"text": "Let the liquid cool at room temperature for 30 minutes, then cover the bowl and refrigerate it for at least 2 hours (or overnight) until the butter solidifies and separates from the water."
+},
+{
+"text": "Carefully lift the solidified disc of cannabutter out of the container and discard the remaining water underneath. Pat the bottom of the butter disc dry with a paper towel."
+}
+],
+"ninjaSettings": {
+"function": "Bake",
+"woodfireFlavor": false,
+"temp": "115",
+"pelletType": "None",
+"probeTarget": "",
+"doneness": "Toasted"
+},
+"notes": "Store your finished cannabutter in an airtight jar in the refrigerator for up to a month, or in the freezer for up to 6 months. When using this butter in recipes, remember that potency varies based on the strength of your starting flower. Always test a small amount first to gauge its effects.",
+"isFavorite": true,
+"updatedAt": 1785535825000
+}
+}
