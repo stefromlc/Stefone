@@ -3,42 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <!-- Primary Meta Tags -->
-<title>OSINT Dashboard – Live Conflict Intelligence Monitor</title>
-<meta name="title" content="OSINT Dashboard – Live Conflict Intelligence Monitor">
-<meta name="description" content="Monitor global conflict signals through a live OSINT dashboard. Track alerts, geospatial activity, escalation metrics, and curated intelligence feeds.">
+    <title>OSINT Dashboard v2.2 – Advanced Conflict Intelligence Monitor</title>
+    <meta name="title" content="OSINT Dashboard v2.2 – Advanced Conflict Intelligence Monitor">
+    <meta name="description" content="Monitor global conflict signals through an advanced live OSINT dashboard. Track escalation metrics, threat forecasting, chokepoints, and curated intelligence feeds.">
+    <meta name="theme-color" content="#020617">
 
-<!-- Open Graph / Social -->
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://www.stefone.com/osint/">
-<meta property="og:title" content="OSINT Dashboard – Live Conflict Intelligence Monitor">
-<meta name="keywords" content="OSINT dashboard, open source intelligence monitor, conflict tracker, war intelligence feed, military news dashboard">
-<meta property="og:description" content="Monitor global conflict signals through a live OSINT dashboard. Track alerts, geospatial activity, escalation metrics, and curated intelligence feeds.">
-<meta property="og:image" content="https://www.stefone.com/assets/thumbs/osint.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="OSINT conflict intelligence dashboard preview">
-
-<!-- Twitter / X -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="OSINT Dashboard – Live Conflict Intelligence Monitor">
-<meta name="twitter:description" content="Monitor global conflict signals through a live OSINT dashboard. Track alerts, geospatial activity, escalation metrics, and curated intelligence feeds.">
-<meta name="twitter:image" content="https://www.stefone.com/assets/thumbs/osint.jpg">
-
-<!-- Theme Color -->
-<meta name="theme-color" content="#020617">
-
-<!-- SVG Favicon (coded, no image file) -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
-  <rect width='100' height='100' rx='18' fill='%23020617'/>
-  <circle cx='50' cy='50' r='30' fill='none' stroke='%23ef4444' stroke-width='6'/>
-  <circle cx='50' cy='50' r='6' fill='%23ef4444'/>
-  <line x1='50' y1='10' x2='50' y2='25' stroke='%23ef4444' stroke-width='4'/>
-  <line x1='50' y1='75' x2='50' y2='90' stroke='%23ef4444' stroke-width='4'/>
-  <line x1='10' y1='50' x2='25' y2='50' stroke='%23ef4444' stroke-width='4'/>
-  <line x1='75' y1='50' x2='90' y2='50' stroke='%23ef4444' stroke-width='4'/>
-</svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+      <rect width='100' height='100' rx='18' fill='%23020617'/>
+      <circle cx='50' cy='50' r='30' fill='none' stroke='%23ef4444' stroke-width='6'/>
+      <circle cx='50' cy='50' r='6' fill='%23ef4444'/>
+      <line x1='50' y1='10' x2='50' y2='25' stroke='%23ef4444' stroke-width='4'/>
+      <line x1='50' y1='75' x2='50' y2='90' stroke='%23ef4444' stroke-width='4'/>
+      <line x1='10' y1='50' x2='25' y2='50' stroke='%23ef4444' stroke-width='4'/>
+      <line x1='75' y1='50' x2='90' y2='50' stroke='%23ef4444' stroke-width='4'/>
+    </svg>">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,9 +31,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* Base / Theme Variables */
         :root {
             /* Default: Military Dark Theme */
             --bg-base: #020617;        
@@ -84,7 +64,6 @@
             --map-bg: #040814;
         }
 
-        /* Tactical Green Theme */
         [data-theme="tactical-green"] {
             --bg-base: #000000;        
             --panel-bg: rgba(0, 20, 0, 0.65);       
@@ -110,7 +89,6 @@
             --map-bg: #000;
         }
 
-        /* Newsroom Light Theme */
         [data-theme="newsroom-light"] {
             --bg-base: #f1f5f9;        
             --panel-bg: rgba(255, 255, 255, 0.9);       
@@ -155,23 +133,13 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* Floating Command Header */
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 24px;
-            background: var(--panel-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--panel-border);
-            border-top: 1px solid var(--panel-border-light);
-            margin: 16px 24px 24px 24px;
-            border-radius: 16px;
-            gap: 16px;
-            position: sticky;
-            top: 16px;
-            z-index: 2000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 24px; background: var(--panel-bg);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border); border-top: 1px solid var(--panel-border-light);
+            margin: 16px 24px 24px 24px; border-radius: 16px; gap: 16px;
+            position: sticky; top: 16px; z-index: 2000;
             box-shadow: 0 10px 40px -10px rgba(0,0,0,0.2);
         }
 
@@ -179,15 +147,14 @@
 
         .header-title {
             color: var(--text-light); font-size: 1.05rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1.5px;
-            display: flex; align-items: center; gap: 10px;
+            text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px;
         }
 
         .btn-icon-only {
             display: flex; align-items: center; justify-content: center;
             background: var(--status-blue-dim); color: var(--status-blue);
             border: 1px solid var(--panel-border); border-radius: 8px;
-            width: 36px; height: 36px; cursor: pointer;
+            width: 36px; height: 36px; cursor: pointer; position: relative;
             transition: all 0.2s ease; text-decoration: none;
         }
         .btn-icon-only:hover { background: var(--status-blue); color: #fff; border-color: var(--status-blue);}
@@ -204,10 +171,8 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .global-search:focus-within { 
-            border-color: var(--status-blue); 
-            box-shadow: 0 0 0 3px var(--status-blue-dim); 
-            background: var(--panel-bg-solid);
-            width: 360px;
+            border-color: var(--status-blue); box-shadow: 0 0 0 3px var(--status-blue-dim); 
+            background: var(--panel-bg-solid); width: 360px;
         }
         .global-search input {
             background: transparent; border: none; color: var(--text-light);
@@ -216,6 +181,16 @@
         .global-search input::placeholder { color: var(--text-muted); }
 
         .header-right { display: flex; align-items: center; gap: 16px; }
+        
+        .global-risk-badge {
+            background: var(--bg-base); border: 1px solid var(--panel-border);
+            padding: 6px 12px; border-radius: 8px; font-family: var(--font-mono);
+            font-weight: 700; font-size: 0.8rem; letter-spacing: 1px;
+            display: flex; align-items: center; gap: 8px; transition: all 0.3s;
+        }
+        .risk-severe { color: var(--status-red); border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.1); box-shadow: 0 0 10px rgba(239,68,68,0.3);}
+        .risk-elevated { color: #ea580c; border-color: rgba(234,88,12,0.5); background: rgba(234,88,12,0.1);}
+        .risk-moderate { color: var(--status-amber); border-color: rgba(245,158,11,0.5); background: rgba(245,158,11,0.1);}
 
         .status-bar {
             font-size: 0.75rem; font-family: var(--font-mono);
@@ -235,7 +210,61 @@
         .btn-primary { background: var(--status-blue-dim); border-color: var(--status-blue); color: var(--status-blue); }
         .btn-primary:hover { background: var(--status-blue); color: #fff; box-shadow: 0 0 15px var(--status-blue-dim); }
 
-        /* Advanced 12-Column Grid Layout */
+        .notification-badge {
+            position: absolute; top: -5px; right: -5px;
+            background: var(--status-red); color: white;
+            font-size: 0.65rem; font-weight: 700; padding: 2px 6px;
+            border-radius: 10px; font-family: var(--font-mono);
+            border: 2px solid var(--panel-bg);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .notification-badge.bump { transform: scale(1.3); }
+
+        .watchlist-hit-badge {
+            background: var(--highlight-yellow); color: var(--highlight-yellow-text);
+            border: 1px solid rgba(234, 179, 8, 0.4); font-family: var(--font-mono);
+            font-size: 0.6rem; padding: 3px 6px; border-radius: 4px;
+            margin-left: 8px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
+        }
+
+        @keyframes watchlist-flash {
+            0% { box-shadow: 0 0 0 rgba(234, 179, 8, 0); }
+            10% { transform: scale(1.02); box-shadow: 0 0 25px rgba(234, 179, 8, 0.7); background: rgba(234, 179, 8, 0.15); border-color: rgba(234, 179, 8, 0.8);}
+            100% { transform: scale(1); box-shadow: 0 0 0 rgba(234, 179, 8, 0); }
+        }
+        
+        .watchlist-highlight {
+            animation: watchlist-flash 2.5s ease-out;
+            border-color: rgba(234, 179, 8, 0.6) !important;
+        }
+
+        .keyword-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--status-blue-dim); color: var(--status-blue);
+            padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500;
+            border: 1px solid var(--status-blue); transition: all 0.2s;
+        }
+        .keyword-pill button {
+            background: transparent; border: none; color: var(--status-blue);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; width: 16px; height: 16px; transition: all 0.2s;
+        }
+        .keyword-pill button:hover { background: rgba(239, 68, 68, 0.2); color: var(--status-red); }
+
+        .theatre-bar-container { display: flex; width: 100%; overflow-x: auto; padding-bottom: 8px; grid-column: span 12; margin-bottom: -10px; }
+        .theatre-bar { display: flex; gap: 12px; }
+        .theatre-tab {
+            background: var(--panel-bg); border: 1px solid var(--panel-border); color: var(--text-muted);
+            padding: 10px 20px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.85rem;
+            font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 8px;
+        }
+        .theatre-tab:hover { background: var(--panel-bg-hover); color: var(--text-light); }
+        .theatre-tab.active {
+            background: var(--status-blue-dim); border-color: var(--status-blue);
+            color: var(--status-blue); box-shadow: 0 0 15px rgba(59,130,246,0.2);
+        }
+
         .dashboard-grid {
             display: grid; grid-template-columns: repeat(12, 1fr); 
             grid-gap: 20px; max-width: 1800px; margin: 0 auto; padding: 0 24px;
@@ -257,14 +286,90 @@
         }
         .panel-header span:first-child { color: var(--text-light); display: flex; align-items: center; gap: 6px;}
 
-        /* Empty States */
         .empty-state {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             gap: 12px; color: var(--text-muted); font-style: italic; font-size: 0.85rem; height: 100%;
             text-align: center; padding: 24px;
         }
 
-        /* --- Default Layout Assignments (Analyst Mode) --- */
+        .changes-panel {
+            grid-column: span 12;
+            padding: 12px 20px;
+            margin-bottom: -10px; /* pull up slightly */
+            border-left: 3px solid var(--status-blue);
+            background: linear-gradient(90deg, var(--panel-bg) 0%, transparent 100%);
+        }
+        .change-item-scroll {
+            display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin;
+        }
+        .change-pill {
+            display: flex; flex-direction: column; gap: 4px; padding: 10px 14px;
+            border-radius: 8px; border: 1px solid var(--panel-border);
+            background: var(--bg-base); cursor: pointer; min-width: 220px; max-width: 320px;
+            flex-shrink: 0; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .change-pill:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.25); }
+        .change-pill.new { border-color: rgba(16, 185, 129, 0.4); border-top: 2px solid var(--status-green); }
+        .change-pill.new:hover { background: rgba(16, 185, 129, 0.08); border-color: var(--status-green);}
+        .change-pill.updated { border-color: rgba(245, 158, 11, 0.4); border-top: 2px solid var(--status-amber); }
+        .change-pill.updated:hover { background: rgba(245, 158, 11, 0.08); border-color: var(--status-amber);}
+        .change-pill.removed { border-color: rgba(239, 68, 68, 0.4); border-top: 2px solid var(--status-red); opacity: 0.7; }
+        .change-pill.removed:hover { background: rgba(239, 68, 68, 0.08); border-color: var(--status-red); opacity: 1; }
+
+        .change-pill-type { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px;}
+        .change-pill.new .change-pill-type { color: var(--status-green); }
+        .change-pill.updated .change-pill-type { color: var(--status-amber); }
+        .change-pill.removed .change-pill-type { color: var(--status-red); }
+
+        .change-pill-title { font-size: 0.85rem; color: var(--text-light); font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;}
+
+        .region-stats-panel { 
+            grid-column: span 12; 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 20px; 
+            padding: 18px 24px; 
+        }
+        .rs-section { 
+            display: flex; flex-direction: column; gap: 8px; 
+            border-right: 1px solid var(--panel-border); padding-right: 20px; 
+        }
+        .rs-section:last-child { border-right: none; padding-right: 0; }
+        
+        .rs-header { 
+            font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; 
+            font-family: var(--font-mono); font-weight: 600; margin-bottom: 4px; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .rs-big-val { 
+            font-size: 2.2rem; font-family: var(--font-mono); font-weight: 700; 
+            color: var(--text-light); line-height: 1; display: flex; align-items: baseline; gap: 10px;
+        }
+        .rs-trend { 
+            font-size: 0.85rem; font-family: var(--font-sans); padding: 3px 8px; 
+            border-radius: 6px; font-weight: 600; letter-spacing: 0.5px;
+        }
+        .rs-trend.up { background: var(--status-red-bg); color: var(--status-red); border: 1px solid rgba(239,68,68,0.3);}
+        .rs-trend.down { background: rgba(16, 185, 129, 0.15); color: var(--status-green); border: 1px solid rgba(16,185,129,0.3);}
+        .rs-trend.flat { background: var(--panel-border-light); color: var(--text-muted); border: 1px solid transparent;}
+        
+        .rs-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+        .rs-list-item { 
+            display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; 
+            cursor: pointer; padding: 6px 10px; border-radius: 6px; 
+            transition: all 0.2s ease; border: 1px solid transparent; background: var(--bg-base);
+        }
+        .rs-list-item:hover { 
+            background: var(--panel-bg-hover); border-color: var(--status-blue); 
+            transform: translateX(3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .rs-list-item .label { color: var(--text-light); display: flex; align-items: center; font-weight: 500;}
+        .rs-list-item .val { font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); }
+        .rs-list-item:hover .val { color: var(--status-blue); }
+        
+        .rs-clickable { cursor: pointer; transition: all 0.2s; }
+        .rs-clickable:hover { opacity: 0.8; transform: translateY(-2px); text-shadow: 0 0 10px rgba(255,255,255,0.2);}
+
         .breaking-panel { grid-column: span 4; border-top: 2px solid var(--status-red); height: 420px; display: flex; flex-direction: column; background: linear-gradient(180deg, var(--status-red-bg) 0%, transparent 100%); }
         .map-panel { grid-column: span 8; height: 420px; padding: 0; overflow: hidden; position: relative;}
         
@@ -275,10 +380,12 @@
         .metrics-wrapper { grid-column: span 8; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 480px; }
         .metrics-panel { height: 100%; display: flex; flex-direction: column; }
         
+        .advanced-metrics-wrapper { grid-column: span 12; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+        
         .timeline-panel { grid-column: span 3; height: 750px; overflow-y: auto; }
         .feed-panel { grid-column: span 9; height: 750px; overflow-y: hidden; display: flex; flex-direction: column;}
 
-        /* --- Research Layout Adjustments --- */
+        /* Research Layout */
         [data-layout="research"] .feed-panel { grid-column: span 12; height: 650px; order: -2; }
         [data-layout="research"] .breaking-panel { grid-column: span 12; height: auto; max-height: 300px; order: -1; }
         [data-layout="research"] .breaking-content { flex-direction: row; overflow-x: auto; padding-bottom: 8px;}
@@ -286,17 +393,18 @@
         [data-layout="research"] .map-panel { grid-column: span 8; order: 1;}
         [data-layout="research"] .middle-left-col { grid-column: span 4; order: 1;}
         [data-layout="research"] .metrics-wrapper { grid-column: span 8; order: 2;}
+        [data-layout="research"] .advanced-metrics-wrapper { order: 3; }
         [data-layout="research"] .timeline-panel { grid-column: span 4; height: 480px; order: 2;}
 
-        /* --- Map-Centric Layout Adjustments --- */
+        /* Map-Centric Layout */
         [data-layout="map-centric"] .map-panel { grid-column: span 12; height: 600px; order: -2;}
         [data-layout="map-centric"] .breaking-panel { grid-column: span 4; order: -1;}
         [data-layout="map-centric"] .feed-panel { grid-column: span 8; height: 600px; order: -1;}
         [data-layout="map-centric"] .middle-left-col { grid-column: span 4; order: 1;}
         [data-layout="map-centric"] .metrics-wrapper { grid-column: span 8; order: 1; height: auto;}
-        [data-layout="map-centric"] .timeline-panel { display: none; } /* Hide timeline for space */
+        [data-layout="map-centric"] .advanced-metrics-wrapper { order: 2; }
+        [data-layout="map-centric"] .timeline-panel { display: none; }
 
-        /* Escalation Meter */
         .escalation-panel { justify-content: space-between;}
         .escalation-header-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;}
         .escalation-score { font-size: 2.5rem; font-family: var(--font-mono); font-weight: 700; line-height: 1;}
@@ -312,7 +420,6 @@
         .level-high .meter-segment:nth-child(1), .level-high .meter-segment:nth-child(2), .level-high .meter-segment:nth-child(3) { background: #ea580c; border-color: #ea580c; box-shadow: 0 0 12px #ea580c; }
         .level-crit .meter-segment { background: var(--status-red); border-color: var(--status-red); box-shadow: 0 0 15px var(--status-red); }
 
-        /* Breaking Alerts */
         .breaking-content { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 6px; flex-grow: 1; }
         
         .alert-item { 
@@ -334,7 +441,6 @@
         .alert-item .alert-title { color: var(--text-light); font-weight: 500; line-height: 1.4; display: block; margin-bottom: 6px; transition: color 0.2s; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
         .alert-item:hover .alert-title { color: var(--status-blue); }
 
-        /* Timeline */
         .timeline-panel { padding-right: 8px; }
         .timeline-container { position: relative; padding-left: 24px; display: flex; flex-direction: column; gap: 24px; margin-left: 6px;}
         .timeline-container::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 0; width: 2px; background: var(--panel-border); border-radius: 2px;}
@@ -353,20 +459,28 @@
         .timeline-title { color: var(--text-light); line-height: 1.5; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;}
         .timeline-item:hover .timeline-title { color: var(--status-blue); }
 
-        /* Brief */
         .brief-list { list-style: none; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; padding-right: 8px;}
         .brief-list li { position: relative; padding-left: 20px; font-size: 0.9rem; color: var(--text-light); line-height: 1.5; cursor: pointer; transition: color 0.2s;}
         .brief-list li:hover { color: var(--status-blue); }
         .brief-list li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.2s;}
         .brief-list li:hover::before { background: var(--status-blue); box-shadow: 0 0 8px var(--status-blue);}
 
-        /* Map Integration */
         .map-panel .panel-header { 
             position: absolute; top: 16px; left: 16px; z-index: 1000; 
             background: var(--panel-bg); backdrop-filter: blur(12px);
             padding: 10px 16px; border: 1px solid var(--panel-border); margin: 0; 
             border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
+        .map-layer-controls {
+            position: absolute; bottom: 16px; left: 16px; z-index: 1000;
+            background: var(--panel-bg); backdrop-filter: blur(12px);
+            padding: 8px 12px; border: 1px solid var(--panel-border);
+            border-radius: 8px; display: flex; gap: 12px; font-size: 0.8rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); color: var(--text-light); font-weight: 500;
+        }
+        .map-layer-controls label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .map-layer-controls input { cursor: pointer; accent-color: var(--status-blue); }
+
         #map { width: 100%; height: 100%; background-color: var(--map-bg); z-index: 1; border-radius: 12px;}
         
         .leaflet-popup-content-wrapper { background: var(--panel-bg-solid); color: var(--text-light); border: 1px solid var(--panel-border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.4); padding: 0;}
@@ -382,7 +496,11 @@
         }
         .map-filter-btn:hover { background: var(--status-blue); color: #fff; box-shadow: 0 0 12px var(--status-blue-dim);}
 
-        /* Visual Metrics Lists */
+        .base-icon { background: var(--status-blue); color: white; border-radius: 50%; width: 20px !important; height: 20px !important; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px var(--status-blue); border: 2px solid var(--panel-bg-solid);}
+        .base-icon svg { width: 12px; height: 12px; }
+        .cp-icon { background: var(--status-amber); color: #000; border-radius: 50%; width: 20px !important; height: 20px !important; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px var(--status-amber); border: 2px solid var(--panel-bg-solid);}
+        .cp-icon svg { width: 12px; height: 12px; }
+
         .metrics-list { display: flex; flex-direction: column; gap: 14px; overflow-y: auto; height: 100%; padding-right: 8px; }
         .metric-row { 
             display: flex; align-items: center; gap: 14px; padding: 10px; border-radius: 8px; 
@@ -406,8 +524,7 @@
         .fill-teal { background: var(--status-teal); box-shadow: 0 0 12px var(--status-teal); }
         .fill-blue { background: var(--status-blue); box-shadow: 0 0 12px var(--status-blue); }
 
-        /* High-Density List Feed */
-        .feed-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap;}
+        .feed-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 10px;}
         .feed-controls select, .filter-btn { 
             background: var(--bg-base); color: var(--text-light); 
             border: 1px solid var(--panel-border); padding: 6px 12px; 
@@ -421,7 +538,7 @@
         .filter-btn { display: flex; align-items: center; gap: 6px; }
         .filter-btn.active { background: var(--status-blue-dim); border-color: var(--status-blue); color: var(--status-blue); }
 
-        .feed-list-container { flex: 1; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column; gap: 14px; transition: all 0.3s; }
+        .feed-list-container { flex: 1; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column; gap: 14px; transition: all 0.3s; margin-top: 10px;}
         
         .article-row { 
             background: var(--bg-base); border: 1px solid var(--panel-border); 
@@ -436,11 +553,53 @@
             z-index: 2;
         }
         
+        .article-row.is-read {
+            opacity: 0.65;
+            border-color: transparent;
+        }
+        .article-row.is-read:hover {
+            opacity: 1;
+            border-color: var(--panel-border);
+        }
+        .article-row.is-read .article-title {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .article-row:hover .article-title {
+            color: var(--status-blue);
+        }
+
+        @keyframes subtle-pulse-green {
+            0% { border-color: rgba(16, 185, 129, 0.1); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+            50% { border-color: rgba(16, 185, 129, 0.5); box-shadow: inset 4px 0 0 var(--status-green), 0 0 20px rgba(16, 185, 129, 0.15); }
+            100% { border-color: rgba(16, 185, 129, 0.1); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .is-new-item {
+            animation: subtle-pulse-green 3s infinite;
+        }
+        .badge-new {
+            background: rgba(16, 185, 129, 0.15); color: var(--status-green);
+            border: 1px solid rgba(16, 185, 129, 0.3); font-family: var(--font-mono);
+            font-size: 0.6rem; padding: 3px 6px; border-radius: 4px; margin-left: 8px; font-weight: 700;
+            display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
+        }
+        
+        .unread-indicator {
+            position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+            width: 6px; height: 6px; border-radius: 50%; background: var(--status-blue);
+            box-shadow: 0 0 8px var(--status-blue);
+            transition: all 0.2s ease;
+        }
+        .article-row.is-read .unread-indicator {
+            opacity: 0;
+            display: none;
+        }
+        
         .article-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 6px; flex-shrink: 0; background: var(--panel-border); box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
         
         .article-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
         .article-title { font-size: 0.95rem; font-weight: 600; color: var(--text-light); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color 0.2s;}
-        .article-row:hover .article-title { color: var(--status-blue); }
+        
         .article-desc { font-size: 0.85rem; color: var(--text-main); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
         
         .article-meta-col { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 8px; min-width: 140px; flex-shrink: 0; border-left: 1px solid var(--panel-border); padding-left: 20px;}
@@ -449,13 +608,14 @@
         
         .kw-highlight { background: var(--highlight-yellow); color: var(--highlight-yellow-text); padding: 0 4px; border-radius: 4px; font-weight: 600; }
         .tag-pill { background: var(--panel-border); font-size: 0.65rem; font-family: var(--font-mono); padding: 3px 8px; border-radius: 6px; color: var(--text-light); text-transform: lowercase; font-weight: 500;}
+        .domain-badge { background: var(--status-blue-dim); border: 1px solid var(--status-blue); color: var(--text-light); padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; }
         
         .rel-score-badge { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; border: 1px solid transparent; padding: 3px 8px; border-radius: 6px;}
         .imp-high { color: var(--status-red); background: var(--status-red-bg); border-color: rgba(239,68,68,0.3);}
         .imp-med { color: var(--status-amber); background: var(--status-amber-bg); border-color: rgba(245,158,11,0.3);}
         .imp-low { color: var(--status-blue); background: var(--status-blue-dim); border-color: rgba(59,130,246,0.3);}
         
-        .action-row { display: flex; gap: 10px; align-items: center; margin-top: 6px;}
+        .action-row { display: flex; gap: 10px; align-items: center; margin-top: 6px; flex-wrap: wrap;}
         .btn-pin { background: var(--panel-border); border: 1px solid transparent; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; width: 28px; height: 28px; border-radius: 6px; }
         .btn-pin:hover { color: var(--text-light); background: var(--panel-border-light); }
         .btn-pin.pinned { color: var(--status-amber); background: var(--status-amber-bg); border-color: var(--status-amber); box-shadow: 0 0 12px var(--status-amber-bg);}
@@ -481,7 +641,6 @@
         }
         .load-more-btn:hover { background: var(--panel-bg-solid); color: var(--text-light); border-style: solid; border-color: var(--status-blue);}
 
-        /* Modals Base */
         .modal-overlay {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
             z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(12px);
@@ -489,7 +648,7 @@
         }
         .modal-container {
             background: var(--panel-bg-solid); border: 1px solid var(--panel-border);
-            width: 100%; max-width: 750px; border-radius: 16px; padding: 0;
+            width: 100%; max-width: 850px; border-radius: 16px; padding: 0;
             position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
             max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;
         }
@@ -508,7 +667,6 @@
         }
         .modal-close:hover { background: var(--status-red); color: #fff; }
 
-        /* Dossier Modal specifics */
         .modal-meta { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 16px; align-items: center; flex: 1; flex-wrap: wrap;}
         .modal-title { font-size: 1.6rem; color: var(--text-light); font-weight: 700; line-height: 1.3; }
         .modal-image { width: 100%; max-height: 450px; object-fit: cover; border-radius: 10px; display: none; border: 1px solid var(--panel-border); }
@@ -524,7 +682,6 @@
         }
         .modal-action:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 8px 20px var(--status-blue-dim); }
 
-        /* Settings Modal Specifics */
         .settings-section { border-top: 1px solid var(--panel-border); padding-top: 24px; margin-top: 12px; display: flex; flex-direction: column; gap: 16px; }
         .settings-section:first-child { border-top: none; padding-top: 0; margin-top: 0;}
         .settings-section h3 { color: var(--text-light); font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 10px;}
@@ -545,7 +702,6 @@
         
         .data-mgr-actions { display: flex; gap: 16px; }
 
-        /* Dashboard/TV Mode Overlay */
         .tv-overlay {
             display: none; position: fixed; inset: 0; background: #000; z-index: 10000;
             flex-direction: column; color: #fff; overflow: hidden;
@@ -578,20 +734,69 @@
 
         @keyframes pulse-anim { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
 
-        /* Custom Scrollbars */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--panel-border-light); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box;}
         ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); border: 2px solid transparent; background-clip: padding-box;}
 
-        /* Loader */
         .loader { display: none; border: 2px solid var(--panel-border-light); border-top: 2px solid var(--status-blue); border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Map Cluster Customization */
         .mycluster { background: var(--panel-bg-solid); color: var(--text-light); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; border: 2px solid var(--status-red); box-shadow: 0 8px 16px rgba(0,0,0,0.5);}
 
-        /* Responsive Layouts */
+        .compare-toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: var(--status-blue-dim); border: 1px solid var(--status-blue);
+            color: var(--text-light); padding: 12px 24px; border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 3000;
+            display: flex; align-items: center; gap: 16px; font-weight: 500;
+            backdrop-filter: blur(8px);
+        }
+        .btn-compare-action {
+            background: transparent; border: none; color: var(--status-blue); font-weight: 600;
+            cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: all 0.2s;
+        }
+        .btn-compare-action:hover { background: var(--status-blue); color: #fff; }
+
+        .compare-modal-container { max-width: 1400px; width: 95%; max-height: 95vh; }
+        .compare-grid {
+            display: grid; grid-template-columns: 140px 1fr 1fr; gap: 16px; width: 100%; min-width: 800px;
+        }
+        .compare-col-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding-bottom: 12px; border-bottom: 1px solid var(--panel-border);
+        }
+        .compare-article-title { font-size: 1.1rem; font-weight: 600; color: var(--text-light); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px;}
+        .compare-row-label {
+            font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);
+            text-transform: uppercase; font-weight: 600; align-self: start; padding-top: 14px;
+        }
+        .compare-cell {
+            background: var(--bg-base); border: 1px solid var(--panel-border); border-radius: 8px;
+            padding: 14px; font-size: 0.9rem; color: var(--text-light); line-height: 1.6;
+            word-break: break-word; transition: all 0.2s;
+        }
+        .compare-cell.diff {
+            background: rgba(234, 179, 8, 0.05); border-color: rgba(234, 179, 8, 0.3);
+            border-left: 4px solid var(--status-amber); box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .compare-empty {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 2px dashed var(--panel-border); border-radius: 12px; color: var(--text-muted);
+            min-height: 200px; gap: 12px; font-style: italic; text-align: center;
+        }
+        .btn-compare-icon {
+            background: var(--panel-border); border: 1px solid transparent; color: var(--text-muted);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; width: 28px; height: 28px; border-radius: 6px;
+        }
+        .btn-compare-icon:hover { color: var(--text-light); background: var(--panel-border-light); }
+        .btn-compare-icon.selected {
+            color: var(--status-blue); background: var(--status-blue-dim);
+            border-color: var(--status-blue); box-shadow: 0 0 12px var(--status-blue-dim);
+        }
+        .btn-compare-icon.selected svg { fill: var(--status-blue-dim); }
+
         @media (max-width: 1500px) {
             .breaking-panel { grid-column: span 5; }
             .map-panel { grid-column: span 7; }
@@ -601,6 +806,9 @@
             .feed-panel { grid-column: span 7; }
         }
         @media (max-width: 1100px) {
+            .region-stats-panel { grid-template-columns: repeat(3, 1fr); }
+            .rs-section:nth-child(3) { border-right: none; padding-right: 0; }
+            
             .breaking-panel { grid-column: span 12; height: 350px; }
             .map-panel { grid-column: span 12; }
             .middle-left-col { grid-column: span 12; flex-direction: row; height: 250px; }
@@ -608,14 +816,20 @@
             .brief-panel { flex: 1; height: 100%; }
             .metrics-wrapper { grid-column: span 12; height: auto; grid-template-columns: 1fr 1fr;}
             .metrics-panel { height: 350px; }
+            .advanced-metrics-wrapper > div { grid-column: span 12 !important; height: auto; min-height: 350px;}
             .timeline-panel { grid-column: span 12; height: 400px; }
             .feed-panel { grid-column: span 12; }
         }
         @media (max-width: 768px) {
             header { flex-direction: column; align-items: stretch; border-radius: 12px; margin: 12px;}
             .global-search { width: 100%; }
-            .header-right { justify-content: space-between; width: 100%; }
+            .header-right { justify-content: space-between; width: 100%; flex-wrap: wrap;}
             .status-bar { justify-content: space-between; width: 100%; border: none; padding: 0; background: transparent;}
+            
+            .region-stats-panel { grid-template-columns: 1fr; gap: 16px;}
+            .rs-section { border-right: none; border-bottom: 1px solid var(--panel-border); padding-right: 0; padding-bottom: 16px; }
+            .rs-section:last-child { border-bottom: none; padding-bottom: 0; }
+            
             .middle-left-col { flex-direction: column; height: auto; }
             .metrics-wrapper { grid-template-columns: 1fr; }
             .article-row { flex-direction: column; align-items: flex-start; gap: 12px;}
@@ -626,6 +840,14 @@
             .modal-container { padding: 0; border-radius: 12px;}
             .modal-sticky-top { padding: 16px 20px; }
             .modal-content-wrap { padding: 20px; gap: 20px; }
+            .compare-grid { grid-template-columns: 1fr; min-width: auto; gap: 8px;}
+            .compare-col-header { flex-direction: column; gap: 8px; border-bottom: none; padding-bottom: 0;}
+            .compare-row-label { display: none; } /* Hide labels on mobile stack */
+            .compare-cell { position: relative; padding-top: 28px;}
+            .compare-cell::before {
+                content: attr(data-label); position: absolute; top: 8px; left: 14px;
+                font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;
+            }
         }
     </style>
 </head>
@@ -633,26 +855,34 @@
 
     <header>
         <div class="header-left">
-            <a href="/projects/" class="btn-icon-only" title="Back to Projects">
+            <a href="#" class="btn-icon-only" title="Back">
                 <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
             </a>
             <div class="header-title">
                 <div class="status-indicator"></div>
-                Intelligence Matrix
+                OSINT Matrix v2.2
             </div>
             
             <div class="global-search">
                 <i data-lucide="search" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
                 <input type="text" id="global-search-input" placeholder="Search targets, assets, or locations...">
-                <span class="shortcut-hint">/</span>
+                <span class="shortcut-hint" style="color:var(--text-muted); font-family:var(--font-mono); font-size:0.75rem;">/</span>
             </div>
         </div>
 
         <div class="header-right">
+            <div class="global-risk-badge" id="global-risk-badge">
+                <i data-lucide="activity" style="width: 14px; height: 14px;"></i> RISK INDEX: ASSESSING
+            </div>
             <div class="status-bar">
                 <div>SYNC: <span id="last-sync">--:--:--</span></div>
                 <div class="loader" id="loader"></div>
             </div>
+            
+            <button class="btn-icon-only" id="btn-watchlist-alerts" title="Watchlist Alerts" style="position: relative;">
+                <i data-lucide="bell" style="width: 16px; height: 16px;"></i>
+                <span id="watchlist-counter" class="notification-badge" style="display: none;">0</span>
+            </button>
             <button class="btn-action btn-primary" onclick="openTvMode()" title="Enter Dashboard Mode">
                 <i data-lucide="monitor-play" style="width: 14px; height: 14px;"></i> Dashboard
             </button>
@@ -663,7 +893,30 @@
     </header>
 
     <div class="dashboard-grid" id="main-grid">
-        <!-- Breaking Alerts -->
+        
+        <div class="theatre-bar-container">
+            <div class="theatre-bar">
+                <button class="theatre-tab active" onclick="setTheatre('Global')"><i data-lucide="globe" style="width: 14px; height: 14px;"></i> GLOBAL COMMAND</button>
+                <button class="theatre-tab" onclick="setTheatre('RUS-UKR')">🇺🇦 RUS-UKR THEATRE</button>
+                <button class="theatre-tab" onclick="setTheatre('MID-EAST')">⚔️ MIDDLE EAST</button>
+                <button class="theatre-tab" onclick="setTheatre('INDO-PAC')">🐉 INDO-PACIFIC</button>
+                <button class="theatre-tab" onclick="setTheatre('CYBER')"><i data-lucide="terminal" style="width: 14px; height: 14px;"></i> CYBER DOMAIN</button>
+            </div>
+        </div>
+
+        <div class="panel changes-panel" id="changes-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-weight: 600; color: var(--text-light); display: flex; align-items: center; gap: 8px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i data-lucide="refresh-cw" style="width: 14px; height: 14px; color: var(--status-blue);"></i> Intelligence Delta Since Last Sync
+                </span>
+                <span id="changes-timestamp" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);"></span>
+            </div>
+            <div class="change-item-scroll" id="changes-content">
+            </div>
+        </div>
+
+        <div class="panel region-stats-panel" id="region-stats-panel"></div>
+
         <div class="panel breaking-panel">
             <div class="panel-header">
                 <span><i data-lucide="alert-triangle" style="width: 14px; height: 14px; color: var(--status-red);"></i> Priority Intelligence</span>
@@ -677,16 +930,19 @@
             </div>
         </div>
 
-        <!-- Conflict Map -->
         <div class="panel map-panel">
             <div class="panel-header">
                 <span><i data-lucide="map" style="width: 14px; height: 14px;"></i> Geospatial Distribution</span>
+            </div>
+            <div class="map-layer-controls">
+                <label><input type="checkbox" id="layer-heatmap" onchange="toggleLayer(this)"> Heatmap</label>
+                <label><input type="checkbox" id="layer-bases" onchange="toggleLayer(this)"> Mil Bases</label>
+                <label><input type="checkbox" id="layer-chokepoints" onchange="toggleLayer(this)"> Chokepoints</label>
             </div>
             <div id="map"></div>
         </div>
 
         <div class="middle-left-col">
-            <!-- Escalation Meter -->
             <div class="panel escalation-panel">
                 <div class="panel-header">
                     <span><i data-lucide="bar-chart-2" style="width: 14px; height: 14px;"></i> Conflict Intensity</span>
@@ -710,7 +966,6 @@
                 </div>
             </div>
 
-            <!-- Daily Brief -->
             <div class="panel brief-panel">
                 <div class="panel-header">
                     <span><i data-lucide="file-text" style="width: 14px; height: 14px;"></i> Executive Summary (24H)</span>
@@ -723,9 +978,7 @@
             </div>
         </div>
 
-        <!-- Metrics Wrapper -->
         <div class="metrics-wrapper">
-            <!-- Equipment Tracker -->
             <div class="panel metrics-panel">
                 <div class="panel-header">
                     <span><i data-lucide="crosshair" style="width: 14px; height: 14px;"></i> Asset Signatures</span>
@@ -738,7 +991,6 @@
                 </div>
             </div>
 
-            <!-- Keyword Trends -->
             <div class="panel metrics-panel">
                 <div class="panel-header">
                     <span><i data-lucide="activity" style="width: 14px; height: 14px;"></i> Strategic Vectors</span>
@@ -751,8 +1003,26 @@
                 </div>
             </div>
         </div>
+        
+        <div class="advanced-metrics-wrapper">
+            <div class="panel metrics-panel forecast-panel" style="grid-column: span 8; height: 350px;">
+                <div class="panel-header">
+                    <span><i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> Threat Forecasting & Probability Modelling</span>
+                </div>
+                <div style="position: relative; height: calc(100% - 40px); width: 100%;">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="panel metrics-panel" style="grid-column: span 4; height: 350px;">
+                <div class="panel-header">
+                    <span><i data-lucide="radar" style="width: 14px; height: 14px;"></i> Force Disposition & Readiness</span>
+                </div>
+                <div class="metrics-list" id="readiness-list" style="overflow-y: hidden;">
+                </div>
+            </div>
+        </div>
 
-        <!-- Event Timeline -->
         <div class="panel timeline-panel">
             <div class="panel-header">
                 <span><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Op Timeline</span>
@@ -765,24 +1035,51 @@
             </div>
         </div>
 
-        <!-- Live Feed -->
         <div class="panel feed-panel">
-            <div class="panel-header">
-                <span><i data-lucide="list" style="width: 14px; height: 14px;"></i> Raw Intelligence Stream</span>
-                <div class="feed-controls">
-                    <button class="filter-btn" id="btn-headline-mode" title="Toggle Headline Mode">
-                        <i data-lucide="menu" style="width: 14px; height: 14px;"></i>
-                    </button>
-                    <button class="filter-btn" id="btn-toggle-pinned" title="Show Pinned Intelligence Only">
-                        <i data-lucide="pin" style="width: 14px; height: 14px;"></i> Pinned
-                    </button>
+            <div class="panel-header" style="flex-direction: column; align-items: flex-start;">
+                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                    <span><i data-lucide="list" style="width: 14px; height: 14px;"></i> Raw Intelligence Stream</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="filter-btn" id="btn-headline-mode" title="Toggle Headline Mode">
+                            <i data-lucide="menu" style="width: 14px; height: 14px;"></i>
+                        </button>
+                        <button class="filter-btn" id="btn-toggle-unread" title="Show Unread Intelligence Only">
+                            <i data-lucide="mail-unread" style="width: 14px; height: 14px;"></i> Unread
+                        </button>
+                        <button class="filter-btn" id="btn-toggle-pinned" title="Show Pinned Intelligence Only">
+                            <i data-lucide="pin" style="width: 14px; height: 14px;"></i> Pinned
+                        </button>
+                    </div>
+                </div>
+                <div class="feed-controls" style="width: 100%;">
+                    <select id="domain-filter">
+                        <option value="all">All Domains</option>
+                        <option value="Air">Air & Space</option>
+                        <option value="Naval">Naval</option>
+                        <option value="Land">Land Forces</option>
+                        <option value="Cyber">Cyber</option>
+                    </select>
+                    <select id="severity-filter">
+                        <option value="all">All Severities</option>
+                        <option value="3">Critical Alerts</option>
+                        <option value="2">Major & Up</option>
+                    </select>
                     <select id="source-filter"><option value="all">All Sources</option></select>
                     <select id="sort-filter">
                         <option value="newest">Sort: Newest</option>
                         <option value="importance">Sort: Importance</option>
-                        <option value="severity">Sort: Severity Level</option>
+                        <option value="severity">Sort: Severity</option>
                         <option value="oldest">Sort: Oldest</option>
                     </select>
+                    
+                    <div style="margin-left: auto; display: flex; gap: 8px;">
+                        <button class="filter-btn" onclick="markAllRead()" title="Mark all loaded intelligence as read">
+                            <i data-lucide="check-check" style="width: 14px; height: 14px;"></i> Mark All Read
+                        </button>
+                        <button class="filter-btn" onclick="markAllUnread()" title="Reset read status across all intelligence">
+                            <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Reset Read
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="feed-list-container" id="feed-container">
@@ -791,9 +1088,6 @@
         </div>
     </div>
 
-    <!-- Modals -->
-    
-    <!-- 1. Intelligence Dossier Modal -->
     <div class="modal-overlay" id="article-modal" onclick="if(event.target===this) closeModal()">
         <div class="modal-container">
             <div class="modal-sticky-top">
@@ -814,7 +1108,6 @@
         </div>
     </div>
 
-    <!-- 2. Settings Modal -->
     <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this) closeSettingsModal()">
         <div class="modal-container">
             <div class="modal-sticky-top">
@@ -823,6 +1116,25 @@
             </div>
             
             <div class="modal-content-wrap" style="padding-top: 10px;">
+                
+                <div class="settings-section">
+                    <h3><i data-lucide="eye" style="width: 16px; height: 16px;"></i> Watchlists & Keyword Alerts</h3>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 8px;">Trigger alerts and visually highlight incoming intelligence that matches these specific phrases.</p>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;" id="watchlist-keywords-container"></div>
+                    
+                    <div class="add-feed-form">
+                        <input type="text" id="new-watchlist-keyword" placeholder="Enter keyword or phrase (e.g. 'Avdiivka')">
+                        <button class="btn-action btn-primary" onclick="addWatchlistKeyword()">Add Keyword</button>
+                    </div>
+                    
+                    <div class="setting-row" style="margin-top: 12px;">
+                        <span style="color: var(--text-main);">Auto-Pin Watchlist Hits</span>
+                        <label style="display:flex; align-items:center; cursor:pointer;">
+                            <input type="checkbox" id="settings-watchlist-autopin" onchange="saveSettings()" style="width:16px; height:16px; accent-color:var(--status-blue);">
+                        </label>
+                    </div>
+                </div>
                 
                 <div class="settings-section">
                     <h3><i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Data Presentation</h3>
@@ -848,9 +1160,7 @@
 
                 <div class="settings-section">
                     <h3><i data-lucide="rss" style="width: 16px; height: 16px;"></i> Active Intelligence Feeds</h3>
-                    <div class="feed-list-mgr" id="settings-feed-list">
-                        <!-- Feeds populated here -->
-                    </div>
+                    <div class="feed-list-mgr" id="settings-feed-list"></div>
                     <div class="add-feed-form">
                         <input type="text" id="new-feed-name" placeholder="Feed Name (e.g. CIA News)">
                         <input type="url" id="new-feed-url" placeholder="RSS/Atom URL">
@@ -874,7 +1184,7 @@
 
                 <div class="settings-section">
                     <h3><i data-lucide="hard-drive-download" style="width: 16px; height: 16px;"></i> Data Management</h3>
-                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 8px;">Export your feeds, pins, and settings to transfer to another device.</p>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 8px;">Export your feeds, pins, read states, and settings to transfer to another device.</p>
                     <div class="data-mgr-actions">
                         <button class="btn-action" onclick="exportDataJSON()"><i data-lucide="download" style="width: 14px; height: 14px;"></i> Export Configuration</button>
                         <label class="btn-action" style="cursor: pointer;">
@@ -889,7 +1199,32 @@
         </div>
     </div>
 
-    <!-- 3. Dashboard / TV Mode Overlay -->
+    <div id="compare-toast" class="compare-toast" style="display:none;">
+        <span><i data-lucide="layers" style="width: 14px; height: 14px; display:inline-block; vertical-align:middle; margin-right:6px;"></i> 1 Article Selected for Comparison. Select another.</span>
+        <button class="btn-compare-action" onclick="clearCompare()">Cancel</button>
+    </div>
+
+    <div class="modal-overlay" id="compare-modal" onclick="if(event.target===this) closeCompareModal()">
+        <div class="modal-container compare-modal-container">
+            <div class="modal-sticky-top">
+                <h2 style="color: var(--text-light); font-size: 1.4rem; margin: 0; display:flex; align-items:center; gap:10px;">
+                    <i data-lucide="columns"></i> Intelligence Comparison
+                </h2>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <button class="btn-action" onclick="swapCompare()" id="btn-swap-compare" title="Swap Columns">
+                        <i data-lucide="arrow-left-right" style="width:14px; height:14px;"></i> Swap
+                    </button>
+                    <button class="modal-close" onclick="closeCompareModal()"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+                </div>
+            </div>
+            <div class="modal-content-wrap" style="overflow-x: auto;">
+                <div class="compare-grid" id="compare-grid">
+                    <!-- Compare Grid Content Injected Here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="tv-overlay" id="tv-mode">
         <div class="tv-bg-blur" id="tv-bg"></div>
         <button class="tv-close" onclick="closeTvMode()">ESC to Exit</button>
@@ -915,96 +1250,149 @@
     </div>
 
     <script>
-        // --- Initialize Icons ---
         lucide.createIcons();
 
-        // --- Core Defaults ---
         const DEFAULT_FEEDS = [
             { url: 'https://defence-blog.com/feed/', name: 'Defence Blog' },
             { url: 'https://www.gov.uk/government/organisations/ministry-of-defence.atom', name: 'UK MOD' },
             { url: 'https://www.navalnews.com/feed/', name: 'Naval News' },
             { url: 'https://breakingdefense.com/feed/', name: 'Breaking Defense' },
             { url: 'https://www.iswresearch.org/feeds/posts/default', name: 'ISW' },
-            { url: 'https://www.defensenews.com/arc/outboundfeeds/rss/', name: 'Defense News' }
+            { url: 'https://www.defensenews.com/arc/outboundfeeds/rss/', name: 'Defense News' },
+            { url: 'https://www.c4isrnet.com/arc/outboundfeeds/rss/', name: 'C4ISRNet' },
+            { url: 'https://news.usni.org/feed', name: 'USNI News' },
+            { url: 'https://theaviationist.com/feed/', name: 'The Aviationist' },
+            { url: 'https://www.airforcetimes.com/arc/outboundfeeds/rss/', name: 'Air Force Times' },
+            { url: 'https://warontherocks.com/feed/', name: 'War on the Rocks' },
+            { url: 'https://www.janes.com/feeds/news', name: 'Janes' },
+            { url: 'https://www.bleepingcomputer.com/feed/', name: 'BleepingComputer' },
+            { url: 'https://mwi.westpoint.edu/feed/', name: 'Modern War Inst.' }
         ];
 
-        // --- State Management ---
         let activeFeeds = JSON.parse(localStorage.getItem('osint_feeds')) || DEFAULT_FEEDS;
         let appSettings = JSON.parse(localStorage.getItem('osint_settings')) || { cycleSpeed: 10, theme: 'military-dark', layout: 'analyst', headlineMode: false };
         let pinnedArticles = new Set(JSON.parse(localStorage.getItem('osint_pinned') || '[]'));
+        let readArticles = new Set(JSON.parse(localStorage.getItem('osint_read') || '[]'));
+        let showUnreadOnly = false;
+        
+        let watchlists = JSON.parse(localStorage.getItem('osint_watchlists')) || [];
+        let watchlistAutoPin = JSON.parse(localStorage.getItem('osint_watchlist_autopin')) || false;
+        let notifiedWatchlistIds = new Set(JSON.parse(localStorage.getItem('osint_notified_watchlist_ids') || '[]'));
+        let currentSessionHits = 0;
+        let showWatchlistOnly = false;
         
         let allArticles = [];
+        let lastRefreshChanges = { new: [], updated: [], removed: [], timestamp: null };
+        let isInitialLoad = true;
+        
         let map, markerClusterGroup, tileLayer;
+        let heatLayer, basesLayer, chokepointsLayer; 
+        let forecastChartInstance = null; 
+        
         let isFetching = false;
         let searchQuery = '';
         let showPinnedOnly = false;
         let feedDisplayLimit = 30;
+        let activeTheatre = 'Global';
         let autoRefreshInterval;
         const REFRESH_INTERVAL_MINUTES = 15;
 
-        // Dashboard/TV Mode State
         let tvIntervalId = null;
         let tvArticles = [];
         let tvCurrentIndex = 0;
         let tvIsActive = false;
+        
+        let compareQueue = []; // Holds max 2 article IDs for comparison
 
         const generateId = () => Math.random().toString(36).substr(2, 9);
 
-        // --- Dictionaries ---
-        const SEVERITY_LEVELS = {
-            3: ['nuclear', 'ballistic missile', 'hypersonic', 'strategic strike', 'invasion'],
-            2: ['attack', 'missile', 'airstrike', 'drone strike', 'explosion', 'offensive', 'counteroffensive'],
-            1: ['deployment', 'troop movement', 'military buildup', 'interception', 'launch', 'sanctions']
+        const CONFLICT_THEATRES = {
+            'Global': [],
+            'RUS-UKR': ['ukraine', 'russia', 'kyiv', 'moscow', 'donbas', 'crimea', 'putin', 'zelensky', 'kharkiv', 'kursk', 'belgorod', 'odessa'],
+            'MID-EAST': ['israel', 'iran', 'gaza', 'hamas', 'hezbollah', 'lebanon', 'yemen', 'houthi', 'red sea', 'tehran', 'jerusalem', 'syria', 'iraq', 'idf', 'hormuz'],
+            'INDO-PAC': ['taiwan', 'china', 'beijing', 'taipei', 'south china sea', 'philippines', 'north korea', 'pyongyang', 'kim jong un', 'japan', 'indo-pacific', 'pla'],
         };
 
-        const KEYWORDS_EQUIPMENT = ['drone', 'uav', 'missile', 'artillery', 'tank', 'fighter jet', 'f-16', 'air defence', 'patriot system', 'rocket system', 'himars', 'naval vessel', 'submarine', 'warship'];
-        const KEYWORDS_TRENDS = ['nato', 'defence aid', 'military support', 'training mission', 'security cooperation', 'sanctions', 'military exercise', 'arms package', 'mobilization', 'troop movement', 'military buildup', 'border incursion', 'intercepted', 'downed aircraft', 'strategic strike', 'nuclear', 'ballistic missile', 'hypersonic', 'military escalation'];
+        const DOMAINS = {
+            'Land': ['tank', 'artillery', 'infantry', 'troop', 'trench', 'mechanized', 'himars', 'patriot', 'offensive'],
+            'Air': ['aircraft', 'fighter', 'jet', 'bomber', 'drone', 'uav', 'missile', 'airspace', 'radar', 'f-16', 'f-35', 'interception', 'airstrike'],
+            'Naval': ['ship', 'navy', 'naval', 'submarine', 'carrier', 'destroyer', 'fleet', 'maritime', 'strait', 'warship', 'csg'],
+            'Cyber': ['cyber', 'hack', 'breach', 'ransomware', 'malware', 'ddos', 'cisa', 'cyberattack', 'apt'],
+            'Space': ['satellite', 'orbit', 'spacecraft', 'gps', 'jamming', 'space force']
+        };
+
+        const SEVERITY_LEVELS = {
+            3: ['nuclear', 'ballistic missile', 'hypersonic', 'strategic strike', 'invasion', 'assassination', 'icbm'],
+            2: ['attack', 'missile', 'airstrike', 'drone strike', 'explosion', 'offensive', 'counteroffensive', 'cyberattack', 'casualty', 'destroyed'],
+            1: ['deployment', 'troop movement', 'military buildup', 'interception', 'launch', 'sanctions', 'exercise', 'drill', 'aid']
+        };
+
+        const KEYWORDS_EQUIPMENT = ['drone', 'uav', 'missile', 'artillery', 'tank', 'fighter jet', 'f-16', 'f-35', 'air defence', 'patriot', 'rocket system', 'himars', 'naval vessel', 'submarine', 'warship', 'carrier'];
+        const KEYWORDS_TRENDS = ['nato', 'defence aid', 'military support', 'training mission', 'security cooperation', 'sanctions', 'military exercise', 'arms package', 'mobilization', 'troop movement', 'border incursion', 'intercepted', 'downed', 'strategic strike', 'nuclear', 'escalation', 'cyberattack'];
         const ALL_HIGHLIGHT_WORDS = [...KEYWORDS_EQUIPMENT, ...KEYWORDS_TRENDS, ...SEVERITY_LEVELS[3], ...SEVERITY_LEVELS[2], ...SEVERITY_LEVELS[1]];
 
         const KEYWORDS_SENTIMENT = {
-            negative: ['attack', 'strike', 'explosion', 'casualties', 'destruction', 'killed', 'wounded', 'crisis'],
-            positive: ['agreement', 'support', 'aid', 'ceasefire', 'package', 'assistance', 'intercepted']
+            negative: ['attack', 'strike', 'explosion', 'casualties', 'destruction', 'killed', 'wounded', 'crisis', 'breach', 'threat'],
+            positive: ['agreement', 'support', 'aid', 'ceasefire', 'package', 'assistance', 'intercepted', 'defended']
         };
 
         const LOCATIONS_DB = {
-            "Ukraine": [49.0, 31.0], "Kyiv": [50.4501, 30.5234], "Kharkiv": [50.0, 36.23], "Odesa": [46.48, 30.73],
-            "Russia": [60.0, 90.0], "Moscow": [55.7558, 37.6173], "St Petersburg": [59.93, 30.31], "Kursk": [51.73, 36.19],
-            "Crimea": [45.3453, 34.0996], "Sevastopol": [44.61, 33.52],
+            "Ukraine": [49.0, 31.0], "Kyiv": [50.4501, 30.5234], "Kharkiv": [50.0, 36.23], "Odesa": [46.48, 30.73], "Crimea": [45.3453, 34.0996], "Sevastopol": [44.61, 33.52], "Donbas": [48.0, 37.8], "Kursk": [51.73, 36.19],
+            "Russia": [60.0, 90.0], "Moscow": [55.7558, 37.6173], "St Petersburg": [59.93, 30.31], "Belgorod": [50.6, 36.6], "Rostov": [47.23, 39.7],
             "Black Sea": [43.4130, 34.2268], "Azov Sea": [46.0, 36.5],
             "UK": [54.0, -2.0], "London": [51.5074, -0.1278],
-            "NATO": [50.879, 4.331], "Poland": [52.0, 19.0], "Warsaw": [52.22, 21.01],
-            "Romania": [45.9, 24.9], "Belarus": [53.9, 27.5], "Minsk": [53.9, 27.56],
-            "Middle East": [29.0, 42.0], "Red Sea": [20.0, 38.0], "Israel": [31.0, 35.0], "Iran": [32.0, 53.0],
-            "Taiwan": [23.6978, 120.9605], "China": [35.8617, 104.1954], "South China Sea": [12.0, 113.0]
+            "NATO": [50.879, 4.331], "Poland": [52.0, 19.0], "Warsaw": [52.22, 21.01], "Romania": [45.9, 24.9], "Baltic Sea": [57.0, 19.0], "Suwalki Gap": [54.1, 23.1],
+            "Middle East": [29.0, 42.0], "Red Sea": [20.0, 38.0], "Israel": [31.0, 35.0], "Jerusalem": [31.76, 35.21], "Tel Aviv": [32.08, 34.78], "Gaza": [31.5, 34.46],
+            "Iran": [32.0, 53.0], "Tehran": [35.68, 51.38], "Yemen": [15.5, 48.0], "Sanaa": [15.36, 44.2], "Lebanon": [33.8, 35.8], "Beirut": [33.89, 35.5], "Syria": [34.8, 38.9], "Iraq": [33.0, 44.0],
+            "Taiwan": [23.6978, 120.9605], "Taipei": [25.03, 121.56], "China": [35.8617, 104.1954], "Beijing": [39.9, 116.4], "South China Sea": [12.0, 113.0], "Philippines": [12.8, 121.7], "Manila": [14.59, 120.98],
+            "North Korea": [40.3, 127.5], "Pyongyang": [39.03, 125.75], "South Korea": [35.9, 127.7], "Seoul": [37.56, 126.97], "Japan": [36.2, 138.2], "Tokyo": [35.67, 139.65],
+            "USA": [37.0, -95.0], "Washington": [38.9, -77.0], "Pentagon": [38.87, -77.05]
         };
+
+        const CHOKEPOINTS = [
+            { name: 'Strait of Hormuz', coords: [26.5667, 56.2500] },
+            { name: 'Bab el-Mandeb', coords: [12.5833, 43.3333] },
+            { name: 'Suez Canal', coords: [30.5852, 32.2654] },
+            { name: 'Taiwan Strait', coords: [24.8000, 119.9000] },
+            { name: 'Malacca Strait', coords: [4.0000, 100.0000] }
+        ];
+
+        const STRATEGIC_BASES = [
+            { name: 'Naval Base Guam', coords: [13.4390, 144.6549] },
+            { name: 'Kadena AB (Japan)', coords: [26.3556, 127.7675] },
+            { name: 'Incirlik AB (Turkey)', coords: [37.0019, 35.4258] },
+            { name: 'Ramstein AB (Germany)', coords: [49.4361, 7.6000] },
+            { name: 'Camp Lemonnier (Djibouti)', coords: [11.5458, 43.1478] },
+            { name: 'Diego Garcia', coords: [-7.3133, 72.4111] }
+        ];
 
         function getIconForKeyword(keyword) {
             const lower = keyword.toLowerCase();
-            if (['drone', 'uav', 'fighter jet', 'f-16'].includes(lower)) return 'plane';
-            if (['missile', 'rocket system', 'himars', 'ballistic missile', 'hypersonic'].includes(lower)) return 'rocket';
+            if (['drone', 'uav', 'fighter jet', 'f-16', 'f-35', 'aircraft', 'bomber'].includes(lower)) return 'plane';
+            if (['missile', 'rocket system', 'himars', 'ballistic missile', 'hypersonic', 'icbm'].includes(lower)) return 'rocket';
             if (['artillery'].includes(lower)) return 'target';
-            if (['tank'].includes(lower)) return 'shield-half';
-            if (['air defence', 'patriot system'].includes(lower)) return 'shield-alert';
-            if (['naval vessel', 'submarine', 'warship'].includes(lower)) return 'ship';
-            if (['nato'].includes(lower)) return 'globe';
-            if (['defence aid', 'military support', 'arms package'].includes(lower)) return 'package';
-            if (['training mission', 'military exercise'].includes(lower)) return 'swords';
+            if (['tank', 'mechanized', 'infantry'].includes(lower)) return 'shield-half';
+            if (['air defence', 'patriot', 'radar'].includes(lower)) return 'shield-alert';
+            if (['naval vessel', 'submarine', 'warship', 'carrier', 'ship', 'fleet', 'csg'].includes(lower)) return 'ship';
+            if (['nato', 'alliance'].includes(lower)) return 'globe';
+            if (['defence aid', 'military support', 'arms package', 'aid'].includes(lower)) return 'package';
+            if (['training mission', 'military exercise', 'drill', 'exercise'].includes(lower)) return 'swords';
             if (['security cooperation'].includes(lower)) return 'handshake';
             if (['sanctions'].includes(lower)) return 'ban';
-            if (['mobilization', 'troop movement', 'military buildup'].includes(lower)) return 'users';
+            if (['mobilization', 'troop movement', 'military buildup', 'troop'].includes(lower)) return 'users';
             if (['border incursion'].includes(lower)) return 'map-pin';
-            if (['intercepted', 'downed aircraft'].includes(lower)) return 'crosshair';
+            if (['intercepted', 'downed aircraft', 'downed'].includes(lower)) return 'crosshair';
             if (['strategic strike', 'nuclear'].includes(lower)) return 'radiation';
-            if (['military escalation'].includes(lower)) return 'trending-up';
+            if (['military escalation', 'escalation'].includes(lower)) return 'trending-up';
+            if (['cyber', 'hack', 'breach', 'ransomware', 'cyberattack'].includes(lower)) return 'terminal';
+            if (['satellite', 'spacecraft', 'orbit'].includes(lower)) return 'satellite';
             return 'activity'; 
         }
 
-        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             applyThemeAndLayout();
             initMap();
             
-            // Search Debouncing & Hotkey
             const searchInput = document.getElementById('global-search-input');
             if (searchInput) {
                 let searchTimeout;
@@ -1013,7 +1401,7 @@
                     searchTimeout = setTimeout(() => {
                         searchQuery = e.target.value.toLowerCase();
                         feedDisplayLimit = 30; 
-                        renderLiveFeed();
+                        renderAll();
                     }, 300);
                 });
             }
@@ -1025,20 +1413,16 @@
                 } else if (e.key === 'Escape') {
                     closeModal();
                     closeSettingsModal();
+                    closeCompareModal();
                     if (tvIsActive) closeTvMode();
                     if (searchInput && document.activeElement === searchInput) searchInput.blur();
                 }
             });
             
-            const sourceFilter = document.getElementById('source-filter');
-            if (sourceFilter) {
-                sourceFilter.addEventListener('change', () => { feedDisplayLimit = 30; renderLiveFeed(); });
-            }
-            
-            const sortFilter = document.getElementById('sort-filter');
-            if (sortFilter) {
-                sortFilter.addEventListener('change', () => { feedDisplayLimit = 30; renderLiveFeed(); });
-            }
+            ['source-filter', 'sort-filter', 'domain-filter', 'severity-filter'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', () => { feedDisplayLimit = 30; renderAll(); });
+            });
 
             const btnTogglePinned = document.getElementById('btn-toggle-pinned');
             if (btnTogglePinned) {
@@ -1046,7 +1430,17 @@
                     showPinnedOnly = !showPinnedOnly;
                     btnTogglePinned.classList.toggle('active');
                     feedDisplayLimit = 30;
-                    renderLiveFeed();
+                    renderAll();
+                });
+            }
+            
+            const btnToggleUnread = document.getElementById('btn-toggle-unread');
+            if (btnToggleUnread) {
+                btnToggleUnread.addEventListener('click', () => {
+                    showUnreadOnly = !showUnreadOnly;
+                    btnToggleUnread.classList.toggle('active');
+                    feedDisplayLimit = 30;
+                    renderAll();
                 });
             }
 
@@ -1057,19 +1451,34 @@
                     appSettings.headlineMode = !appSettings.headlineMode;
                     btnHeadlineMode.classList.toggle('active');
                     localStorage.setItem('osint_settings', JSON.stringify(appSettings));
-                    renderLiveFeed();
+                    renderAll();
                 });
             }
 
-            const btnRefresh = document.getElementById('btn-refresh');
-            if (btnRefresh) {
-                btnRefresh.addEventListener('click', () => fetchData(true));
+            const btnWatchlistAlerts = document.getElementById('btn-watchlist-alerts');
+            if (btnWatchlistAlerts) {
+                btnWatchlistAlerts.addEventListener('click', () => {
+                    currentSessionHits = 0;
+                    updateWatchlistCounter();
+                    
+                    showWatchlistOnly = !showWatchlistOnly;
+                    if(showWatchlistOnly) {
+                        btnWatchlistAlerts.classList.add('active');
+                        btnWatchlistAlerts.style.background = 'var(--status-blue)';
+                        btnWatchlistAlerts.style.color = '#fff';
+                    } else {
+                        btnWatchlistAlerts.classList.remove('active');
+                        btnWatchlistAlerts.style.background = 'var(--status-blue-dim)';
+                        btnWatchlistAlerts.style.color = 'var(--status-blue)';
+                    }
+                    feedDisplayLimit = 30;
+                    renderAll();
+                });
             }
             
             loadCache();
             fetchData();
             
-            // Auto refresh mechanism
             let countdown = REFRESH_INTERVAL_MINUTES * 60;
             setInterval(() => {
                 if (countdown <= 0) {
@@ -1078,16 +1487,70 @@
                 } else {
                     countdown--;
                 }
-                const countdownEl = document.getElementById('countdown');
-                if (countdownEl) {
-                    const m = Math.floor(countdown / 60).toString().padStart(2, '0');
-                    const s = (countdown % 60).toString().padStart(2, '0');
-                    countdownEl.innerText = `${m}:${s}`;
-                }
             }, 1000);
         });
 
-        // --- Intelligence Pinning ---
+        function updateWatchlistCounter() {
+            const counter = document.getElementById('watchlist-counter');
+            if (counter) {
+                if (currentSessionHits > 0) {
+                    counter.style.display = 'block';
+                    counter.innerText = currentSessionHits > 99 ? '99+' : currentSessionHits;
+                    counter.classList.remove('bump');
+                    void counter.offsetWidth; 
+                    counter.classList.add('bump');
+                } else {
+                    counter.style.display = 'none';
+                }
+            }
+        }
+
+        function setTheatre(th) {
+            activeTheatre = th;
+            document.querySelectorAll('.theatre-tab').forEach(btn => {
+                if (btn.innerText.includes(th) || btn.getAttribute('onclick').includes(th)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            renderAll();
+        }
+
+        function getTheatreArticles() {
+            if (activeTheatre === 'Global') return allArticles;
+            if (activeTheatre === 'CYBER') return allArticles.filter(a => a.domains.includes('Cyber'));
+            return allArticles.filter(a => a.theatres.includes(activeTheatre));
+        }
+        
+        function getFilteredArticles() {
+            let filtered = getTheatreArticles();
+            const filterSelect = document.getElementById('source-filter');
+            const domainSelect = document.getElementById('domain-filter');
+            const severitySelect = document.getElementById('severity-filter');
+            
+            const filterVal = filterSelect ? filterSelect.value : 'all';
+            const domainVal = domainSelect ? domainSelect.value : 'all';
+            const sevVal = severitySelect ? severitySelect.value : 'all';
+
+            if (filterVal !== 'all') filtered = filtered.filter(a => a.source === filterVal);
+            if (domainVal !== 'all') filtered = filtered.filter(a => a.domains.includes(domainVal));
+            if (sevVal === '3') filtered = filtered.filter(a => a.severity === 3);
+            if (sevVal === '2') filtered = filtered.filter(a => a.severity >= 2);
+            if (showPinnedOnly) filtered = filtered.filter(a => pinnedArticles.has(a.id));
+            if (showWatchlistOnly) filtered = filtered.filter(a => a.isWatchlistHit);
+            if (showUnreadOnly) filtered = filtered.filter(a => !readArticles.has(a.id));
+            
+            if (searchQuery) {
+                filtered = filtered.filter(a => 
+                    a.title.toLowerCase().includes(searchQuery) || 
+                    a.description.toLowerCase().includes(searchQuery) ||
+                    a.tags.some(t => t.includes(searchQuery))
+                );
+            }
+            return filtered;
+        }
+
         function togglePin(e, id) {
             e.stopPropagation(); 
             if (pinnedArticles.has(id)) {
@@ -1096,69 +1559,148 @@
                 pinnedArticles.add(id);
             }
             localStorage.setItem('osint_pinned', JSON.stringify([...pinnedArticles]));
-            renderLiveFeed(); 
+            renderAll(); 
+        }
+        
+        function markAllRead() {
+            allArticles.forEach(a => readArticles.add(a.id));
+            localStorage.setItem('osint_read', JSON.stringify([...readArticles]));
+            renderAll();
         }
 
-        // --- Settings & Data Management ---
+        function markAllUnread() {
+            readArticles.clear();
+            localStorage.setItem('osint_read', JSON.stringify([]));
+            renderAll();
+        }
+
+        function applyFilter(filterId, value) {
+            const el = document.getElementById(filterId);
+            if (el) {
+                el.value = value;
+                feedDisplayLimit = 30;
+                renderAll();
+                
+                const feedPanel = document.querySelector('.feed-panel');
+                if(feedPanel) feedPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        
+        function resetFiltersAndScroll() {
+            ['source-filter', 'domain-filter', 'severity-filter'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.value = 'all';
+            });
+            
+            const searchInput = document.getElementById('global-search-input');
+            if(searchInput) {
+                searchInput.value = '';
+                searchQuery = '';
+            }
+            
+            feedDisplayLimit = 30;
+            renderAll();
+            
+            const feedPanel = document.querySelector('.feed-panel');
+            if(feedPanel) feedPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         function applyThemeAndLayout() {
             document.body.dataset.theme = appSettings.theme || 'military-dark';
             document.body.dataset.layout = appSettings.layout || 'analyst';
             
-            // Update map tiles based on theme
             if (map) {
                 if (tileLayer) map.removeLayer(tileLayer);
                 const tileUrl = appSettings.theme === 'newsroom-light' 
                     ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
                     : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-                
                 tileLayer = L.tileLayer(tileUrl, { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 10 }).addTo(map);
             }
         }
 
         function openSettingsModal() {
             renderSettingsFeeds();
-            const cycleSpeedSelect = document.getElementById('settings-cycle-speed');
-            if (cycleSpeedSelect) cycleSpeedSelect.value = appSettings.cycleSpeed || 10;
+            renderWatchlists();
             
-            const themeSelect = document.getElementById('settings-theme');
-            if (themeSelect) themeSelect.value = appSettings.theme || 'military-dark';
-
-            const layoutSelect = document.getElementById('settings-layout');
-            if (layoutSelect) layoutSelect.value = appSettings.layout || 'analyst';
+            document.getElementById('settings-cycle-speed').value = appSettings.cycleSpeed || 10;
+            document.getElementById('settings-theme').value = appSettings.theme || 'military-dark';
+            document.getElementById('settings-layout').value = appSettings.layout || 'analyst';
+            document.getElementById('settings-watchlist-autopin').checked = watchlistAutoPin;
 
             const settingsModal = document.getElementById('settings-modal');
             if (settingsModal) {
                 settingsModal.style.display = 'flex';
-                const modalContainer = settingsModal.querySelector('.modal-container');
-                if (modalContainer) modalContainer.scrollTop = 0;
+                settingsModal.querySelector('.modal-container').scrollTop = 0;
             }
         }
 
         function closeSettingsModal() {
-            const settingsModal = document.getElementById('settings-modal');
-            if (settingsModal) settingsModal.style.display = 'none';
+            document.getElementById('settings-modal').style.display = 'none';
         }
         
         function closeSettingsModalAndReload() {
             saveSettings();
-            applyThemeAndLayout(); // Apply visually without full reload
+            applyThemeAndLayout();
             closeSettingsModal();
-            // Force refetch to apply feed changes cleanly
             allArticles = [];
+            isInitialLoad = true;
             fetchData(true);
         }
 
         function saveSettings() {
-            const cycleSpeedSelect = document.getElementById('settings-cycle-speed');
-            const themeSelect = document.getElementById('settings-theme');
-            const layoutSelect = document.getElementById('settings-layout');
-            
-            appSettings.cycleSpeed = cycleSpeedSelect ? parseInt(cycleSpeedSelect.value) || 10 : 10;
-            appSettings.theme = themeSelect ? themeSelect.value : 'military-dark';
-            appSettings.layout = layoutSelect ? layoutSelect.value : 'analyst';
+            appSettings.cycleSpeed = parseInt(document.getElementById('settings-cycle-speed').value) || 10;
+            appSettings.theme = document.getElementById('settings-theme').value || 'military-dark';
+            appSettings.layout = document.getElementById('settings-layout').value || 'analyst';
+            watchlistAutoPin = document.getElementById('settings-watchlist-autopin').checked;
             
             localStorage.setItem('osint_settings', JSON.stringify(appSettings));
             localStorage.setItem('osint_feeds', JSON.stringify(activeFeeds));
+            localStorage.setItem('osint_watchlist_autopin', JSON.stringify(watchlistAutoPin));
+            localStorage.setItem('osint_watchlists', JSON.stringify(watchlists));
+        }
+
+        function renderWatchlists() {
+            const container = document.getElementById('watchlist-keywords-container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (watchlists.length === 0) {
+                container.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem; font-style:italic;">No active watchlists.</span>`;
+            }
+            
+            watchlists.forEach((kw, index) => {
+                container.innerHTML += `
+                    <div class="keyword-pill">
+                        ${kw}
+                        <button onclick="removeWatchlistKeyword(${index})" title="Remove"><i data-lucide="x" style="width:12px; height:12px;"></i></button>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        function addWatchlistKeyword() {
+            const input = document.getElementById('new-watchlist-keyword');
+            if (input && input.value.trim()) {
+                const val = input.value.trim();
+                if (!watchlists.includes(val)) {
+                    watchlists.push(val);
+                    saveSettings();
+                    renderWatchlists();
+                    
+                    analyzeData();
+                    renderAll();
+                }
+                input.value = '';
+            }
+        }
+
+        function removeWatchlistKeyword(index) {
+            watchlists.splice(index, 1);
+            saveSettings();
+            renderWatchlists();
+            analyzeData();
+            renderAll();
         }
 
         function renderSettingsFeeds() {
@@ -1204,11 +1746,14 @@
 
         function exportDataJSON() {
             const exportData = {
-                version: "1.1",
+                version: "2.2",
                 timestamp: new Date().toISOString(),
                 feeds: activeFeeds,
                 settings: appSettings,
-                pinned: [...pinnedArticles]
+                pinned: [...pinnedArticles],
+                readArticles: [...readArticles],
+                watchlists: watchlists,
+                watchlistAutoPin: watchlistAutoPin
             };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
             const dlAnchorElem = document.createElement('a');
@@ -1227,31 +1772,202 @@
                     if (data.feeds) activeFeeds = data.feeds;
                     if (data.settings) appSettings = data.settings;
                     if (data.pinned) pinnedArticles = new Set(data.pinned);
+                    if (data.readArticles) readArticles = new Set(data.readArticles);
+                    if (data.watchlists) watchlists = data.watchlists;
+                    if (data.watchlistAutoPin !== undefined) watchlistAutoPin = data.watchlistAutoPin;
                     
                     saveSettings();
                     localStorage.setItem('osint_pinned', JSON.stringify([...pinnedArticles]));
+                    localStorage.setItem('osint_read', JSON.stringify([...readArticles]));
                     
                     alert("Configuration imported successfully. The system will now reload.");
                     location.reload();
                 } catch (error) {
-                    alert("Error parsing configuration file. Ensure it is a valid JSON export.");
+                    alert("Error parsing configuration file.");
                 }
             };
             reader.readAsText(file);
         }
 
-        // --- Dashboard / TV Mode Logic ---
+        function toggleCompare(e, id) {
+            e.stopPropagation();
+            if (compareQueue.includes(id)) {
+                compareQueue = compareQueue.filter(x => x !== id);
+            } else {
+                if (compareQueue.length >= 2) {
+                    // Replace the second item if queue is full to allow swapping
+                    compareQueue[1] = id;
+                } else {
+                    compareQueue.push(id);
+                }
+            }
+            
+            updateCompareUI();
+            
+            if (compareQueue.length === 2) {
+                openCompareModal();
+            }
+        }
+
+        function updateCompareUI() {
+            document.querySelectorAll('.btn-compare-icon').forEach(btn => {
+                const id = btn.dataset.id;
+                if (compareQueue.includes(id)) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+
+            const toast = document.getElementById('compare-toast');
+            if (compareQueue.length === 1) {
+                toast.style.display = 'flex';
+            } else {
+                toast.style.display = 'none';
+            }
+        }
+
+        function clearCompare() {
+            compareQueue = [];
+            updateCompareUI();
+        }
+
+        function openCompareModal() {
+            renderCompareGrid();
+            document.getElementById('compare-modal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeCompareModal() {
+            document.getElementById('compare-modal').style.display = 'none';
+            clearCompare();
+        }
+
+        function swapCompare() {
+            if (compareQueue.length === 2) {
+                compareQueue.reverse();
+                renderCompareGrid();
+                lucide.createIcons();
+            }
+        }
+
+        function removeFromCompare(index) {
+            compareQueue.splice(index, 1);
+            updateCompareUI();
+            if (compareQueue.length === 0) {
+                closeCompareModal();
+            } else {
+                renderCompareGrid();
+                lucide.createIcons();
+            }
+        }
+
+        function arraysEqual(a, b) {
+            if (a === b) return true;
+            if (a == null || b == null) return false;
+            if (a.length !== b.length) return false;
+            let sortedA = [...a].sort();
+            let sortedB = [...b].sort();
+            for (let i = 0; i < sortedA.length; ++i) {
+                if (sortedA[i] !== sortedB[i]) return false;
+            }
+            return true;
+        }
+
+        function renderCompareGrid() {
+            const grid = document.getElementById('compare-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const art1 = compareQueue.length > 0 ? allArticles.find(a => a.id === compareQueue[0]) : null;
+            const art2 = compareQueue.length > 1 ? allArticles.find(a => a.id === compareQueue[1]) : null;
+
+            const swapBtn = document.getElementById('btn-swap-compare');
+            if (swapBtn) {
+                swapBtn.disabled = !(art1 && art2);
+                swapBtn.style.opacity = (art1 && art2) ? '1' : '0.5';
+            }
+
+            // Headers
+            grid.innerHTML += `<div class="compare-row-label" style="padding-top:0;"></div>`; // Empty top-left
+            
+            [art1, art2].forEach((art, idx) => {
+                if (art) {
+                    grid.innerHTML += `
+                        <div class="compare-col-header">
+                            <div style="flex-grow:1; padding-right:12px;">
+                                <div class="compare-article-title">${art.title}</div>
+                            </div>
+                            <button class="btn-action" style="padding:4px 8px; font-size:0.75rem; flex-shrink:0;" onclick="removeFromCompare(${idx})">
+                                <i data-lucide="trash-2" style="width:12px; height:12px;"></i>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    grid.innerHTML += `
+                        <div class="compare-empty">
+                            <i data-lucide="file-dashed" style="width:32px; height:32px; opacity:0.5;"></i>
+                            <span>Select another article to compare</span>
+                        </div>
+                    `;
+                }
+            });
+
+            // If we don't have at least one article, don't render fields
+            if (!art1 && !art2) return;
+
+            const attributes = [
+                { label: 'Source', key: 'source', format: v => `<span style="font-weight:600;">${v}</span>` },
+                { label: 'Published', key: 'pubDate', format: v => v.toLocaleString() },
+                { label: 'Severity', key: 'severity', format: v => {
+                    if(v===3) return '<span class="alert-badge" style="color:var(--status-red); border:1px solid rgba(239,68,68,0.3);">CRITICAL</span>';
+                    if(v===2) return '<span class="alert-badge" style="color:#ea580c; border:1px solid rgba(234,88,12,0.3);">MAJOR</span>';
+                    if(v===1) return '<span class="alert-badge" style="color:var(--status-amber); border:1px solid rgba(245,158,11,0.3);">ALERT</span>';
+                    return '<span style="color:var(--text-muted);">Standard</span>';
+                }},
+                { label: 'Theatre', key: 'theatres', format: v => (v||[]).join(', '), isArray: true },
+                { label: 'Domain', key: 'domains', format: v => (v||[]).map(d => `<span class="domain-badge">${d}</span>`).join(' '), isArray: true },
+                { label: 'Watchlist', key: 'isWatchlistHit', format: (v, art) => v ? `<span class="watchlist-hit-badge">HIT: ${art.watchlistMatches.join(', ')}</span>` : '<span style="color:var(--text-muted);">None</span>' },
+                { label: 'Keywords', key: 'tags', format: v => (v||[]).map(t => `<span class="tag-pill">${t}</span>`).join(' '), isArray: true },
+                { label: 'Summary', key: 'description', format: v => applyHighlighting(v) },
+                { label: 'Original', key: 'link', format: v => `<a href="${v}" target="_blank" style="color:var(--status-blue); text-decoration:none; display:flex; align-items:center; gap:6px;">Open Link <i data-lucide="external-link" style="width:12px; height:12px;"></i></a>` }
+            ];
+
+            attributes.forEach(attr => {
+                let val1 = art1 ? art1[attr.key] : null;
+                let val2 = art2 ? art2[attr.key] : null;
+
+                let isDiff = false;
+                if (art1 && art2) {
+                    if (attr.isArray) {
+                        isDiff = !arraysEqual(val1, val2);
+                    } else if (attr.key === 'pubDate') {
+                        isDiff = val1.getTime() !== val2.getTime();
+                    } else {
+                        isDiff = val1 !== val2;
+                    }
+                }
+
+                const formatSafe = (val, art) => val != null && val !== '' ? attr.format(val, art) : '-';
+
+                grid.innerHTML += `
+                    <div class="compare-row-label" data-label="${attr.label}">${attr.label}</div>
+                    <div class="compare-cell ${isDiff && art1 ? 'diff' : ''}" data-label="${attr.label}">${art1 ? formatSafe(val1, art1) : ''}</div>
+                    <div class="compare-cell ${isDiff && art2 ? 'diff' : ''}" data-label="${attr.label}">${art2 ? formatSafe(val2, art2) : ''}</div>
+                `;
+            });
+        }
+
         function openTvMode() {
             tvIsActive = true;
-            const tvModeEl = document.getElementById('tv-mode');
-            if (tvModeEl) tvModeEl.style.display = 'flex';
+            document.getElementById('tv-mode').style.display = 'flex';
             try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } catch(e){}
             
-            tvArticles = allArticles.filter(a => a.importance > 5 || a.severity > 0)
+            tvArticles = getTheatreArticles().filter(a => a.importance > 5 || a.severity > 0)
                                     .sort((a,b) => b.pubDate - a.pubDate)
                                     .slice(0, 50);
             
-            if(tvArticles.length === 0) tvArticles = allArticles.slice(0, 50); 
+            if(tvArticles.length === 0) tvArticles = getTheatreArticles().slice(0, 50); 
             if(tvArticles.length === 0) return; 
 
             tvCurrentIndex = 0;
@@ -1266,8 +1982,7 @@
 
         function closeTvMode() {
             tvIsActive = false;
-            const tvModeEl = document.getElementById('tv-mode');
-            if (tvModeEl) tvModeEl.style.display = 'none';
+            document.getElementById('tv-mode').style.display = 'none';
             clearInterval(tvIntervalId);
             try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e){}
         }
@@ -1276,115 +1991,116 @@
             if(!tvArticles[tvCurrentIndex]) return;
             const a = tvArticles[tvCurrentIndex];
             
-            const tvTitle = document.getElementById('tv-title');
-            if (tvTitle) tvTitle.innerText = a.title;
+            document.getElementById('tv-title').innerText = a.title;
             
             let displayDesc = a.description;
             if(displayDesc.length > 300) displayDesc = displayDesc.substring(0, 300) + '...';
-            const tvDesc = document.getElementById('tv-desc');
-            if (tvDesc) tvDesc.innerText = displayDesc;
-            
-            const tvSource = document.getElementById('tv-source');
-            if (tvSource) tvSource.innerText = a.source;
-            
-            const tvTime = document.getElementById('tv-time');
-            if (tvTime) tvTime.innerText = a.pubDate.toLocaleString();
+            document.getElementById('tv-desc').innerText = displayDesc;
+            document.getElementById('tv-source').innerText = a.source;
+            document.getElementById('tv-time').innerText = a.pubDate.toLocaleString();
             
             const bgEl = document.getElementById('tv-bg');
-            if (bgEl) {
-                if (a.imageUrl) {
-                    bgEl.style.backgroundImage = `url('${a.imageUrl}')`;
-                } else {
-                    bgEl.style.backgroundImage = `none`;
-                }
-            }
+            if (a.imageUrl) bgEl.style.backgroundImage = `url('${a.imageUrl}')`;
+            else bgEl.style.backgroundImage = `none`;
 
-            // Badges
             const badgesContainer = document.getElementById('tv-badges');
-            if (badgesContainer) {
-                badgesContainer.innerHTML = '';
-                if (a.severity === 3) badgesContainer.innerHTML += `<div class="tv-badge" style="background: var(--status-red); color: #fff;">CRITICAL ALERT</div>`;
-                else if (a.severity === 2) badgesContainer.innerHTML += `<div class="tv-badge" style="background: #ea580c; color: #fff;">MAJOR EVENT</div>`;
-                badgesContainer.innerHTML += `<div class="tv-badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">IMP: ${a.importance}/10</div>`;
-            }
+            badgesContainer.innerHTML = '';
+            if (a.severity === 3) badgesContainer.innerHTML += `<div class="tv-badge" style="background: var(--status-red); color: #fff;">CRITICAL ALERT</div>`;
+            else if (a.severity === 2) badgesContainer.innerHTML += `<div class="tv-badge" style="background: #ea580c; color: #fff;">MAJOR EVENT</div>`;
+            if (a.isWatchlistHit) badgesContainer.innerHTML += `<div class="tv-badge" style="background: rgba(234, 179, 8, 0.9); color: #000;">WATCHLIST: ${a.watchlistMatches.join(', ')}</div>`;
+            badgesContainer.innerHTML += `<div class="tv-badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">IMP: ${a.importance}/10</div>`;
 
-            // Reset and animate progress bar
             const bar = document.getElementById('tv-progress');
-            if (bar) {
-                bar.style.transition = 'none';
-                bar.style.width = '0%';
-                void bar.offsetWidth;
-                bar.style.transition = `width ${appSettings.cycleSpeed || 10}s linear`;
-                bar.style.width = '100%';
-            }
+            bar.style.transition = 'none';
+            bar.style.width = '0%';
+            void bar.offsetWidth;
+            bar.style.transition = `width ${appSettings.cycleSpeed || 10}s linear`;
+            bar.style.width = '100%';
         }
 
-
-        // --- Standard Modals ---
-        function openModal(articleId) {
-            const article = allArticles.find(a => a.id === articleId);
+        function openModal(articleId, fallbackArticle = null) {
+            const article = allArticles.find(a => a.id === articleId) || fallbackArticle;
             if (!article) return;
             
-            const modalMeta = document.getElementById('modal-meta');
-            if (modalMeta) {
-                modalMeta.innerHTML = `
-                    <div style="display:flex; gap:12px; align-items:center;">
-                        <span style="color:var(--text-light); font-weight:500;">${article.source}</span>
-                        <span>•</span>
-                        <span>${article.pubDate.toLocaleString()}</span>
-                    </div>
-                    <span class="rel-score-badge imp-${article.importance > 7 ? 'high' : (article.importance > 4 ? 'med' : 'low')}" title="Importance Score">IMP: ${article.importance}/10</span>
-                `;
+            if (!readArticles.has(articleId)) {
+                readArticles.add(articleId);
+                localStorage.setItem('osint_read', JSON.stringify([...readArticles]));
+                
+                const rowEl = document.getElementById(`art-${articleId}`);
+                if (rowEl) {
+                    rowEl.classList.add('is-read');
+                    rowEl.classList.remove('is-new-item'); 
+                    const badge = rowEl.querySelector('.badge-new');
+                    if(badge) badge.style.display = 'none';
+                }
             }
             
-            const modalTitle = document.getElementById('modal-title');
-            if (modalTitle) modalTitle.innerText = article.title;
+            document.getElementById('modal-meta').innerHTML = `
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <span style="color:var(--text-light); font-weight:500;">${article.source}</span>
+                    <span>•</span>
+                    <span>${article.pubDate.toLocaleString()}</span>
+                </div>
+                <span class="rel-score-badge imp-${article.importance > 7 ? 'high' : (article.importance > 4 ? 'med' : 'low')}" title="Importance Score">IMP: ${article.importance}/10</span>
+            `;
+            
+            let wHit = '';
+            if(article.isWatchlistHit) {
+                wHit = `<span class="watchlist-hit-badge" style="margin-left:12px;"><i data-lucide="eye" style="width:12px; height:12px;"></i> Watchlist Hit</span>`;
+            }
+
+            document.getElementById('modal-title').innerHTML = `${article.title} ${wHit}`;
             
             let descHtml = article.description || 'No detailed payload available.';
             descHtml = applyHighlighting(descHtml);
             
             const modalDesc = document.getElementById('modal-desc');
-            if (modalDesc) modalDesc.innerHTML = descHtml;
+            modalDesc.innerHTML = descHtml;
             
-            const modalLink = document.getElementById('modal-link');
-            if (modalLink) modalLink.href = article.link;
-            
-            const tagsContainer = document.getElementById('modal-tags');
-            if (tagsContainer) {
-                tagsContainer.innerHTML = article.tags.map(t => `<span class="tag-pill">${t}</span>`).join('');
+            const related = allArticles.filter(a => a.id !== article.id && a.tags && article.tags && a.tags.some(t => article.tags.includes(t))).slice(0, 3);
+            if(related.length > 0) {
+                const relatedContainer = document.createElement('div');
+                relatedContainer.style.marginTop = '24px';
+                relatedContainer.innerHTML = '<h4 style="color:var(--text-light); margin-bottom:12px; font-size:0.9rem; border-bottom:1px solid var(--panel-border); padding-bottom:8px;">Linked Intelligence Vectors</h4>';
+                
+                related.forEach(r => {
+                    relatedContainer.innerHTML += `
+                        <div style="background:var(--bg-base); border:1px solid var(--panel-border); padding:10px; border-radius:6px; margin-bottom:8px; cursor:pointer; font-size:0.85rem; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--status-blue)'; this.style.transform='translateX(4px)';" onmouseout="this.style.borderColor='var(--panel-border)'; this.style.transform='translateX(0)';" onclick="openModal('${r.id}')">
+                            <div style="color:var(--text-light); font-weight:500; margin-bottom:4px;">${r.title}</div>
+                            <div style="color:var(--text-muted); font-family:var(--font-mono); font-size:0.75rem;">${r.source} • ${r.pubDate.toLocaleDateString()}</div>
+                        </div>
+                    `;
+                });
+                modalDesc.appendChild(relatedContainer);
             }
 
+            document.getElementById('modal-link').href = article.link;
+            document.getElementById('modal-tags').innerHTML = (article.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
+
             const img = document.getElementById('modal-image');
-            if (img) {
-                if (article.imageUrl) {
-                    img.src = article.imageUrl;
-                    img.style.display = 'block';
-                } else {
-                    img.style.display = 'none';
-                }
+            if (article.imageUrl) {
+                img.src = article.imageUrl;
+                img.style.display = 'block';
+            } else {
+                img.style.display = 'none';
             }
             
-            const articleModal = document.getElementById('article-modal');
-            if (articleModal) {
-                articleModal.style.display = 'flex';
-                const modalContainer = articleModal.querySelector('.modal-container');
-                if (modalContainer) modalContainer.scrollTop = 0;
-            }
+            document.getElementById('article-modal').style.display = 'flex';
+            document.getElementById('article-modal').querySelector('.modal-container').scrollTop = 0;
             lucide.createIcons();
         }
 
         function closeModal() {
-            const articleModal = document.getElementById('article-modal');
-            if (articleModal) articleModal.style.display = 'none';
+            document.getElementById('article-modal').style.display = 'none';
         }
 
-        // --- Local Caching ---
         function loadCache() {
             const cached = localStorage.getItem('osint_cache');
             if (cached) {
                 try {
                     const parsed = JSON.parse(cached);
                     allArticles = parsed.map(a => ({...a, pubDate: new Date(a.pubDate)}));
+                    isInitialLoad = false;
                     analyzeData();
                     renderAll();
                 } catch(e) {}
@@ -1392,11 +2108,10 @@
         }
 
         function saveCache() {
-            const toSave = allArticles.slice(0, 250);
+            const toSave = allArticles.slice(0, 300); 
             localStorage.setItem('osint_cache', JSON.stringify(toSave));
         }
 
-        // --- Deduplication Logic ---
         function calculateSimilarity(str1, str2) {
             const words1 = new Set(str1.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/));
             const words2 = new Set(str2.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/));
@@ -1405,16 +2120,33 @@
             return intersection.size / (union.size || 1);
         }
 
-        function isDuplicate(newArt, existingArticles) {
-            return existingArticles.some(ex => {
-                if (ex.link && newArt.link && ex.link === newArt.link) return true;
-                const titleSim = calculateSimilarity(ex.title, newArt.title);
-                if (titleSim > 0.8) return true;
-                return false;
+        function calculateDiff(prevArticles, currentArticles) {
+            const diff = { new: [], updated: [], removed: [], timestamp: new Date() };
+            const currentMap = new Map(currentArticles.map(a => [a.id, a]));
+            const prevMap = new Map(prevArticles.map(a => [a.id, a]));
+
+            currentArticles.forEach(art => {
+                if (!prevMap.has(art.id)) {
+                    diff.new.push(art);
+                } else {
+                    const prevArt = prevMap.get(art.id);
+                    if (art.title !== prevArt.title || 
+                        art.description !== prevArt.description || 
+                        art.severity !== prevArt.severity) {
+                        diff.updated.push(art);
+                    }
+                }
             });
+
+            prevArticles.forEach(art => {
+                if (!currentMap.has(art.id)) {
+                    diff.removed.push(art);
+                }
+            });
+
+            return diff;
         }
 
-        // --- Data Fetching & Parsing ---
         async function fetchData(manual = false) {
             if (isFetching) return;
             isFetching = true;
@@ -1424,6 +2156,10 @@
             
             let fetchedArticles = [];
             
+            let previousArticlesSnapshot = allArticles.map(a => ({
+                ...a, title: a.title, description: a.description, severity: a.severity
+            }));
+
             for (let feed of activeFeeds) {
                 try {
                     const rss2jsonUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&api_key=`;
@@ -1472,12 +2208,37 @@
             }
 
             let merged = manual ? [] : [...allArticles];
+            
             fetchedArticles.forEach(art => {
-                if (!isDuplicate(art, merged)) merged.push(art);
+                let existingIdx = merged.findIndex(ex =>
+                    (ex.link && art.link && ex.link === art.link) ||
+                    calculateSimilarity(ex.title, art.title) > 0.8
+                );
+
+                if (existingIdx !== -1) {
+                    let existing = merged[existingIdx];
+                    if (existing.title !== art.title || existing.description !== art.description) {
+                        existing.title = art.title;
+                        existing.description = art.description;
+                        existing.pubDate = art.pubDate; 
+                        if (art.imageUrl) existing.imageUrl = art.imageUrl;
+                    }
+                } else {
+                    merged.push(art);
+                }
             });
 
-            allArticles = merged.sort((a, b) => b.pubDate - a.pubDate).slice(0, 500);
-            analyzeData();
+            allArticles = merged.sort((a, b) => b.pubDate - a.pubDate).slice(0, 600);
+            
+            analyzeData(); 
+            
+            if (!isInitialLoad && !manual) {
+                lastRefreshChanges = calculateDiff(previousArticlesSnapshot, allArticles);
+            } else {
+                lastRefreshChanges = { new: [], updated: [], removed: [], timestamp: new Date() };
+                isInitialLoad = false;
+            }
+
             renderAll();
             saveCache();
 
@@ -1510,7 +2271,8 @@
             
             return { 
                 id: generateId(), title, link, pubDate, description: textDesc, source: sourceName, 
-                severity: 0, sentiment: 'neutral', imageUrl, tags: [], relevanceScore: 0, importance: 1
+                severity: 0, sentiment: 'neutral', imageUrl, tags: [], relevanceScore: 0, importance: 1,
+                theatres: [], domains: [], isWatchlistHit: false, watchlistMatches: [], isNewWatchlistHit: false
             };
         }
 
@@ -1520,11 +2282,39 @@
             return tmp.textContent || tmp.innerText || "";
         }
 
-        // --- Analysis Logic ---
         function analyzeData() {
+            let hasNewWatchlistHits = false;
+
             allArticles.forEach(article => {
                 const fullText = (article.title + " " + article.description).toLowerCase();
                 
+                article.isWatchlistHit = false;
+                article.watchlistMatches = [];
+                
+                if (watchlists.length > 0) {
+                    watchlists.forEach(kw => {
+                        if (fullText.includes(kw.toLowerCase())) {
+                            article.isWatchlistHit = true;
+                            if(!article.watchlistMatches.includes(kw)) {
+                                article.watchlistMatches.push(kw);
+                            }
+                        }
+                    });
+
+                    if (article.isWatchlistHit) {
+                        if (!notifiedWatchlistIds.has(article.id)) {
+                            notifiedWatchlistIds.add(article.id);
+                            currentSessionHits++;
+                            hasNewWatchlistHits = true;
+                            article.isNewWatchlistHit = true; 
+                            
+                            if (watchlistAutoPin && !pinnedArticles.has(article.id)) {
+                                pinnedArticles.add(article.id);
+                            }
+                        }
+                    }
+                }
+
                 article.severity = 0;
                 for (let lvl = 3; lvl >= 1; lvl--) {
                     if (SEVERITY_LEVELS[lvl].some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(fullText))) {
@@ -1545,23 +2335,46 @@
                 Object.keys(LOCATIONS_DB).forEach(loc => {
                     if (new RegExp(`\\b${loc}\\b`, 'i').test(fullText)) foundTags.add(loc.toLowerCase());
                 });
-                article.tags = Array.from(foundTags).slice(0, 3);
+                article.tags = Array.from(foundTags).slice(0, 4);
 
-                // Base Relevance Score 0-100
+                article.theatres = [];
+                Object.keys(CONFLICT_THEATRES).forEach(th => {
+                    if (th === 'Global') return;
+                    if (CONFLICT_THEATRES[th].some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(fullText))) {
+                        article.theatres.push(th);
+                    }
+                });
+                if (article.theatres.length === 0) article.theatres.push('Global');
+
+                article.domains = [];
+                Object.keys(DOMAINS).forEach(dom => {
+                    if (DOMAINS[dom].some(kw => new RegExp(`\\b${kw}\\b`, 'i').test(fullText))) {
+                        article.domains.push(dom);
+                    }
+                });
+
                 let score = (article.severity * 25) + (foundTags.size * 5) + (Math.abs(sentimentScore) * 2);
-                article.relevanceScore = Math.min(100, score);
+                if (article.isWatchlistHit) score += 30; 
                 
-                // Convert to Importance Score 1-10
+                article.relevanceScore = Math.min(100, score);
                 article.importance = Math.min(10, Math.max(1, Math.ceil(article.relevanceScore / 10)));
             });
+
+            if (hasNewWatchlistHits) {
+                localStorage.setItem('osint_notified_watchlist_ids', JSON.stringify([...notifiedWatchlistIds].slice(-1000)));
+                if (watchlistAutoPin) localStorage.setItem('osint_pinned', JSON.stringify([...pinnedArticles]));
+                updateWatchlistCounter();
+            }
         }
 
-        function countKeywords(keywordsArray, onlyRecent = true) {
+        function countKeywords(keywordsArray, onlyRecent = true, specificArticles = null) {
             const counts = {};
             keywordsArray.forEach(kw => counts[kw] = 0);
             const twentyFourHoursAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
+            
+            const activeArticles = specificArticles || getTheatreArticles();
 
-            allArticles.forEach(article => {
+            activeArticles.forEach(article => {
                 if (onlyRecent && article.pubDate < twentyFourHoursAgo) return;
                 const fullText = (article.title + " " + article.description).toLowerCase();
                 keywordsArray.forEach(kw => {
@@ -1579,12 +2392,28 @@
                 const regex = new RegExp(`\\b(${kw})\\b`, 'gi');
                 highlighted = highlighted.replace(regex, '<span class="kw-highlight">$&</span>');
             });
+            watchlists.forEach(kw => {
+                const regex = new RegExp(`\\b(${kw})\\b`, 'gi');
+                highlighted = highlighted.replace(regex, '<span class="kw-highlight" style="background:var(--status-amber-bg); color:var(--status-amber); outline: 1px solid var(--status-amber);">$&</span>');
+            });
             return highlighted;
         }
 
-        // --- Render Functions ---
+        function updateGlobalRisk() {
+            const criticals = allArticles.filter(a => a.severity === 3 && (Date.now() - a.pubDate.getTime()) < 24*3600*1000).length;
+            const badge = document.getElementById('global-risk-badge');
+            if (!badge) return;
+            badge.className = 'global-risk-badge';
+            if (criticals > 4) { badge.innerHTML = '<span class="tv-pulse"></span> RISK INDEX: SEVERE'; badge.classList.add('risk-severe'); }
+            else if (criticals > 1) { badge.innerHTML = '<i data-lucide="alert-triangle"></i> RISK INDEX: ELEVATED'; badge.classList.add('risk-elevated'); }
+            else { badge.innerHTML = '<i data-lucide="activity"></i> RISK INDEX: MODERATE'; badge.classList.add('risk-moderate'); }
+            lucide.createIcons();
+        }
+
         function renderAll() {
             renderFilters();
+            renderChangesPanel(); 
+            renderRegionStats(); 
             renderBreaking();
             renderEscalationMeter();
             renderTimeline();
@@ -1592,13 +2421,176 @@
             renderLiveFeed();
             updateMetricsUI();
             updateMap();
+            renderForecastChart();
+            renderReadiness();
+            updateGlobalRisk();
+            updateCompareUI();
+        }
+
+        function renderChangesPanel() {
+            const panel = document.getElementById('changes-panel');
+            if (!panel) return;
+
+            const { new: newArts, updated, removed, timestamp } = lastRefreshChanges;
+            const totalChanges = newArts.length + updated.length + removed.length;
+
+            if (totalChanges === 0) {
+                panel.style.display = 'none';
+                return;
+            }
+
+            panel.style.display = 'block';
+            document.getElementById('changes-timestamp').innerText = timestamp ? timestamp.toLocaleTimeString() : '';
+
+            const container = document.getElementById('changes-content');
+            container.innerHTML = '';
+
+            const createPill = (art, type) => {
+                const div = document.createElement('div');
+                div.className = `change-pill ${type}`;
+                div.onclick = () => openModal(art.id, type === 'removed' ? art : null);
+
+                let icon = type === 'new' ? 'plus-circle' : (type === 'updated' ? 'edit-2' : 'trash-2');
+                let label = type.toUpperCase();
+
+                div.innerHTML = `
+                    <div class="change-pill-type"><i data-lucide="${icon}" style="width:12px; height:12px;"></i> ${label}</div>
+                    <div class="change-pill-title">${art.title}</div>
+                `;
+                return div;
+            };
+
+            newArts.forEach(a => container.appendChild(createPill(a, 'new')));
+            updated.forEach(a => container.appendChild(createPill(a, 'updated')));
+            removed.forEach(a => container.appendChild(createPill(a, 'removed')));
+
+            lucide.createIcons();
+        }
+        
+        function renderRegionStats() {
+            const container = document.getElementById('region-stats-panel');
+            if (!container) return;
+            
+            const articles = getFilteredArticles(); 
+            
+            const now = Date.now();
+            const twelveHoursAgo = now - (12 * 3600 * 1000);
+            const twentyFourHoursAgo = now - (24 * 3600 * 1000);
+            
+            let recentCount = 0;
+            let pastCount = 0;
+            
+            articles.forEach(a => {
+                const t = a.pubDate.getTime();
+                if (t >= twelveHoursAgo) recentCount++;
+                else if (t >= twentyFourHoursAgo && t < twelveHoursAgo) pastCount++;
+            });
+            
+            let trendIcon = '➜';
+            let trendClass = 'flat';
+            let trendText = 'Stable Volume';
+            
+            if (recentCount > pastCount * 1.1 + 2) { trendIcon = '▲'; trendClass = 'up'; trendText = 'Escalating Volume'; }
+            else if (recentCount < pastCount * 0.9 - 2) { trendIcon = '▼'; trendClass = 'down'; trendText = 'Decreasing Volume';}
+            
+            let crit = 0, maj = 0, std = 0;
+            articles.forEach(a => {
+                if (a.severity === 3) crit++;
+                else if (a.severity >= 2) maj++;
+                else if (a.severity === 1) std++;
+            });
+            
+            const domainCounts = { Air: 0, Land: 0, Naval: 0, Cyber: 0, Space: 0 };
+            articles.forEach(a => {
+                a.domains.forEach(d => { if (domainCounts[d] !== undefined) domainCounts[d]++; });
+            });
+            
+            const sourceMap = {};
+            articles.forEach(a => { sourceMap[a.source] = (sourceMap[a.source] || 0) + 1; });
+            const topSources = Object.entries(sourceMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            
+            const kwMap = {};
+            articles.forEach(a => {
+                (a.tags || []).forEach(t => { kwMap[t] = (kwMap[t] || 0) + 1; });
+            });
+            const topKeywords = Object.entries(kwMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            
+            const theatreName = activeTheatre === 'Global' ? 'Global Overview' : `${activeTheatre} Summary`;
+            
+            container.innerHTML = `
+                <!-- Volume & Trend -->
+                <div class="rs-section">
+                    <div class="rs-header">${theatreName} <i data-lucide="activity" style="width:12px;height:12px;"></i></div>
+                    <div class="rs-big-val rs-clickable" onclick="resetFiltersAndScroll()" title="Reset all filters">
+                        ${articles.length} 
+                        <span class="rs-trend ${trendClass}" title="${trendText} vs prev 12h">${trendIcon}</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Active Intelligence Records</div>
+                </div>
+                
+                <!-- Severity Alerts -->
+                <div class="rs-section">
+                    <div class="rs-header">Threat Alerts <i data-lucide="alert-triangle" style="width:12px;height:12px;"></i></div>
+                    <ul class="rs-list">
+                        <li class="rs-list-item" onclick="applyFilter('severity-filter', '3')" title="Filter by Critical">
+                            <span class="label" style="color:var(--status-red);"><i data-lucide="siren" style="width:12px;height:12px;display:inline-block;margin-right:6px;"></i>Critical</span> <span class="val">${crit}</span>
+                        </li>
+                        <li class="rs-list-item" onclick="applyFilter('severity-filter', '2')" title="Filter by Major & Up">
+                            <span class="label" style="color:#ea580c;"><i data-lucide="alert-circle" style="width:12px;height:12px;display:inline-block;margin-right:6px;"></i>Major</span> <span class="val">${maj}</span>
+                        </li>
+                        <li class="rs-list-item" onclick="resetFiltersAndScroll()" title="Show All Severities">
+                            <span class="label" style="color:var(--status-amber);"><i data-lucide="info" style="width:12px;height:12px;display:inline-block;margin-right:6px;"></i>Standard</span> <span class="val">${std}</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Domain Breakdown -->
+                <div class="rs-section">
+                    <div class="rs-header">Domain Activity <i data-lucide="layers" style="width:12px;height:12px;"></i></div>
+                    <ul class="rs-list">
+                        ${Object.entries(domainCounts).filter(([k,v]) => v > 0).slice(0,4).map(([dom, val]) => `
+                            <li class="rs-list-item" onclick="applyFilter('domain-filter', '${dom}')" title="Filter by ${dom} domain">
+                                <span class="label">${dom}</span> <span class="val">${val}</span>
+                            </li>
+                        `).join('')}
+                        ${Object.entries(domainCounts).every(([k,v]) => v === 0) ? '<li style="font-size:0.8rem; color:var(--text-muted); font-style:italic; padding-top:6px;">No domain tags detected</li>' : ''}
+                    </ul>
+                </div>
+                
+                <!-- Top Sources -->
+                <div class="rs-section">
+                    <div class="rs-header">Primary Vectors <i data-lucide="rss" style="width:12px;height:12px;"></i></div>
+                    <ul class="rs-list">
+                        ${topSources.map(([src, val]) => `
+                            <li class="rs-list-item" onclick="applyFilter('source-filter', '${src}')" title="Filter by source: ${src}">
+                                <span class="label" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 140px;">${src}</span> <span class="val">${val}</span>
+                            </li>
+                        `).join('')}
+                        ${topSources.length === 0 ? '<li style="font-size:0.8rem; color:var(--text-muted); font-style:italic; padding-top:6px;">No sources active</li>' : ''}
+                    </ul>
+                </div>
+                
+                <!-- Top Keywords -->
+                <div class="rs-section">
+                    <div class="rs-header">Frequent Entities <i data-lucide="hash" style="width:12px;height:12px;"></i></div>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
+                        ${topKeywords.map(([kw, val]) => `
+                            <span class="tag-pill rs-clickable" style="font-size:0.7rem; display:inline-flex; align-items:center; gap:6px; background:var(--panel-bg-solid); border:1px solid var(--panel-border);" onclick="filterFeedByKeyword('${kw}')" title="Search for ${kw}">
+                                ${kw} <span style="opacity:0.5; font-family:var(--font-mono);">${val}</span>
+                            </span>
+                        `).join('')}
+                        ${topKeywords.length === 0 ? '<span style="font-size:0.8rem; color:var(--text-muted); font-style:italic; margin-top:4px;">Insufficient data</span>' : ''}
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
         }
 
         function renderFilters() {
             const filter = document.getElementById('source-filter');
             if (!filter) return;
             const currentVal = filter.value;
-            const sources = [...new Set(allArticles.map(a => a.source))];
+            const sources = [...new Set(getTheatreArticles().map(a => a.source))];
             
             filter.innerHTML = '<option value="all">All Sources</option>';
             sources.forEach(src => {
@@ -1609,7 +2601,6 @@
 
         function renderLiveFeed() {
             const container = document.getElementById('feed-container');
-            const filterSelect = document.getElementById('source-filter');
             const sortSelect = document.getElementById('sort-filter');
             
             if (!container) return;
@@ -1620,42 +2611,26 @@
                 container.classList.remove('headline-mode');
             }
 
-            const filterVal = filterSelect ? filterSelect.value : 'all';
             const sortVal = sortSelect ? sortSelect.value : 'newest';
+
             container.innerHTML = '';
-
-            let filtered = [...allArticles];
-
-            if (filterVal !== 'all') filtered = filtered.filter(a => a.source === filterVal);
-            if (showPinnedOnly) filtered = filtered.filter(a => pinnedArticles.has(a.id));
-            if (searchQuery) {
-                filtered = filtered.filter(a => 
-                    a.title.toLowerCase().includes(searchQuery) || 
-                    a.description.toLowerCase().includes(searchQuery) ||
-                    a.tags.some(t => t.includes(searchQuery))
-                );
-            }
+            
+            let filtered = getFilteredArticles();
 
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i data-lucide="search-x" style="width: 32px; height: 32px; opacity: 0.5;"></i>
-                        <span>No intelligence records match the current filters.</span>
+                        <span>No intelligence records match the current filters and command context.</span>
                     </div>`;
                 lucide.createIcons();
                 return;
             }
 
-            // Apply Sorting
-            if (sortVal === 'newest') {
-                filtered.sort((a, b) => b.pubDate - a.pubDate);
-            } else if (sortVal === 'oldest') {
-                filtered.sort((a, b) => a.pubDate - b.pubDate);
-            } else if (sortVal === 'importance') {
-                filtered.sort((a, b) => b.importance - a.importance || b.pubDate - a.pubDate);
-            } else if (sortVal === 'severity') {
-                filtered.sort((a, b) => b.severity - a.severity || b.pubDate - a.pubDate);
-            }
+            if (sortVal === 'newest') filtered.sort((a, b) => b.pubDate - a.pubDate);
+            else if (sortVal === 'oldest') filtered.sort((a, b) => a.pubDate - b.pubDate);
+            else if (sortVal === 'importance') filtered.sort((a, b) => b.importance - a.importance || b.pubDate - a.pubDate);
+            else if (sortVal === 'severity') filtered.sort((a, b) => b.severity - a.severity || b.pubDate - a.pubDate);
 
             const toRender = filtered.slice(0, feedDisplayLimit);
 
@@ -1668,12 +2643,37 @@
                 else if (article.severity === 2) badges += '<span class="alert-badge" style="color:#ea580c; border:1px solid rgba(234,88,12,0.3); margin-left:8px;">MAJ</span>';
                 else if (article.severity === 1) badges += '<span class="alert-badge" style="color:var(--status-amber); border:1px solid rgba(245,158,11,0.3); margin-left:8px;">ALRT</span>';
 
+                if (article.isWatchlistHit) {
+                    badges += `<span class="watchlist-hit-badge" title="Matched: ${article.watchlistMatches.join(', ')}"><i data-lucide="eye" style="width:10px; height:10px;"></i> WATCHLIST</span>`;
+                }
+
+                const isNewDelta = lastRefreshChanges.new.some(n => n.id === article.id);
+                const isRead = readArticles.has(article.id);
+                const isUnreadNew = isNewDelta && !isRead;
+
+                let badgeNewHTML = isUnreadNew ? '<span class="badge-new">NEW</span>' : '';
+                
                 const sentimentClass = `sent-${article.sentiment}`;
                 const isPinned = pinnedArticles.has(article.id);
                 const pinClass = isPinned ? 'pinned' : '';
                 
+                const isCompareSelected = compareQueue.includes(article.id);
+                const compareClass = isCompareSelected ? 'selected' : '';
+
+                const readClass = isRead ? 'is-read' : '';
+                const newPulseClass = isUnreadNew ? 'is-new-item' : '';
+                const wlPulseClass = article.isNewWatchlistHit ? 'watchlist-highlight' : '';
+                
+                const unreadIndicator = isRead ? '' : '<div class="unread-indicator"></div>';
+                
                 const row = document.createElement('div');
-                row.className = 'article-row';
+                row.id = `art-${article.id}`;
+                row.className = `article-row ${wlPulseClass} ${readClass} ${newPulseClass}`;
+                
+                if(article.isNewWatchlistHit) {
+                    setTimeout(() => { article.isNewWatchlistHit = false; }, 2500);
+                }
+
                 row.onclick = () => openModal(article.id);
                 
                 let imageHTML = '';
@@ -1681,7 +2681,8 @@
                     imageHTML = `<img src="${article.imageUrl}" class="article-thumb" onerror="this.style.display='none'">`;
                 }
 
-                const tagsHTML = article.tags.map(t => `<span class="tag-pill">${t}</span>`).join('');
+                const tagsHTML = (article.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
+                const domainsHTML = (article.domains || []).map(d => `<span class="domain-badge">${d}</span>`).join('');
                 
                 let displayDesc = article.description;
                 if (displayDesc.length > 200) displayDesc = displayDesc.substring(0, 200) + '...';
@@ -1692,12 +2693,13 @@
                 else if(article.importance > 4) impClass = 'imp-med';
 
                 row.innerHTML = `
+                    ${unreadIndicator}
                     ${imageHTML}
                     <div class="article-content">
-                        <div class="article-title">${article.title} ${badges}</div>
+                        <div class="article-title">${article.title} ${badgeNewHTML} ${badges}</div>
                         <div class="article-desc">${displayDesc}</div>
                         <div class="action-row">
-                            ${tagsHTML}
+                            ${domainsHTML} ${tagsHTML}
                         </div>
                     </div>
                     <div class="article-meta-col">
@@ -1705,6 +2707,9 @@
                         <span class="article-time">${dateStr} ${timeStr}</span>
                         <div style="display:flex; gap: 8px; align-items:center; margin-top: 4px;">
                             <span class="rel-score-badge ${impClass}" title="Importance Score">IMP: ${article.importance}/10</span>
+                            <button class="btn-compare-icon ${compareClass}" data-id="${article.id}" onclick="toggleCompare(event, '${article.id}')" title="Compare Intelligence">
+                                <i data-lucide="columns" style="width: 14px; height: 14px;"></i>
+                            </button>
                             <button class="btn-pin ${pinClass}" onclick="togglePin(event, '${article.id}')" title="Pin Intelligence">
                                 <i data-lucide="pin" style="width: 14px; height: 14px;"></i>
                             </button>
@@ -1730,7 +2735,7 @@
             if (!container) return;
             container.innerHTML = '';
             
-            const breakingArticles = allArticles.filter(a => a.isBreaking)
+            const breakingArticles = getTheatreArticles().filter(a => a.isBreaking)
                 .sort((a, b) => b.severity - a.severity || b.pubDate - a.pubDate);
             
             const breakingCount = document.getElementById('breaking-count');
@@ -1740,7 +2745,7 @@
                 container.innerHTML = `
                     <div class="empty-state" style="padding: 10px; flex-direction: row;">
                         <i data-lucide="shield-check" style="width: 16px; height: 16px; opacity: 0.5;"></i>
-                        <span>Awaiting payload. Status normal.</span>
+                        <span>Awaiting payload. Status normal in sector.</span>
                     </div>`;
                 return;
             }
@@ -1772,7 +2777,7 @@
             let recentScore = 0;
             let pastScore = 0;
             
-            allArticles.forEach(a => {
+            getTheatreArticles().forEach(a => {
                 let s = 0;
                 if (a.severity === 3) s = 5;
                 if (a.severity === 2) s = 3;
@@ -1785,7 +2790,7 @@
                 }
             });
 
-            const totalScore = recentScore + pastScore; // Total 24h score for meter
+            const totalScore = recentScore + pastScore; 
 
             const label = document.getElementById('escalation-score');
             const segments = document.getElementById('meter-segments');
@@ -1811,9 +2816,9 @@
             
             if(trendEl) {
                 if (recentScore > pastScore + 2) {
-                    trendEl.innerHTML = `<i data-lucide="trending-up" style="width: 16px; height: 16px; color: var(--status-red);"></i> <span style="color: var(--status-red);">Increasing</span>`;
+                    trendEl.innerHTML = `<i data-lucide="trending-up" style="width: 16px; height: 16px; color: var(--status-red);"></i> <span style="color: var(--status-red);">Escalating</span>`;
                 } else if (recentScore < pastScore - 2) {
-                    trendEl.innerHTML = `<i data-lucide="trending-down" style="width: 16px; height: 16px; color: var(--status-green);"></i> <span style="color: var(--status-green);">Decreasing</span>`;
+                    trendEl.innerHTML = `<i data-lucide="trending-down" style="width: 16px; height: 16px; color: var(--status-green);"></i> <span style="color: var(--status-green);">De-escalating</span>`;
                 } else {
                     trendEl.innerHTML = `<i data-lucide="minus" style="width: 16px; height: 16px; color: var(--status-amber);"></i> <span style="color: var(--status-amber);">Stable</span>`;
                 }
@@ -1825,7 +2830,7 @@
             const container = document.getElementById('timeline-container');
             if (!container) return;
             container.innerHTML = '';
-            const recent = allArticles.slice(0, 15);
+            const recent = getTheatreArticles().slice(0, 15);
             
             if(recent.length === 0) {
                  container.innerHTML = `<div class="empty-state"><i data-lucide="clock" style="width: 24px; height: 24px; opacity: 0.5;"></i><span>No timeline data.</span></div>`;
@@ -1836,9 +2841,13 @@
                 const item = document.createElement('div');
                 item.className = `timeline-item ${index === 0 ? 'recent' : ''}`;
                 item.onclick = () => openModal(a.id);
+                
+                const tagsStr = (a.tags || []).map(t => `<span class="tag-pill" style="font-size: 0.6rem;">${t}</span>`).join('');
+                
                 item.innerHTML = `
                     <span class="timeline-time">${a.pubDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${a.source}</span>
                     <span class="timeline-title">${a.title}</span>
+                    <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">${tagsStr}</div>
                 `;
                 container.appendChild(item);
             });
@@ -1850,11 +2859,12 @@
             container.innerHTML = '';
 
             const twentyFourHoursAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
-            const recentBreaking = allArticles.filter(a => a.isBreaking && a.pubDate > twentyFourHoursAgo).slice(0, 6);
-            const toShow = recentBreaking.length >= 3 ? recentBreaking : allArticles.slice(0, 6);
+            const articles = getTheatreArticles();
+            const recentBreaking = articles.filter(a => a.isBreaking && a.pubDate > twentyFourHoursAgo).slice(0, 6);
+            const toShow = recentBreaking.length >= 3 ? recentBreaking : articles.slice(0, 6);
 
             if (toShow.length === 0) {
-                container.innerHTML = '<li style="color:var(--text-muted); list-style:none; padding-left:0;">No data logged in past 24h.</li>';
+                container.innerHTML = '<li style="color:var(--text-muted); list-style:none; padding-left:0;">No intelligence logged in past 24h.</li>';
                 return;
             }
             toShow.forEach(article => {
@@ -1865,12 +2875,11 @@
             });
         }
 
-        // --- Map & Geospatial ---
         function initMap() {
             const mapContainer = document.getElementById('map');
             if (!mapContainer) return;
             
-            map = L.map('map', {zoomControl: false}).setView([48.0, 31.0], 3); 
+            map = L.map('map', {zoomControl: false}).setView([35.0, 31.0], 2); 
             L.control.zoom({position: 'bottomright'}).addTo(map);
             
             const tileUrl = appSettings.theme === 'newsroom-light' 
@@ -1896,6 +2905,20 @@
                 }
             });
             map.addLayer(markerClusterGroup);
+
+            basesLayer = L.layerGroup();
+            STRATEGIC_BASES.forEach(base => {
+                L.marker(base.coords, {
+                    icon: L.divIcon({className: 'base-icon', html: '<i data-lucide="shield"></i>'})
+                }).bindPopup(`<div style="font-family: var(--font-sans);"><strong style="color:var(--status-blue);">${base.name}</strong><br>Strategic Military Base</div>`).addTo(basesLayer);
+            });
+
+            chokepointsLayer = L.layerGroup();
+            CHOKEPOINTS.forEach(cp => {
+                L.marker(cp.coords, {
+                    icon: L.divIcon({className: 'cp-icon', html: '<i data-lucide="anchor"></i>'})
+                }).bindPopup(`<div style="font-family: var(--font-sans);"><strong style="color:var(--status-amber);">${cp.name}</strong><br>Global Maritime Chokepoint</div>`).addTo(chokepointsLayer);
+            });
         }
 
         function filterFeedByLocation(loc) {
@@ -1903,7 +2926,7 @@
             if (searchInput) searchInput.value = loc;
             searchQuery = loc.toLowerCase();
             feedDisplayLimit = 30;
-            renderLiveFeed();
+            renderAll();
             const feedContainer = document.getElementById('feed-container');
             if (feedContainer) feedContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -1913,9 +2936,24 @@
             if (searchInput) searchInput.value = keyword;
             searchQuery = keyword.toLowerCase();
             feedDisplayLimit = 30;
-            renderLiveFeed();
+            renderAll();
             const feedContainer = document.getElementById('feed-container');
             if (feedContainer) feedContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function toggleLayer(checkbox) {
+            if (checkbox.id === 'layer-heatmap') {
+                if (checkbox.checked && heatLayer) map.addLayer(heatLayer);
+                else if (heatLayer) map.removeLayer(heatLayer);
+            }
+            if (checkbox.id === 'layer-bases') {
+                if (checkbox.checked) map.addLayer(basesLayer);
+                else map.removeLayer(basesLayer);
+            }
+            if (checkbox.id === 'layer-chokepoints') {
+                if (checkbox.checked) map.addLayer(chokepointsLayer);
+                else map.removeLayer(chokepointsLayer);
+            }
         }
 
         let mapUpdateTimeout;
@@ -1924,11 +2962,14 @@
             clearTimeout(mapUpdateTimeout);
             mapUpdateTimeout = setTimeout(() => {
                 markerClusterGroup.clearLayers();
+                if (heatLayer && map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
 
                 const locationMentions = {};
                 const twentyFourHoursAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
+                const activeArticles = getTheatreArticles();
+                const heatData = [];
 
-                allArticles.forEach(article => {
+                activeArticles.forEach(article => {
                     if (article.pubDate < twentyFourHoursAgo) return;
                     const titleWords = article.title.match(/[A-Z][a-z]+/g) || [];
                     
@@ -1955,6 +2996,8 @@
                         const jitterLat = coords[0] + (Math.random() - 0.5) * 0.5;
                         const jitterLng = coords[1] + (Math.random() - 0.5) * 0.5;
                         
+                        heatData.push([jitterLat, jitterLng, a.importance * 10]);
+
                         const marker = L.marker([jitterLat, jitterLng], {icon: redIcon});
                         const popupContent = `
                             <div style="font-family: var(--font-sans); padding: 4px;">
@@ -1974,12 +3017,24 @@
                         markerClusterGroup.addLayer(marker);
                     });
                 });
+
+                if (heatData.length > 0 && typeof L.heatLayer === 'function') {
+                    heatLayer = L.heatLayer(heatData, {radius: 35, blur: 20, maxZoom: 10});
+                    const hmCheckbox = document.getElementById('layer-heatmap');
+                    if (hmCheckbox && hmCheckbox.checked) map.addLayer(heatLayer);
+                }
+
+                if (activeTheatre === 'RUS-UKR') map.setView([49.0, 31.0], 5);
+                else if (activeTheatre === 'MID-EAST') map.setView([31.0, 40.0], 4);
+                else if (activeTheatre === 'INDO-PAC') map.setView([15.0, 115.0], 4);
+                else map.setView([35.0, 31.0], 2);
+
             }, 500);
         }
 
-        // --- Visual Metrics ---
         function updateMetricsUI() {
-            const eqData = countKeywords(KEYWORDS_EQUIPMENT).slice(0, 8);
+            const activeArticles = getTheatreArticles();
+            const eqData = countKeywords(KEYWORDS_EQUIPMENT, true, activeArticles).slice(0, 8);
             const eqContainer = document.getElementById('equipment-list');
             
             if (eqContainer) {
@@ -2011,7 +3066,7 @@
                 }
             }
 
-            const trData = countKeywords(KEYWORDS_TRENDS).slice(0, 8);
+            const trData = countKeywords(KEYWORDS_TRENDS, true, activeArticles).slice(0, 8);
             const trContainer = document.getElementById('trend-list');
             
             if (trContainer) {
@@ -2044,6 +3099,117 @@
             }
 
             lucide.createIcons();
+        }
+
+        function renderForecastChart() {
+            const ctx = document.getElementById('forecastChart');
+            if (!ctx || typeof Chart === 'undefined') return;
+            
+            const articles = getTheatreArticles();
+            const buckets = {};
+            const now = Date.now();
+            
+            for(let i=14; i>=0; i--) {
+                const time = now - (i * 12 * 3600 * 1000);
+                const label = new Date(time).toLocaleDateString([], {month:'short', day:'numeric'}) + ' ' + (new Date(time).getHours() >= 12 ? 'PM' : 'AM');
+                buckets[label] = { score: 0, time: time };
+            }
+            
+            articles.forEach(a => {
+                if (now - a.pubDate.getTime() > 14 * 12 * 3600 * 1000) return;
+                let bucketLabel = null;
+                let minDiff = Infinity;
+                Object.keys(buckets).forEach(lbl => {
+                    const diff = Math.abs(buckets[lbl].time - a.pubDate.getTime());
+                    if (diff < minDiff) { minDiff = diff; bucketLabel = lbl; }
+                });
+                if (bucketLabel) {
+                    buckets[bucketLabel].score += a.severity * 2 + (a.importance * 0.5);
+                }
+            });
+
+            const labels = Object.keys(buckets);
+            const dataPoints = Object.values(buckets).map(b => b.score);
+            
+            const last3 = dataPoints.slice(-3);
+            const momentum = (last3[2] - last3[0]) / 2;
+            const forecastVal = Math.max(0, last3[2] + momentum);
+            
+            labels.push('Forecast (12h)');
+            dataPoints.push(forecastVal);
+
+            const pointColors = dataPoints.map((val, i) => i === dataPoints.length - 1 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(59, 130, 246, 0.5)');
+            const borderColors = dataPoints.map((val, i) => i === dataPoints.length - 1 ? 'rgba(239, 68, 68, 1)' : 'rgba(59, 130, 246, 1)');
+
+            if (forecastChartInstance) forecastChartInstance.destroy();
+            
+            Chart.defaults.color = 'rgba(255, 255, 255, 0.5)';
+            Chart.defaults.font.family = "'JetBrains Mono', monospace";
+            
+            forecastChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Escalation Index',
+                        data: dataPoints,
+                        borderColor: borderColors,
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: pointColors,
+                        segment: {
+                            borderDash: ctx => ctx.p1DataIndex === dataPoints.length - 1 ? [5, 5] : undefined,
+                            borderColor: ctx => ctx.p1DataIndex === dataPoints.length - 1 ? 'rgba(239, 68, 68, 1)' : 'rgba(59, 130, 246, 1)',
+                        },
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderReadiness() {
+            const list = document.getElementById('readiness-list');
+            if (!list) return;
+            list.innerHTML = '';
+            
+            const articles = getTheatreArticles();
+            let nuclearMentions = 0, carrierMentions = 0, airMentions = 0, natoMentions = 0, cyberMentions = 0;
+            
+            articles.slice(0, 150).forEach(a => {
+                const text = (a.title + " " + a.description).toLowerCase();
+                if (text.includes('nuclear') || text.includes('icbm')) nuclearMentions++;
+                if (text.includes('carrier') || text.includes('csg') || text.includes('fleet')) carrierMentions++;
+                if (text.includes('bomber') || text.includes('fighter') || text.includes('airspace')) airMentions++;
+                if (text.includes('nato') || text.includes('alliance')) natoMentions++;
+                if (text.includes('cyber') || text.includes('hack')) cyberMentions++;
+            });
+
+            const metrics = [
+                { name: 'Strategic/DEFCON Est.', value: nuclearMentions > 5 ? 'ELEVATED' : 'NORMAL', color: nuclearMentions > 5 ? 'var(--status-amber)' : 'var(--status-green)' },
+                { name: 'Naval Posture', value: carrierMentions > 8 ? 'CSG ACTIVE' : 'STANDARD', color: carrierMentions > 8 ? 'var(--status-blue)' : 'var(--text-muted)' },
+                { name: 'Air Sortie Rate', value: airMentions > 15 ? 'HIGH ALERT' : 'ROUTINE', color: airMentions > 15 ? 'var(--status-amber)' : 'var(--text-muted)' },
+                { name: 'Alliance Readiness', value: natoMentions > 20 ? 'RAPID RESPONSE' : 'MONITORING', color: natoMentions > 20 ? 'var(--status-blue)' : 'var(--status-green)' },
+                { name: 'Cyber Threat Level', value: cyberMentions > 12 ? 'SEVERE' : 'MODERATE', color: cyberMentions > 12 ? 'var(--status-red)' : 'var(--status-amber)' }
+            ];
+            
+            metrics.forEach(m => {
+                list.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding: 16px 12px; border-bottom: 1px solid var(--panel-border); background: var(--bg-base); margin-bottom: 8px; border-radius: 8px; transition: all 0.2s;">
+                        <span style="font-weight: 600; color: var(--text-light); font-size: 0.85rem;">${m.name}</span>
+                        <span style="font-family: var(--font-mono); font-weight: 700; color: ${m.color}; font-size: 0.85rem; letter-spacing: 0.5px;">${m.value}</span>
+                    </div>
+                `;
+            });
         }
     </script>
 </body>
