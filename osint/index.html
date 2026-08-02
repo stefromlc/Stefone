@@ -3,6 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script>
+        // TV & Silk Browser Optimization: Force desktop rendering context and identify environment
+        (function() {
+            var isTV = /Silk\/|AFT|FireTV|SmartTV/i.test(navigator.userAgent);
+            if (isTV) {
+                document.documentElement.classList.add('fire-tv-silk');
+                var metaViewport = document.querySelector('meta[name="viewport"]');
+                if (metaViewport) {
+                    // Force a 1920px virtual viewport to prevent Fire TV media query collapse
+                    metaViewport.setAttribute('content', 'width=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                }
+            }
+        })();
+    </script>
+    
     <title>OSINT Dashboard v2.2 – Advanced Conflict Intelligence Monitor</title>
     <meta name="title" content="OSINT Dashboard v2.2 – Advanced Conflict Intelligence Monitor">
     <meta name="description" content="Monitor global conflict signals through an advanced live OSINT dashboard. Track escalation metrics, threat forecasting, chokepoints, and curated intelligence feeds.">
@@ -849,6 +865,103 @@
                 font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;
             }
         }
+
+        /* =========================================
+           FIRE TV & SILK BROWSER OPTIMIZATIONS
+           ========================================= */
+        html.fire-tv-silk {
+            /* Prevent Silk from artificially scaling up text blocks */
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        
+        html.fire-tv-silk body {
+            /* Ensure the desktop grid is preserved regardless of how Silk handles the viewport */
+            min-width: 1920px !important; 
+            overflow-x: hidden;
+        }
+
+        /* TV Mode Scaling & Responsive Adjustments */
+        html.fire-tv-silk .tv-overlay {
+            width: 100vw;
+            height: 100vh;
+            /* Silk fullscreen sometimes fails to honor inset natively */
+            top: 0; left: 0; bottom: 0; right: 0;
+            position: fixed;
+        }
+
+        html.fire-tv-silk .tv-content {
+            /* Proportional TV Safe-area margins to prevent hardware overscan cropping */
+            padding: 8vh 6vw;
+            max-width: 100vw;
+            box-sizing: border-box;
+            justify-content: center;
+        }
+
+        html.fire-tv-silk .tv-header {
+            top: 6vh;
+            left: 6vw;
+            gap: 1.5vw;
+        }
+
+        html.fire-tv-silk .tv-header-title {
+            font-size: clamp(1.2rem, 1.5vw, 2rem);
+            gap: 1vw;
+        }
+        
+        html.fire-tv-silk .tv-pulse {
+            width: 1vw;
+            height: 1vw;
+            min-width: 12px;
+            min-height: 12px;
+        }
+
+        html.fire-tv-silk .tv-close {
+            top: 6vh;
+            right: 6vw;
+            padding: 1vh 1.5vw;
+            font-size: clamp(0.9rem, 1.2vw, 1.5rem);
+            background: rgba(255,255,255,0.15);
+        }
+
+        html.fire-tv-silk .tv-title {
+            /* Swapped rems for proportional vw units ensuring perfect scale on 1080p regardless of base font */
+            font-size: clamp(3rem, 5vw, 6.5rem);
+            line-height: 1.2;
+            margin-bottom: 3vh;
+            /* Fixes text clipping observed in webkit line-clamp on Silk displays */
+            padding-bottom: 0.1em;
+            margin-top: -0.1em;
+        }
+
+        html.fire-tv-silk .tv-desc {
+            font-size: clamp(1.4rem, 1.8vw, 2.5rem);
+            line-height: 1.6;
+            max-width: 85vw;
+            margin-bottom: 3vh;
+        }
+
+        html.fire-tv-silk .tv-meta {
+            font-size: clamp(1.1rem, 1.4vw, 1.8rem);
+            margin-bottom: 3vh;
+            gap: 2vw;
+        }
+
+        html.fire-tv-silk .tv-badges {
+            margin-bottom: 3vh;
+            gap: 1vw;
+        }
+
+        html.fire-tv-silk .tv-badge {
+            font-size: clamp(0.9rem, 1.1vw, 1.4rem);
+            padding: 0.8vh 1.2vw;
+            border-radius: 0.4vw;
+        }
+
+        html.fire-tv-silk .tv-progress-container {
+            height: 1vh;
+            min-height: 6px;
+        }
     </style>
 </head>
 <body data-theme="military-dark" data-layout="analyst">
@@ -1302,7 +1415,7 @@
         let tvCurrentIndex = 0;
         let tvIsActive = false;
         
-        let compareQueue = []; // Holds max 2 article IDs for comparison
+        let compareQueue = [];
 
         const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -1780,10 +1893,10 @@
                     localStorage.setItem('osint_pinned', JSON.stringify([...pinnedArticles]));
                     localStorage.setItem('osint_read', JSON.stringify([...readArticles]));
                     
-                    alert("Configuration imported successfully. The system will now reload.");
-                    location.reload();
+                    console.log("Configuration imported successfully. The system will now reload.");
+                    setTimeout(() => location.reload(), 500);
                 } catch (error) {
-                    alert("Error parsing configuration file.");
+                    console.error("Error parsing configuration file.");
                 }
             };
             reader.readAsText(file);
@@ -1795,7 +1908,6 @@
                 compareQueue = compareQueue.filter(x => x !== id);
             } else {
                 if (compareQueue.length >= 2) {
-                    // Replace the second item if queue is full to allow swapping
                     compareQueue[1] = id;
                 } else {
                     compareQueue.push(id);
@@ -1888,8 +2000,7 @@
                 swapBtn.style.opacity = (art1 && art2) ? '1' : '0.5';
             }
 
-            // Headers
-            grid.innerHTML += `<div class="compare-row-label" style="padding-top:0;"></div>`; // Empty top-left
+            grid.innerHTML += `<div class="compare-row-label" style="padding-top:0;"></div>`; 
             
             [art1, art2].forEach((art, idx) => {
                 if (art) {
@@ -1913,7 +2024,6 @@
                 }
             });
 
-            // If we don't have at least one article, don't render fields
             if (!art1 && !art2) return;
 
             const attributes = [
@@ -1961,7 +2071,14 @@
         function openTvMode() {
             tvIsActive = true;
             document.getElementById('tv-mode').style.display = 'flex';
-            try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } catch(e){}
+            
+            // Execute safe fullscreen requests explicitly targeting Silk Browser's webkit implementations.
+            const docEl = document.documentElement;
+            try { 
+                if (docEl.requestFullscreen) docEl.requestFullscreen();
+                else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+                else if (docEl.msRequestFullscreen) docEl.msRequestFullscreen();
+            } catch(e) { console.warn('Fullscreen execution blocked'); }
             
             tvArticles = getTheatreArticles().filter(a => a.importance > 5 || a.severity > 0)
                                     .sort((a,b) => b.pubDate - a.pubDate)
@@ -1984,7 +2101,13 @@
             tvIsActive = false;
             document.getElementById('tv-mode').style.display = 'none';
             clearInterval(tvIntervalId);
-            try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e){}
+            
+            // Execute safe exit fullscreen gracefully.
+            try { 
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+            } catch(e) { console.warn('Exit Fullscreen execution blocked'); }
         }
 
         function renderTvArticle() {
