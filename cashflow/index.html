@@ -134,13 +134,13 @@
                         <p class="text-xs text-slate-400 mt-2 font-medium relative z-10 flex items-center gap-1.5"><i data-lucide="clock" class="w-3 h-3"></i> <span id="kpi-current-date">As of today</span></p>
                     </div>
                     
-                    <!-- Safe to Spend -->
+                    <!-- Global Safe to Spend -->
                     <div class="bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 p-6 rounded-2xl shadow-card flex flex-col justify-between relative overflow-hidden group border border-brand-400 interactive-card hover:shadow-card-hover hover:-translate-y-1">
                         <div class="absolute -right-4 -bottom-4 opacity-[0.07] transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 pointer-events-none">
                             <i data-lucide="shield-check" class="w-40 h-40 text-white"></i>
                         </div>
                         <div class="flex justify-between items-start mb-4 relative z-10">
-                            <span class="text-sm font-bold text-white/90 tracking-wide">Safe to Spend</span>
+                            <span class="text-sm font-bold text-white/90 tracking-wide">Global Safe Spend</span>
                             <div class="p-2 bg-white/20 text-white rounded-xl backdrop-blur-md shadow-sm"><i data-lucide="check-circle-2" class="w-4 h-4"></i></div>
                         </div>
                         <div class="relative z-10">
@@ -169,6 +169,36 @@
                         </div>
                         <h3 id="kpi-netflow" class="text-3xl font-extrabold text-slate-800 tracking-tight">£0.00</h3>
                         <p class="text-xs text-slate-400 mt-2 font-medium flex items-center gap-1.5"><i data-lucide="bar-chart-2" class="w-3 h-3"></i> In selected timeframe</p>
+                    </div>
+                </div>
+
+                <!-- Spend Until Next Income Widget -->
+                <div id="widget-spend-until-income" class="hidden bg-white rounded-2xl border border-slate-200/60 shadow-card overflow-hidden">
+                    <div class="p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div class="flex-1 w-full">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
+                                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                                </div>
+                                <h2 class="text-lg font-bold text-slate-800 tracking-tight">Comfortable to Spend <span class="font-normal text-slate-500 text-sm ml-1 hidden sm:inline-block">until next income</span></h2>
+                            </div>
+                            <p class="text-sm text-slate-500 font-medium max-w-lg">
+                                The amount you can safely spend today without falling below your safety buffer, factoring in all scheduled bills before your next payday.
+                            </p>
+                            
+                            <div id="sui-warning" class="hidden mt-4 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-start gap-3 shadow-sm max-w-lg">
+                                <i data-lucide="alert-circle" class="w-5 h-5 shrink-0 mt-0.5"></i>
+                                <p class="text-sm font-semibold">Warning: Spending more could drop your balance below your safety buffer before you get paid.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col items-end text-right w-full md:w-auto bg-slate-50 p-6 rounded-2xl border border-slate-100/80 shadow-inner">
+                            <h3 id="sui-amount" class="text-4xl sm:text-5xl font-extrabold text-emerald-600 tracking-tight mb-2 truncate max-w-full">£0.00</h3>
+                            <div class="flex flex-col items-end gap-1.5 text-sm font-semibold text-slate-600 mt-2">
+                                <span class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-sm"><i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i> <span id="sui-days">0 days</span> left</span>
+                                <span class="flex items-center gap-1.5"><i data-lucide="arrow-down-circle" class="w-4 h-4 text-emerald-500"></i> Next: <span id="sui-income-amt" class="text-emerald-700">£0.00</span> on <span id="sui-date">Date</span></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1223,13 +1253,62 @@
 
                     const buffer = parseFloat(state.settings.safetyBuffer) || 0;
                     const minFutureContext = Math.min(currentBalance, min.balance);
-                    const safeToSpend = Math.max(0, minFutureContext - buffer);
-                    document.getElementById('kpi-safe').textContent = ui.formatMoney(safeToSpend);
+                    const globalSafeToSpend = Math.max(0, minFutureContext - buffer);
+                    document.getElementById('kpi-safe').textContent = ui.formatMoney(globalSafeToSpend);
                     
                     const net = totalIn - totalOut;
                     const netEl = document.getElementById('kpi-netflow');
                     netEl.textContent = (net > 0 ? '+' : '') + ui.formatMoney(net);
                     netEl.className = `text-3xl font-extrabold tracking-tight ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+
+                    // Spend Until Next Income Logic
+                    const suiWidget = document.getElementById('widget-spend-until-income');
+                    
+                    let nextIncomeIdx = -1;
+                    // Start from 1 to find income strictly occurring *after* today
+                    for (let i = 1; i < futureData.length; i++) {
+                        if (futureData[i].income > 0) {
+                            nextIncomeIdx = i;
+                            break;
+                        }
+                    }
+
+                    if (nextIncomeIdx > -1) {
+                        let scheduledExpenses = 0;
+                        // Sum expenses from tomorrow (index 1) up to the day before income
+                        for (let i = 1; i < nextIncomeIdx; i++) {
+                            scheduledExpenses += futureData[i].expense;
+                        }
+
+                        // We use today's calculated balance as the starting point (it already includes today's scheduled transactions)
+                        const safeSpendUntilIncome = currentBalance - scheduledExpenses - buffer;
+                        
+                        const nextIncomeDate = futureData[nextIncomeIdx].dateStr;
+                        const nextIncomeAmt = futureData[nextIncomeIdx].income;
+                        const daysUntil = nextIncomeIdx; // i.e., index 1 means 1 day away (tomorrow)
+
+                        const amtEl = document.getElementById('sui-amount');
+                        amtEl.textContent = ui.formatMoney(safeSpendUntilIncome);
+                        
+                        if (safeSpendUntilIncome <= 0) {
+                            amtEl.classList.remove('text-emerald-600');
+                            amtEl.classList.add('text-rose-600');
+                            document.getElementById('sui-warning').classList.remove('hidden');
+                        } else {
+                            amtEl.classList.remove('text-rose-600');
+                            amtEl.classList.add('text-emerald-600');
+                            document.getElementById('sui-warning').classList.add('hidden');
+                        }
+
+                        document.getElementById('sui-days').textContent = `${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
+                        document.getElementById('sui-date').textContent = dateUtils.formatDisplayShort(nextIncomeDate);
+                        document.getElementById('sui-income-amt').textContent = ui.formatMoney(nextIncomeAmt);
+                        
+                        suiWidget.classList.remove('hidden');
+                    } else {
+                        // Hide if no future income is scheduled within horizon
+                        suiWidget.classList.add('hidden');
+                    }
                 }
 
                 ui.renderInsights(futureData);
