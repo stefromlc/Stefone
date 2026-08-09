@@ -1281,7 +1281,10 @@
                         }
 
                         // We use today's calculated balance as the starting point (it already includes today's scheduled transactions)
-                        const safeSpendUntilIncome = currentBalance - scheduledExpenses - buffer;
+                        const localSafeSpend = currentBalance - scheduledExpenses - buffer;
+                        
+                        // NEW LOGIC: Cap it by the global safe spend to prevent future overdrafts
+                        const safeSpendUntilIncome = Math.max(0, Math.min(localSafeSpend, globalSafeToSpend));
                         
                         const nextIncomeDate = futureData[nextIncomeIdx].dateStr;
                         const nextIncomeAmt = futureData[nextIncomeIdx].income;
@@ -1290,14 +1293,22 @@
                         const amtEl = document.getElementById('sui-amount');
                         amtEl.textContent = ui.formatMoney(safeSpendUntilIncome);
                         
+                        const warningEl = document.getElementById('sui-warning');
                         if (safeSpendUntilIncome <= 0) {
                             amtEl.classList.remove('text-emerald-600');
                             amtEl.classList.add('text-rose-600');
-                            document.getElementById('sui-warning').classList.remove('hidden');
+                            warningEl.className = 'mt-4 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-start gap-3 shadow-sm max-w-lg';
+                            warningEl.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 shrink-0 mt-0.5"></i><p class="text-sm font-semibold">Warning: Spending more could drop your balance below your safety buffer.</p>';
+                        } else if (localSafeSpend > globalSafeToSpend) {
+                            // The user is protected from a post-payday bottleneck
+                            amtEl.classList.remove('text-rose-600');
+                            amtEl.classList.add('text-emerald-600');
+                            warningEl.className = 'mt-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl flex items-start gap-3 shadow-sm max-w-lg';
+                            warningEl.innerHTML = '<i data-lucide="info" class="w-5 h-5 shrink-0 mt-0.5"></i><p class="text-sm font-semibold">Capped to protect your balance for larger bills scheduled <em>after</em> your next payday.</p>';
                         } else {
                             amtEl.classList.remove('text-rose-600');
                             amtEl.classList.add('text-emerald-600');
-                            document.getElementById('sui-warning').classList.add('hidden');
+                            warningEl.className = 'hidden';
                         }
 
                         document.getElementById('sui-days').textContent = `${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
@@ -1305,6 +1316,7 @@
                         document.getElementById('sui-income-amt').textContent = ui.formatMoney(nextIncomeAmt);
                         
                         suiWidget.classList.remove('hidden');
+                        lucide.createIcons(); // Re-render newly injected warning icons
                     } else {
                         // Hide if no future income is scheduled within horizon
                         suiWidget.classList.add('hidden');
