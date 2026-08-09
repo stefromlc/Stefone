@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopoMaker | Topographic SVG Generator</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- JSZip for bundling multiple SVG layers -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <style>
+        /* Custom Styles for Map Overlay */
+        #map-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        #selection-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px dashed rgba(59, 130, 246, 0.8);
+            background-color: rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #selection-overlay::after {
+            content: '+';
+            color: rgba(59, 130, 246, 0.8);
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        /* Checkered background for SVG preview to show transparency */
+        .checker-bg {
+            background-image: 
+                linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+                linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
+                linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        /* SVG layer transition for smooth UI updates */
+        svg path {
+            transition: fill 0.3s ease, stroke 0.3s ease;
+        }
+        
+        /* Hide scrollbar for clean UI */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800 h-screen w-screen overflow-hidden flex flex-col md:flex-row font-sans">
+
+    <!-- Sidebar Controls -->
+    <aside class="w-full md:w-80 lg:w-96 bg-white border-r border-gray-200 flex flex-col h-full z-10 shadow-lg shrink-0">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-200 bg-slate-900 text-white">
+            <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-4.24 4.24a3 3 0 0 0 0 4.24L11 22"/><path d="M12 2v8"/><path d="m16 6-4-4-4 4"/></svg>
+                TopoMaker
+            </h1>
+            <p class="text-slate-400 text-sm mt-1">Laser-ready contour generation</p>
+        </div>
+
+        <!-- Scrollable settings -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            
+            <!-- Location Search -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Location</label>
+                <div class="flex gap-2">
+                    <input type="text" id="search-input" placeholder="e.g. Mount Fuji, Grand Canyon" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                    <button id="search-btn" class="px-3 py-2 bg-slate-100 border border-gray-300 rounded-md text-slate-600 hover:bg-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </button>
+                </div>
+                <p id="search-status" class="text-xs text-red-500 mt-1 hidden">Location not found.</p>
+            </div>
+
+            <hr class="border-gray-100">
+
+            <!-- Selection Box Ratio -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Capture Area Shape</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button class="ratio-btn px-2 py-1 text-xs border border-blue-500 bg-blue-50 text-blue-700 rounded transition-colors" data-w="1" data-h="1">Square 1:1</button>
+                    <button class="ratio-btn px-2 py-1 text-xs border border-gray-300 bg-white hover:bg-gray-50 rounded transition-colors" data-w="4" data-h="3">Landscape 4:3</button>
+                    <button class="ratio-btn px-2 py-1 text-xs border border-gray-300 bg-white hover:bg-gray-50 rounded transition-colors" data-w="3" data-h="4">Portrait 3:4</button>
+                </div>
+            </div>
+
+            <!-- Contour Parameters -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Contour Parameters</label>
+                
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">Number of Layers</span>
+                            <span id="layers-val" class="font-mono text-blue-600 font-bold">12</span>
+                        </div>
+                        <input type="range" id="param-layers" min="3" max="40" value="12" class="w-full accent-blue-600">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">Terrain Smoothing</span>
+                            <span id="smoothing-val" class="font-mono text-blue-600 font-bold">Medium</span>
+                        </div>
+                        <input type="range" id="param-smoothing" min="0" max="10" value="3" class="w-full accent-blue-600">
+                        <p class="text-[10px] text-gray-400 mt-1 leading-tight">Higher smoothing reduces jagged edges but removes fine detail. Crucial for laser cutting.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-gray-100">
+
+            <!-- Export Settings -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Export Size</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" id="export-width" value="200" min="50" max="1000" class="w-24 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <span class="text-sm text-gray-500">mm (Width)</span>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-1">Height is calculated automatically to maintain aspect ratio.</p>
+            </div>
+            
+            <div id="status-container" class="hidden rounded-md bg-blue-50 p-3 border border-blue-100">
+                <div class="flex items-center">
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span id="status-text" class="text-xs text-blue-700 font-medium">Processing...</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="p-4 border-t border-gray-200 bg-gray-50 space-y-2">
+            <button id="btn-generate" class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-md font-semibold text-sm transition-colors shadow-sm flex justify-center items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+                Generate Contours
+            </button>
+            <button id="btn-export" disabled class="w-full py-3 px-4 bg-white border border-gray-300 text-gray-400 rounded-md font-semibold text-sm transition-colors flex justify-center items-center gap-2 cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Export Layers (ZIP)
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-full bg-white relative">
+        
+        <!-- View Tabs -->
+        <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[2000] bg-white rounded-full shadow-lg border border-gray-200 p-1 flex">
+            <button id="tab-map" class="px-6 py-1.5 rounded-full text-sm font-semibold bg-slate-900 text-white transition-colors">Map Setup</button>
+            <button id="tab-preview" class="px-6 py-1.5 rounded-full text-sm font-semibold text-gray-500 hover:text-slate-900 transition-colors">3D Preview</button>
+        </div>
+
+        <!-- Map View -->
+        <div id="view-map" class="flex-1 w-full h-full relative">
+            <div id="map-container">
+                <div id="map" class="w-full h-full"></div>
+                <!-- The selection reticle -->
+                <div id="selection-overlay" style="width: 300px; height: 300px;"></div>
+            </div>
+            
+            <!-- Instructions Overlay -->
+            <div class="absolute bottom-6 right-6 z-[1000] bg-white/90 backdrop-blur px-4 py-3 rounded-lg shadow-lg border border-gray-200 max-w-xs pointer-events-none">
+                <h3 class="font-bold text-sm text-slate-800 mb-1">How to use</h3>
+                <p class="text-xs text-slate-600">Pan and zoom the map to frame your desired terrain within the blue dashed box. Click 'Generate Contours' when ready.</p>
+            </div>
+        </div>
+
+        <!-- Preview View -->
+        <div id="view-preview" class="hidden flex-1 w-full h-full checker-bg overflow-auto flex items-center justify-center p-8 relative">
+            <div id="svg-wrapper" class="bg-white shadow-2xl rounded-sm transition-transform duration-300 hover:scale-[1.02] cursor-crosshair">
+                <!-- SVG will be injected here -->
+            </div>
+            
+            <!-- Preview Options Overlay -->
+            <div class="absolute bottom-6 right-6 bg-white p-3 rounded-lg shadow-lg border border-gray-200 flex flex-col gap-2">
+                <label class="text-xs font-semibold text-gray-700">Preview Style</label>
+                <div class="flex items-center gap-2">
+                    <input type="radio" name="pstyle" id="style-3d" value="3d" checked class="accent-blue-600">
+                    <label for="style-3d" class="text-sm cursor-pointer">Stacked Materials</label>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="radio" name="pstyle" id="style-lines" value="lines" class="accent-blue-600">
+                    <label for="style-lines" class="text-sm cursor-pointer">Laser Outlines</label>
+                </div>
+            </div>
+
+            <!-- Stats Overlay -->
+            <div class="absolute top-6 right-6 bg-white/90 backdrop-blur p-3 rounded-lg shadow-md border border-gray-200 text-xs text-slate-600 space-y-1">
+                <div class="flex justify-between gap-4"><span class="font-semibold">Elevation Min:</span> <span id="stat-min">-- m</span></div>
+                <div class="flex justify-between gap-4"><span class="font-semibold">Elevation Max:</span> <span id="stat-max">-- m</span></div>
+                <div class="flex justify-between gap-4"><span class="font-semibold">Grid Res:</span> <span id="stat-res">-- px</span></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Application Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- UI Elements ---
+            const mapEl = document.getElementById('map');
+            const selectionOverlay = document.getElementById('selection-overlay');
+            const btnGenerate = document.getElementById('btn-generate');
+            const btnExport = document.getElementById('btn-export');
+            const tabMap = document.getElementById('tab-map');
+            const tabPreview = document.getElementById('tab-preview');
+            const viewMap = document.getElementById('view-map');
+            const viewPreview = document.getElementById('view-preview');
+            const svgWrapper = document.getElementById('svg-wrapper');
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.getElementById('search-btn');
+            const searchStatus = document.getElementById('search-status');
+            const statusContainer = document.getElementById('status-container');
+            const statusText = document.getElementById('status-text');
+            const ratioBtns = document.querySelectorAll('.ratio-btn');
+            
+            // Stats elements
+            const statMin = document.getElementById('stat-min');
+            const statMax = document.getElementById('stat-max');
+            const statRes = document.getElementById('stat-res');
+
+            // --- State Variables ---
+            let appState = {
+                currentRawHeights: null,
+                currentWidth: 0,
+                currentHeight: 0,
+                currentSvgString: '',
+                currentGeoJson: null,
+                minH: 0,
+                maxH: 0
+            };
+
+            // --- Initialize Map (Leaflet) ---
+            // Start at a visually interesting default location (e.g., Swiss Alps)
+            const map = L.map('map', {
+                zoomControl: false, // Move it to bottom right later
+                attributionControl: false
+            }).setView([46.03, 7.74], 12); 
+
+            L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+            // Use generic OSM tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+            }).addTo(map);
+
+            // --- Event Listeners: UI Controls ---
+
+            // Sync sliders with text display
+            const updateSliderDisplay = (id, suffix = '') => {
+                const slider = document.getElementById(`param-${id}`);
+                const display = document.getElementById(`${id}-val`);
+                let val = slider.value;
+                if (id === 'smoothing') {
+                    if (val == 0) val = 'None';
+                    else if (val < 4) val = 'Low';
+                    else if (val < 7) val = 'Medium';
+                    else val = 'High';
+                }
+                display.innerText = val + suffix;
+            };
+
+            document.getElementById('param-layers').addEventListener('input', () => {
+                updateSliderDisplay('layers');
+                if (appState.currentRawHeights) generateContours(); // Real-time update if data exists
+            });
+            
+            document.getElementById('param-smoothing').addEventListener('change', () => {
+                updateSliderDisplay('smoothing');
+                if (appState.currentRawHeights) generateContours(); // Expensive operation, do on change (release)
+            });
+
+            // Ratio Buttons
+            ratioBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Update UI styling
+                    ratioBtns.forEach(b => {
+                        b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+                        b.classList.add('border-gray-300', 'bg-white', 'text-gray-700');
+                    });
+                    e.target.classList.remove('border-gray-300', 'bg-white', 'text-gray-700');
+                    e.target.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+
+                    // Calculate new dimensions (keep max dimension around 300px for the overlay)
+                    const wRatio = parseFloat(e.target.dataset.w);
+                    const hRatio = parseFloat(e.target.dataset.h);
+                    let width, height;
+                    const baseSize = 320;
+                    
+                    if (wRatio > hRatio) {
+                        width = baseSize;
+                        height = baseSize * (hRatio / wRatio);
+                    } else {
+                        height = baseSize;
+                        width = baseSize * (wRatio / hRatio);
+                    }
+                    
+                    selectionOverlay.style.width = `${width}px`;
+                    selectionOverlay.style.height = `${height}px`;
+                });
+            });
+
+            // Tab Switching
+            const switchTab = (tab) => {
+                if (tab === 'map') {
+                    tabMap.classList.replace('text-gray-500', 'text-white');
+                    tabMap.classList.replace('bg-transparent', 'bg-slate-900');
+                    tabMap.classList.remove('hover:text-slate-900');
+                    
+                    tabPreview.classList.replace('text-white', 'text-gray-500');
+                    tabPreview.classList.replace('bg-slate-900', 'bg-transparent');
+                    tabPreview.classList.add('hover:text-slate-900');
+
+                    viewMap.classList.remove('hidden');
+                    viewPreview.classList.add('hidden');
+                    map.invalidateSize(); // Fix leafet render bug after unhiding
+                } else {
+                    tabPreview.classList.replace('text-gray-500', 'text-white');
+                    tabPreview.classList.replace('bg-transparent', 'bg-slate-900');
+                    tabPreview.classList.remove('hover:text-slate-900');
+                    
+                    tabMap.classList.replace('text-white', 'text-gray-500');
+                    tabMap.classList.replace('bg-slate-900', 'bg-transparent');
+                    tabMap.classList.add('hover:text-slate-900');
+
+                    viewPreview.classList.remove('hidden');
+                    viewMap.classList.add('hidden');
+                }
+            };
+
+            tabMap.addEventListener('click', () => switchTab('map'));
+            tabPreview.addEventListener('click', () => switchTab('preview'));
+
+            // Preview Style Toggle
+            document.querySelectorAll('input[name="pstyle"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const svg = svgWrapper.querySelector('svg');
+                    if (!svg) return;
+                    if (radio.value === '3d') {
+                        svg.classList.remove('style-lines');
+                        svg.classList.add('style-3d');
+                    } else {
+                        svg.classList.remove('style-3d');
+                        svg.classList.add('style-lines');
+                    }
+                });
+            });
+
+            // Search Function (Nominatim)
+            const performSearch = async () => {
+                const query = searchInput.value.trim();
+                if (!query) return;
+                
+                searchBtn.disabled = true;
+                searchBtn.innerHTML = '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+                searchStatus.classList.add('hidden');
+
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`, {
+                        headers: { 'User-Agent': 'TopoMaker-DemoApp' }
+                    });
+                    const data = await res.json();
+                    
+                    if (data && data.length > 0) {
+                        const loc = data[0];
+                        // Get bounding box if available to set appropriate zoom
+                        if (loc.boundingbox) {
+                            const [s, n, w, e] = loc.boundingbox;
+                            map.fitBounds([[s, w], [n, e]]);
+                        } else {
+                            map.setView([loc.lat, loc.lon], 12);
+                        }
+                    } else {
+                        searchStatus.classList.remove('hidden');
+                    }
+                } catch (e) {
+                    console.error("Search failed:", e);
+                    searchStatus.innerText = "Network error during search.";
+                    searchStatus.classList.remove('hidden');
+                } finally {
+                    searchBtn.disabled = false;
+                    searchBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
+                }
+            };
+            
+            searchBtn.addEventListener('click', performSearch);
+            searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+
+
+            // --- Core Logic: Mercator & Tile Math ---
+
+            // Web Mercator math
+            const TILE_SIZE = 256;
+            const deg2rad = d => d * Math.PI / 180;
+            const rad2deg = r => r * 180 / Math.PI;
+
+            // Convert LatLng to Web Mercator Pixel Coordinates at a given zoom
+            function latLngToPixel(lat, lng, zoom) {
+                const scale = 1 << zoom;
+                let sinLat = Math.sin(deg2rad(lat));
+                // Clamp to avoid infinity at poles
+                sinLat = Math.max(Math.min(sinLat, 0.9999), -0.9999);
+                
+                const x = TILE_SIZE * (0.5 + lng / 360) * scale;
+                const y = TILE_SIZE * (0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)) * scale;
+                return { x, y };
+            }
+
+            // --- Core Logic: Fetching and Processing ---
+
+            const setStatus = (msg) => {
+                if (msg) {
+                    statusContainer.classList.remove('hidden');
+                    statusText.innerText = msg;
+                } else {
+                    statusContainer.classList.add('hidden');
+                }
+            };
+
+            btnGenerate.addEventListener('click', async () => {
+                btnGenerate.disabled = true;
+                btnExport.disabled = true;
+                btnExport.classList.replace('text-slate-800', 'text-gray-400');
+                btnExport.classList.replace('hover:bg-gray-50', 'cursor-not-allowed');
+                svgWrapper.innerHTML = '';
+
+                try {
+                    // 1. Determine geographic bounds of the selection box
+                    const rect = selectionOverlay.getBoundingClientRect();
+                    
+                    // Convert screen pixels to map latlng
+                    const nw = map.containerPointToLatLng([rect.left, rect.top]);
+                    const se = map.containerPointToLatLng([rect.right, rect.bottom]);
+
+                    // Determine required grid resolution. We want the longest side to be ~600px for good detail vs performance balance
+                    const targetMaxDim = 600;
+                    
+                    // Calculate what zoom level gives us roughly this many pixels for the bounds
+                    let fetchZoom = 1;
+                    let pNW, pSE, w, h;
+                    // Brute force find best zoom (usually between 10 and 15)
+                    for (let z = 5; z <= 15; z++) {
+                        pNW = latLngToPixel(nw.lat, nw.lng, z);
+                        pSE = latLngToPixel(se.lat, se.lng, z);
+                        w = Math.abs(pSE.x - pNW.x);
+                        h = Math.abs(pSE.y - pNW.y);
+                        if (Math.max(w, h) >= targetMaxDim) {
+                            fetchZoom = z;
+                            break;
+                        }
+                    }
+
+                    // Recalculate exactly at chosen zoom
+                    pNW = latLngToPixel(nw.lat, nw.lng, fetchZoom);
+                    pSE = latLngToPixel(se.lat, se.lng, fetchZoom);
+                    const gridW = Math.round(Math.abs(pSE.x - pNW.x));
+                    const gridH = Math.round(Math.abs(pSE.y - pNW.y));
+                    
+                    // Prevent massive memory allocation if zoom goes crazy
+                    if (gridW > 2000 || gridH > 2000) throw new Error("Selection area is too large. Please zoom in.");
+
+                    setStatus(`Fetching terrain data (Zoom ${fetchZoom})...`);
+
+                    // Calculate which tiles we need
+                    const txMin = Math.floor(Math.min(pNW.x, pSE.x) / TILE_SIZE);
+                    const txMax = Math.floor(Math.max(pNW.x, pSE.x) / TILE_SIZE);
+                    const tyMin = Math.floor(Math.min(pNW.y, pSE.y) / TILE_SIZE);
+                    const tyMax = Math.floor(Math.max(pNW.y, pSE.y) / TILE_SIZE);
+
+                    // Create offscreen canvas large enough for all needed tiles
+                    const canvasW = (txMax - txMin + 1) * TILE_SIZE;
+                    const canvasH = (tyMax - tyMin + 1) * TILE_SIZE;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = canvasW;
+                    canvas.height = canvasH;
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    // Fill with black/transparent fallback
+                    ctx.fillStyle = "rgba(0,0,0,1)";
+                    ctx.fillRect(0, 0, canvasW, canvasH);
+
+                    // Fetch tiles
+                    const tilePromises = [];
+                    for (let x = txMin; x <= txMax; x++) {
+                        for (let y = tyMin; y <= tyMax; y++) {
+                            tilePromises.push(new Promise(resolve => {
+                                const img = new Image();
+                                img.crossOrigin = "Anonymous";
+                                // AWS Terrarium endpoint
+                                img.src = `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${fetchZoom}/${x}/${y}.png`;
+                                img.onload = () => {
+                                    // Draw onto composite canvas at correct offset
+                                    ctx.drawImage(img, (x - txMin) * TILE_SIZE, (y - tyMin) * TILE_SIZE);
+                                    resolve(true);
+                                };
+                                img.onerror = () => {
+                                    console.warn(`Missing tile: ${fetchZoom}/${x}/${y}`);
+                                    resolve(false); // resolve anyway to not block
+                                };
+                            }));
+                        }
+                    }
+
+                    await Promise.all(tilePromises);
+
+                    setStatus("Processing height data...");
+
+                    // Calculate cropping region to match selection perfectly
+                    const cropX = Math.round(Math.min(pNW.x, pSE.x) - (txMin * TILE_SIZE));
+                    const cropY = Math.round(Math.min(pNW.y, pSE.y) - (tyMin * TILE_SIZE));
+                    
+                    // Extract exactly our region
+                    const imageData = ctx.getImageData(cropX, cropY, gridW, gridH);
+                    const data = imageData.data;
+                    
+                    // Convert RGB to Height array
+                    // Mapzen Terrarium formula: height = (r * 256 + g + b / 256) - 32768
+                    const heights = new Float32Array(gridW * gridH);
+                    let minHeight = Infinity;
+                    let maxHeight = -Infinity;
+
+                    for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+                        const r = data[i];
+                        const g = data[i+1];
+                        const b = data[i+2];
+                        let h = (r * 256 + g + b / 256) - 32768;
+                        
+                        // Handle ocean / void data. Sometimes void is extreme negative.
+                        if (h < -10000) h = 0; 
+
+                        heights[j] = h;
+                        if (h < minHeight) minHeight = h;
+                        if (h > maxHeight) maxHeight = h;
+                    }
+
+                    // Validate data
+                    if (maxHeight - minHeight < 1) {
+                        alert("The selected area is too flat. No distinct contours can be generated.");
+                        setStatus(null);
+                        btnGenerate.disabled = false;
+                        return;
+                    }
+
+                    // Store in state
+                    appState.currentRawHeights = heights;
+                    appState.currentWidth = gridW;
+                    appState.currentHeight = gridH;
+                    appState.minH = minHeight;
+                    appState.maxH = maxHeight;
+
+                    // Update UI Stats
+                    statMin.innerText = `${Math.round(minHeight)} m`;
+                    statMax.innerText = `${Math.round(maxHeight)} m`;
+                    statRes.innerText = `${gridW} x ${gridH}`;
+
+                    setStatus("Generating vector contours...");
+                    
+                    // Short timeout to allow UI update before heavy d3 processing
+                    setTimeout(() => {
+                        generateContours();
+                        switchTab('preview');
+                        setStatus(null);
+                        btnGenerate.disabled = false;
+                        
+                        // Enable export
+                        btnExport.disabled = false;
+                        btnExport.classList.replace('text-gray-400', 'text-slate-800');
+                        btnExport.classList.remove('cursor-not-allowed');
+                        btnExport.classList.add('hover:bg-gray-100');
+                    }, 50);
+
+                } catch (e) {
+                    console.error(e);
+                    alert("An error occurred: " + e.message);
+                    setStatus(null);
+                    btnGenerate.disabled = false;
+                }
+            });
+
+
+            // --- Core Logic: Blur & Contours ---
+            
+            // Fast 1D Box Blur approximation of Gaussian
+            function boxBlur(source, w, h, radius) {
+                if (radius <= 0) return source;
+                
+                const r = Math.floor(radius);
+                let current = new Float32Array(source);
+                let target = new Float32Array(source.length);
+
+                // 2 passes for better smoothing
+                for (let pass = 0; pass < 2; pass++) {
+                    // Horizontal
+                    for (let y = 0; y < h; y++) {
+                        let offset = y * w;
+                        for (let x = 0; x < w; x++) {
+                            let sum = 0, count = 0;
+                            for (let dx = -r; dx <= r; dx++) {
+                                let nx = x + dx;
+                                if (nx >= 0 && nx < w) {
+                                    sum += current[offset + nx];
+                                    count++;
+                                }
+                            }
+                            target[offset + x] = sum / count;
+                        }
+                    }
+                    // Swap
+                    let tmp = current; current = target; target = tmp;
+
+                    // Vertical
+                    for (let x = 0; x < w; x++) {
+                        for (let y = 0; y < h; y++) {
+                            let sum = 0, count = 0;
+                            for (let dy = -r; dy <= r; dy++) {
+                                let ny = y + dy;
+                                if (ny >= 0 && ny < h) {
+                                    sum += current[ny * w + x];
+                                    count++;
+                                }
+                            }
+                            target[y * w + x] = sum / count;
+                        }
+                    }
+                    // Swap back
+                    tmp = current; current = target; target = tmp;
+                }
+                return current;
+            }
+
+            function generateContours() {
+                const w = appState.currentWidth;
+                const h = appState.currentHeight;
+                const numLayers = parseInt(document.getElementById('param-layers').value, 10);
+                const smoothing = parseInt(document.getElementById('param-smoothing').value, 10);
+
+                // Apply blur to raw data
+                const processedHeights = boxBlur(appState.currentRawHeights, w, h, smoothing);
+
+                // Recalculate min/max after blur just in case peaks were smoothed
+                let minH = Infinity, maxH = -Infinity;
+                for(let i=0; i<processedHeights.length; i++) {
+                    if (processedHeights[i] < minH) minH = processedHeights[i];
+                    if (processedHeights[i] > maxH) maxH = processedHeights[i];
+                }
+
+                // Generate Thresholds (elevations where contours will be drawn)
+                // We use a linear scale between min and max
+                const thresholds = [];
+                const step = (maxH - minH) / numLayers;
+                for (let i = 1; i <= numLayers; i++) {
+                    thresholds.push(minH + (step * i));
+                }
+
+                // d3-contour magic
+                const generator = d3.contours()
+                    .size([w, h])
+                    .thresholds(thresholds);
+                
+                const contourData = generator(processedHeights);
+                appState.currentGeoJson = contourData;
+
+                renderSVG();
+            }
+
+            function renderSVG() {
+                const w = appState.currentWidth;
+                const h = appState.currentHeight;
+                const contourData = appState.currentGeoJson;
+                const styleMode = document.querySelector('input[name="pstyle"]:checked').value;
+
+                // Path generator. null projection maps GeoJSON [x,y] directly to SVG [x,y]
+                const pathGen = d3.geoPath(null);
+
+                // Build SVG string
+                // Note: We use dynamic classes for styles so CSS can handle the toggle
+                let svg = `<svg id="preview-svg" class="style-${styleMode} w-full h-auto block" style="max-height: 80vh;" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
+                
+                // Add embedded CSS for the preview only
+                svg += `
+                    <style>
+                        /* Base Path Settings */
+                        svg path {
+                            stroke-linejoin: round;
+                            stroke-linecap: round;
+                        }
+                        
+                        /* Laser Outlines Style */
+                        svg.style-lines path {
+                            fill: none !important;
+                            stroke: #ef4444 !important; /* Red for laser cut */
+                            stroke-width: 0.5px;
+                        }
+                        svg.style-lines path:hover {
+                            stroke: #3b82f6 !important;
+                            stroke-width: 1px;
+                        }
+
+                        /* 3D Stacked Material Style */
+                        svg.style-3d path {
+                            stroke: rgba(0,0,0,0.1);
+                            stroke-width: 0.5px;
+                        }
+                    </style>
+                `;
+
+                // Add background rect to represent base layer
+                svg += `<rect width="${w}" height="${h}" fill="#d4d4d8" class="base-layer"/>`;
+
+                const totalLayers = contourData.length;
+                
+                contourData.forEach((layerData, index) => {
+                    const d = pathGen(layerData);
+                    if (d) {
+                        // Generate a wood/cardboard-like color gradient
+                        // Start tan (#d4d4d8), end dark brown (#451a03)
+                        const t = index / Math.max(1, (totalLayers - 1));
+                        
+                        // Simple color interpolation for visual preview
+                        const r = Math.round(212 - (t * (212 - 69)));
+                        const g = Math.round(212 - (t * (212 - 26)));
+                        const b = Math.round(216 - (t * (216 - 3)));
+                        const color = `rgb(${r},${g},${b})`;
+                        
+                        svg += `<path d="${d}" fill="${color}" data-layer="${index}" data-elevation="${layerData.value.toFixed(1)}m" />`;
+                    }
+                });
+
+                svg += `</svg>`;
+                
+                appState.currentSvgString = svg;
+                svgWrapper.innerHTML = svg;
+            }
+
+            // --- Export Logic (Bundled as ZIP) ---
+            btnExport.addEventListener('click', async () => {
+                if (!appState.currentGeoJson) return;
+
+                const exportWidthMM = document.getElementById('export-width').value || 200;
+                const pxW = appState.currentWidth;
+                const pxH = appState.currentHeight;
+                
+                // Calculate physical height based on pixel aspect ratio
+                const exportHeightMM = (pxH / pxW) * exportWidthMM;
+
+                const pathGen = d3.geoPath(null);
+                const zip = new JSZip();
+                
+                // Update button UI state to show processing
+                const originalBtnHtml = btnExport.innerHTML;
+                btnExport.disabled = true;
+                btnExport.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Zipping...';
+
+                // Build the composite SVG (Original behavior, kept inside the ZIP as a reference)
+                let compositeSvgOut = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n`;
+                compositeSvgOut += `<svg width="${exportWidthMM}mm" height="${exportHeightMM}mm" viewBox="0 0 ${pxW} ${pxH}" xmlns="http://www.w3.org/2000/svg">\n`;
+                compositeSvgOut += `  <g id="TopoLayers" fill="none" stroke="#FF0000" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round">\n`;
+                compositeSvgOut += `    <rect id="BaseBoundary" x="0" y="0" width="${pxW}" height="${pxH}" stroke="#0000FF" />\n`;
+
+                appState.currentGeoJson.forEach((layerData, index) => {
+                    const d = pathGen(layerData);
+                    if (d) {
+                        // Add to composite
+                        compositeSvgOut += `    <path id="Layer_${index}_Elev_${Math.round(layerData.value)}m" d="${d}" />\n`;
+
+                        // Build independent SVG for this specific layer
+                        let layerSvgOut = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n`;
+                        layerSvgOut += `<svg width="${exportWidthMM}mm" height="${exportHeightMM}mm" viewBox="0 0 ${pxW} ${pxH}" xmlns="http://www.w3.org/2000/svg">\n`;
+                        // Include the bounding box on every layer so they align automatically in laser software
+                        layerSvgOut += `  <rect id="BaseBoundary" x="0" y="0" width="${pxW}" height="${pxH}" fill="none" stroke="#0000FF" stroke-width="0.5" />\n`;
+                        layerSvgOut += `  <path id="Layer_${index}_Elev_${Math.round(layerData.value)}m" d="${d}" fill="none" stroke="#FF0000" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" />\n`;
+                        layerSvgOut += `</svg>`;
+
+                        // Zero-pad the index so alphabetical sorting works correctly (e.g. 01, 02... 10, 11)
+                        const paddedIndex = String(index + 1).padStart(2, '0');
+                        zip.file(`Layer_${paddedIndex}_Elevation_${Math.round(layerData.value)}m.svg`, layerSvgOut);
+                    }
+                });
+
+                compositeSvgOut += `  </g>\n`;
+                compositeSvgOut += `</svg>`;
+                
+                // Add the composite to the zip as well
+                zip.file("Composite_All_Layers.svg", compositeSvgOut);
+
+                try {
+                    // Generate ZIP file asynchronously
+                    const content = await zip.generateAsync({type: "blob"});
+                    
+                    // Trigger download
+                    const url = URL.createObjectURL(content);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `TopoMaker_Export_${exportWidthMM}mm.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } catch (err) {
+                    console.error("ZIP Generation failed", err);
+                    alert("Failed to generate ZIP file.");
+                } finally {
+                    // Restore UI
+                    btnExport.innerHTML = originalBtnHtml;
+                    btnExport.disabled = false;
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>

@@ -1,5 +1,22 @@
 [
   {
+    "title": "CashFlow",
+    "slug": "cashflow",
+    "description": "CashFlow Planner is a private personal finance tool that forecasts your cash balance, tracks income and expenses, calculates safe-to-spend limits, and helps you plan savings goals.",
+    "thumbnail": "assets/thumbs/cashflow.jpg",
+    "tags": [
+      "Cahs",
+      "Flow",
+      "Manager",
+      "Money"
+    ],
+    "category": "Tools",
+    "featured": true,
+    "date": "2026-08-09",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "ninja",
     "slug": "ninja",
     "description": "Ninja is a recipe manager and cooking companion for the Ninja Woodfire XL Pro, featuring smart recipes, timers, shopping lists, pantry tracking, and cooking tools.",
