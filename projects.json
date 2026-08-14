@@ -284,23 +284,6 @@
     "repoUrl": ""
   },
   {
-    "title": "Defend The UK",
-    "slug": "defend-the-uk",
-    "description": "Defend the UK from an incoming fleet. Strategically deploy boats, fire cannons, and manage health and score in fast-paced, arcade-style gameplay.",
-    "thumbnail": "assets/thumbs/defend-the-uk.jpg",
-    "tags": [
-      "Defend",
-      "Fun",
-      "Game",
-      "Uk"
-    ],
-    "category": "Games",
-    "featured": true,
-    "date": "2026-02-22",
-    "demoUrl": "",
-    "repoUrl": ""
-  },
-  {
     "title": "Currently",
     "slug": "currently",
     "description": "Save articles to read later, filter unread content, and search headlines quickly. Feeds are cached locally for speed and update in the background without interruptions.",
