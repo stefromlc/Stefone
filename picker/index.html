@@ -5,20 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warehouse Picker Analytics Pro</title>
 
-    <!-- Meta Tags & Codebased Favicon -->
-    <meta name="description" content="Advanced performance tracking and analytics dashboard for warehouse pickers. Track items, pacing, downtime, and distance efficiently.">
+    <meta name="description" content="Advanced performance tracking and analytics dashboard for warehouse pickers. Track items, pacing, downtime, distance, and steps efficiently.">
     <meta name="theme-color" content="#3b82f6">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Warehouse Picker Analytics Pro">
-    <meta property="og:description" content="Advanced performance tracking and analytics dashboard for warehouse pickers. Track items, pacing, downtime, and distance efficiently.">
-    <link rel="icon" type="image/x-icon" href="https://codebased.app/favicon.ico">
-    <link rel="apple-touch-icon" href="https://codebased.app/favicon.ico">
-
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
@@ -40,19 +36,16 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
         
-        /* Smooth transitions */
         .theme-transition { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
         
-        /* Print Styles */
         @media print {
             body, html { background: white !important; color: black !important; height: auto !important; overflow: visible !important; }
-            .no-print, nav, header, #sidebar, #mobile-overlay, #tab-entry, #tab-history, #tab-reports { display: none !important; }
+            .no-print, nav, header, #sidebar, #mobile-overlay, #tab-entry, #tab-history, #tab-reports, #tab-settings { display: none !important; }
             #tab-dashboard { display: block !important; }
             main { height: auto !important; overflow: visible !important; display: block !important; position: static !important; }
             .print-only { display: block !important; }
@@ -62,22 +55,29 @@
             @page { margin: 1cm; size: A4 portrait; }
         }
         
-        /* Utility for hiding initially */
         .hidden-tab { display: none; }
-        
-        /* Hide scrollbar for chart filters on mobile but keep functionality */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom progress circle */
+        .circular-chart { display: block; margin: 0 auto; max-width: 80%; max-height: 250px; }
+        .circle-bg { fill: none; stroke: #e2e8f0; stroke-width: 3.8; }
+        .dark .circle-bg { stroke: #334155; }
+        .circle { fill: none; stroke-width: 2.8; stroke-linecap: round; animation: progress 1s ease-out forwards; }
+        @keyframes progress { 0% { stroke-dasharray: 0 100; } }
+        .percentage { fill: #111827; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.5em; text-anchor: middle; }
+        .dark .percentage { fill: #f9fafb; }
+        .circle-label { fill: #6b7280; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.15em; text-anchor: middle; }
+        .dark .circle-label { fill: #9ca3af; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 theme-transition min-h-screen flex flex-col md:flex-row overflow-x-hidden">
 
-    <!-- Mobile Header (Print hidden) -->
     <div class="md:hidden flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 no-print z-20 shadow-sm">
         <div class="flex items-center gap-3">
-            <a href="/projects/" class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors" title="Back to Projects">
-                <i class="ph-bold ph-arrow-left text-xl"></i>
-            </a>
+            <button id="mobile-menu-btn" class="p-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                <i class="ph ph-list text-2xl"></i>
+            </button>
             <div class="flex items-center gap-2 font-bold text-xl text-brand-600 dark:text-brand-400">
                 <i class="ph-fill ph-package"></i> Tracker Pro
             </div>
@@ -87,22 +87,11 @@
                 <i class="ph-fill ph-moon text-lg dark:hidden"></i>
                 <i class="ph-fill ph-sun text-lg hidden dark:block"></i>
             </button>
-            <button id="mobile-menu-btn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                <i class="ph ph-list text-2xl"></i>
-            </button>
         </div>
     </div>
 
-    <!-- Sidebar Navigation -->
     <nav id="sidebar" class="w-full md:w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col justify-between fixed md:sticky top-0 h-screen transition-transform duration-300 -translate-x-full md:translate-x-0 z-30 no-print shadow-xl md:shadow-none">
         <div>
-            <!-- Back to Projects -->
-            <div class="flex p-4 border-b border-gray-100 dark:border-gray-700/50">
-                <a href="/projects/" class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
-                    <i class="ph-bold ph-arrow-left text-sm"></i> Back to Projects
-                </a>
-            </div>
-
             <div class="hidden md:flex items-center gap-3 p-6 border-b border-gray-100 dark:border-gray-700/50">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
                     <i class="ph-fill ph-chart-polar text-xl"></i>
@@ -115,7 +104,7 @@
                     <i class="ph-bold ph-squares-four text-lg"></i> Dashboard
                 </button>
                 <button data-tab="entry" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
-                    <i class="ph-bold ph-plus-circle text-lg"></i> Add/Edit Entry
+                    <i class="ph-bold ph-plus-circle text-lg"></i> Add/Edit Shift
                 </button>
                 <button data-tab="history" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
                     <i class="ph-bold ph-table text-lg"></i> Shift History
@@ -137,43 +126,42 @@
                 <span>Daily Target</span>
                 <span id="sidebar-target-text" class="text-gray-900 dark:text-white font-bold bg-white dark:bg-gray-800 px-2 py-0.5 rounded shadow-sm">1,416</span>
             </div>
-            <!-- Mobile close button -->
             <button id="close-sidebar" class="md:hidden w-full mt-4 flex items-center justify-center p-3 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold">
                 Close Menu
             </button>
         </div>
     </nav>
 
-    <!-- Overlay for mobile menu -->
     <div id="mobile-overlay" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-20 hidden md:hidden no-print transition-opacity"></div>
 
     <main class="flex-1 overflow-y-auto h-screen relative scroll-smooth print-full-width bg-gray-50/50 dark:bg-gray-900/50">
         <div class="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto pb-24">
             
-            <!-- Print Header -->
             <div class="hidden print:block mb-8 text-center border-b pb-4">
                 <h1 class="text-3xl font-bold">Warehouse Picker Analytics Pro Report</h1>
                 <p class="text-gray-600" id="print-date"></p>
             </div>
 
-            <!-- TAB: ENTRY FORM -->
             <section id="tab-entry" class="hidden-tab">
-                <div class="max-w-2xl mx-auto">
+                <!-- Entry Form HTML (Unchanged structure, reused purely for entry) -->
+                <div class="max-w-3xl mx-auto">
                     <h2 id="entry-form-title" class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Add Shift Data</h2>
-                    
-                    <form id="entry-form" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8 space-y-6 theme-transition">
-                        <!-- Date & Items -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <form id="entry-form" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8 space-y-8 theme-transition">
+                        <!-- Top Row: Date, Items, Steps -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Shift Date <span class="text-red-500">*</span></label>
-                                <input type="date" id="input-date" required class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow font-medium">
+                                <input type="date" id="input-date" required class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none transition-shadow font-medium">
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Total Items Picked <span class="text-red-500">*</span></label>
-                                <input type="number" id="input-items" required min="0" placeholder="e.g. 1500" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow font-medium">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Total Items <span class="text-red-500">*</span></label>
+                                <input type="number" id="input-items" required min="1" placeholder="e.g. 1500" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none transition-shadow font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Total Steps <span class="text-red-500">*</span></label>
+                                <input type="number" id="input-steps" required min="0" placeholder="e.g. 12500" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none transition-shadow font-medium">
                             </div>
                         </div>
-
                         <!-- Distance -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Distance Walked <span class="text-red-500">*</span></label>
@@ -188,8 +176,23 @@
                             </div>
                             <p class="text-xs font-medium text-gray-500 mt-2" id="distance-conversion-hint"></p>
                         </div>
-
-                        <!-- Downtime Tracking -->
+                        <!-- Shift Duration & Breaks -->
+                        <div class="p-5 border border-brand-100 dark:border-brand-900/30 rounded-2xl bg-brand-50/50 dark:bg-brand-900/10">
+                            <h3 class="text-sm font-bold text-brand-700 dark:text-brand-400 mb-4 flex items-center gap-2">
+                                <i class="ph-bold ph-clock"></i> Shift Duration & Breaks
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Shift Length (Hours) <span class="text-red-500">*</span></label>
+                                    <input type="number" id="input-shift-hours" required step="0.1" min="1" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none transition-shadow font-medium">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Unpaid Breaks (Minutes) <span class="text-red-500">*</span></label>
+                                    <input type="number" id="input-break-mins" required min="0" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none transition-shadow font-medium">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Downtime -->
                         <div class="p-5 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50/50 dark:bg-gray-900/30">
                             <div class="flex items-center justify-between">
                                 <label class="font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -200,7 +203,6 @@
                                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-300 dark:peer-focus:ring-brand-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
                                 </label>
                             </div>
-                            
                             <div id="downtime-fields" class="hidden grid-cols-1 sm:grid-cols-2 gap-5 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Downtime (Minutes)</label>
@@ -219,98 +221,87 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Advanced toggle -->
-                        <details class="group border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden bg-gray-50/50 dark:bg-gray-900/30">
-                            <summary class="flex justify-between items-center font-semibold cursor-pointer list-none p-5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                                <span class="flex items-center gap-2"><i class="ph-bold ph-clock text-brand-500"></i> Advanced Details (Time & Notes)</span>
-                                <span class="transition-transform duration-300 group-open:rotate-180 bg-white dark:bg-gray-700 p-1 rounded-full shadow-sm border border-gray-200 dark:border-gray-600"><i class="ph-bold ph-caret-down text-gray-500"></i></span>
-                            </summary>
-                            <div class="p-5 border-t border-gray-200 dark:border-gray-700 space-y-5 text-sm bg-white dark:bg-gray-800/80">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                    <div>
-                                        <label class="block text-gray-700 dark:text-gray-300 font-medium mb-1">Total Shift Hours <span class="text-xs text-gray-400 block font-normal">(Includes breaks)</span></label>
-                                        <input type="number" id="input-shift-hours" value="8" step="0.1" min="1" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-700 dark:text-gray-300 font-medium mb-1">Active Working Hours <span class="text-xs text-gray-400 block font-normal">(Excludes breaks)</span></label>
-                                        <input type="number" id="input-active-hours" value="7.5" step="0.1" min="1" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-gray-700 dark:text-gray-300 font-medium mb-1">Notes / Interferences</label>
-                                    <textarea id="input-notes" rows="2" placeholder="Equipment issues, heavy items, replenishment delays..." class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white resize-none outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"></textarea>
-                                </div>
-                            </div>
-                        </details>
-
-                        <div class="flex gap-3 pt-2">
-                            <button type="button" id="btn-cancel-edit" class="hidden flex-1 bg-gray-100 border border-gray-200 hover:bg-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 text-gray-700 dark:text-white font-bold py-3 px-4 rounded-xl transition-all">Cancel</button>
-                            <button type="submit" id="btn-save-entry" class="flex-[2] w-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all focus:ring-4 focus:ring-brand-500/50 flex items-center justify-center gap-2">
-                                <i class="ph-bold ph-check text-lg"></i> Save Shift Data
+                        <!-- Notes -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Notes & Interferences</label>
+                            <textarea id="input-notes" rows="2" placeholder="Equipment issues, heavy items, zone changes..." class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white resize-none outline-none focus:ring-2 focus:ring-brand-500 font-medium"></textarea>
+                        </div>
+                        <div class="flex gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                            <button type="button" id="btn-cancel-edit" class="hidden flex-1 bg-gray-100 border border-gray-200 hover:bg-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 text-gray-700 dark:text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-sm">Cancel</button>
+                            <button type="submit" id="btn-save-entry" class="flex-[2] w-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all focus:ring-4 focus:ring-brand-500/50 flex items-center justify-center gap-2 text-lg">
+                                <i class="ph-bold ph-check"></i> Save Shift Data
                             </button>
                         </div>
                     </form>
-                    
-                    <!-- Form Alert -->
-                    <div id="form-alert" class="hidden mt-4 p-4 rounded-xl text-sm font-medium flex items-center gap-3"></div>
+                    <div id="form-alert" class="hidden mt-4 p-4 rounded-xl text-sm font-medium flex items-center gap-3 shadow-sm"></div>
                 </div>
             </section>
 
             <section id="tab-dashboard" class="block">
-
-                <!-- Empty State -->
                 <div id="dashboard-empty" class="hidden text-center py-20 px-4 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm mt-8">
                     <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-brand-50 dark:bg-brand-900/20 mb-6 text-brand-500 border-8 border-white dark:border-gray-800 shadow-inner">
                         <i class="ph-duotone ph-chart-polar text-5xl"></i>
                     </div>
                     <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">Welcome to Tracker Pro</h2>
-                    <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto text-lg">Track items, calculate exact times per pick, and monitor your walking efficiency instantly.</p>
+                    <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto text-lg">Track items, evaluate performance independently of shift lengths, and monitor your walking efficiency instantly.</p>
                     <div class="flex flex-col sm:flex-row justify-center gap-4">
                         <button onclick="App.switchTab('entry')" class="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white px-8 py-3.5 rounded-xl font-bold transition shadow-lg shadow-brand-500/30 flex justify-center items-center gap-2"><i class="ph-bold ph-plus"></i> Add First Shift</button>
                         <button onclick="App.loadDemoData()" class="w-full sm:w-auto bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 px-8 py-3.5 rounded-xl font-bold transition shadow-sm flex justify-center items-center gap-2"><i class="ph-bold ph-magic-wand"></i> Load Demo Data</button>
                     </div>
                 </div>
 
-                <!-- Content wrapper -->
                 <div id="dashboard-content">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 no-print">
-                        <div>
-                            <div class="flex items-center gap-3">
+                    <!-- Header with Performance Score -->
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-6 no-print bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
                                 <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                                    Performance Overview
+                                    Latest Performance
                                 </h2>
-                                <!-- Streak Indicator -->
                                 <div id="dashboard-streak" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide"></div>
                             </div>
-                            <p class="text-sm text-gray-500 font-medium mt-1 flex items-center gap-2">
-                                <span class="bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300 text-xs font-bold">TARGET: <span id="dash-target-text">1,416</span></span>
-                                <span class="hidden sm:inline">&bull;</span>
+                            <p class="text-sm text-gray-500 font-medium flex items-center gap-2">
+                                <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300 text-xs font-bold border border-gray-200 dark:border-gray-600">TARGET: <span id="dash-target-text">1,416</span></span>
+                                <span>&bull;</span>
                                 <span class="text-brand-600 dark:text-brand-400" id="dash-target-pace"></span>
                             </p>
                         </div>
-                        <button onclick="App.switchTab('entry')" class="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-md shadow-brand-500/20 flex items-center justify-center gap-2">
-                            <i class="ph-bold ph-plus"></i> Log Shift
-                        </button>
+                        
+                        <!-- NEW: Performance Score Widget -->
+                        <div class="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-700/50 w-full lg:w-auto">
+                            <div class="relative w-16 h-16">
+                                <svg viewBox="0 0 36 36" class="circular-chart w-full h-full">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    <path id="score-circle" class="circle" stroke="#3b82f6" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    <text x="18" y="19" class="percentage" id="score-text">0</text>
+                                    <text x="18" y="25" class="circle-label">/100</text>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-0.5">Shift Score</p>
+                                <p class="text-lg font-extrabold text-gray-900 dark:text-white leading-none" id="score-grade">-</p>
+                                <p class="text-[10px] text-gray-500 mt-1 font-medium">Vol + Speed + Routing</p>
+                            </div>
+                            <div class="ml-2 pl-4 border-l border-gray-200 dark:border-gray-700 hidden sm:block">
+                                <button onclick="App.switchTab('entry')" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-md shadow-brand-500/20 flex items-center justify-center gap-2">
+                                    <i class="ph-bold ph-plus"></i> Log Shift
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Enhanced Top KPI Cards Grid -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-                        
-                        <!-- Card 1: Shift Volume (Spans 2 cols) -->
-                        <div class="xl:col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between relative overflow-hidden dashboard-card group hover:shadow-md transition-shadow">
+                    <!-- 4 Main Metric Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+                        <div id="card-latest-shift" class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between relative overflow-hidden dashboard-card cursor-pointer hover:border-brand-300 dark:hover:border-brand-700 transition-colors" title="Click to view latest shift details">
                             <div class="absolute right-0 top-0 w-1.5 h-full transition-all duration-300" id="card1-status"></div>
-                            
                             <div class="flex justify-between items-start mb-2">
                                 <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Total Picked <span id="val-latest-date" class="text-xs font-normal ml-1 opacity-70 bg-gray-100 dark:bg-gray-700 px-1.5 rounded"></span></p>
                                 <div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 text-brand-500 rounded-lg"><i class="ph-bold ph-package"></i></div>
                             </div>
-                            
                             <div class="flex items-baseline gap-2 mb-3">
                                 <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="val-latest-items">-</span>
                                 <span class="text-sm font-bold bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md" id="val-latest-pct-badge">-%</span>
                             </div>
-                            
                             <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 mb-2 overflow-hidden">
                                 <div class="h-full rounded-full transition-all duration-1000 ease-out" id="val-latest-bar" style="width: 0%"></div>
                             </div>
@@ -318,31 +309,31 @@
                                 <span id="val-latest-achieved">Achieved: 0</span>
                                 <span id="val-latest-missed">Diff: 0</span>
                             </div>
-                            
-                            <!-- New At-This-Pace Projection -->
-                            <div id="val-latest-proj" class="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50 text-xs text-gray-500 dark:text-gray-400">
-                                <!-- Populated by JS -->
-                            </div>
+                            <div id="val-latest-proj" class="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50 text-xs text-gray-500 dark:text-gray-400 truncate"></div>
                         </div>
 
-                        <!-- Card 2: Avg Time Per Pick -->
-                        <div class="xl:col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between dashboard-card group hover:shadow-md transition-shadow">
+                        <div class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between dashboard-card">
                             <div class="flex justify-between items-start mb-2">
-                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Avg Time Per Pick</p>
+                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Picking Speed (UPH)</p>
                                 <div class="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 rounded-lg"><i class="ph-bold ph-timer"></i></div>
                             </div>
                             <div class="flex items-baseline gap-2 mb-1">
-                                <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="val-sec-pick">-</span>
-                                <span class="text-lg font-bold text-gray-400 dark:text-gray-500">sec</span>
+                                <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="val-uph">-</span>
+                                <span class="text-sm font-bold text-gray-400 dark:text-gray-500">items/hr</span>
                             </div>
-                            <div class="flex items-center flex-wrap gap-2 mt-auto">
-                                <span id="val-sec-pick-trend" class="text-xs font-bold px-2 py-1 rounded-md"></span>
-                                <span id="val-sec-pick-avg-cmp" class="text-xs font-semibold text-gray-500 dark:text-gray-400"></span>
+                            <div class="flex justify-between items-end mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium mb-0.5">Pace / Pick</p>
+                                    <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-sec-pick">-</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500 font-medium mb-0.5">30-Day Trend</p>
+                                    <span id="val-sec-pick-trend" class="text-xs font-bold px-2 py-0.5 rounded-md inline-block mt-0.5"></span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Card 3: Distance Per Pick -->
-                        <div class="xl:col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between dashboard-card hover:shadow-md transition-shadow">
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between dashboard-card">
                             <div class="flex justify-between items-start mb-2">
                                 <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Distance Per Pick</p>
                                 <div class="p-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 rounded-lg"><i class="ph-bold ph-ruler"></i></div>
@@ -353,8 +344,8 @@
                             </div>
                             <div class="flex justify-between items-end mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
                                 <div>
-                                    <p class="text-xs text-gray-500 font-medium mb-0.5">Overall Efficiency</p>
-                                    <p class="text-sm font-bold text-gray-900 dark:text-white"><span id="val-latest-efficiency">-</span> <span class="text-xs font-normal text-gray-500">items/km</span></p>
+                                    <p class="text-xs text-gray-500 font-medium mb-0.5">Routing Effic.</p>
+                                    <p class="text-sm font-bold text-gray-900 dark:text-white"><span id="val-latest-efficiency">-</span> <span class="text-[10px] uppercase font-bold text-gray-400">items/km</span></p>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-xs text-gray-500 font-medium mb-0.5">Total Walked</p>
@@ -362,11 +353,50 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between dashboard-card">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">Movement</p>
+                                <div class="p-1.5 bg-orange-50 dark:bg-orange-900/30 text-orange-500 rounded-lg"><i class="ph-bold ph-footprints"></i></div>
+                            </div>
+                            <div class="flex items-baseline gap-2 mb-1">
+                                <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="val-steps-pick">-</span>
+                                <span class="text-sm font-bold text-gray-400 dark:text-gray-500">steps/pick</span>
+                            </div>
+                            <div class="flex justify-between items-end mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
+                                <div>
+                                    <p class="text-xs text-gray-500 font-medium mb-0.5">Total Steps</p>
+                                    <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-latest-steps">-</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500 font-medium mb-0.5">Meters / Step</p>
+                                    <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-meters-step">-</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Chart Controls -->
+                    <!-- NEW: Actionable Insights & Driver Analysis (Full Width) -->
+                    <div class="bg-gradient-to-r from-brand-600 to-indigo-700 dark:from-brand-900 dark:to-indigo-900 rounded-3xl p-1 mb-6 shadow-md dashboard-card no-print">
+                        <div class="bg-white dark:bg-gray-800 rounded-[22px] p-6 h-full flex flex-col lg:flex-row gap-6 items-center">
+                            <div class="w-16 h-16 bg-brand-50 dark:bg-brand-900/30 text-brand-500 rounded-2xl flex items-center justify-center flex-shrink-0 border border-brand-100 dark:border-brand-800">
+                                <i class="ph-duotone ph-lightbulb-filament text-4xl"></i>
+                            </div>
+                            <div class="flex-1 w-full">
+                                <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Smart Driver Analysis</h3>
+                                <div id="driver-analysis-content" class="text-lg font-medium text-gray-900 dark:text-gray-100 leading-snug">
+                                    Analyzing your data to find the main driver of your performance...
+                                </div>
+                            </div>
+                            <div id="driver-impact-pills" class="flex flex-row lg:flex-col gap-2 w-full lg:w-48 flex-shrink-0">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Charts Header -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 no-print mt-8">
-                        <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-duotone ph-trend-up text-brand-500"></i> Analytics & Trends</h3>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"><i class="ph-duotone ph-chart-line-up text-brand-500"></i> Main Analytics</h3>
                         <div class="flex bg-white dark:bg-gray-800 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 w-full sm:w-auto overflow-x-auto no-scrollbar shadow-sm" id="chart-filters">
                             <button onclick="App.setChartFilter(7)" id="btn-filter-7" class="flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white whitespace-nowrap">7 Days</button>
                             <button onclick="App.setChartFilter(30)" id="btn-filter-30" class="flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-lg transition-colors bg-gray-100 dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white whitespace-nowrap">30 Days</button>
@@ -375,88 +405,136 @@
                         </div>
                     </div>
 
-                    <!-- Primary Charts Grid -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        
-                        <!-- Chart 1: Production (Items) -->
                         <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm dashboard-card relative">
                             <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1">Pick Volume</h3>
                             <p class="text-xs text-gray-500 mb-4">Total items picked vs target goal line.</p>
-                            <div class="relative h-[250px] w-full chart-container">
-                                <canvas id="chart-main"></canvas>
-                            </div>
+                            <div class="relative h-[250px] w-full chart-container"><canvas id="chart-main"></canvas></div>
                         </div>
 
-                        <!-- Chart 2: Time Per Pick -->
                         <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm dashboard-card relative">
-                            <div class="absolute top-4 right-5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold px-2.5 py-1 rounded-md">Lower is Better</div>
-                            <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1">Pacing Trend (Seconds / Pick)</h3>
-                            <p class="text-xs text-gray-500 mb-4">Average seconds taken for each pick during active hours.</p>
-                            <div class="relative h-[250px] w-full chart-container">
-                                <canvas id="chart-time"></canvas>
-                            </div>
+                            <div class="absolute top-4 right-5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold px-2.5 py-1 rounded-md">Higher is Better</div>
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1">Speed Trend (UPH)</h3>
+                            <p class="text-xs text-gray-500 mb-4">Units per hour (active time only).</p>
+                            <div class="relative h-[250px] w-full chart-container"><canvas id="chart-time"></canvas></div>
                         </div>
                     </div>
 
-                    <!-- Secondary Charts & Insights -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        
-                        <!-- Chart 3: Distance Efficiency (items/km) -->
+                    <!-- NEW: Advanced Pro Analytics Tier -->
+                    <div class="flex items-center gap-3 mt-10 mb-4 no-print">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="ph-duotone ph-cpu text-brand-500"></i> Pro Analysis Engine
+                        </h3>
+                        <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <!-- Efficiency Quadrant -->
                         <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm dashboard-card">
-                            <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1">Routing Efficiency (Items per Km)</h3>
-                            <p class="text-xs text-gray-500 mb-4">Higher values mean you are getting more items per distance walked.</p>
-                            <div class="relative h-[220px] w-full chart-container">
-                                <canvas id="chart-efficiency"></canvas>
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1">Efficiency Quadrant</h3>
+                                    <p class="text-xs text-gray-500">Maps your shifts: Speed (UPH) vs Routing Efficiency (Items/Km).</p>
+                                </div>
+                                <div class="text-[10px] uppercase font-bold bg-gray-100 dark:bg-gray-700 text-gray-500 px-2 py-1 rounded">Top Right = Elite</div>
                             </div>
+                            <div class="relative h-[250px] w-full chart-container"><canvas id="chart-quadrant"></canvas></div>
                         </div>
 
-                        <!-- Actionable Insights Panel -->
-                        <div class="bg-gradient-to-b from-brand-50 to-white dark:from-gray-800 dark:to-gray-800 rounded-3xl p-6 border border-brand-100 dark:border-gray-700 shadow-sm flex flex-col dashboard-card relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-full h-1 bg-brand-500"></div>
-                            <h3 class="text-lg font-extrabold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><i class="ph-fill ph-lightbulb text-amber-500 text-xl"></i> Smart Insights</h3>
+                        <!-- Downtime Impact -->
+                        <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm dashboard-card flex flex-col">
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                                <i class="ph-fill ph-warning-circle text-amber-500"></i> Downtime Impact
+                            </h3>
+                            <p class="text-xs text-gray-500 mb-5">Filtered period impact on output.</p>
                             
-                            <div class="flex-1 space-y-4 flex flex-col">
-                                <!-- Main Takeaway Block -->
-                                <div id="insight-takeaway" class="hidden p-4 rounded-xl shadow-sm border border-brand-100 dark:border-gray-600/50">
-                                    <!-- Populated by JS -->
+                            <div class="grid grid-cols-2 gap-3 mb-4 flex-1">
+                                <div class="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                                    <p class="text-[10px] text-gray-500 font-bold uppercase mb-1">Time Lost</p>
+                                    <p class="text-xl font-extrabold text-amber-600 dark:text-amber-500" id="dt-total-time">-</p>
                                 </div>
-
-                                <div id="insight-time" class="p-3.5 rounded-xl bg-white dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600/50 shadow-sm">
-                                    <!-- Populated by JS -->
-                                </div>
-                                <div id="insight-routing" class="p-3.5 rounded-xl bg-white dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600/50 shadow-sm">
-                                    <!-- Populated by JS -->
-                                </div>
-                                <div id="insight-downtime" class="hidden p-3.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 shadow-sm text-amber-900 dark:text-amber-400">
-                                    <!-- Populated by JS -->
+                                <div class="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                                    <p class="text-[10px] text-gray-500 font-bold uppercase mb-1">Output Lost</p>
+                                    <p class="text-xl font-extrabold text-red-600 dark:text-red-400" id="dt-total-picks">-</p>
                                 </div>
                             </div>
-
-                            <!-- Pace Analysis & Consistency Block -->
-                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <div class="flex items-center justify-between mb-3">
-                                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">30-Day Pace Analysis</p>
-                                    <span id="stat-consistency-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full border hidden"></span>
-                                </div>
-                                <div class="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-700/50 text-center">
-                                    <div>
-                                        <p class="text-[10px] text-gray-500 font-medium uppercase mb-0.5">Best</p>
-                                        <p class="text-sm font-bold text-emerald-600 dark:text-emerald-400" id="stat-best-pace">-</p>
-                                    </div>
-                                    <div class="border-x border-gray-200 dark:border-gray-700">
-                                        <p class="text-[10px] text-gray-500 font-medium uppercase mb-0.5">Avg</p>
-                                        <p class="text-sm font-bold text-gray-700 dark:text-gray-300" id="stat-avg-pace">-</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-gray-500 font-medium uppercase mb-0.5">Worst</p>
-                                        <p class="text-sm font-bold text-amber-600 dark:text-amber-500" id="stat-worst-pace">-</p>
-                                    </div>
+                            
+                            <div>
+                                <p class="text-xs font-bold text-gray-900 dark:text-white mb-2">Primary Reasons</p>
+                                <div id="dt-reasons-list" class="space-y-2">
+                                    <!-- Populated via JS -->
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 7-Day Performance Summary -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <!-- Best vs Worst -->
+                        <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm dashboard-card">
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                                <i class="ph-fill ph-scales text-brand-500"></i> Best vs Worst (Last 30 Days)
+                            </h3>
+                            <p class="text-xs text-gray-500 mb-4">Comparing your most and least efficient shifts.</p>
+                            
+                            <div class="grid grid-cols-2 gap-px bg-gray-200 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden mb-3">
+                                <div class="bg-emerald-50/50 dark:bg-emerald-900/10 p-4">
+                                    <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2 flex justify-between">Best Shift <span id="bvw-best-date" class="text-gray-500"></span></p>
+                                    <p class="text-2xl font-extrabold text-gray-900 dark:text-white mb-2" id="bvw-best-uph">- <span class="text-xs font-normal text-gray-500">UPH</span></p>
+                                    <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                                        <li>Vol: <strong id="bvw-best-vol" class="text-gray-900 dark:text-white"></strong></li>
+                                        <li>Dist: <strong id="bvw-best-dist" class="text-gray-900 dark:text-white"></strong></li>
+                                        <li>Down: <strong id="bvw-best-dt" class="text-gray-900 dark:text-white"></strong></li>
+                                    </ul>
+                                </div>
+                                <div class="bg-red-50/50 dark:bg-red-900/10 p-4">
+                                    <p class="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2 flex justify-between">Worst Shift <span id="bvw-worst-date" class="text-gray-500"></span></p>
+                                    <p class="text-2xl font-extrabold text-gray-900 dark:text-white mb-2" id="bvw-worst-uph">- <span class="text-xs font-normal text-gray-500">UPH</span></p>
+                                    <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                                        <li>Vol: <strong id="bvw-worst-vol" class="text-gray-900 dark:text-white"></strong></li>
+                                        <li>Dist: <strong id="bvw-worst-dist" class="text-gray-900 dark:text-white"></strong></li>
+                                        <li>Down: <strong id="bvw-worst-dt" class="text-gray-900 dark:text-white"></strong></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700/50 text-sm">
+                                <strong class="text-gray-900 dark:text-white">Key Difference:</strong> <span id="bvw-takeaway" class="text-gray-600 dark:text-gray-400">Need more data to compare shifts.</span>
+                            </div>
+                        </div>
+
+                        <!-- Forecast Outlook -->
+                        <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm dashboard-card flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                                    <i class="ph-fill ph-crystal-ball text-indigo-500"></i> Forecast Outlook
+                                </h3>
+                                <p class="text-xs text-gray-500 mb-6">Estimated range for your next standard shift based on recent rolling volatility.</p>
+                            </div>
+                            
+                            <div class="flex items-center justify-center py-4">
+                                <div class="text-center">
+                                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Expected Output Range</p>
+                                    <div class="flex items-baseline justify-center gap-3">
+                                        <span class="text-3xl font-extrabold text-gray-400" id="forecast-low">-</span>
+                                        <span class="text-xl font-bold text-gray-300 dark:text-gray-600">to</span>
+                                        <span class="text-4xl font-extrabold text-indigo-600 dark:text-indigo-400" id="forecast-high">-</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Target Hit Probability</span>
+                                    <span class="text-sm font-extrabold" id="forecast-prob-val">-</span>
+                                </div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div class="bg-indigo-500 h-2 rounded-full transition-all duration-1000" id="forecast-prob-bar" style="width: 0%"></div>
+                                </div>
+                                <p class="text-[10px] text-gray-500 mt-2 text-center" id="forecast-desc">Calculating statistical likelihood...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7-Day Rolling Summary -->
                     <div id="seven-day-summary" class="mb-6 bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm dashboard-card relative">
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
                             <div class="flex items-center gap-3">
@@ -468,7 +546,7 @@
                             <span id="sum7-context" class="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600"></span>
                         </div>
                         
-                        <div id="sum7-content" class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                        <div id="sum7-content" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                             <div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50">
                                 <p class="text-xs text-gray-500 font-bold uppercase mb-1 tracking-wider">Total Vol</p>
                                 <p class="text-2xl font-extrabold text-gray-900 dark:text-white" id="sum7-items">-</p>
@@ -478,14 +556,18 @@
                                 <p class="text-2xl font-extrabold text-gray-900 dark:text-white" id="sum7-avg-items">-</p>
                             </div>
                             <div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50">
-                                <p class="text-xs text-gray-500 font-bold uppercase mb-1 tracking-wider">Time/Pick</p>
+                                <p class="text-xs text-gray-500 font-bold uppercase mb-1 tracking-wider">Speed (UPH)</p>
                                 <p class="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400" id="sum7-time">-</p>
                             </div>
                             <div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50">
                                 <p class="text-xs text-gray-500 font-bold uppercase mb-1 tracking-wider">Dist/Pick</p>
                                 <p class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400" id="sum7-dist">-</p>
                             </div>
-                            <div class="col-span-2 lg:col-span-1 bg-brand-50 dark:bg-brand-900/20 rounded-2xl p-4 border border-brand-100 dark:border-brand-800/30 flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
+                            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50">
+                                <p class="text-xs text-gray-500 font-bold uppercase mb-1 tracking-wider">Steps/Pick</p>
+                                <p class="text-2xl font-extrabold text-orange-500 dark:text-orange-400" id="sum7-steps">-</p>
+                            </div>
+                            <div class="col-span-2 md:col-span-1 bg-brand-50 dark:bg-brand-900/20 rounded-2xl p-4 border border-brand-100 dark:border-brand-800/30 flex flex-col justify-center items-center md:items-start text-center md:text-left">
                                 <p class="text-xs text-brand-600 dark:text-brand-400 font-bold uppercase mb-1 tracking-wider">Goal Met</p>
                                 <p class="text-2xl font-extrabold" id="sum7-kpi">-</p>
                             </div>
@@ -497,7 +579,7 @@
                 </div>
             </section>
 
-            <!-- TAB: HISTORY -->
+            <!-- History, Reports, Settings Tabs exactly as original structure to respect single file mandate, hidden by default -->
             <section id="tab-history" class="hidden-tab">
                 <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                     <div class="p-5 sm:p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50 dark:bg-gray-800/50">
@@ -515,20 +597,18 @@
                                 <tr>
                                     <th scope="col" class="px-5 py-4">Date</th>
                                     <th scope="col" class="px-5 py-4">Items Picked</th>
-                                    <th scope="col" class="px-5 py-4">Sec / Pick</th>
+                                    <th scope="col" class="px-5 py-4">Active Hours</th>
+                                    <th scope="col" class="px-5 py-4 hidden sm:table-cell">Steps</th>
+                                    <th scope="col" class="px-5 py-4">Speed (UPH)</th>
                                     <th scope="col" class="px-5 py-4">Meters / Pick</th>
-                                    <th scope="col" class="px-5 py-4 hidden sm:table-cell">Downtime</th>
-                                    <th scope="col" class="px-5 py-4 hidden md:table-cell">Dist (Km)</th>
-                                    <th scope="col" class="px-5 py-4 hidden lg:table-cell max-w-[200px]">Notes</th>
+                                    <th scope="col" class="px-5 py-4 hidden md:table-cell">Downtime</th>
                                     <th scope="col" class="px-5 py-4 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="history-table-body" class="divide-y divide-gray-100 dark:divide-gray-700/50">
-                                <!-- Data injected via JS -->
                             </tbody>
                         </table>
                     </div>
-                    <!-- Empty state for table -->
                     <div id="history-empty" class="hidden p-12 text-center text-gray-500 font-medium">
                         <i class="ph-duotone ph-ghost text-4xl mb-3 text-gray-400"></i><br>
                         No historical records found for this period.
@@ -536,26 +616,21 @@
                 </div>
             </section>
 
-            <!-- TAB: REPORTS & EXPORT -->
             <section id="tab-reports" class="hidden-tab max-w-4xl mx-auto space-y-6">
                 <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white mb-6">Data Management & Reports</h2>
-
                 <div class="bg-gradient-to-r from-brand-600 to-indigo-700 rounded-3xl shadow-lg border border-brand-500 p-6 sm:p-8 text-white relative overflow-hidden">
                     <div class="absolute -right-10 -top-10 opacity-10"><i class="ph-fill ph-file-pdf text-[200px]"></i></div>
                     <h3 class="text-xl font-bold mb-3 flex items-center gap-2 relative z-10"><i class="ph-bold ph-printer"></i> Generate Formal Report</h3>
-                    <p class="text-brand-100 mb-6 max-w-lg relative z-10">Download a formatted, print-ready PDF summary of your current dashboard view. Perfect for performance reviews and 1-on-1s.</p>
+                    <p class="text-brand-100 mb-6 max-w-lg relative z-10">Download a formatted, print-ready PDF summary of your current dashboard view.</p>
                     <button type="button" onclick="App.printReport()" class="w-full sm:w-auto bg-white text-brand-700 hover:bg-gray-50 font-bold rounded-xl px-6 py-3 flex items-center justify-center gap-2 transition shadow relative z-10">
                         <i class="ph-bold ph-download-simple text-lg"></i> Download PDF Report
                     </button>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Export Box -->
                     <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8">
                         <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl flex items-center justify-center mb-4"><i class="ph-bold ph-export text-xl"></i></div>
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Export Your Data</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Download your data to use in Excel or keep as a backup. You own it completely.</p>
-                        
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Download your data to use in Excel or keep as a backup.</p>
                         <div class="space-y-3">
                             <button onclick="App.exportData('csv')" class="w-full bg-gray-50 text-gray-700 hover:bg-gray-100 dark:bg-gray-900/50 dark:text-gray-300 dark:hover:bg-gray-700 font-bold rounded-xl px-4 py-3 text-sm flex items-center justify-center gap-2 transition border border-gray-200 dark:border-gray-700 shadow-sm">
                                 <i class="ph-fill ph-file-csv text-lg text-emerald-500"></i> Spreadsheet (CSV)
@@ -565,13 +640,10 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Import Box -->
                     <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8">
                         <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-500 rounded-xl flex items-center justify-center mb-4"><i class="ph-bold ph-import text-xl"></i></div>
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Import Backup</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Restore data from a previously saved JSON backup file.</p>
-                        
                         <label class="w-full cursor-pointer bg-white dark:bg-gray-800 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-gray-700 font-bold rounded-xl px-4 py-8 text-sm flex flex-col items-center justify-center gap-2 transition border-2 border-dashed border-brand-200 dark:border-brand-800/50">
                             <i class="ph-duotone ph-upload-simple text-3xl mb-1"></i>
                             Select JSON File
@@ -580,7 +652,6 @@
                         <p id="import-status" class="text-xs font-bold mt-4 text-center"></p>
                     </div>
                 </div>
-
                 <div class="bg-red-50 dark:bg-red-900/10 rounded-3xl border border-red-100 dark:border-red-900/30 p-6 sm:p-8 mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div>
                         <h3 class="text-lg font-bold text-red-700 dark:text-red-400 mb-1 flex items-center gap-2"><i class="ph-fill ph-warning-circle"></i> Danger Zone</h3>
@@ -592,10 +663,8 @@
                 </div>
             </section>
 
-            <!-- TAB: SETTINGS -->
             <section id="tab-settings" class="hidden-tab max-w-2xl mx-auto space-y-6">
                 <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white mb-6">Application Settings</h2>
-                
                 <form id="settings-form" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8 space-y-8">
                     <div class="space-y-5">
                         <div class="flex items-center gap-3 border-b border-gray-100 dark:border-gray-700 pb-3">
@@ -603,30 +672,27 @@
                             <h3 class="text-lg font-bold text-gray-900 dark:text-white">Shift Goals</h3>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">KPI Target (Items per shift)</label>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">KPI Target (Items per standard shift)</label>
                             <input type="number" id="setting-kpi" required min="1" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none font-medium text-lg">
-                            <p class="text-xs text-gray-500 mt-2 font-medium">This calculates your target pace (seconds per pick) and updates dashboard progress bars.</p>
                         </div>
                     </div>
-
                     <div class="space-y-5">
                         <div class="flex items-center gap-3 border-b border-gray-100 dark:border-gray-700 pb-3">
                             <div class="p-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg"><i class="ph-bold ph-clock text-lg"></i></div>
-                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Shift Time Defaults</h3>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Default Shift Parameters</h3>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Default Shift Hours</label>
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Default Shift Duration (Hours)</label>
                                 <input type="number" id="setting-shift-hours" required step="0.1" min="1" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Default Active Hours</label>
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Default Active Working Time (Hours)</label>
                                 <input type="number" id="setting-active-hours" required step="0.1" min="1" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none font-medium">
                             </div>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2 font-medium">Used to auto-fill the Add Entry form. Active hours exclude lunches and breaks, ensuring accurate Time-per-Pick calculations.</p>
+                        <p class="text-xs text-gray-500 mt-2 font-medium">These defaults will pre-fill the "Add Shift" form to save you time.</p>
                     </div>
-
                     <div class="pt-6 border-t border-gray-100 dark:border-gray-700 flex justify-end">
                         <button type="submit" class="w-full sm:w-auto bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 font-bold py-3 px-8 rounded-xl shadow-md transition-all">
                             Save Settings
@@ -634,42 +700,111 @@
                     </div>
                 </form>
             </section>
-
         </div>
     </main>
 
-    <!-- Custom Modal for Alerts/Confirms -->
-    <div id="custom-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center no-print opacity-0 transition-opacity">
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-sm w-full mx-4 p-6 sm:p-8 transform scale-95 transition-transform" id="modal-content-box">
-            <h3 id="modal-title" class="text-xl font-extrabold text-gray-900 dark:text-white mb-2">Title</h3>
-            <p id="modal-body" class="text-sm text-gray-600 dark:text-gray-300 mb-8 font-medium">Message</p>
-            <div class="flex justify-end gap-3" id="modal-buttons">
-                <!-- Buttons injected via JS -->
+    <!-- Modals -->
+    <div id="day-details-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center no-print opacity-0 transition-opacity">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-lg w-full mx-4 p-6 sm:p-8 transform scale-95 transition-transform overflow-y-auto max-h-[90vh]" id="day-details-content">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 id="day-details-title" class="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">Shift Details</h3>
+                    <p id="day-details-date" class="text-sm text-gray-500 dark:text-gray-400 font-medium"></p>
+                </div>
+                <button onclick="App.closeDayDetails()" class="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition text-gray-600 dark:text-gray-300">
+                    <i class="ph-bold ph-x text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-brand-50 dark:bg-brand-900/20 rounded-2xl border border-brand-100 dark:border-brand-800/30">
+                        <p class="text-xs text-brand-600 dark:text-brand-400 font-bold uppercase tracking-wider mb-1">Total Picked</p>
+                        <p id="dd-items" class="text-2xl font-extrabold text-gray-900 dark:text-white">-</p>
+                    </div>
+                    <div class="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800/30">
+                        <p class="text-xs text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider mb-1">Speed (UPH)</p>
+                        <p id="dd-uph" class="text-2xl font-extrabold text-gray-900 dark:text-white">-</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2"><i class="ph-bold ph-clock"></i> Time Breakdown</h4>
+                    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50 space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Total Shift Time</span>
+                            <span id="dd-shift-hours" class="font-bold text-gray-900 dark:text-white">-</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Unpaid Breaks</span>
+                            <span id="dd-breaks" class="font-bold text-gray-900 dark:text-white">-</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Active Hours</span>
+                            <span id="dd-active-hours" class="font-bold text-gray-900 dark:text-white">-</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Downtime / Delays</span>
+                            <span id="dd-downtime" class="font-bold text-amber-600 dark:text-amber-500">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2"><i class="ph-bold ph-person-simple-run"></i> Movement & Efficiency</h4>
+                    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50 space-y-3 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Distance Walked</span>
+                            <span id="dd-distance" class="font-bold text-gray-900 dark:text-white">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Step Count</span>
+                            <span id="dd-steps" class="font-bold text-gray-900 dark:text-white">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Distance per Pick</span>
+                            <span id="dd-meters-pick" class="font-bold text-emerald-600 dark:text-emerald-400">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dd-insight" class="p-4 rounded-xl text-sm leading-snug border hidden"></div>
+                
+                <div id="dd-notes-container" class="hidden">
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2"><i class="ph-bold ph-notebook"></i> Shift Notes</h4>
+                    <div class="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800/50 p-4 rounded-xl text-sm text-yellow-800 dark:text-yellow-500 font-medium" id="dd-notes"></div>
+                </div>
+            </div>
+            
+            <div class="mt-8 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700 pt-4">
+                <button id="dd-btn-edit" class="px-5 py-2.5 text-sm font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:text-brand-400 dark:hover:bg-brand-900/40 rounded-xl transition shadow-sm border border-brand-100 dark:border-brand-800 flex items-center gap-2"><i class="ph-bold ph-pencil-simple"></i> Edit Shift</button>
+                <button onclick="App.closeDayDetails()" class="px-5 py-2.5 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 rounded-xl transition shadow-sm border border-gray-200 dark:border-gray-600">Close</button>
             </div>
         </div>
     </div>
 
+    <div id="custom-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center no-print opacity-0 transition-opacity">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-sm w-full mx-4 p-6 sm:p-8 transform scale-95 transition-transform" id="modal-content-box">
+            <h3 id="modal-title" class="text-xl font-extrabold text-gray-900 dark:text-white mb-2">Title</h3>
+            <p id="modal-body" class="text-sm text-gray-600 dark:text-gray-300 mb-8 font-medium">Message</p>
+            <div class="flex justify-end gap-3" id="modal-buttons"></div>
+        </div>
+    </div>
+
     <script>
-        // --- Core Application Logic ---
         const App = {
             CONSTANTS: { MILE_TO_KM: 1.60934 },
             state: {
-                data: [], // Array of shift objects
+                data: [], 
                 settings: { kpiTarget: 1416, shiftHours: 8, activeHours: 7.5 },
-                currentUnit: 'miles',
-                theme: 'light',
-                editingId: null,
-                chartFilter: 30 
+                currentUnit: 'miles', theme: 'light', editingId: null, chartFilter: 30 
             },
-            charts: { main: null, time: null, efficiency: null },
+            charts: { main: null, time: null, quadrant: null },
             
-            // Modern, vibrant color palette
             chartColors: {
-                brand: '#3b82f6', brandLight: 'rgba(59, 130, 246, 0.2)',
-                target: '#94a3b8', // Gray for target line
-                time: '#6366f1', timeLight: 'rgba(99, 102, 241, 0.2)', // Indigo
-                efficiency: '#10b981', effLight: 'rgba(16, 185, 129, 0.2)', // Emerald
-                darkText: '#f3f4f6', lightText: '#475569',
+                brand: '#3b82f6', brandLight: 'rgba(59, 130, 246, 0.2)', target: '#94a3b8', 
+                time: '#6366f1', timeLight: 'rgba(99, 102, 241, 0.2)', efficiency: '#10b981', effLight: 'rgba(16, 185, 129, 0.2)',
+                steps: '#f59e0b', stepsLight: 'rgba(245, 158, 11, 0.2)', darkText: '#f3f4f6', lightText: '#475569',
                 darkGrid: 'rgba(255,255,255,0.05)', lightGrid: 'rgba(0,0,0,0.05)'
             },
 
@@ -688,7 +823,6 @@
                 document.getElementById('print-date').innerText = `Generated on ${new Date().toLocaleDateString()}`;
             },
 
-            // Helper to get consistent pace (sec/pick)
             getPace(shiftData, defaultActiveHours) {
                 const items = Math.max(shiftData.items || 1, 1);
                 const active = shiftData.activeHours || defaultActiveHours;
@@ -696,13 +830,16 @@
                 const prodHrs = Math.max(active - (dtMins / 60), 0.1); 
                 return (prodHrs * 3600) / items;
             },
+            
+            getUPH(shiftData, defaultActiveHours) {
+                return 3600 / this.getPace(shiftData, defaultActiveHours);
+            },
 
-            // --- Storage and State Management ---
             loadSettings() {
                 const stored = localStorage.getItem('kpiTrackerSettingsV2');
                 if (stored) {
                     try { this.state.settings = { ...this.state.settings, ...JSON.parse(stored) }; } 
-                    catch (e) { console.error(e); }
+                    catch (e) {}
                 }
                 this.updateDynamicText();
             },
@@ -730,8 +867,11 @@
 
             applySettingsToForm() {
                 if(!this.state.editingId) {
-                    document.getElementById('input-shift-hours').value = this.state.settings.shiftHours;
-                    document.getElementById('input-active-hours').value = this.state.settings.activeHours;
+                    const hrs = this.state.settings.shiftHours;
+                    const active = this.state.settings.activeHours;
+                    const defaultBreakMins = Math.max(0, Math.round((hrs - active) * 60));
+                    document.getElementById('input-shift-hours').value = hrs;
+                    document.getElementById('input-break-mins').value = defaultBreakMins;
                 }
             },
 
@@ -751,29 +891,87 @@
                 this.render();
             },
 
-            // --- UI Rendering & Data Calculation ---
             render() {
                 const hasData = this.state.data.length > 0;
-                
                 document.getElementById('dashboard-empty').classList.toggle('hidden', hasData);
                 document.getElementById('dashboard-content').classList.toggle('hidden', !hasData);
 
                 if (hasData) {
                     this.updateDashboardMetrics();
-                    this.calculateAdvancedInsights(); // New function for enhanced metrics
+                    this.calculatePerformanceScore();
+                    this.updateDriverAnalysis();
+                    this.updateBestVsWorst();
+                    this.updateDowntimeImpact();
+                    this.updateForecast();
                     this.update7DaySummary();
                     this.updateCharts();
-                    this.generateInsights();
                 }
                 this.renderHistoryTable();
             },
 
+            calculatePerformanceScore() {
+                const data = this.state.data;
+                if (!data || data.length === 0) return;
+                
+                const latest = data[data.length - 1];
+                
+                // 1. Volume Score (30%)
+                const actHrs = latest.activeHours || this.state.settings.activeHours;
+                const dynamicTarget = (this.state.settings.kpiTarget / this.state.settings.activeHours) * actHrs;
+                let volScore = Math.min(100, (latest.items / dynamicTarget) * 100);
+
+                // 2. Speed Score (40%)
+                const uphTarget = this.state.settings.kpiTarget / this.state.settings.activeHours;
+                const uph = this.getUPH(latest, this.state.settings.activeHours);
+                let speedScore = Math.min(100, (uph / uphTarget) * 100);
+
+                // 3. Routing Efficiency Score (30%) - Compare to historical avg or assume good if missing
+                let effScore = 85; 
+                if (data.length > 1 && latest.distanceMiles) {
+                    const latestMeters = ((latest.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / latest.items;
+                    const pastData = data.slice(0, -1).filter(d => d.distanceMiles);
+                    if (pastData.length > 0) {
+                        const avgMeters = pastData.reduce((s, d) => s + (((d.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / d.items), 0) / pastData.length;
+                        // If they walk less than average, score goes up. If they walk more, it goes down.
+                        const effRatio = avgMeters / latestMeters; 
+                        effScore = Math.min(100, Math.max(0, 85 * effRatio));
+                    }
+                }
+
+                // Calculate final weighted score
+                const finalScore = Math.round((volScore * 0.30) + (speedScore * 0.40) + (effScore * 0.30));
+                
+                const scoreText = document.getElementById('score-text');
+                const scoreCircle = document.getElementById('score-circle');
+                const scoreGrade = document.getElementById('score-grade');
+                
+                scoreText.textContent = finalScore;
+                scoreCircle.style.strokeDasharray = `${finalScore}, 100`;
+
+                if (finalScore >= 95) {
+                    scoreCircle.style.stroke = '#10b981'; // Emerald
+                    scoreGrade.innerText = "Elite"; scoreGrade.className = "text-lg font-extrabold text-emerald-600 dark:text-emerald-400 leading-none";
+                } else if (finalScore >= 85) {
+                    scoreCircle.style.stroke = '#3b82f6'; // Blue
+                    scoreGrade.innerText = "Excellent"; scoreGrade.className = "text-lg font-extrabold text-brand-600 dark:text-brand-400 leading-none";
+                } else if (finalScore >= 75) {
+                    scoreCircle.style.stroke = '#f59e0b'; // Amber
+                    scoreGrade.innerText = "Solid"; scoreGrade.className = "text-lg font-extrabold text-amber-600 dark:text-amber-500 leading-none";
+                } else {
+                    scoreCircle.style.stroke = '#ef4444'; // Red
+                    scoreGrade.innerText = "Needs Focus"; scoreGrade.className = "text-lg font-extrabold text-red-600 dark:text-red-400 leading-none";
+                }
+            },
+
             updateDashboardMetrics() {
                 const data = this.state.data;
+                if (!data || data.length === 0) return;
+                
                 const latest = data[data.length - 1];
-                const prev = data.length > 1 ? data[data.length - 2] : null;
 
-                // 1. Calculations for Latest Shift Volume
+                const cardLatest = document.getElementById('card-latest-shift');
+                if (cardLatest) cardLatest.onclick = () => App.viewDayDetails(latest.id);
+
                 const latestPct = (latest.items / this.state.settings.kpiTarget) * 100;
                 const diff = this.state.settings.kpiTarget - latest.items;
 
@@ -792,7 +990,7 @@
                     pctBadge.innerText = `${latestPct.toFixed(1)}%`;
                     pctBadge.className = 'text-sm font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-md';
                     bar.className = 'h-full rounded-full transition-all duration-1000 ease-out bg-emerald-500';
-                    document.getElementById('val-latest-missed').innerHTML = `+<span class="font-bold text-emerald-600 dark:text-emerald-400">${Math.abs(diff).toLocaleString()}</span> over`;
+                    document.getElementById('val-latest-missed').innerHTML = `+<span class="font-bold text-emerald-600 dark:text-emerald-400">${Math.abs(diff).toLocaleString()}</span> over goal`;
                 } else {
                     card1Status.className = 'absolute right-0 top-0 w-1.5 h-full bg-brand-500';
                     pctBadge.innerText = `${latestPct.toFixed(1)}%`;
@@ -801,201 +999,301 @@
                     document.getElementById('val-latest-missed').innerHTML = `-<span class="font-bold text-gray-900 dark:text-white">${diff.toLocaleString()}</span> short`;
                 }
 
-                // -> New Feature: At-This-Pace Projection
                 const latestPace = this.getPace(latest, this.state.settings.activeHours);
                 const projItems = Math.round((this.state.settings.activeHours * 3600) / latestPace);
-                const projEl = document.getElementById('val-latest-proj');
-                projEl.innerHTML = `Projected output for normal full shift (${this.state.settings.activeHours}h): <span class="font-bold text-gray-800 dark:text-gray-200">${projItems.toLocaleString()}</span>`;
+                document.getElementById('val-latest-proj').innerHTML = `Proj. 8h output: <span class="font-bold text-gray-800 dark:text-gray-200">${projItems.toLocaleString()}</span>`;
 
-                // 2. Calculations for Average Time per Pick
                 const targetSecPerPick = (this.state.settings.activeHours * 3600) / this.state.settings.kpiTarget;
-                const timeEl = document.getElementById('val-sec-pick');
-                timeEl.innerText = latestPace.toFixed(1);
+                const uphTarget = 3600 / targetSecPerPick;
+                const latestUph = this.getUPH(latest, this.state.settings.activeHours);
                 
-                // Colorize based on target pace
-                if (latestPace <= targetSecPerPick) {
-                    timeEl.className = "text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight";
-                } else {
-                    timeEl.className = "text-4xl font-extrabold text-amber-500 tracking-tight";
-                }
+                const uphEl = document.getElementById('val-uph');
+                uphEl.innerText = Math.round(latestUph).toLocaleString();
+                document.getElementById('val-sec-pick').innerText = `${latestPace.toFixed(1)} sec`;
+                
+                uphEl.className = latestUph >= uphTarget 
+                    ? "text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight"
+                    : "text-4xl font-extrabold text-amber-500 tracking-tight";
 
-                // Trend vs Previous Shift
                 const trendBadge = document.getElementById('val-sec-pick-trend');
-                if (prev) {
-                    const prevSec = this.getPace(prev, this.state.settings.activeHours);
-                    const secDiff = latestPace - prevSec;
-                    
-                    if (Math.abs(secDiff) < 0.1) {
-                        trendBadge.innerHTML = 'Flat'; trendBadge.className = 'text-xs font-bold px-2 py-1 rounded-md bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300';
-                    } else if (secDiff < 0) {
-                        // Negative difference means FASTER (Good)
-                        trendBadge.innerHTML = `<i class="ph-bold ph-trend-down"></i> ${Math.abs(secDiff).toFixed(1)}s`; 
-                        trendBadge.className = 'text-xs font-bold px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 flex items-center gap-1';
-                    } else {
-                        // Positive difference means SLOWER (Bad)
-                        trendBadge.innerHTML = `<i class="ph-bold ph-trend-up"></i> ${Math.abs(secDiff).toFixed(1)}s`; 
-                        trendBadge.className = 'text-xs font-bold px-2 py-1 rounded-md bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 flex items-center gap-1';
-                    }
-                } else {
-                    trendBadge.style.display = 'none';
-                }
-
-                // -> New Feature: Compare vs 30-Day Average
-                const avgCmpEl = document.getElementById('val-sec-pick-avg-cmp');
                 const last30 = data.filter(d => (new Date() - new Date(d.date)) <= 30 * 24*3600*1000);
+                
                 if (last30.length > 2) {
-                    const avg30Pace = last30.reduce((s,d) => s + this.getPace(d, this.state.settings.activeHours), 0) / last30.length;
-                    const diffPct = ((avg30Pace - latestPace) / avg30Pace) * 100;
+                    const avg30Uph = last30.reduce((s,d) => s + this.getUPH(d, this.state.settings.activeHours), 0) / last30.length;
+                    const diffPct = ((latestUph - avg30Uph) / avg30Uph) * 100;
                     
                     if (Math.abs(diffPct) < 1) {
-                        avgCmpEl.innerHTML = `&mdash; Exact 30-day average.`;
+                        trendBadge.innerHTML = 'Stable'; trendBadge.className = 'text-xs font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 mt-0.5 inline-block';
                     } else if (diffPct > 0) {
-                        avgCmpEl.innerHTML = `&mdash; <span class="text-emerald-600 dark:text-emerald-400">${diffPct.toFixed(0)}% faster</span> than your 30d avg.`;
+                        trendBadge.innerHTML = `<i class="ph-bold ph-trend-up"></i> ${diffPct.toFixed(0)}% faster`; 
+                        trendBadge.className = 'text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 flex items-center gap-1 mt-0.5 inline-block';
                     } else {
-                        avgCmpEl.innerHTML = `&mdash; <span class="text-amber-600 dark:text-amber-400">${Math.abs(diffPct).toFixed(0)}% slower</span> than your 30d avg.`;
+                        trendBadge.innerHTML = `<i class="ph-bold ph-trend-down"></i> ${Math.abs(diffPct).toFixed(0)}% slower`; 
+                        trendBadge.className = 'text-xs font-bold px-2 py-0.5 rounded-md bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 flex items-center gap-1 mt-0.5 inline-block';
                     }
-                } else {
-                    avgCmpEl.innerHTML = '';
-                }
+                } else { trendBadge.style.display = 'none'; }
 
-                // 3. Calculations for Distance Per Pick
                 const latestKm = latest.distanceMiles * this.CONSTANTS.MILE_TO_KM;
                 const metersPerPick = (latestKm * 1000) / latest.items;
                 const efficiency = latest.items / (latestKm || 1);
 
-                document.getElementById('val-dist-pick').innerText = metersPerPick.toFixed(1);
-                document.getElementById('val-latest-efficiency').innerText = efficiency.toFixed(0);
+                document.getElementById('val-dist-pick').innerText = isNaN(metersPerPick) ? '-' : metersPerPick.toFixed(1);
+                document.getElementById('val-latest-efficiency').innerText = isNaN(efficiency) ? '-' : efficiency.toFixed(0);
                 document.getElementById('val-latest-km').innerText = `${latestKm.toFixed(1)} km`;
-            },
 
-            // -> New Function: Enhancements (Streaks, Direction, Best/Worst, Takeaways)
-            calculateAdvancedInsights() {
-                const data = this.state.data;
-                const latest = data[data.length - 1];
-                if (data.length < 2) return;
-
-                // --- 1. Performance Streaks ---
+                if (latest.stepCount) {
+                    document.getElementById('val-steps-pick').innerText = (latest.stepCount / latest.items).toFixed(1);
+                    document.getElementById('val-latest-steps').innerText = latest.stepCount.toLocaleString();
+                    document.getElementById('val-meters-step').innerText = ((latestKm * 1000) / latest.stepCount).toFixed(2) + 'm';
+                } else {
+                    document.getElementById('val-steps-pick').innerText = '-';
+                    document.getElementById('val-latest-steps').innerText = '-';
+                    document.getElementById('val-meters-step').innerText = '-';
+                }
+                
+                // Dashboard Streak Logic
                 let targetStreak = 0;
                 for (let i = data.length - 1; i >= 0; i--) {
-                    if (data[i].items >= this.state.settings.kpiTarget) targetStreak++;
-                    else break;
+                    if (data[i].items >= this.state.settings.kpiTarget) targetStreak++; else break;
                 }
-                
-                let paceStreak = 0;
-                for (let i = data.length - 1; i > 0; i--) {
-                    if (this.getPace(data[i], this.state.settings.activeHours) < this.getPace(data[i-1], this.state.settings.activeHours)) paceStreak++;
-                    else break;
-                }
-
                 const streakEl = document.getElementById('dashboard-streak');
-                streakEl.className = 'hidden items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide shadow-sm border';
-                
                 if (targetStreak >= 3) {
                     streakEl.classList.remove('hidden');
                     streakEl.classList.add('flex', 'bg-orange-50', 'text-orange-700', 'border-orange-200', 'dark:bg-orange-900/30', 'dark:text-orange-400', 'dark:border-orange-800/50');
                     streakEl.innerHTML = `<i class="ph-fill ph-fire text-sm text-orange-500"></i> ${targetStreak} Shift Goal Streak`;
-                } else if (paceStreak >= 3) {
-                    streakEl.classList.remove('hidden');
-                    streakEl.classList.add('flex', 'bg-blue-50', 'text-blue-700', 'border-blue-200', 'dark:bg-blue-900/30', 'dark:text-blue-400', 'dark:border-blue-800/50');
-                    streakEl.innerHTML = `<i class="ph-bold ph-trend-down text-sm"></i> ${paceStreak} Shifts Faster Pace`;
+                } else { streakEl.classList.add('hidden'); }
+            },
+
+            updateDriverAnalysis() {
+                const data = this.state.data;
+                const contentEl = document.getElementById('driver-analysis-content');
+                const pillsEl = document.getElementById('driver-impact-pills');
+                
+                if (!data || data.length < 2) {
+                    contentEl.innerHTML = "Log at least two shifts to unlock Smart Driver Analysis. We'll find out what's causing your performance to rise or fall.";
+                    pillsEl.innerHTML = '';
+                    return;
                 }
 
-                // --- 2. Best / Average / Worst (30 Days) ---
-                const cutoff30 = new Date(); cutoff30.setDate(cutoff30.getDate() - 30);
-                const last30 = data.filter(d => new Date(d.date) >= cutoff30);
+                const latest = data[data.length - 1];
+                const pastData = data.slice(0, -1).slice(-30); // Compare to last 30 days
                 
-                if (last30.length > 0) {
-                    const paces30 = last30.map(d => this.getPace(d, this.state.settings.activeHours));
-                    const best = Math.min(...paces30);
-                    const worst = Math.max(...paces30);
-                    const avg = paces30.reduce((a,b) => a+b, 0) / paces30.length;
+                const getAvg = (arr, key) => arr.reduce((sum, item) => sum + item[key], 0) / arr.length;
+                
+                const latestUph = this.getUPH(latest, this.state.settings.activeHours);
+                const avgUph = pastData.reduce((sum, d) => sum + this.getUPH(d, this.state.settings.activeHours), 0) / pastData.length;
+                const uphChange = ((latestUph - avgUph) / avgUph) * 100;
 
-                    document.getElementById('stat-best-pace').innerText = `${best.toFixed(1)}s`;
-                    document.getElementById('stat-avg-pace').innerText = `${avg.toFixed(1)}s`;
-                    document.getElementById('stat-worst-pace').innerText = `${worst.toFixed(1)}s`;
-
-                    // --- 3. Consistency (CV) ---
-                    if (last30.length > 3) {
-                        const variance = paces30.reduce((s,p) => s + Math.pow(p - avg, 2), 0) / paces30.length;
-                        const cv = Math.sqrt(variance) / avg;
-                        const pEl = document.getElementById('stat-consistency-pill');
-                        pEl.classList.remove('hidden');
-                        
-                        if (cv < 0.04) {
-                            pEl.innerText = "Highly Consistent";
-                            pEl.className = "text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400";
-                        } else if (cv > 0.12) {
-                            pEl.innerText = "Variable Pace";
-                            pEl.className = "text-[10px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400";
-                        } else {
-                            pEl.innerText = "Normal Variation";
-                            pEl.className = "text-[10px] font-bold px-2 py-0.5 rounded-full border bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400";
-                        }
-                    }
-                }
-
-                // --- 4. Main Actionable Takeaway ---
-                const twEl = document.getElementById('insight-takeaway');
-                twEl.classList.remove('hidden');
-                
-                let takeaway = ""; let twIcon = ""; let twColor = "";
-                
-                const latestPace = this.getPace(latest, this.state.settings.activeHours);
-                const avg30 = last30.reduce((s,d) => s + this.getPace(d, this.state.settings.activeHours), 0) / (last30.length||1);
-                const targetMissed = latest.items < this.state.settings.kpiTarget;
-                const dtImpactPct = latest.downtimeMinutes ? (latest.downtimeMinutes / ((latest.activeHours||this.state.settings.activeHours)*60)) : 0;
-                
                 const latestMeters = ((latest.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / latest.items;
-                const avgMeters = last30.reduce((s,d) => s + (((d.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / d.items), 0) / (last30.length||1);
-
-                if (targetMissed && dtImpactPct > 0.08) { // >8% downtime
-                    takeaway = `<strong class="block mb-1">Minimize Interruptions</strong> Downtime is currently your biggest blocker. You lost ${(dtImpactPct*100).toFixed(0)}% of your active time to '${latest.downtimeReason || 'issues'}'. Resolving this makes target achievable.`;
-                    twIcon = "ph-warning-octagon"; twColor = "text-amber-600 dark:text-amber-500 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/50";
-                } else if (targetMissed && latestMeters > avgMeters * 1.15 && last30.length > 2) {
-                    takeaway = `<strong class="block mb-1">Focus on Routing</strong> Your active pace is fine, but you walked significantly more per item (${latestMeters.toFixed(1)}m) than your average. Ensure efficient pathing between picks.`;
-                    twIcon = "ph-steps"; twColor = "text-indigo-600 dark:text-indigo-400 bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800/50";
-                } else if (targetMissed && latestPace > avg30) {
-                    takeaway = `<strong class="block mb-1">Regain Picking Speed</strong> Your active picking pace (${latestPace.toFixed(1)}s) has dropped below your average. Focus heavily on quick item identification and handling.`;
-                    twIcon = "ph-timer"; twColor = "text-red-600 dark:text-red-400 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800/50";
-                } else if (!targetMissed && targetStreak > 2) {
-                    takeaway = `<strong class="block mb-1">Maintain Current Strategy</strong> Exceptional consistency. You have hit your target ${targetStreak} shifts in a row. Keep using your current methods and rest adequately.`;
-                    twIcon = "ph-fire"; twColor = "text-orange-600 dark:text-orange-400 bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800/50";
-                } else if (!targetMissed && latestPace < avg30 * 0.95 && last30.length > 2) {
-                    takeaway = `<strong class="block mb-1">Top-Tier Performance</strong> You operated 5%+ faster than your average pace today. Excellent job, but ensure this output is physically sustainable long-term.`;
-                    twIcon = "ph-rocket"; twColor = "text-emerald-600 dark:text-emerald-400 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50";
-                } else {
-                    takeaway = `<strong class="block mb-1">Micro-Optimizations</strong> Performance is very stable. Focus on reducing small delays (e.g., scanning, box prep) to comfortably push your numbers higher.`;
-                    twIcon = "ph-lightbulb"; twColor = "text-brand-700 dark:text-brand-400 bg-brand-50 border-brand-200 dark:bg-brand-900/20 dark:border-brand-800/50";
-                }
-
-                twEl.className = `p-4 rounded-xl shadow-sm border text-sm ${twColor}`;
-                twEl.innerHTML = `<div class="flex items-start gap-3"><i class="ph-fill ${twIcon} text-2xl mt-0.5"></i><p class="leading-snug">${takeaway}</p></div>`;
-
-                // --- 5. 7-Day vs 30-Day Direction ---
-                const cutoff7 = new Date(); cutoff7.setDate(cutoff7.getDate() - 7);
-                const last7 = data.filter(d => new Date(d.date) >= cutoff7);
+                const pastWithDist = pastData.filter(d=>d.distanceMiles);
+                const avgMeters = pastWithDist.length > 0 ? pastWithDist.reduce((s,d) => s + (((d.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / d.items), 0) / pastWithDist.length : latestMeters;
                 
-                const dirEl = document.getElementById('sum7-direction');
-                if (last7.length > 1 && last30.length > last7.length) {
-                    const avg7Pace = last7.reduce((s,d) => s + this.getPace(d, this.state.settings.activeHours), 0) / last7.length;
-                    
-                    // Positive diff means 7d is faster (lower seconds)
-                    const paceDiff = avg30 - avg7Pace; 
-                    
-                    dirEl.classList.remove('hidden');
-                    if (paceDiff > 0.4) {
-                        dirEl.innerHTML = `<i class="ph-bold ph-trend-up"></i> Improving`;
-                        dirEl.className = "text-xs font-bold px-2 py-1 rounded border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center gap-1";
-                    } else if (paceDiff < -0.4) {
-                        dirEl.innerHTML = `<i class="ph-bold ph-trend-down"></i> Declining`;
-                        dirEl.className = "text-xs font-bold px-2 py-1 rounded border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 flex items-center gap-1";
+                const dtHours = (latest.downtimeMinutes || 0) / 60;
+                const actHrs = latest.activeHours || this.state.settings.activeHours;
+                const dtPct = (dtHours / actHrs) * 100;
+
+                let what = "", why = "", action = "";
+                let pills = [];
+
+                if (dtPct > 8) {
+                    what = `<span class="text-amber-500 font-bold">Performance Impacted by Interruptions.</span>`;
+                    why = `You lost ${dtPct.toFixed(0)}% of your productive time to downtime (${latest.downtimeReason}).`;
+                    action = `Communicate recurring issues to your supervisor to clear blockers.`;
+                    pills.push({ label: 'Downtime', val: `${latest.downtimeMinutes}m`, type: 'bad' });
+                } else if (uphChange < -5) {
+                    what = `<span class="text-red-500 font-bold">Speed Dropped ${Math.abs(uphChange).toFixed(1)}% Below Average.</span>`;
+                    if (latestMeters > avgMeters * 1.1) {
+                        why = `Your primary drag factor was routing. You walked ${latestMeters.toFixed(1)}m per item vs your normal ${avgMeters.toFixed(1)}m.`;
+                        action = `Focus on pathing efficiency in your current zone to prevent excess walking.`;
+                        pills.push({ label: 'Routing', val: 'Inefficient', type: 'bad' });
                     } else {
-                        dirEl.innerHTML = `&approx; Stable`;
-                        dirEl.className = "text-xs font-bold px-2 py-1 rounded border bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 flex items-center gap-1";
+                        why = `Your movement efficiency was normal, meaning the delay was at the pick face (scanning, packing, or fatigue).`;
+                        action = `Ensure your equipment is working and focus on quick item identification.`;
+                        pills.push({ label: 'Pick-Face', val: 'Slow', type: 'bad' });
+                    }
+                } else if (uphChange > 5) {
+                    what = `<span class="text-emerald-500 font-bold">Elite Performance: Speed Up ${uphChange.toFixed(1)}%.</span>`;
+                    if (latestMeters < avgMeters * 0.9) {
+                        why = `Driven by excellent routing. You only walked ${latestMeters.toFixed(1)}m per item (saving ${(avgMeters-latestMeters).toFixed(1)}m per pick!).`;
+                        action = `Remember your pathing strategy today—it works perfectly.`;
+                        pills.push({ label: 'Routing', val: 'Optimal', type: 'good' });
+                    } else {
+                        why = `Driven by pure pick-face speed. Your travel distance was average, but your pacing was relentless.`;
+                        action = `Outstanding work. Ensure this pace is physically sustainable for the whole week.`;
+                        pills.push({ label: 'Pick-Face', val: 'Fast', type: 'good' });
                     }
                 } else {
-                    dirEl.classList.add('hidden');
+                    what = `<span class="text-brand-400 font-bold">Highly Consistent Shift.</span>`;
+                    why = `Your speed (${Math.round(latestUph)} UPH) and routing (${latestMeters.toFixed(1)}m/pick) perfectly match your 30-day baseline.`;
+                    action = `You're in the groove. Look for micro-optimizations (like staging your trolley) to push into the next tier.`;
+                    pills.push({ label: 'Pace', val: 'Stable', type: 'neutral' });
                 }
+
+                contentEl.innerHTML = `<p class="mb-1">${what} ${why}</p><p class="text-sm text-gray-500 dark:text-gray-400"><i class="ph-bold ph-arrow-bend-down-right"></i> ${action}</p>`;
+
+                pillsEl.innerHTML = pills.map(p => {
+                    let color = 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600';
+                    if(p.type === 'good') color = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
+                    if(p.type === 'bad') color = 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800';
+                    return `<div class="flex-1 flex justify-between items-center px-3 py-1.5 rounded-lg border text-xs font-bold ${color}">
+                        <span class="uppercase tracking-wider opacity-80">${p.label}</span>
+                        <span>${p.val}</span>
+                    </div>`;
+                }).join('');
+            },
+
+            updateBestVsWorst() {
+                const data = this.state.data || [];
+                const past30 = data.filter(d => (new Date() - new Date(d.date)) <= 30 * 24*3600*1000);
+                
+                if (past30.length < 3) {
+                    document.getElementById('bvw-takeaway').innerText = "Log at least 3 shifts this month to compare.";
+                    document.getElementById('bvw-best-uph').innerHTML = '- <span class="text-xs font-normal text-gray-500">UPH</span>';
+                    document.getElementById('bvw-worst-uph').innerHTML = '- <span class="text-xs font-normal text-gray-500">UPH</span>';
+                    return;
+                }
+
+                let bestShift = past30[0], worstShift = past30[0];
+                let maxUph = 0, minUph = Infinity;
+
+                past30.forEach(d => {
+                    const uph = this.getUPH(d, this.state.settings.activeHours);
+                    if (uph > maxUph) { maxUph = uph; bestShift = d; }
+                    if (uph < minUph) { minUph = uph; worstShift = d; }
+                });
+
+                const fillData = (prefix, shift, uph) => {
+                    document.getElementById(`bvw-${prefix}-date`).innerText = this.formatDateShort(shift.date);
+                    document.getElementById(`bvw-${prefix}-uph`).innerHTML = `${Math.round(uph)} <span class="text-xs font-normal text-gray-500 dark:text-gray-400">UPH</span>`;
+                    document.getElementById(`bvw-${prefix}-vol`).innerText = shift.items.toLocaleString();
+                    const mPick = shift.distanceMiles ? (((shift.distanceMiles * this.CONSTANTS.MILE_TO_KM)*1000)/shift.items).toFixed(1) + 'm/pick' : 'N/A';
+                    document.getElementById(`bvw-${prefix}-dist`).innerText = mPick;
+                    document.getElementById(`bvw-${prefix}-dt`).innerText = shift.downtimeMinutes ? `${shift.downtimeMinutes}m` : '0m';
+                };
+
+                fillData('best', bestShift, maxUph);
+                fillData('worst', worstShift, minUph);
+
+                // Calculate key difference
+                const bMeters = bestShift.distanceMiles ? (((bestShift.distanceMiles * this.CONSTANTS.MILE_TO_KM)*1000)/bestShift.items) : null;
+                const wMeters = worstShift.distanceMiles ? (((worstShift.distanceMiles * this.CONSTANTS.MILE_TO_KM)*1000)/worstShift.items) : null;
+                
+                let takeaway = "";
+                if (worstShift.downtimeMinutes > (bestShift.downtimeMinutes || 0) + 20) {
+                    takeaway = `Downtime was the killer. Your worst shift had ${worstShift.downtimeMinutes}m of interruptions compared to ${bestShift.downtimeMinutes || 0}m on your best day.`;
+                } else if (bMeters && wMeters && wMeters > bMeters * 1.2) {
+                    takeaway = `Routing efficiency. You walked ${wMeters.toFixed(1)}m per item on your worst day, compared to a highly efficient ${bMeters.toFixed(1)}m on your best.`;
+                } else {
+                    takeaway = `Pure pick speed. Movement and downtime were similar, meaning your physical picking/scanning pace was significantly faster on ${this.formatDateShort(bestShift.date)}.`;
+                }
+                document.getElementById('bvw-takeaway').innerText = takeaway;
+            },
+
+            updateDowntimeImpact() {
+                const data = this.state.data || [];
+                const filterDays = parseInt(this.state.chartFilter === 'all' ? 9999 : this.state.chartFilter);
+                const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - filterDays);
+                const filtered = data.filter(d => new Date(d.date) >= cutoff);
+
+                let totalDtMins = 0;
+                let estimatedPicksLost = 0;
+                const reasons = {};
+
+                filtered.forEach(d => {
+                    if (d.downtimeMinutes > 0) {
+                        totalDtMins += d.downtimeMinutes;
+                        const reason = d.downtimeReason || 'Other';
+                        reasons[reason] = (reasons[reason] || 0) + d.downtimeMinutes;
+                        
+                        // Calc lost picks for this shift
+                        const actHrs = d.activeHours || this.state.settings.activeHours;
+                        const prodHrs = Math.max(actHrs - (d.downtimeMinutes / 60), 0.1);
+                        const pace = d.items / prodHrs; // Items per productive hour
+                        estimatedPicksLost += pace * (d.downtimeMinutes / 60);
+                    }
+                });
+
+                document.getElementById('dt-total-time').innerText = totalDtMins > 60 ? `${(totalDtMins/60).toFixed(1)} hrs` : `${totalDtMins} mins`;
+                document.getElementById('dt-total-picks').innerText = Math.round(estimatedPicksLost).toLocaleString();
+
+                const listEl = document.getElementById('dt-reasons-list');
+                if (totalDtMins === 0) {
+                    listEl.innerHTML = `<p class="text-sm text-gray-500 italic">No downtime recorded in this period. Great job!</p>`;
+                    return;
+                }
+
+                // Sort reasons by duration
+                const sortedReasons = Object.entries(reasons).sort((a,b) => b[1] - a[1]);
+                listEl.innerHTML = sortedReasons.map(([reason, mins]) => {
+                    const pct = (mins / totalDtMins) * 100;
+                    return `
+                    <div class="mb-2">
+                        <div class="flex justify-between text-xs font-medium mb-1">
+                            <span class="text-gray-700 dark:text-gray-300">${reason}</span>
+                            <span class="text-gray-500">${mins}m</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+                            <div class="bg-amber-500 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>`;
+                }).join('');
+            },
+
+            updateForecast() {
+                const data = this.state.data || [];
+                const past7 = data.filter(d => (new Date() - new Date(d.date)) <= 7 * 24*3600*1000);
+                
+                const lowEl = document.getElementById('forecast-low');
+                const highEl = document.getElementById('forecast-high');
+                const probVal = document.getElementById('forecast-prob-val');
+                const probBar = document.getElementById('forecast-prob-bar');
+                const desc = document.getElementById('forecast-desc');
+
+                if (past7.length < 3) {
+                    lowEl.innerText = '-'; highEl.innerText = '-'; probVal.innerText = '-'; probBar.style.width = '0%';
+                    desc.innerText = "Log at least 3 shifts in the last week to unlock forecasting.";
+                    return;
+                }
+
+                // Calculate Mean and Standard Deviation of items
+                const itemsArr = past7.map(d => {
+                    // Normalize to standard shift length so forecast is for a standard day
+                    const act = d.activeHours || this.state.settings.activeHours;
+                    const pace = d.items / act;
+                    return pace * this.state.settings.activeHours; 
+                });
+
+                const mean = itemsArr.reduce((a,b)=>a+b,0) / itemsArr.length;
+                const variance = itemsArr.reduce((s, val) => s + Math.pow(val - mean, 2), 0) / itemsArr.length;
+                const stdDev = Math.sqrt(variance);
+
+                const low = Math.round(mean - stdDev);
+                const high = Math.round(mean + stdDev);
+
+                lowEl.innerText = low.toLocaleString();
+                highEl.innerText = high.toLocaleString();
+
+                // Simple Probability calculation (Z-score approximation)
+                const target = this.state.settings.kpiTarget;
+                let prob = 0;
+                if (mean >= target + stdDev) prob = 95;
+                else if (mean <= target - stdDev) prob = 5;
+                else {
+                    // Linear approximation between mean-stddev and mean+stddev
+                    const range = (mean + stdDev) - (mean - stdDev);
+                    const position = target - (mean - stdDev);
+                    prob = 100 - ((position / range) * 100);
+                    prob = Math.max(5, Math.min(95, prob)); // clamp
+                }
+
+                probVal.innerText = `${prob.toFixed(0)}%`;
+                probBar.style.width = `${prob}%`;
+
+                if(prob > 75) { probBar.className = "bg-emerald-500 h-2 rounded-full transition-all duration-1000"; probVal.className = "text-sm font-extrabold text-emerald-600 dark:text-emerald-400"; }
+                else if(prob > 40) { probBar.className = "bg-brand-500 h-2 rounded-full transition-all duration-1000"; probVal.className = "text-sm font-extrabold text-brand-600 dark:text-brand-400"; }
+                else { probBar.className = "bg-amber-500 h-2 rounded-full transition-all duration-1000"; probVal.className = "text-sm font-extrabold text-amber-600 dark:text-amber-500"; }
+
+                desc.innerText = `Based on your volatility (±${Math.round(stdDev)}) over the last 7 shifts.`;
             },
 
             update7DaySummary() {
@@ -1004,19 +1302,16 @@
                 cutoff.setHours(0,0,0,0);
                 
                 const weekData = this.state.data.filter(d => new Date(d.date) >= cutoff);
-                
                 const emptyEl = document.getElementById('sum7-empty');
                 const contentEl = document.getElementById('sum7-content');
                 
                 if (weekData.length === 0) {
-                    emptyEl.classList.remove('hidden');
-                    contentEl.classList.add('hidden');
+                    emptyEl.classList.remove('hidden'); contentEl.classList.add('hidden');
                     document.getElementById('sum7-context').innerText = "0 Shifts Logged";
                     return;
                 }
                 
-                emptyEl.classList.add('hidden');
-                contentEl.classList.remove('hidden');
+                emptyEl.classList.add('hidden'); contentEl.classList.remove('hidden');
                 
                 const totalItems = weekData.reduce((sum, d) => sum + d.items, 0);
                 const avgItems = Math.round(totalItems / weekData.length);
@@ -1024,38 +1319,40 @@
                 const totalActiveHours = weekData.reduce((sum, d) => sum + (d.activeHours || this.state.settings.activeHours), 0);
                 const totalDowntimeMins = weekData.reduce((sum, d) => sum + (d.downtimeMinutes || 0), 0);
                 const totalProductiveHours = totalActiveHours - (totalDowntimeMins / 60);
+                const totalSteps = weekData.reduce((sum, d) => sum + (d.stepCount || 0), 0);
                 
-                const avgSecPerPick = (totalProductiveHours * 3600) / totalItems;
-                const avgMetersPerPick = (totalKm * 1000) / totalItems;
+                const avgUph = Math.round(totalItems / totalProductiveHours);
+                const avgMetersPerPick = totalKm > 0 ? (totalKm * 1000) / totalItems : 0;
                 const kpiPct = (avgItems / this.state.settings.kpiTarget) * 100;
                 
                 document.getElementById('sum7-context').innerText = `${weekData.length} Shifts`;
                 document.getElementById('sum7-items').innerText = totalItems.toLocaleString();
                 document.getElementById('sum7-avg-items').innerText = avgItems.toLocaleString();
-                document.getElementById('sum7-time').innerText = `${avgSecPerPick.toFixed(1)}s`;
-                document.getElementById('sum7-dist').innerText = `${avgMetersPerPick.toFixed(1)}m`;
+                document.getElementById('sum7-time').innerText = `${avgUph}`;
+                document.getElementById('sum7-dist').innerText = avgMetersPerPick > 0 ? `${avgMetersPerPick.toFixed(1)}m` : '-';
                 
+                const shiftsWithSteps = weekData.filter(d => d.stepCount > 0);
+                if (shiftsWithSteps.length > 0) {
+                    const avgStepsPerPick = totalSteps / shiftsWithSteps.reduce((s, d) => s + d.items, 0);
+                    document.getElementById('sum7-steps').innerText = avgStepsPerPick.toFixed(1);
+                } else { document.getElementById('sum7-steps').innerText = '-'; }
+
                 const kpiEl = document.getElementById('sum7-kpi');
                 if (kpiPct >= 100) {
                     kpiEl.innerHTML = `<i class="ph-fill ph-check-circle text-emerald-500 mb-1 block text-3xl"></i> <span class="text-emerald-600 dark:text-emerald-400">Yes</span>`;
-                } else {
-                    kpiEl.innerHTML = `<span class="text-brand-600 dark:text-brand-400">${kpiPct.toFixed(0)}%</span>`;
-                }
+                } else { kpiEl.innerHTML = `<span class="text-brand-600 dark:text-brand-400">${kpiPct.toFixed(0)}%</span>`; }
             },
 
-            // --- Chart Generation logic ---
             setChartFilter(days) {
                 this.state.chartFilter = days;
                 ['7', '30', '90', 'all'].forEach(id => {
                     const btn = document.getElementById(`btn-filter-${id}`);
                     if (!btn) return;
-                    if (id == days) {
-                        btn.className = "flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-lg transition-colors bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white whitespace-nowrap";
-                    } else {
-                        btn.className = "flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white whitespace-nowrap bg-transparent";
-                    }
+                    if (id == days) btn.className = "flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-lg transition-colors bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white whitespace-nowrap";
+                    else btn.className = "flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white whitespace-nowrap bg-transparent";
                 });
                 this.updateCharts();
+                this.updateDowntimeImpact(); // Filter downtime by chart range too
             },
 
             updateCharts() {
@@ -1076,16 +1373,20 @@
                 const itemsData = chartData.map(d => d.items);
                 const targetData = chartData.map(() => this.state.settings.kpiTarget);
                 
-                const timeData = chartData.map(d => parseFloat(this.getPace(d, this.state.settings.activeHours).toFixed(1)));
-                const targetTimeData = chartData.map(() => parseFloat(((this.state.settings.activeHours * 3600) / this.state.settings.kpiTarget).toFixed(1)));
+                const uphData = chartData.map(d => parseFloat(this.getUPH(d, this.state.settings.activeHours).toFixed(0)));
+                const targetUphData = chartData.map(() => parseFloat((this.state.settings.kpiTarget / this.state.settings.activeHours).toFixed(0)));
 
-                const effData = chartData.map(d => {
-                    const km = d.distanceMiles * this.CONSTANTS.MILE_TO_KM;
-                    return parseFloat((d.items / (km || 1)).toFixed(0));
-                });
-
+                const effData = chartData.map(d => parseFloat((d.items / (d.distanceMiles * this.CONSTANTS.MILE_TO_KM || 1)).toFixed(0)));
+                
+                // Common chart options
                 const commonOptions = {
                     responsive: true, maintainAspectRatio: false,
+                    onClick: (event, elements) => {
+                        if (elements && elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            if (chartData[dataIndex]) App.viewDayDetails(chartData[dataIndex].id);
+                        }
+                    },
                     plugins: { 
                         legend: { labels: { color: textColor, font: {family: "'Inter', sans-serif", weight: '600'} } },
                         tooltip: { backgroundColor: isDark ? '#1f2937' : '#ffffff', titleColor: isDark ? '#fff' : '#111827', bodyColor: isDark ? '#d1d5db' : '#4b5563', borderColor: isDark ? '#374151' : '#e5e7eb', borderWidth: 1, padding: 10, cornerRadius: 8, displayColors: true }
@@ -1096,7 +1397,7 @@
                     }
                 };
 
-                // Chart 1: Pick Volume
+                // Main Volume Chart
                 if (this.charts.main) this.charts.main.destroy();
                 const ctxMain = document.getElementById('chart-main').getContext('2d');
                 this.charts.main = new Chart(ctxMain, {
@@ -1104,14 +1405,14 @@
                     data: {
                         labels: labels,
                         datasets: [
-                            { type: 'line', label: `Target (${this.state.settings.kpiTarget})`, data: targetData, borderColor: this.chartColors.target, borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 },
+                            { type: 'line', label: `Target`, data: targetData, borderColor: this.chartColors.target, borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 0 },
                             { type: 'bar', label: 'Items Picked', data: itemsData, backgroundColor: itemsData.map(val => val >= this.state.settings.kpiTarget ? this.chartColors.efficiency : this.chartColors.brand), borderRadius: 6, maxBarThickness: 40 }
                         ]
                     },
                     options: commonOptions
                 });
 
-                // Chart 2: Time Per Pick
+                // Speed Chart
                 if (this.charts.time) this.charts.time.destroy();
                 const ctxTime = document.getElementById('chart-time').getContext('2d');
                 this.charts.time = new Chart(ctxTime, {
@@ -1119,97 +1420,99 @@
                     data: {
                         labels: labels,
                         datasets: [
-                            { label: `Target Pace`, data: targetTimeData, borderColor: this.chartColors.target, borderWidth: 2, borderDash: [5, 5], pointRadius: 0, fill: false },
-                            { label: 'Seconds / Pick', data: timeData, borderColor: this.chartColors.time, backgroundColor: this.chartColors.timeLight, borderWidth: 3, fill: true, tension: 0.4, pointBackgroundColor: this.chartColors.time, pointRadius: 4, pointHoverRadius: 6 }
+                            { label: `Target UPH`, data: targetUphData, borderColor: this.chartColors.target, borderWidth: 2, borderDash: [5, 5], pointRadius: 0, fill: false },
+                            { label: 'Units Per Hour', data: uphData, borderColor: this.chartColors.time, backgroundColor: this.chartColors.timeLight, borderWidth: 3, fill: true, tension: 0.4, pointBackgroundColor: this.chartColors.time, pointRadius: 4 }
                         ]
                     },
-                    options: {
-                        ...commonOptions,
-                        scales: { x: commonOptions.scales.x, y: { ...commonOptions.scales.y, title: {display: false, text: 'Seconds'} } }
-                    }
+                    options: { ...commonOptions, scales: { x: commonOptions.scales.x, y: { ...commonOptions.scales.y, title: {display: false} } } }
                 });
 
-                // Chart 3: Efficiency Trend
-                if (this.charts.efficiency) this.charts.efficiency.destroy();
-                const ctxEff = document.getElementById('chart-efficiency').getContext('2d');
-                this.charts.efficiency = new Chart(ctxEff, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Items per Km', data: effData, borderColor: this.chartColors.efficiency, backgroundColor: this.chartColors.effLight, borderWidth: 3, fill: true, tension: 0.4, pointBackgroundColor: this.chartColors.efficiency, pointRadius: 4
-                        }]
-                    },
-                    options: { ...commonOptions, plugins: { legend: { display: false }, tooltip: commonOptions.plugins.tooltip } }
-                });
-            },
-
-            // --- Secondary Insights ---
-            generateInsights() {
-                const data = this.state.data;
-                const timeEl = document.getElementById('insight-time');
-                const routeEl = document.getElementById('insight-routing');
-                const downEl = document.getElementById('insight-downtime');
-
-                if (data.length < 2) {
-                    timeEl.innerHTML = `<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Log more shifts to unlock detailed pacing and routing comparisons.</span>`;
-                    routeEl.style.display = 'none';
-                    if (downEl) downEl.classList.add('hidden');
-                    return;
-                }
+                // NEW: Quadrant Scatter Chart
+                if (this.charts.quadrant) this.charts.quadrant.destroy();
+                const ctxQuad = document.getElementById('chart-quadrant').getContext('2d');
                 
-                routeEl.style.display = 'block';
-                const latest = data[data.length - 1];
-                const prev = data[data.length - 2];
+                // Prepare Scatter Data (X: Items/Km, Y: UPH)
+                const scatterData = chartData.filter(d => d.distanceMiles > 0).map(d => ({
+                    x: parseFloat((d.items / (d.distanceMiles * this.CONSTANTS.MILE_TO_KM)).toFixed(1)),
+                    y: parseFloat(this.getUPH(d, this.state.settings.activeHours).toFixed(1)),
+                    raw: d // keep reference
+                }));
 
-                const latestPace = this.getPace(latest, this.state.settings.activeHours);
-                const targetSec = (this.state.settings.activeHours * 3600) / this.state.settings.kpiTarget;
-                
-                if (latestPace <= targetSec) {
-                    timeEl.innerHTML = `<p class="text-sm font-medium text-emerald-700 dark:text-emerald-400 leading-snug"><strong class="font-bold">Target Beaten:</strong> You averaged ${latestPace.toFixed(1)}s per pick during active time, beating the target of ${targetSec.toFixed(1)}s.</p>`;
-                } else {
-                    const diffSec = (latestPace - targetSec).toFixed(1);
-                    timeEl.innerHTML = `<p class="text-sm font-medium text-gray-700 dark:text-gray-300 leading-snug"><strong class="font-bold">Pacing Gap:</strong> You took ${diffSec}s longer per pick than target during active picking time.</p>`;
-                }
+                if (scatterData.length > 0) {
+                    // Find medians for crosshairs
+                    const xVals = scatterData.map(d => d.x).sort((a,b)=>a-b);
+                    const yVals = scatterData.map(d => d.y).sort((a,b)=>a-b);
+                    const medianX = xVals[Math.floor(xVals.length/2)];
+                    const medianY = yVals[Math.floor(yVals.length/2)];
 
-                // Routing / Distance Insight
-                const latestMeters = ((latest.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / latest.items;
-                const prevMeters = ((prev.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / prev.items;
-                
-                if (latestMeters > prevMeters + 1) { 
-                    routeEl.innerHTML = `<p class="text-sm font-medium text-gray-700 dark:text-gray-300 leading-snug"><strong class="font-bold">High Travel:</strong> You walked ${latestMeters.toFixed(1)}m per item, more than your previous shift. </p>`;
-                } else if (latestMeters < prevMeters - 1) {
-                    routeEl.innerHTML = `<p class="text-sm font-medium text-gray-700 dark:text-gray-300 leading-snug"><strong class="font-bold">Optimal Routing:</strong> Excellent travel distance (${latestMeters.toFixed(1)}m/pick) compared to yesterday.</p>`;
-                } else {
-                    routeEl.innerHTML = `<p class="text-sm font-medium text-gray-700 dark:text-gray-300 leading-snug"><strong class="font-bold">Consistent Routing:</strong> Your distance walked per pick remained perfectly stable.</p>`;
-                }
+                    // Custom Plugin for Quadrant Background
+                    const quadrantPlugin = {
+                        id: 'quadrantBg',
+                        beforeDraw(chart) {
+                            const {ctx, chartArea: {left, top, right, bottom}, scales: {x, y}} = chart;
+                            const midX = x.getPixelForValue(medianX);
+                            const midY = y.getPixelForValue(medianY);
+                            
+                            ctx.save();
+                            // Crosshairs
+                            ctx.beginPath();
+                            ctx.strokeStyle = isDark ? '#4b5563' : '#d1d5db';
+                            ctx.lineWidth = 1;
+                            ctx.setLineDash([5, 5]);
+                            ctx.moveTo(left, midY); ctx.lineTo(right, midY);
+                            ctx.moveTo(midX, top); ctx.lineTo(midX, bottom);
+                            ctx.stroke();
 
-                // Enhanced Downtime Impact
-                if (latest.downtimeMinutes > 0 && downEl) {
-                    downEl.classList.remove('hidden');
-                    const dtHours = latest.downtimeMinutes / 60;
-                    const actHrs = latest.activeHours || this.state.settings.activeHours;
-                    const dtPct = (dtHours / actHrs) * 100;
-                    
-                    const latestProd = actHrs - dtHours;
-                    const currentPicksPerHour = latest.items / (latestProd || 1);
-                    const lostPicks = Math.round(currentPicksPerHour * dtHours);
-                    const estimatedTotal = latest.items + lostPicks;
-                    
-                    let perfText = '';
-                    if (latest.items < this.state.settings.kpiTarget) {
-                        if (estimatedTotal >= this.state.settings.kpiTarget) {
-                            perfText = `You missed the target, but without downtime you were pacing for <strong>${estimatedTotal.toLocaleString()}</strong> items (beating target!).`;
-                        } else {
-                            perfText = `Estimated picks lost to downtime: <strong>~${lostPicks}</strong>.`;
+                            // Labels
+                            ctx.fillStyle = isDark ? 'rgba(156, 163, 175, 0.4)' : 'rgba(107, 114, 128, 0.4)';
+                            ctx.font = 'bold 10px Inter';
+                            ctx.textAlign = 'center';
+                            
+                            // Top Right (Elite)
+                            ctx.fillText('ELITE', midX + (right - midX)/2, midY - (midY - top)/2);
+                            // Top Left (Fast Inefficient)
+                            ctx.fillText('FAST / INEFFICIENT', left + (midX - left)/2, midY - (midY - top)/2);
+                            // Bottom Right (Slow Efficient)
+                            ctx.fillText('SLOW / EFFICIENT', midX + (right - midX)/2, bottom - (bottom - midY)/2);
+                            // Bottom Left (Slow Inefficient)
+                            ctx.fillText('SLOW / INEFFICIENT', left + (midX - left)/2, bottom - (bottom - midY)/2);
+                            
+                            ctx.restore();
                         }
-                    } else {
-                        perfText = `You hit target despite downtime. Without it, you were pacing for a massive <strong>${estimatedTotal.toLocaleString()}</strong> items.`;
-                    }
+                    };
 
-                    downEl.innerHTML = `<p class="text-sm font-medium leading-snug"><strong class="font-bold"><i class="ph-bold ph-warning-circle"></i> Downtime Impact:</strong> ${perfText} <br><em class="opacity-75 mt-1 block">(Productive time: ${latestProd.toFixed(1)}h, ${dtPct.toFixed(1)}% downtime)</em></p>`;
-                } else if (downEl) {
-                    downEl.classList.add('hidden');
+                    this.charts.quadrant = new Chart(ctxQuad, {
+                        type: 'scatter',
+                        data: {
+                            datasets: [{
+                                label: 'Shifts',
+                                data: scatterData,
+                                backgroundColor: this.chartColors.brand,
+                                pointRadius: 5,
+                                pointHoverRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (ctx) => {
+                                            const d = ctx.raw.raw;
+                                            return `${this.formatDateShort(d.date)}: ${ctx.raw.y} UPH | ${ctx.raw.x} Items/Km`;
+                                        }
+                                    },
+                                    backgroundColor: isDark ? '#1f2937' : '#ffffff', titleColor: isDark ? '#fff' : '#111827', bodyColor: isDark ? '#d1d5db' : '#4b5563', borderColor: isDark ? '#374151' : '#e5e7eb', borderWidth: 1, padding: 10
+                                }
+                            },
+                            scales: {
+                                x: { title: { display: true, text: 'Routing Efficiency (Items/Km)', color: textColor }, grid: { display: false }, ticks: { color: textColor } },
+                                y: { title: { display: true, text: 'Speed (UPH)', color: textColor }, grid: { display: false }, ticks: { color: textColor } }
+                            }
+                        },
+                        plugins: [quadrantPlugin]
+                    });
                 }
             },
 
@@ -1227,32 +1530,38 @@
                 }
 
                 if (filteredData.length === 0) {
-                    document.getElementById('history-empty').classList.remove('hidden');
-                    return;
+                    document.getElementById('history-empty').classList.remove('hidden'); return;
                 }
                 document.getElementById('history-empty').classList.add('hidden');
 
                 filteredData.forEach(d => {
                     const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-colors group';
+                    tr.className = 'hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-colors group cursor-pointer';
+                    tr.onclick = (e) => { if (!e.target.closest('button')) App.viewDayDetails(d.id); };
                     
                     const km = (d.distanceMiles * this.CONSTANTS.MILE_TO_KM);
+                    const activeH = d.activeHours || this.state.settings.activeHours;
+                    
+                    const uph = Math.round(this.getUPH(d, this.state.settings.activeHours));
                     const secPick = this.getPace(d, this.state.settings.activeHours).toFixed(1);
                     const mPick = ((km * 1000) / (d.items || 1)).toFixed(1);
-                    const targetSec = (this.state.settings.activeHours * 3600) / this.state.settings.kpiTarget;
                     
-                    const timeColor = secPick <= targetSec ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-gray-900 dark:text-white font-medium';
+                    const targetUph = this.state.settings.kpiTarget / this.state.settings.activeHours;
+                    const timeColor = uph >= targetUph ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-gray-900 dark:text-white font-medium';
+                    
                     const downtimeStr = d.downtimeMinutes ? `<span class="text-amber-600 dark:text-amber-400 font-semibold">${d.downtimeMinutes}m</span> <span class="text-xs text-gray-500">(${d.downtimeReason})</span>` : '-';
+                    const stepsStr = d.stepCount ? `${d.stepCount.toLocaleString()} <span class="text-xs text-gray-500 block">(${(d.stepCount/d.items).toFixed(1)}/pick)</span>` : '-';
 
                     tr.innerHTML = `
                         <td class="px-5 py-4 font-bold text-gray-900 dark:text-white whitespace-nowrap">${this.formatDateShort(d.date)}</td>
                         <td class="px-5 py-4 font-medium">${d.items.toLocaleString()}</td>
-                        <td class="px-5 py-4 ${timeColor}">${secPick}s</td>
+                        <td class="px-5 py-4 font-medium text-gray-600 dark:text-gray-400">${activeH}h</td>
+                        <td class="px-5 py-4 hidden sm:table-cell font-medium">${stepsStr}</td>
+                        <td class="px-5 py-4 ${timeColor}">${uph} <span class="text-xs font-normal opacity-70 ml-1 block">(${secPick}s/p)</span></td>
                         <td class="px-5 py-4 font-medium text-gray-600 dark:text-gray-400">${mPick}m</td>
-                        <td class="px-5 py-4 hidden sm:table-cell">${downtimeStr}</td>
-                        <td class="px-5 py-4 hidden md:table-cell text-gray-500">${km.toFixed(2)}</td>
-                        <td class="px-5 py-4 hidden lg:table-cell max-w-[200px] truncate text-gray-500 text-xs" title="${d.notes || ''}">${d.notes || '-'}</td>
+                        <td class="px-5 py-4 hidden md:table-cell text-gray-500">${downtimeStr}</td>
                         <td class="px-5 py-4 text-right whitespace-nowrap opacity-50 group-hover:opacity-100 transition-opacity">
+                            <button onclick="App.viewDayDetails('${d.id}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg dark:text-indigo-400 dark:hover:bg-gray-700 transition" title="View Details"><i class="ph-bold ph-eye text-lg"></i></button>
                             <button onclick="App.editEntry('${d.id}')" class="p-2 text-brand-600 hover:bg-brand-50 rounded-lg dark:text-brand-400 dark:hover:bg-gray-700 transition" title="Edit"><i class="ph-bold ph-pencil-simple text-lg"></i></button>
                             <button onclick="App.deleteEntry('${d.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg dark:text-red-400 dark:hover:bg-gray-700 transition" title="Delete"><i class="ph-bold ph-trash text-lg"></i></button>
                         </td>
@@ -1261,22 +1570,15 @@
                 });
             },
 
-            // --- Event Listeners and Tab Management ---
             setupEventListeners() {
                 document.getElementById('input-has-downtime').addEventListener('change', (e) => {
                     const fields = document.getElementById('downtime-fields');
-                    if (e.target.checked) {
-                        fields.classList.remove('hidden');
-                        fields.classList.add('grid');
-                    } else {
-                        fields.classList.add('hidden');
-                        fields.classList.remove('grid');
-                    }
+                    if (e.target.checked) { fields.classList.remove('hidden'); fields.classList.add('grid'); } 
+                    else { fields.classList.add('hidden'); fields.classList.remove('grid'); }
                 });
 
                 document.getElementById('entry-form').addEventListener('submit', (e) => {
                     e.preventDefault();
-                    
                     const dateVal = document.getElementById('input-date').value;
                     const existingIndex = this.state.data.findIndex(d => d.date === dateVal && d.id !== this.state.editingId);
 
@@ -1284,27 +1586,26 @@
                         const distInput = parseFloat(document.getElementById('input-distance').value);
                         const miles = this.state.currentUnit === 'miles' ? distInput : (distInput / this.CONSTANTS.MILE_TO_KM);
                         const hasDowntime = document.getElementById('input-has-downtime').checked;
-
+                        const stepInput = document.getElementById('input-steps').value;
+                        const shiftHours = parseFloat(document.getElementById('input-shift-hours').value);
+                        const breakMins = parseFloat(document.getElementById('input-break-mins').value) || 0;
+                        
                         const entry = {
-                            id: this.state.editingId || ('id_' + Date.now().toString(36) + Math.random().toString(36).substr(2)),
+                            id: this.state.editingId || ('id_' + Date.now().toString(36)),
                             date: dateVal,
                             items: parseInt(document.getElementById('input-items').value),
+                            stepCount: stepInput ? parseInt(stepInput) : null,
                             distanceMiles: parseFloat(miles.toFixed(2)),
-                            shiftHours: parseFloat(document.getElementById('input-shift-hours').value),
-                            activeHours: parseFloat(document.getElementById('input-active-hours').value),
+                            shiftHours: shiftHours,
+                            activeHours: shiftHours - (breakMins / 60),
                             downtimeMinutes: hasDowntime ? (parseInt(document.getElementById('input-downtime-mins').value) || 0) : 0,
                             downtimeReason: hasDowntime ? document.getElementById('input-downtime-reason').value : '',
                             notes: document.getElementById('input-notes').value
                         };
 
-                        if (this.state.editingId) {
-                            const idx = this.state.data.findIndex(d => d.id === this.state.editingId);
-                            this.state.data[idx] = entry;
-                        } else if (existingIndex >= 0) {
-                            this.state.data[existingIndex] = entry;
-                        } else {
-                            this.state.data.push(entry);
-                        }
+                        if (this.state.editingId) this.state.data[this.state.data.findIndex(d => d.id === this.state.editingId)] = entry;
+                        else if (existingIndex >= 0) this.state.data[existingIndex] = entry;
+                        else this.state.data.push(entry);
 
                         this.saveData();
                         this.showToast('Shift saved successfully!', 'success');
@@ -1312,9 +1613,8 @@
                         this.switchTab('dashboard');
                     };
 
-                    if (existingIndex >= 0) {
-                        this.showConfirm("Overwrite Existing Shift?", `A shift is already recorded for ${this.formatDate(dateVal)}. Update it?`, proceedSave);
-                    } else { proceedSave(); }
+                    if (existingIndex >= 0) this.showConfirm("Overwrite Shift?", `A shift is already recorded for ${this.formatDate(dateVal)}. Update it?`, proceedSave);
+                    else proceedSave();
                 });
 
                 document.getElementById('btn-cancel-edit').addEventListener('click', () => this.resetForm());
@@ -1323,8 +1623,7 @@
 
                 document.querySelectorAll('.nav-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
-                        const tab = e.currentTarget.dataset.tab;
-                        if(tab) this.switchTab(tab);
+                        if(e.currentTarget.dataset.tab) this.switchTab(e.currentTarget.dataset.tab);
                         document.getElementById('sidebar').classList.remove('translate-x-0');
                         document.getElementById('mobile-overlay').classList.add('hidden', 'opacity-0');
                     });
@@ -1346,15 +1645,12 @@
                 const openMenu = () => {
                     document.getElementById('sidebar').classList.add('translate-x-0');
                     const overlay = document.getElementById('mobile-overlay');
-                    overlay.classList.remove('hidden');
-                    setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+                    overlay.classList.remove('hidden'); setTimeout(() => overlay.classList.remove('opacity-0'), 10);
                 };
-                
                 const closeMenu = () => {
                     document.getElementById('sidebar').classList.remove('translate-x-0');
                     const overlay = document.getElementById('mobile-overlay');
-                    overlay.classList.add('opacity-0');
-                    setTimeout(() => overlay.classList.add('hidden'), 300);
+                    overlay.classList.add('opacity-0'); setTimeout(() => overlay.classList.add('hidden'), 300);
                 };
 
                 document.getElementById('mobile-menu-btn').addEventListener('click', openMenu);
@@ -1362,7 +1658,6 @@
                 document.getElementById('mobile-overlay').addEventListener('click', closeMenu);
 
                 document.getElementById('import-file').addEventListener('change', (e) => this.handleImport(e));
-
                 document.getElementById('btn-nuke').addEventListener('click', () => {
                     this.showConfirm("CLEAR ALL DATA", "Are you absolutely sure? This will delete all history from this browser permanently.", () => {
                         this.state.data = []; this.saveData(); this.switchTab('dashboard');
@@ -1374,35 +1669,25 @@
                     const val = parseFloat(e.target.value);
                     const hint = document.getElementById('distance-conversion-hint');
                     if (isNaN(val)) { hint.innerText = ''; return; }
-                    if (this.state.currentUnit === 'miles') hint.innerText = `≈ ${(val * this.CONSTANTS.MILE_TO_KM).toFixed(2)} Kilometres`;
-                    else hint.innerText = `≈ ${(val / this.CONSTANTS.MILE_TO_KM).toFixed(2)} Miles`;
+                    hint.innerText = this.state.currentUnit === 'miles' ? `≈ ${(val * this.CONSTANTS.MILE_TO_KM).toFixed(2)} Kilometres` : `≈ ${(val / this.CONSTANTS.MILE_TO_KM).toFixed(2)} Miles`;
                 });
             },
 
-            // --- Utilities ---
             switchTab(tabId, isEdit = false) {
                 if (tabId === 'entry' && !isEdit) this.resetForm();
-
-                ['tab-dashboard', 'tab-entry', 'tab-history', 'tab-reports', 'tab-settings'].forEach(id => {
-                    document.getElementById(id).style.display = 'none';
-                });
+                ['tab-dashboard', 'tab-entry', 'tab-history', 'tab-reports', 'tab-settings'].forEach(id => document.getElementById(id).style.display = 'none');
                 document.getElementById('tab-' + tabId).style.display = 'block';
 
                 document.querySelectorAll('.nav-btn').forEach(btn => {
                     if (btn.dataset.tab === tabId) {
                         btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-400 transition-colors";
-                        const icon = btn.querySelector('i');
-                        icon.className = icon.className.replace('ph-bold', 'ph-fill').replace('ph ', 'ph-fill ');
+                        btn.querySelector('i').className = btn.querySelector('i').className.replace('ph-bold', 'ph-fill').replace('ph ', 'ph-fill ');
                     } else {
                         btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors";
-                        const icon = btn.querySelector('i');
-                        icon.className = icon.className.replace('ph-fill', 'ph-bold');
+                        btn.querySelector('i').className = btn.querySelector('i').className.replace('ph-fill', 'ph-bold');
                     }
                 });
-
-                if(tabId === 'dashboard' && this.state.data.length > 0) {
-                    setTimeout(() => this.updateCharts(), 50); 
-                }
+                if(tabId === 'dashboard' && this.state.data.length > 0) setTimeout(() => this.updateCharts(), 50); 
             },
 
             setUnit(unit) {
@@ -1430,24 +1715,25 @@
                 
                 document.getElementById('input-date').value = entry.date;
                 document.getElementById('input-items').value = entry.items;
+                document.getElementById('input-steps').value = entry.stepCount || '';
+                document.getElementById('input-distance').value = (this.state.currentUnit === 'miles' ? entry.distanceMiles : (entry.distanceMiles * this.CONSTANTS.MILE_TO_KM)).toFixed(2);
                 
-                const distInput = this.state.currentUnit === 'miles' ? entry.distanceMiles : (entry.distanceMiles * this.CONSTANTS.MILE_TO_KM);
-                document.getElementById('input-distance').value = distInput.toFixed(2);
-                document.getElementById('input-shift-hours').value = entry.shiftHours || this.state.settings.shiftHours;
-                document.getElementById('input-active-hours').value = entry.activeHours || this.state.settings.activeHours;
+                const hrs = entry.shiftHours || this.state.settings.shiftHours;
+                const act = entry.activeHours || this.state.settings.activeHours;
+                const breakMins = Math.round((hrs - act) * 60);
+
+                document.getElementById('input-shift-hours').value = hrs;
+                document.getElementById('input-break-mins').value = breakMins >= 0 ? breakMins : 0;
                 
                 const hasDt = !!(entry.downtimeMinutes && entry.downtimeMinutes > 0);
                 document.getElementById('input-has-downtime').checked = hasDt;
                 const dtFields = document.getElementById('downtime-fields');
                 if (hasDt) {
-                    dtFields.classList.remove('hidden');
-                    dtFields.classList.add('grid');
+                    dtFields.classList.remove('hidden'); dtFields.classList.add('grid');
                     document.getElementById('input-downtime-mins').value = entry.downtimeMinutes;
                     document.getElementById('input-downtime-reason').value = entry.downtimeReason || 'Other';
                 } else {
-                    dtFields.classList.add('hidden');
-                    dtFields.classList.remove('grid');
-                    document.getElementById('input-downtime-mins').value = '';
+                    dtFields.classList.add('hidden'); dtFields.classList.remove('grid');
                 }
 
                 document.getElementById('input-notes').value = entry.notes || '';
@@ -1466,9 +1752,8 @@
                 document.getElementById('input-date').valueAsDate = new Date();
                 this.applySettingsToForm();
                 
-                const dtFields = document.getElementById('downtime-fields');
-                dtFields.classList.add('hidden');
-                dtFields.classList.remove('grid');
+                document.getElementById('downtime-fields').classList.add('hidden');
+                document.getElementById('downtime-fields').classList.remove('grid');
                 document.getElementById('input-has-downtime').checked = false;
 
                 this.state.editingId = null;
@@ -1485,13 +1770,66 @@
                 }, true);
             },
 
+            viewDayDetails(id) {
+                const d = this.state.data.find(x => x.id === id);
+                if (!d) return;
+
+                const activeH = d.activeHours || this.state.settings.activeHours;
+                const shiftH = d.shiftHours || this.state.settings.shiftHours;
+                const breaks = Math.round((shiftH - activeH) * 60);
+                
+                const uph = this.getUPH(d, this.state.settings.activeHours);
+                const targetUph = this.state.settings.kpiTarget / this.state.settings.activeHours;
+                const km = d.distanceMiles * this.CONSTANTS.MILE_TO_KM;
+                const mPick = ((km * 1000) / (d.items || 1)).toFixed(1);
+
+                document.getElementById('day-details-date').innerText = this.formatDate(d.date);
+                document.getElementById('dd-items').innerText = d.items.toLocaleString();
+                document.getElementById('dd-uph').innerText = Math.round(uph);
+                
+                document.getElementById('dd-shift-hours').innerText = `${shiftH} hours`;
+                document.getElementById('dd-breaks').innerText = `${breaks > 0 ? breaks + ' mins' : 'None'}`;
+                document.getElementById('dd-active-hours').innerText = `${activeH.toFixed(1)} hours`;
+                document.getElementById('dd-downtime').innerText = d.downtimeMinutes > 0 ? `${d.downtimeMinutes} mins (${d.downtimeReason})` : 'None';
+                document.getElementById('dd-distance').innerText = `${km.toFixed(2)} km (${d.distanceMiles} mi)`;
+                document.getElementById('dd-steps').innerText = d.stepCount ? d.stepCount.toLocaleString() : 'N/A';
+                document.getElementById('dd-meters-pick').innerText = `${mPick} m`;
+
+                const insightEl = document.getElementById('dd-insight');
+                insightEl.classList.remove('hidden');
+                
+                if (shiftH > this.state.settings.shiftHours + 0.5) {
+                    insightEl.innerHTML = `<strong>Overtime Shift:</strong> You worked an extended shift (${shiftH}h). ${uph < targetUph * 0.9 ? 'Focus on maintaining pace during extra hours.' : 'Excellent job maintaining pace!'}`;
+                    insightEl.className = uph < targetUph * 0.9 ? "p-4 rounded-xl text-sm leading-snug border bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50" : "p-4 rounded-xl text-sm leading-snug border bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50";
+                } else {
+                    insightEl.innerHTML = uph >= targetUph ? `<strong>Target Cleared:</strong> You hit your target pacing for this shift.` : `<strong>Pacing Gap:</strong> UPH (${Math.round(uph)}) was below target (${Math.round(targetUph)}).`;
+                    insightEl.className = uph >= targetUph ? "p-4 rounded-xl text-sm leading-snug border bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50" : "p-4 rounded-xl text-sm leading-snug border bg-gray-50 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700";
+                }
+
+                const notesEl = document.getElementById('dd-notes-container');
+                if (d.notes) { notesEl.classList.remove('hidden'); document.getElementById('dd-notes').innerText = d.notes; } 
+                else { notesEl.classList.add('hidden'); }
+
+                document.getElementById('dd-btn-edit').onclick = () => { this.closeDayDetails(); this.editEntry(d.id); };
+
+                const modal = document.getElementById('day-details-modal');
+                const content = document.getElementById('day-details-content');
+                modal.classList.remove('hidden'); void modal.offsetWidth;
+                modal.classList.remove('opacity-0'); content.classList.remove('scale-95');
+            },
+            
+            closeDayDetails() {
+                const modal = document.getElementById('day-details-modal');
+                const content = document.getElementById('day-details-content');
+                modal.classList.add('opacity-0'); content.classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            },
+
             initTheme() {
                 if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark');
-                    this.state.theme = 'dark';
+                    document.documentElement.classList.add('dark'); this.state.theme = 'dark';
                 } else {
-                    document.documentElement.classList.remove('dark');
-                    this.state.theme = 'light';
+                    document.documentElement.classList.remove('dark'); this.state.theme = 'light';
                 }
             },
 
@@ -1508,7 +1846,6 @@
             showToast(message, type = 'info') {
                 const alert = document.getElementById('form-alert');
                 alert.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'bg-red-50', 'text-red-800');
-                
                 if (type === 'success') {
                     alert.classList.add('bg-emerald-50', 'dark:bg-emerald-900/30', 'text-emerald-800', 'dark:text-emerald-400', 'border', 'border-emerald-200', 'dark:border-emerald-800');
                     alert.innerHTML = `<i class="ph-fill ph-check-circle text-xl"></i> ${message}`;
@@ -1526,16 +1863,13 @@
                 document.getElementById('modal-body').innerText = message;
                 
                 const btnClass = isDanger ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-brand-600 hover:bg-brand-700 text-white';
-
                 document.getElementById('modal-buttons').innerHTML = `
                     <button id="modal-cancel" class="px-5 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-xl transition">Cancel</button>
                     <button id="modal-confirm" class="px-5 py-2.5 text-sm font-bold rounded-xl transition shadow-md ${btnClass}">Confirm</button>
                 `;
 
-                modal.classList.remove('hidden');
-                void modal.offsetWidth;
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
+                modal.classList.remove('hidden'); void modal.offsetWidth;
+                modal.classList.remove('opacity-0'); content.classList.remove('scale-95');
 
                 const hide = () => {
                     modal.classList.add('opacity-0'); content.classList.add('scale-95');
@@ -1554,15 +1888,13 @@
                 setTimeout(() => {
                     const element = document.getElementById('tab-dashboard');
                     const opt = {
-                        margin: [10, 10, 10, 10],
-                        filename: `Warehouse_Pro_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+                        margin: [10, 10, 10, 10], filename: `Warehouse_Pro_Report_${new Date().toISOString().split('T')[0]}.pdf`,
                         image: { type: 'jpeg', quality: 0.98 },
                         html2canvas: { scale: 2, useCORS: true, logging: false },
                         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
-                    html2pdf().set(opt).from(element).save().then(() => {
-                        this.showToast('PDF downloaded successfully.', 'success');
-                    }).catch(() => this.showToast('Failed to generate PDF.', 'error'));
+                    html2pdf().set(opt).from(element).save().then(() => this.showToast('PDF downloaded successfully.', 'success'))
+                    .catch(() => this.showToast('Failed to generate PDF.', 'error'));
                 }, 800);
             },
 
@@ -1574,13 +1906,10 @@
                     content = JSON.stringify(this.state.data, null, 2);
                     filename += '.json'; mimeType = 'application/json';
                 } else if (format === 'csv') {
-                    const headers = ['Date', 'Items', 'Distance(Miles)', 'Distance(Km)', 'ShiftHours', 'ActiveHours', 'DowntimeMins', 'DowntimeReason', 'SecondsPerPick', 'MetersPerPick', 'Notes'];
+                    const headers = ['Date', 'Items', 'StepCount', 'Distance(Miles)', 'Distance(Km)', 'ShiftHours', 'ActiveHours', 'DowntimeMins', 'DowntimeReason', 'SecondsPerPick', 'UnitsPerHour', 'MetersPerPick', 'Notes'];
                     const rows = this.state.data.map(d => {
                         const km = (d.distanceMiles * this.CONSTANTS.MILE_TO_KM).toFixed(2);
-                        const secPick = this.getPace(d, this.state.settings.activeHours).toFixed(1);
-                        const mPick = ((km * 1000) / (d.items || 1)).toFixed(1);
-                        const notes = (d.notes || '').replace(/,/g, ';').replace(/\n/g, ' ');
-                        return `${d.date},${d.items},${d.distanceMiles},${km},${d.shiftHours},${d.activeHours},${d.downtimeMinutes || 0},${d.downtimeReason || ''},${secPick},${mPick},"${notes}"`;
+                        return `${d.date},${d.items},${d.stepCount||0},${d.distanceMiles},${km},${d.shiftHours},${d.activeHours},${d.downtimeMinutes || 0},${d.downtimeReason || ''},${this.getPace(d, this.state.settings.activeHours).toFixed(1)},${Math.round(this.getUPH(d, this.state.settings.activeHours))},${((km * 1000) / (d.items || 1)).toFixed(1)},"${(d.notes || '').replace(/,/g, ';').replace(/\n/g, ' ')}"`;
                     });
                     content = [headers.join(','), ...rows].join('\n');
                     filename += '.csv'; mimeType = 'text/csv';
@@ -1588,10 +1917,8 @@
 
                 const blob = new Blob([content], { type: mimeType });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url; a.download = filename;
-                document.body.appendChild(a); a.click();
-                document.body.removeChild(a); URL.revokeObjectURL(url);
+                const a = document.createElement('a'); a.href = url; a.download = filename;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
             },
 
             handleImport(event) {
@@ -1599,15 +1926,13 @@
                 if (!file) return;
 
                 const statusEl = document.getElementById('import-status');
-                statusEl.innerText = "Reading file...";
-                statusEl.className = "text-xs font-bold mt-4 text-center text-blue-500";
+                statusEl.innerText = "Reading file..."; statusEl.className = "text-xs font-bold mt-4 text-center text-blue-500";
 
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const importedData = JSON.parse(e.target.result);
-                        if (!Array.isArray(importedData)) throw new Error("Invalid format: Not an array");
-                        if(importedData.length > 0 && (!importedData[0].date || importedData[0].items === undefined)) throw new Error("Invalid format");
+                        if (!Array.isArray(importedData) || (importedData.length > 0 && (!importedData[0].date || importedData[0].items === undefined))) throw new Error("Invalid format");
 
                         this.showConfirm("Import Data", `Found ${importedData.length} records. Merge with existing data?`, () => {
                             importedData.forEach(imp => {
@@ -1615,13 +1940,11 @@
                                 if (idx >= 0) this.state.data[idx] = imp; else this.state.data.push(imp);
                             });
                             this.saveData(); this.switchTab('dashboard');
-                            statusEl.innerText = "Import successful!";
-                            statusEl.className = "text-xs font-bold mt-4 text-center text-emerald-500";
+                            statusEl.innerText = "Import successful!"; statusEl.className = "text-xs font-bold mt-4 text-center text-emerald-500";
                             setTimeout(()=> { statusEl.innerText = ""; event.target.value = ''; }, 3000);
                         });
                     } catch (error) {
-                        statusEl.innerText = `Error: ${error.message}`;
-                        statusEl.className = "text-xs font-bold mt-4 text-center text-red-500";
+                        statusEl.innerText = `Error: ${error.message}`; statusEl.className = "text-xs font-bold mt-4 text-center text-red-500";
                     }
                 };
                 reader.readAsText(file);
@@ -1630,23 +1953,23 @@
             loadDemoData() {
                 const demoData = [];
                 const baseDate = new Date();
-                baseDate.setDate(baseDate.getDate() - 20);
+                baseDate.setDate(baseDate.getDate() - 30);
 
-                const trendItems = [1210, 1250, 1280, 1300, 1260, 1350, 1380, 1400, 1410, 1420, 1390, 1450, 1480, 1510];
-                const distTrend = [12.5, 12.4, 12.2, 12.0, 13.5, 11.8, 11.5, 11.2, 11.0, 11.0, 11.4, 10.8, 10.5, 10.2];
+                const itemsGen = [1150, 1250, 1420, 1300, 1050, 1380, 1400, 1410, 1500, 1390, 1250, 1480, 1510];
+                const distGen = [13.2, 12.4, 11.2, 12.0, 14.5, 11.5, 11.2, 11.0, 10.1, 11.4, 13.8, 10.5, 10.2];
+                const dtMinsGen = [0, 0, 0, 15, 60, 0, 0, 0, 0, 0, 45, 0, 0];
 
-                for (let i = 0; i < trendItems.length; i++) {
+                for (let i = 0; i < itemsGen.length; i++) {
                     const d = new Date(baseDate);
-                    d.setDate(d.getDate() + i);
-                    if(d.getDay() === 0 || d.getDay() === 6) { baseDate.setDate(baseDate.getDate() + 1); continue; }
-
+                    d.setDate(d.getDate() + (i * 2));
+                    if(d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+                    
                     demoData.push({
                         id: 'demo_' + i, date: d.toISOString().split('T')[0],
-                        items: trendItems[i], distanceMiles: distTrend[i],
+                        items: itemsGen[i], distanceMiles: distGen[i], stepCount: Math.round(distGen[i] * 2000),
                         shiftHours: 8, activeHours: 7.5,
-                        downtimeMinutes: i === 4 ? 45 : (i === 10 ? 25 : 0),
-                        downtimeReason: i === 4 ? 'Equipment/MHE' : (i === 10 ? 'Replenishment' : ''),
-                        notes: i === 4 ? 'Heavy congestion in aisle 4' : (i === 11 ? 'Great pick path assignment' : '')
+                        downtimeMinutes: dtMinsGen[i], downtimeReason: dtMinsGen[i] > 0 ? (i === 4 ? 'Equipment/MHE' : 'Replenishment') : '',
+                        notes: ''
                     });
                 }
                 this.state.data = demoData;
