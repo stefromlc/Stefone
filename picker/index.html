@@ -143,7 +143,6 @@
             </div>
 
             <section id="tab-entry" class="hidden-tab">
-                <!-- Entry Form HTML (Unchanged structure, reused purely for entry) -->
                 <div class="max-w-3xl mx-auto">
                     <h2 id="entry-form-title" class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Add Shift Data</h2>
                     <form id="entry-form" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sm:p-8 space-y-8 theme-transition">
@@ -267,7 +266,7 @@
                             </p>
                         </div>
                         
-                        <!-- NEW: Performance Score Widget -->
+                        <!-- Performance Score Widget -->
                         <div class="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/50 p-3 rounded-2xl border border-gray-100 dark:border-gray-700/50 w-full lg:w-auto">
                             <div class="relative w-16 h-16">
                                 <svg viewBox="0 0 36 36" class="circular-chart w-full h-full">
@@ -309,7 +308,10 @@
                                 <span id="val-latest-achieved">Achieved: 0</span>
                                 <span id="val-latest-missed">Diff: 0</span>
                             </div>
-                            <div id="val-latest-proj" class="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50 text-xs text-gray-500 dark:text-gray-400 truncate"></div>
+                            <div>
+                                <div id="val-latest-proj" class="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50 text-xs text-gray-500 dark:text-gray-400 truncate"></div>
+                                <div id="val-extra-time" class="mt-1.5 text-xs font-bold flex items-center gap-1"></div>
+                            </div>
                         </div>
 
                         <div class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-800/80 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between dashboard-card">
@@ -321,14 +323,20 @@
                                 <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="val-uph">-</span>
                                 <span class="text-sm font-bold text-gray-400 dark:text-gray-500">items/hr</span>
                             </div>
-                            <div class="flex justify-between items-end mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
-                                <div>
-                                    <p class="text-xs text-gray-500 font-medium mb-0.5">Pace / Pick</p>
-                                    <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-sec-pick">-</p>
+                            <div class="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
+                                <div class="flex justify-between items-end mb-2">
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-medium mb-0.5">Pace / Pick</p>
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-sec-pick">-</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-gray-500 font-medium mb-0.5">30-Day Trend</p>
+                                        <span id="val-sec-pick-trend" class="text-xs font-bold px-2 py-0.5 rounded-md inline-block mt-0.5"></span>
+                                    </div>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-xs text-gray-500 font-medium mb-0.5">30-Day Trend</p>
-                                    <span id="val-sec-pick-trend" class="text-xs font-bold px-2 py-0.5 rounded-md inline-block mt-0.5"></span>
+                                <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-900/50 px-2 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                                    <span class="text-[10px] uppercase font-bold text-gray-500">Pace vs Target</span>
+                                    <span id="val-pace-target-pct" class="text-xs font-bold">-</span>
                                 </div>
                             </div>
                         </div>
@@ -342,14 +350,20 @@
                                 <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="val-dist-pick">-</span>
                                 <span class="text-lg font-bold text-gray-400 dark:text-gray-500">m</span>
                             </div>
-                            <div class="flex justify-between items-end mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
-                                <div>
-                                    <p class="text-xs text-gray-500 font-medium mb-0.5">Routing Effic.</p>
-                                    <p class="text-sm font-bold text-gray-900 dark:text-white"><span id="val-latest-efficiency">-</span> <span class="text-[10px] uppercase font-bold text-gray-400">items/km</span></p>
+                            <div class="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
+                                <div class="flex justify-between items-end mb-2">
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-medium mb-0.5">Routing Effic.</p>
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white"><span id="val-latest-efficiency">-</span> <span class="text-[10px] uppercase font-bold text-gray-400">items/km</span></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-gray-500 font-medium mb-0.5">Total Walked</p>
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-latest-km">-</p>
+                                    </div>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-xs text-gray-500 font-medium mb-0.5">Total Walked</p>
-                                    <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-latest-km">-</p>
+                                <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-900/50 px-2 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                                    <span class="text-[10px] uppercase font-bold text-gray-500 flex items-center gap-1"><i class="ph-bold ph-person-simple-walk"></i> Speed: <span id="val-walk-speed" class="text-gray-900 dark:text-white">-</span></span>
+                                    <span id="val-dist-eff-avg" class="text-[10px]">-</span>
                                 </div>
                             </div>
                         </div>
@@ -363,33 +377,172 @@
                                 <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight" id="val-steps-pick">-</span>
                                 <span class="text-sm font-bold text-gray-400 dark:text-gray-500">steps/pick</span>
                             </div>
-                            <div class="flex justify-between items-end mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
-                                <div>
-                                    <p class="text-xs text-gray-500 font-medium mb-0.5">Total Steps</p>
-                                    <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-latest-steps">-</p>
+                            <div class="mt-auto pt-2 border-t border-gray-100 dark:border-gray-700/50">
+                                <div class="flex justify-between items-end mb-2">
+                                    <div>
+                                        <p class="text-xs text-gray-500 font-medium mb-0.5">Total Steps</p>
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-latest-steps">-</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-gray-500 font-medium mb-0.5">Meters / Step</p>
+                                        <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-meters-step">-</p>
+                                    </div>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-xs text-gray-500 font-medium mb-0.5">Meters / Step</p>
-                                    <p class="text-sm font-bold text-gray-900 dark:text-white" id="val-meters-step">-</p>
+                                <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-900/50 px-2 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                                    <span class="text-[10px] uppercase font-bold text-gray-500">vs Historical Avg</span>
+                                    <span id="val-steps-eff-avg" class="text-[10px]">-</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- NEW: Actionable Insights & Driver Analysis (Full Width) -->
-                    <div class="bg-gradient-to-r from-brand-600 to-indigo-700 dark:from-brand-900 dark:to-indigo-900 rounded-3xl p-1 mb-6 shadow-md dashboard-card no-print">
-                        <div class="bg-white dark:bg-gray-800 rounded-[22px] p-6 h-full flex flex-col lg:flex-row gap-6 items-center">
-                            <div class="w-16 h-16 bg-brand-50 dark:bg-brand-900/30 text-brand-500 rounded-2xl flex items-center justify-center flex-shrink-0 border border-brand-100 dark:border-brand-800">
-                                <i class="ph-duotone ph-lightbulb-filament text-4xl"></i>
+                    <!-- Progress vs Baselines -->
+                    <div class="flex items-center gap-3 mt-4 mb-4 no-print">
+                        <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                            <i class="ph-bold ph-trend-up"></i> Progress vs Baselines
+                        </h3>
+                        <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 no-print" id="baseline-cards-container">
+                        <!-- Speed (UPH) Baseline -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-3 transition-colors hover:border-indigo-300 dark:hover:border-indigo-700">
+                            <div class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 mb-1">
+                                <i class="ph-fill ph-timer text-lg"></i>
+                                <h4 class="text-xs font-bold uppercase tracking-wider">Speed (UPH)</h4>
                             </div>
-                            <div class="flex-1 w-full">
-                                <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Smart Driver Analysis</h3>
-                                <div id="driver-analysis-content" class="text-lg font-medium text-gray-900 dark:text-gray-100 leading-snug">
-                                    Analyzing your data to find the main driver of your performance...
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase">Since First Shift</p>
+                                        <p class="text-base font-extrabold text-gray-900 dark:text-white" id="base-first-uph">-</p>
+                                    </div>
+                                    <div id="base-first-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold">-</div>
+                                </div>
+                                <div class="h-px bg-gray-100 dark:bg-gray-700"></div>
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase">vs 7-Day Avg</p>
+                                        <p class="text-base font-extrabold text-gray-900 dark:text-white" id="base-7-uph">-</p>
+                                    </div>
+                                    <div id="base-7-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold">-</div>
+                                </div>
+                                <div class="h-px bg-gray-100 dark:bg-gray-700"></div>
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase">vs 30-Day Avg</p>
+                                        <p class="text-base font-extrabold text-gray-900 dark:text-white" id="base-30-uph">-</p>
+                                    </div>
+                                    <div id="base-30-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold">-</div>
                                 </div>
                             </div>
-                            <div id="driver-impact-pills" class="flex flex-row lg:flex-col gap-2 w-full lg:w-48 flex-shrink-0">
-                                <!-- Populated via JS -->
+                        </div>
+
+                        <!-- Distance (Meters/Pick) Baseline -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-3 transition-colors hover:border-emerald-300 dark:hover:border-emerald-700">
+                            <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
+                                <i class="ph-fill ph-ruler text-lg"></i>
+                                <h4 class="text-xs font-bold uppercase tracking-wider">Distance (m/Pick)</h4>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase">Since First Shift</p>
+                                        <p class="text-base font-extrabold text-gray-900 dark:text-white" id="base-first-dist">-</p>
+                                    </div>
+                                    <div id="base-first-dist-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold">-</div>
+                                </div>
+                                <div class="h-px bg-gray-100 dark:bg-gray-700"></div>
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase">vs 7-Day Avg</p>
+                                        <p class="text-base font-extrabold text-gray-900 dark:text-white" id="base-7-dist">-</p>
+                                    </div>
+                                    <div id="base-7-dist-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold">-</div>
+                                </div>
+                                <div class="h-px bg-gray-100 dark:bg-gray-700"></div>
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase">vs 30-Day Avg</p>
+                                        <p class="text-base font-extrabold text-gray-900 dark:text-white" id="base-30-dist">-</p>
+                                    </div>
+                                    <div id="base-30-dist-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Movement (Steps/Pick) Baseline -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-3 transition-colors hover:border-orange-300 dark:hover:border-orange-700">
+                            <div class="flex items-center gap-2 text-orange-500 dark:text-orange-400 mb-1">
+                                <i class="ph-fill ph-footprints text-lg"></i>
+                                <h4 class="text-xs font-bold uppercase tracking-wider">Movement (Steps/Pick)</h4>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase">Since First Shift</p>
+                                        <p class="text-base font-extrabold text-gray-900 dark:text-white" id="base-first-steps">-</p>
+                                    </div>
+                                    <div id="base-first-steps-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold">-</div>
+                                </div>
+                                <div class="h-px bg-gray-100 dark:bg-gray-700"></div>
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase">vs 7-Day Avg</p>
+                                        <p class="text-base font-extrabold text-gray-900 dark:text-white" id="base-7-steps">-</p>
+                                    </div>
+                                    <div id="base-7-steps-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold">-</div>
+                                </div>
+                                <div class="h-px bg-gray-100 dark:bg-gray-700"></div>
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-gray-500 uppercase">vs 30-Day Avg</p>
+                                        <p class="text-base font-extrabold text-gray-900 dark:text-white" id="base-30-steps">-</p>
+                                    </div>
+                                    <div id="base-30-steps-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Performance Coach (Full Width) -->
+                    <div class="bg-gradient-to-r from-brand-600 to-indigo-700 dark:from-brand-900 dark:to-indigo-900 rounded-3xl p-1 mb-6 shadow-md dashboard-card no-print">
+                        <div class="bg-white dark:bg-gray-800 rounded-[22px] p-5 sm:p-6 h-full">
+                            <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-700/50 pb-3">
+                                <h3 class="text-base sm:text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-brand-50 dark:bg-brand-900/30 text-brand-500 rounded-xl flex items-center justify-center border border-brand-100 dark:border-brand-800">
+                                        <i class="ph-duotone ph-robot text-xl"></i>
+                                    </div>
+                                    AI Performance Coach
+                                </h3>
+                                <span id="coach-confidence" class="text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg border">Loading...</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4">
+                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3.5 border border-gray-100 dark:border-gray-700/50">
+                                     <p class="text-[10px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5"><i class="ph-bold ph-info"></i> Current Status</p>
+                                     <p id="coach-status" class="text-sm font-medium text-gray-900 dark:text-gray-100 leading-snug">Analyzing...</p>
+                                </div>
+                                <div class="bg-red-50 dark:bg-red-900/10 rounded-xl p-3.5 border border-red-100 dark:border-red-900/30">
+                                     <p class="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase mb-1.5 flex items-center gap-1.5"><i class="ph-bold ph-warning-octagon"></i> Holding You Back</p>
+                                     <p id="coach-bottleneck" class="text-sm font-medium text-gray-900 dark:text-gray-100 leading-snug">-</p>
+                                </div>
+                                <div class="bg-emerald-50 dark:bg-emerald-900/10 rounded-xl p-3.5 border border-emerald-100 dark:border-emerald-900/30">
+                                     <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-1.5 flex items-center gap-1.5"><i class="ph-bold ph-target"></i> Next Shift Focus</p>
+                                     <p id="coach-focus" class="text-sm font-medium text-gray-900 dark:text-gray-100 leading-snug">-</p>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3.5 border border-gray-100 dark:border-gray-700/50 opacity-80">
+                                     <p class="text-[10px] font-bold text-gray-500 uppercase mb-1.5 flex items-center gap-1.5"><i class="ph-bold ph-prohibit"></i> Ignore For Now</p>
+                                     <p id="coach-ignore" class="text-sm font-medium text-gray-600 dark:text-gray-400 leading-snug">-</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-brand-50/50 dark:bg-brand-900/10 rounded-xl p-3.5 border border-brand-100 dark:border-brand-800/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                                 <span class="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2"><i class="ph-bold ph-flag-checkered text-brand-500"></i> Next Personal Milestone:</span>
+                                 <span id="coach-milestone" class="text-sm font-extrabold text-brand-600 dark:text-brand-400 bg-white dark:bg-gray-800 px-3 py-1 rounded-lg shadow-sm border border-brand-100 dark:border-brand-800/50"></span>
                             </div>
                         </div>
                     </div>
@@ -420,7 +573,7 @@
                         </div>
                     </div>
 
-                    <!-- NEW: Advanced Pro Analytics Tier -->
+                    <!-- Advanced Pro Analytics Tier -->
                     <div class="flex items-center gap-3 mt-10 mb-4 no-print">
                         <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                             <i class="ph-duotone ph-cpu text-brand-500"></i> Pro Analysis Engine
@@ -472,13 +625,13 @@
                         <!-- Best vs Worst -->
                         <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm dashboard-card">
                             <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-                                <i class="ph-fill ph-scales text-brand-500"></i> Best vs Worst (Last 30 Days)
+                                <i class="ph-fill ph-scales text-brand-500"></i> Highest vs Lowest Recorded (Last 30 Days)
                             </h3>
-                            <p class="text-xs text-gray-500 mb-4">Comparing your most and least efficient shifts.</p>
+                            <p class="text-xs text-gray-500 mb-4">Comparing your highest and lowest output shifts.</p>
                             
                             <div class="grid grid-cols-2 gap-px bg-gray-200 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden mb-3">
                                 <div class="bg-emerald-50/50 dark:bg-emerald-900/10 p-4">
-                                    <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2 flex justify-between">Best Shift <span id="bvw-best-date" class="text-gray-500"></span></p>
+                                    <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2 flex justify-between">Highest Output <span id="bvw-best-date" class="text-gray-500"></span></p>
                                     <p class="text-2xl font-extrabold text-gray-900 dark:text-white mb-2" id="bvw-best-uph">- <span class="text-xs font-normal text-gray-500">UPH</span></p>
                                     <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                                         <li>Vol: <strong id="bvw-best-vol" class="text-gray-900 dark:text-white"></strong></li>
@@ -487,7 +640,7 @@
                                     </ul>
                                 </div>
                                 <div class="bg-red-50/50 dark:bg-red-900/10 p-4">
-                                    <p class="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2 flex justify-between">Worst Shift <span id="bvw-worst-date" class="text-gray-500"></span></p>
+                                    <p class="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2 flex justify-between">Lowest Output <span id="bvw-worst-date" class="text-gray-500"></span></p>
                                     <p class="text-2xl font-extrabold text-gray-900 dark:text-white mb-2" id="bvw-worst-uph">- <span class="text-xs font-normal text-gray-500">UPH</span></p>
                                     <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                                         <li>Vol: <strong id="bvw-worst-vol" class="text-gray-900 dark:text-white"></strong></li>
@@ -579,7 +732,6 @@
                 </div>
             </section>
 
-            <!-- History, Reports, Settings Tabs exactly as original structure to respect single file mandate, hidden by default -->
             <section id="tab-history" class="hidden-tab">
                 <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                     <div class="p-5 sm:p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50 dark:bg-gray-800/50">
@@ -932,13 +1084,11 @@
                     const pastData = data.slice(0, -1).filter(d => d.distanceMiles);
                     if (pastData.length > 0) {
                         const avgMeters = pastData.reduce((s, d) => s + (((d.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / d.items), 0) / pastData.length;
-                        // If they walk less than average, score goes up. If they walk more, it goes down.
                         const effRatio = avgMeters / latestMeters; 
                         effScore = Math.min(100, Math.max(0, 85 * effRatio));
                     }
                 }
 
-                // Calculate final weighted score
                 const finalScore = Math.round((volScore * 0.30) + (speedScore * 0.40) + (effScore * 0.30));
                 
                 const scoreText = document.getElementById('score-text');
@@ -949,16 +1099,16 @@
                 scoreCircle.style.strokeDasharray = `${finalScore}, 100`;
 
                 if (finalScore >= 95) {
-                    scoreCircle.style.stroke = '#10b981'; // Emerald
+                    scoreCircle.style.stroke = '#10b981'; 
                     scoreGrade.innerText = "Elite"; scoreGrade.className = "text-lg font-extrabold text-emerald-600 dark:text-emerald-400 leading-none";
                 } else if (finalScore >= 85) {
-                    scoreCircle.style.stroke = '#3b82f6'; // Blue
+                    scoreCircle.style.stroke = '#3b82f6'; 
                     scoreGrade.innerText = "Excellent"; scoreGrade.className = "text-lg font-extrabold text-brand-600 dark:text-brand-400 leading-none";
                 } else if (finalScore >= 75) {
-                    scoreCircle.style.stroke = '#f59e0b'; // Amber
+                    scoreCircle.style.stroke = '#f59e0b'; 
                     scoreGrade.innerText = "Solid"; scoreGrade.className = "text-lg font-extrabold text-amber-600 dark:text-amber-500 leading-none";
                 } else {
-                    scoreCircle.style.stroke = '#ef4444'; // Red
+                    scoreCircle.style.stroke = '#ef4444'; 
                     scoreGrade.innerText = "Needs Focus"; scoreGrade.className = "text-lg font-extrabold text-red-600 dark:text-red-400 leading-none";
                 }
             },
@@ -1007,6 +1157,18 @@
                 const uphTarget = 3600 / targetSecPerPick;
                 const latestUph = this.getUPH(latest, this.state.settings.activeHours);
                 
+                const extraTimeEl = document.getElementById('val-extra-time');
+                if (latest.items < this.state.settings.kpiTarget) {
+                    const hrs = diff / latestUph;
+                    const h = Math.floor(hrs);
+                    const m = Math.round((hrs - h) * 60);
+                    extraTimeEl.innerHTML = `<i class="ph-bold ph-clock"></i> +${h}h ${m}m needed`;
+                    extraTimeEl.className = "mt-1.5 text-xs font-bold text-amber-600 dark:text-amber-500 flex items-center gap-1";
+                } else {
+                    extraTimeEl.innerHTML = `<i class="ph-bold ph-check-circle"></i> Target Cleared`;
+                    extraTimeEl.className = "mt-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1";
+                }
+
                 const uphEl = document.getElementById('val-uph');
                 uphEl.innerText = Math.round(latestUph).toLocaleString();
                 document.getElementById('val-sec-pick').innerText = `${latestPace.toFixed(1)} sec`;
@@ -1033,6 +1195,16 @@
                     }
                 } else { trendBadge.style.display = 'none'; }
 
+                const paceVsTargetPct = ((latestUph - uphTarget) / uphTarget) * 100;
+                const paceVsTargetEl = document.getElementById('val-pace-target-pct');
+                if (paceVsTargetPct >= 0) {
+                    paceVsTargetEl.innerHTML = `+${paceVsTargetPct.toFixed(1)}% <i class="ph-bold ph-trend-up"></i>`;
+                    paceVsTargetEl.className = 'text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1';
+                } else {
+                    paceVsTargetEl.innerHTML = `${paceVsTargetPct.toFixed(1)}% <i class="ph-bold ph-trend-down"></i>`;
+                    paceVsTargetEl.className = 'text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1';
+                }
+
                 const latestKm = latest.distanceMiles * this.CONSTANTS.MILE_TO_KM;
                 const metersPerPick = (latestKm * 1000) / latest.items;
                 const efficiency = latest.items / (latestKm || 1);
@@ -1040,6 +1212,28 @@
                 document.getElementById('val-dist-pick').innerText = isNaN(metersPerPick) ? '-' : metersPerPick.toFixed(1);
                 document.getElementById('val-latest-efficiency').innerText = isNaN(efficiency) ? '-' : efficiency.toFixed(0);
                 document.getElementById('val-latest-km').innerText = `${latestKm.toFixed(1)} km`;
+
+                const actHrsLatest = latest.activeHours || this.state.settings.activeHours;
+                const dtHrsLatest = (latest.downtimeMinutes || 0) / 60;
+                const prodHrsLatest = Math.max(actHrsLatest - dtHrsLatest, 0.1);
+                const walkSpeed = latestKm / prodHrsLatest;
+                document.getElementById('val-walk-speed').innerText = `${walkSpeed.toFixed(1)} km/h`;
+
+                const pastDistData = data.slice(0, -1).filter(d => d.distanceMiles);
+                const distEffAvgEl = document.getElementById('val-dist-eff-avg');
+                if (pastDistData.length > 0) {
+                    const histKm = pastDistData.reduce((s,d) => s + (d.distanceMiles * this.CONSTANTS.MILE_TO_KM), 0);
+                    const histItems = pastDistData.reduce((s,d) => s + d.items, 0);
+                    const avgEff = histItems / histKm;
+                    const diffEff = ((efficiency - avgEff) / avgEff) * 100;
+                    if (diffEff >= 0) {
+                        distEffAvgEl.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-bold">+${diffEff.toFixed(1)}% vs avg</span>`;
+                    } else {
+                        distEffAvgEl.innerHTML = `<span class="text-red-600 dark:text-red-400 font-bold">${diffEff.toFixed(1)}% vs avg</span>`;
+                    }
+                } else {
+                    distEffAvgEl.innerHTML = `<span class="text-gray-400 dark:text-gray-500">No baseline</span>`;
+                }
 
                 if (latest.stepCount) {
                     document.getElementById('val-steps-pick').innerText = (latest.stepCount / latest.items).toFixed(1);
@@ -1050,8 +1244,25 @@
                     document.getElementById('val-latest-steps').innerText = '-';
                     document.getElementById('val-meters-step').innerText = '-';
                 }
+
+                const pastStepsData = data.slice(0, -1).filter(d => d.stepCount);
+                const stepsEffAvgEl = document.getElementById('val-steps-eff-avg');
+                if (latest.stepCount && pastStepsData.length > 0) {
+                    const currentStepsPerPick = latest.stepCount / latest.items;
+                    const histSteps = pastStepsData.reduce((s,d) => s + d.stepCount, 0);
+                    const histItemsForSteps = pastStepsData.reduce((s,d) => s + d.items, 0);
+                    const avgStepsPerPick = histSteps / histItemsForSteps;
+                    
+                    const stepsDiffPct = ((avgStepsPerPick - currentStepsPerPick) / avgStepsPerPick) * 100;
+                    if (stepsDiffPct >= 0) {
+                        stepsEffAvgEl.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-bold">+${stepsDiffPct.toFixed(1)}% improved</span>`;
+                    } else {
+                        stepsEffAvgEl.innerHTML = `<span class="text-red-600 dark:text-red-400 font-bold">${Math.abs(stepsDiffPct).toFixed(1)}% declined</span>`;
+                    }
+                } else {
+                    stepsEffAvgEl.innerHTML = `<span class="text-gray-400 dark:text-gray-500">No baseline</span>`;
+                }
                 
-                // Dashboard Streak Logic
                 let targetStreak = 0;
                 for (let i = data.length - 1; i >= 0; i--) {
                     if (data[i].items >= this.state.settings.kpiTarget) targetStreak++; else break;
@@ -1062,84 +1273,234 @@
                     streakEl.classList.add('flex', 'bg-orange-50', 'text-orange-700', 'border-orange-200', 'dark:bg-orange-900/30', 'dark:text-orange-400', 'dark:border-orange-800/50');
                     streakEl.innerHTML = `<i class="ph-fill ph-fire text-sm text-orange-500"></i> ${targetStreak} Shift Goal Streak`;
                 } else { streakEl.classList.add('hidden'); }
+
+                const baseFirstUphEl = document.getElementById('base-first-uph');
+                const baseFirstBadge = document.getElementById('base-first-badge');
+                const base7UphEl = document.getElementById('base-7-uph');
+                const base7Badge = document.getElementById('base-7-badge');
+                const base30UphEl = document.getElementById('base-30-uph');
+                const base30Badge = document.getElementById('base-30-badge');
+
+                const baseFirstDistEl = document.getElementById('base-first-dist');
+                const baseFirstDistBadge = document.getElementById('base-first-dist-badge');
+                const base7DistEl = document.getElementById('base-7-dist');
+                const base7DistBadge = document.getElementById('base-7-dist-badge');
+                const base30DistEl = document.getElementById('base-30-dist');
+                const base30DistBadge = document.getElementById('base-30-dist-badge');
+
+                const baseFirstStepsEl = document.getElementById('base-first-steps');
+                const baseFirstStepsBadge = document.getElementById('base-first-steps-badge');
+                const base7StepsEl = document.getElementById('base-7-steps');
+                const base7StepsBadge = document.getElementById('base-7-steps-badge');
+                const base30StepsEl = document.getElementById('base-30-steps');
+                const base30StepsBadge = document.getElementById('base-30-steps-badge');
+
+                const formatBadge = (badgeEl, diffPct, lowerIsBetter = false) => {
+                    if (diffPct === null || isNaN(diffPct)) {
+                        badgeEl.innerText = "N/A";
+                        badgeEl.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-600";
+                    } else if (Math.abs(diffPct) < 1) {
+                        badgeEl.innerText = "Flat";
+                        badgeEl.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600";
+                    } else {
+                        const isGood = lowerIsBetter ? diffPct < 0 : diffPct > 0;
+                        const sign = diffPct > 0 ? '+' : '';
+                        if (isGood) {
+                            badgeEl.innerHTML = `<i class="ph-bold ${lowerIsBetter ? 'ph-trend-down' : 'ph-trend-up'}"></i> ${sign}${diffPct.toFixed(1)}%`;
+                            badgeEl.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 flex items-center gap-1 border border-emerald-200 dark:border-emerald-800/50";
+                        } else {
+                            badgeEl.innerHTML = `<i class="ph-bold ${lowerIsBetter ? 'ph-trend-up' : 'ph-trend-down'}"></i> ${sign}${diffPct.toFixed(1)}%`;
+                            badgeEl.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 flex items-center gap-1 border border-red-200 dark:border-red-800/50";
+                        }
+                    }
+                };
+
+                const getAvgUph = (shiftArr) => {
+                    if (shiftArr.length === 0) return null;
+                    return shiftArr.reduce((s, d) => s + this.getUPH(d, this.state.settings.activeHours), 0) / shiftArr.length;
+                };
+
+                const getAvgMeters = (shiftArr) => {
+                    const withDist = shiftArr.filter(d => d.distanceMiles);
+                    if (withDist.length === 0) return null;
+                    const histKm = withDist.reduce((s,d) => s + (d.distanceMiles * this.CONSTANTS.MILE_TO_KM), 0);
+                    const histItems = withDist.reduce((s,d) => s + d.items, 0);
+                    return (histKm * 1000) / (histItems || 1);
+                };
+
+                const getAvgSteps = (shiftArr) => {
+                    const withSteps = shiftArr.filter(d => d.stepCount);
+                    if (withSteps.length === 0) return null;
+                    const histSteps = withSteps.reduce((s,d) => s + d.stepCount, 0);
+                    const histItems = withSteps.reduce((s,d) => s + d.items, 0);
+                    return histSteps / (histItems || 1);
+                };
+
+                if (data.length > 1) {
+                    const firstUph = this.getUPH(data[0], this.state.settings.activeHours);
+                    const diffFirst = ((latestUph - firstUph) / firstUph) * 100;
+                    baseFirstUphEl.innerText = `${Math.round(firstUph)}`;
+                    formatBadge(baseFirstBadge, diffFirst);
+                } else {
+                    baseFirstUphEl.innerText = "-"; formatBadge(baseFirstBadge, null);
+                }
+
+                const now = new Date(latest.date).getTime();
+                const past7Data = data.slice(0, -1).filter(d => (now - new Date(d.date).getTime()) <= 7 * 24*3600*1000);
+                const past30Data = data.slice(0, -1).filter(d => (now - new Date(d.date).getTime()) <= 30 * 24*3600*1000);
+
+                const avg7Uph = getAvgUph(past7Data);
+                if (avg7Uph) {
+                    base7UphEl.innerText = `${Math.round(avg7Uph)}`;
+                    formatBadge(base7Badge, ((latestUph - avg7Uph) / avg7Uph) * 100);
+                } else {
+                    base7UphEl.innerText = "-"; formatBadge(base7Badge, null);
+                }
+
+                const avg30Uph = getAvgUph(past30Data);
+                if (avg30Uph) {
+                    base30UphEl.innerText = `${Math.round(avg30Uph)}`;
+                    formatBadge(base30Badge, ((latestUph - avg30Uph) / avg30Uph) * 100);
+                } else {
+                    base30UphEl.innerText = "-"; formatBadge(base30Badge, null);
+                }
+
+                const latestMetersPerPick = (latestKm * 1000) / (latest.items || 1);
+                const dataWithDist = data.filter(d => d.distanceMiles);
+
+                if (dataWithDist.length > 1 && latest.distanceMiles) {
+                    const firstShiftDist = dataWithDist[0];
+                    const firstMeters = ((firstShiftDist.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / (firstShiftDist.items || 1);
+                    const diffFirstDist = ((latestMetersPerPick - firstMeters) / firstMeters) * 100;
+                    baseFirstDistEl.innerText = `${firstMeters.toFixed(1)}m`;
+                    formatBadge(baseFirstDistBadge, diffFirstDist, true);
+                } else {
+                    baseFirstDistEl.innerText = "-"; formatBadge(baseFirstDistBadge, null);
+                }
+
+                const avg7Meters = getAvgMeters(past7Data);
+                if (avg7Meters && latest.distanceMiles) {
+                    base7DistEl.innerText = `${avg7Meters.toFixed(1)}m`;
+                    formatBadge(base7DistBadge, ((latestMetersPerPick - avg7Meters) / avg7Meters) * 100, true);
+                } else {
+                    base7DistEl.innerText = "-"; formatBadge(base7DistBadge, null);
+                }
+
+                const avg30Meters = getAvgMeters(past30Data);
+                if (avg30Meters && latest.distanceMiles) {
+                    base30DistEl.innerText = `${avg30Meters.toFixed(1)}m`;
+                    formatBadge(base30DistBadge, ((latestMetersPerPick - avg30Meters) / avg30Meters) * 100, true);
+                } else {
+                    base30DistEl.innerText = "-"; formatBadge(base30DistBadge, null);
+                }
+
+                const latestStepsPerPick = latest.stepCount ? latest.stepCount / (latest.items || 1) : null;
+                const dataWithSteps = data.filter(d => d.stepCount);
+
+                if (dataWithSteps.length > 1 && latestStepsPerPick !== null) {
+                    const firstShiftSteps = dataWithSteps[0];
+                    const firstSteps = firstShiftSteps.stepCount / (firstShiftSteps.items || 1);
+                    const diffFirstSteps = ((latestStepsPerPick - firstSteps) / firstSteps) * 100;
+                    baseFirstStepsEl.innerText = `${firstSteps.toFixed(1)}`;
+                    formatBadge(baseFirstStepsBadge, diffFirstSteps, true);
+                } else {
+                    baseFirstStepsEl.innerText = "-"; formatBadge(baseFirstStepsBadge, null);
+                }
+
+                const avg7Steps = getAvgSteps(past7Data);
+                if (avg7Steps !== null && latestStepsPerPick !== null) {
+                    base7StepsEl.innerText = `${avg7Steps.toFixed(1)}`;
+                    formatBadge(base7StepsBadge, ((latestStepsPerPick - avg7Steps) / avg7Steps) * 100, true);
+                } else {
+                    base7StepsEl.innerText = "-"; formatBadge(base7StepsBadge, null);
+                }
+
+                const avg30Steps = getAvgSteps(past30Data);
+                if (avg30Steps !== null && latestStepsPerPick !== null) {
+                    base30StepsEl.innerText = `${avg30Steps.toFixed(1)}`;
+                    formatBadge(base30StepsBadge, ((latestStepsPerPick - avg30Steps) / avg30Steps) * 100, true);
+                } else {
+                    base30StepsEl.innerText = "-"; formatBadge(base30StepsBadge, null);
+                }
             },
 
             updateDriverAnalysis() {
                 const data = this.state.data;
-                const contentEl = document.getElementById('driver-analysis-content');
-                const pillsEl = document.getElementById('driver-impact-pills');
+                const count = data.length;
                 
-                if (!data || data.length < 2) {
-                    contentEl.innerHTML = "Log at least two shifts to unlock Smart Driver Analysis. We'll find out what's causing your performance to rise or fall.";
-                    pillsEl.innerHTML = '';
+                const confEl = document.getElementById('coach-confidence');
+                const statusEl = document.getElementById('coach-status');
+                const bottleneckEl = document.getElementById('coach-bottleneck');
+                const focusEl = document.getElementById('coach-focus');
+                const ignoreEl = document.getElementById('coach-ignore');
+                const milestoneEl = document.getElementById('coach-milestone');
+                
+                if (!data || count === 0) return;
+
+                const latest = data[count - 1];
+                const targetUph = this.state.settings.kpiTarget / this.state.settings.activeHours;
+                const latestUph = this.getUPH(latest, this.state.settings.activeHours);
+                const dtPct = ((latest.downtimeMinutes || 0) / 60) / (latest.activeHours || this.state.settings.activeHours) * 100;
+                const latestMeters = ((latest.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / (latest.items || 1);
+
+                if (count < 3) {
+                    confEl.innerText = "Learning Mode (Low Conf)";
+                    confEl.className = "text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg border bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600";
+                    
+                    statusEl.innerText = "Just starting out. We are currently establishing your personal baseline.";
+                    bottleneckEl.innerText = "N/A - Too early to diagnose reliable bottlenecks.";
+                    focusEl.innerText = "Accuracy, safe lifting, and learning warehouse zones.";
+                    ignoreEl.innerText = "The massive KPI target and speed (UPH). They will naturally improve as you learn.";
+                    milestoneEl.innerText = `${Math.round(latestUph * 1.15)} UPH (Forming Baseline)`;
                     return;
                 }
 
-                const latest = data[data.length - 1];
-                const pastData = data.slice(0, -1).slice(-30); // Compare to last 30 days
-                
-                const getAvg = (arr, key) => arr.reduce((sum, item) => sum + item[key], 0) / arr.length;
-                
-                const latestUph = this.getUPH(latest, this.state.settings.activeHours);
+                const pastData = data.slice(0, -1).slice(-30);
                 const avgUph = pastData.reduce((sum, d) => sum + this.getUPH(d, this.state.settings.activeHours), 0) / pastData.length;
                 const uphChange = ((latestUph - avgUph) / avgUph) * 100;
-
-                const latestMeters = ((latest.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / latest.items;
+                
                 const pastWithDist = pastData.filter(d=>d.distanceMiles);
                 const avgMeters = pastWithDist.length > 0 ? pastWithDist.reduce((s,d) => s + (((d.distanceMiles * this.CONSTANTS.MILE_TO_KM) * 1000) / d.items), 0) / pastWithDist.length : latestMeters;
-                
-                const dtHours = (latest.downtimeMinutes || 0) / 60;
-                const actHrs = latest.activeHours || this.state.settings.activeHours;
-                const dtPct = (dtHours / actHrs) * 100;
 
-                let what = "", why = "", action = "";
-                let pills = [];
-
-                if (dtPct > 8) {
-                    what = `<span class="text-amber-500 font-bold">Performance Impacted by Interruptions.</span>`;
-                    why = `You lost ${dtPct.toFixed(0)}% of your productive time to downtime (${latest.downtimeReason}).`;
-                    action = `Communicate recurring issues to your supervisor to clear blockers.`;
-                    pills.push({ label: 'Downtime', val: `${latest.downtimeMinutes}m`, type: 'bad' });
-                } else if (uphChange < -5) {
-                    what = `<span class="text-red-500 font-bold">Speed Dropped ${Math.abs(uphChange).toFixed(1)}% Below Average.</span>`;
-                    if (latestMeters > avgMeters * 1.1) {
-                        why = `Your primary drag factor was routing. You walked ${latestMeters.toFixed(1)}m per item vs your normal ${avgMeters.toFixed(1)}m.`;
-                        action = `Focus on pathing efficiency in your current zone to prevent excess walking.`;
-                        pills.push({ label: 'Routing', val: 'Inefficient', type: 'bad' });
-                    } else {
-                        why = `Your movement efficiency was normal, meaning the delay was at the pick face (scanning, packing, or fatigue).`;
-                        action = `Ensure your equipment is working and focus on quick item identification.`;
-                        pills.push({ label: 'Pick-Face', val: 'Slow', type: 'bad' });
-                    }
-                } else if (uphChange > 5) {
-                    what = `<span class="text-emerald-500 font-bold">Elite Performance: Speed Up ${uphChange.toFixed(1)}%.</span>`;
-                    if (latestMeters < avgMeters * 0.9) {
-                        why = `Driven by excellent routing. You only walked ${latestMeters.toFixed(1)}m per item (saving ${(avgMeters-latestMeters).toFixed(1)}m per pick!).`;
-                        action = `Remember your pathing strategy today—it works perfectly.`;
-                        pills.push({ label: 'Routing', val: 'Optimal', type: 'good' });
-                    } else {
-                        why = `Driven by pure pick-face speed. Your travel distance was average, but your pacing was relentless.`;
-                        action = `Outstanding work. Ensure this pace is physically sustainable for the whole week.`;
-                        pills.push({ label: 'Pick-Face', val: 'Fast', type: 'good' });
-                    }
+                if (count < 7) {
+                    confEl.innerText = "Building Baseline (Low Conf)";
+                    confEl.className = "text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg border bg-brand-100 text-brand-700 border-brand-300 dark:bg-brand-900/40 dark:text-brand-400 dark:border-brand-800/50";
+                    statusEl.innerText = `You are ${uphChange > 0 ? 'improving' : 'stabilizing'} at ${Math.round(latestUph)} UPH vs your initial ${Math.round(avgUph)} UPH average.`;
                 } else {
-                    what = `<span class="text-brand-400 font-bold">Highly Consistent Shift.</span>`;
-                    why = `Your speed (${Math.round(latestUph)} UPH) and routing (${latestMeters.toFixed(1)}m/pick) perfectly match your 30-day baseline.`;
-                    action = `You're in the groove. Look for micro-optimizations (like staging your trolley) to push into the next tier.`;
-                    pills.push({ label: 'Pace', val: 'Stable', type: 'neutral' });
+                    confEl.innerText = "Active Tuning (High Conf)";
+                    confEl.className = "text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg border bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800/50";
+                    statusEl.innerText = `Established baseline at ${Math.round(avgUph)} UPH. You are currently running ${Math.abs(uphChange).toFixed(1)}% ${uphChange >= 0 ? 'above' : 'below'} average.`;
                 }
 
-                contentEl.innerHTML = `<p class="mb-1">${what} ${why}</p><p class="text-sm text-gray-500 dark:text-gray-400"><i class="ph-bold ph-arrow-bend-down-right"></i> ${action}</p>`;
+                if (dtPct > 8) {
+                    bottleneckEl.innerText = `Interruptions (${latest.downtimeMinutes}m lost to downtime).`;
+                    focusEl.innerText = "Clear blockers quickly or escalate issues to supervision. Stay steady when picking.";
+                    ignoreEl.innerText = "Walking faster. It won't recover time lost to waiting.";
+                } else if (latestMeters > avgMeters * 1.15) {
+                    bottleneckEl.innerText = `Routing. You walked ${latestMeters.toFixed(1)}m/pick vs your normal ${avgMeters.toFixed(1)}m.`;
+                    focusEl.innerText = "Map your pick path ahead of time. Avoid backtracking in aisles.";
+                    ignoreEl.innerText = "Physical scan/pack speed. Your feet are losing the time.";
+                } else if (uphChange < -5) {
+                    bottleneckEl.innerText = "Pick-face delays. Routing and downtime are normal, but output dropped.";
+                    focusEl.innerText = "Equipment checks (scanner lag?) and minimizing touches per item.";
+                    ignoreEl.innerText = "Rushing your walk. Focus strictly on smooth transitions at the bin.";
+                } else if (uphChange > 8) {
+                    bottleneckEl.innerText = "None currently. Elite shift flow detected.";
+                    focusEl.innerText = "Sustainability. Ensure this pace isn't burning you out physically.";
+                    ignoreEl.innerText = "Micro-optimizations. Keep your current rhythm.";
+                } else {
+                    bottleneckEl.innerText = "Consistency plateau. You've hit a steady rhythm.";
+                    focusEl.innerText = "Finding 1-2 seconds of savings in your trolley staging or item scanning.";
+                    ignoreEl.innerText = "Major changes to your routine.";
+                }
 
-                pillsEl.innerHTML = pills.map(p => {
-                    let color = 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600';
-                    if(p.type === 'good') color = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
-                    if(p.type === 'bad') color = 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800';
-                    return `<div class="flex-1 flex justify-between items-center px-3 py-1.5 rounded-lg border text-xs font-bold ${color}">
-                        <span class="uppercase tracking-wider opacity-80">${p.label}</span>
-                        <span>${p.val}</span>
-                    </div>`;
-                }).join('');
+                if (latestUph >= targetUph && avgUph >= targetUph) {
+                    milestoneEl.innerText = "Target Consistently Achieved! Maintain pace.";
+                } else {
+                    let step = Math.round(avgUph * 1.15);
+                    if (step >= targetUph) step = Math.round(targetUph);
+                    milestoneEl.innerText = `${step} UPH (Stepping Stone)`;
+                }
             },
 
             updateBestVsWorst() {
@@ -1147,7 +1508,7 @@
                 const past30 = data.filter(d => (new Date() - new Date(d.date)) <= 30 * 24*3600*1000);
                 
                 if (past30.length < 3) {
-                    document.getElementById('bvw-takeaway').innerText = "Log at least 3 shifts this month to compare.";
+                    document.getElementById('bvw-takeaway').innerText = "Log at least 3 shifts this month to establish a reliable range.";
                     document.getElementById('bvw-best-uph').innerHTML = '- <span class="text-xs font-normal text-gray-500">UPH</span>';
                     document.getElementById('bvw-worst-uph').innerHTML = '- <span class="text-xs font-normal text-gray-500">UPH</span>';
                     return;
@@ -1174,15 +1535,14 @@
                 fillData('best', bestShift, maxUph);
                 fillData('worst', worstShift, minUph);
 
-                // Calculate key difference
                 const bMeters = bestShift.distanceMiles ? (((bestShift.distanceMiles * this.CONSTANTS.MILE_TO_KM)*1000)/bestShift.items) : null;
                 const wMeters = worstShift.distanceMiles ? (((worstShift.distanceMiles * this.CONSTANTS.MILE_TO_KM)*1000)/worstShift.items) : null;
                 
                 let takeaway = "";
                 if (worstShift.downtimeMinutes > (bestShift.downtimeMinutes || 0) + 20) {
-                    takeaway = `Downtime was the killer. Your worst shift had ${worstShift.downtimeMinutes}m of interruptions compared to ${bestShift.downtimeMinutes || 0}m on your best day.`;
+                    takeaway = `Downtime was the killer. Your lowest output shift had ${worstShift.downtimeMinutes}m of interruptions compared to ${bestShift.downtimeMinutes || 0}m on your highest.`;
                 } else if (bMeters && wMeters && wMeters > bMeters * 1.2) {
-                    takeaway = `Routing efficiency. You walked ${wMeters.toFixed(1)}m per item on your worst day, compared to a highly efficient ${bMeters.toFixed(1)}m on your best.`;
+                    takeaway = `Routing efficiency. You walked ${wMeters.toFixed(1)}m per item on your lowest output day, compared to a highly efficient ${bMeters.toFixed(1)}m on your highest.`;
                 } else {
                     takeaway = `Pure pick speed. Movement and downtime were similar, meaning your physical picking/scanning pace was significantly faster on ${this.formatDateShort(bestShift.date)}.`;
                 }
@@ -1205,10 +1565,9 @@
                         const reason = d.downtimeReason || 'Other';
                         reasons[reason] = (reasons[reason] || 0) + d.downtimeMinutes;
                         
-                        // Calc lost picks for this shift
                         const actHrs = d.activeHours || this.state.settings.activeHours;
                         const prodHrs = Math.max(actHrs - (d.downtimeMinutes / 60), 0.1);
-                        const pace = d.items / prodHrs; // Items per productive hour
+                        const pace = d.items / prodHrs;
                         estimatedPicksLost += pace * (d.downtimeMinutes / 60);
                     }
                 });
@@ -1222,7 +1581,6 @@
                     return;
                 }
 
-                // Sort reasons by duration
                 const sortedReasons = Object.entries(reasons).sort((a,b) => b[1] - a[1]);
                 listEl.innerHTML = sortedReasons.map(([reason, mins]) => {
                     const pct = (mins / totalDtMins) * 100;
@@ -1249,15 +1607,13 @@
                 const probBar = document.getElementById('forecast-prob-bar');
                 const desc = document.getElementById('forecast-desc');
 
-                if (past7.length < 3) {
+                if (past7.length < 5) {
                     lowEl.innerText = '-'; highEl.innerText = '-'; probVal.innerText = '-'; probBar.style.width = '0%';
-                    desc.innerText = "Log at least 3 shifts in the last week to unlock forecasting.";
+                    desc.innerHTML = `<span class="text-amber-600 dark:text-amber-500 font-bold"><i class="ph-bold ph-warning-circle"></i> Insufficient Data</span>. Log at least 5 shifts in 7 days to generate a reliable statistical forecast.`;
                     return;
                 }
 
-                // Calculate Mean and Standard Deviation of items
                 const itemsArr = past7.map(d => {
-                    // Normalize to standard shift length so forecast is for a standard day
                     const act = d.activeHours || this.state.settings.activeHours;
                     const pace = d.items / act;
                     return pace * this.state.settings.activeHours; 
@@ -1273,17 +1629,15 @@
                 lowEl.innerText = low.toLocaleString();
                 highEl.innerText = high.toLocaleString();
 
-                // Simple Probability calculation (Z-score approximation)
                 const target = this.state.settings.kpiTarget;
                 let prob = 0;
                 if (mean >= target + stdDev) prob = 95;
                 else if (mean <= target - stdDev) prob = 5;
                 else {
-                    // Linear approximation between mean-stddev and mean+stddev
                     const range = (mean + stdDev) - (mean - stdDev);
                     const position = target - (mean - stdDev);
                     prob = 100 - ((position / range) * 100);
-                    prob = Math.max(5, Math.min(95, prob)); // clamp
+                    prob = Math.max(5, Math.min(95, prob)); 
                 }
 
                 probVal.innerText = `${prob.toFixed(0)}%`;
@@ -1293,7 +1647,7 @@
                 else if(prob > 40) { probBar.className = "bg-brand-500 h-2 rounded-full transition-all duration-1000"; probVal.className = "text-sm font-extrabold text-brand-600 dark:text-brand-400"; }
                 else { probBar.className = "bg-amber-500 h-2 rounded-full transition-all duration-1000"; probVal.className = "text-sm font-extrabold text-amber-600 dark:text-amber-500"; }
 
-                desc.innerText = `Based on your volatility (±${Math.round(stdDev)}) over the last 7 shifts.`;
+                desc.innerText = `Based on your volatility (±${Math.round(stdDev)}) over the last ${past7.length} shifts.`;
             },
 
             update7DaySummary() {
@@ -1352,7 +1706,7 @@
                     else btn.className = "flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white whitespace-nowrap bg-transparent";
                 });
                 this.updateCharts();
-                this.updateDowntimeImpact(); // Filter downtime by chart range too
+                this.updateDowntimeImpact(); 
             },
 
             updateCharts() {
@@ -1378,7 +1732,6 @@
 
                 const effData = chartData.map(d => parseFloat((d.items / (d.distanceMiles * this.CONSTANTS.MILE_TO_KM || 1)).toFixed(0)));
                 
-                // Common chart options
                 const commonOptions = {
                     responsive: true, maintainAspectRatio: false,
                     onClick: (event, elements) => {
@@ -1397,7 +1750,6 @@
                     }
                 };
 
-                // Main Volume Chart
                 if (this.charts.main) this.charts.main.destroy();
                 const ctxMain = document.getElementById('chart-main').getContext('2d');
                 this.charts.main = new Chart(ctxMain, {
@@ -1412,7 +1764,6 @@
                     options: commonOptions
                 });
 
-                // Speed Chart
                 if (this.charts.time) this.charts.time.destroy();
                 const ctxTime = document.getElementById('chart-time').getContext('2d');
                 this.charts.time = new Chart(ctxTime, {
@@ -1427,25 +1778,21 @@
                     options: { ...commonOptions, scales: { x: commonOptions.scales.x, y: { ...commonOptions.scales.y, title: {display: false} } } }
                 });
 
-                // NEW: Quadrant Scatter Chart
                 if (this.charts.quadrant) this.charts.quadrant.destroy();
                 const ctxQuad = document.getElementById('chart-quadrant').getContext('2d');
                 
-                // Prepare Scatter Data (X: Items/Km, Y: UPH)
                 const scatterData = chartData.filter(d => d.distanceMiles > 0).map(d => ({
                     x: parseFloat((d.items / (d.distanceMiles * this.CONSTANTS.MILE_TO_KM)).toFixed(1)),
                     y: parseFloat(this.getUPH(d, this.state.settings.activeHours).toFixed(1)),
-                    raw: d // keep reference
+                    raw: d 
                 }));
 
                 if (scatterData.length > 0) {
-                    // Find medians for crosshairs
                     const xVals = scatterData.map(d => d.x).sort((a,b)=>a-b);
                     const yVals = scatterData.map(d => d.y).sort((a,b)=>a-b);
                     const medianX = xVals[Math.floor(xVals.length/2)];
                     const medianY = yVals[Math.floor(yVals.length/2)];
 
-                    // Custom Plugin for Quadrant Background
                     const quadrantPlugin = {
                         id: 'quadrantBg',
                         beforeDraw(chart) {
@@ -1454,7 +1801,6 @@
                             const midY = y.getPixelForValue(medianY);
                             
                             ctx.save();
-                            // Crosshairs
                             ctx.beginPath();
                             ctx.strokeStyle = isDark ? '#4b5563' : '#d1d5db';
                             ctx.lineWidth = 1;
@@ -1463,18 +1809,13 @@
                             ctx.moveTo(midX, top); ctx.lineTo(midX, bottom);
                             ctx.stroke();
 
-                            // Labels
                             ctx.fillStyle = isDark ? 'rgba(156, 163, 175, 0.4)' : 'rgba(107, 114, 128, 0.4)';
                             ctx.font = 'bold 10px Inter';
                             ctx.textAlign = 'center';
                             
-                            // Top Right (Elite)
                             ctx.fillText('ELITE', midX + (right - midX)/2, midY - (midY - top)/2);
-                            // Top Left (Fast Inefficient)
                             ctx.fillText('FAST / INEFFICIENT', left + (midX - left)/2, midY - (midY - top)/2);
-                            // Bottom Right (Slow Efficient)
                             ctx.fillText('SLOW / EFFICIENT', midX + (right - midX)/2, bottom - (bottom - midY)/2);
-                            // Bottom Left (Slow Inefficient)
                             ctx.fillText('SLOW / INEFFICIENT', left + (midX - left)/2, bottom - (bottom - midY)/2);
                             
                             ctx.restore();
