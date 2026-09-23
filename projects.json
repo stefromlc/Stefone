@@ -1,5 +1,23 @@
 [
   {
+    "title": "TraceCam",
+    "slug": "tracecam",
+    "description": "TraceCam is an AR drawing aid that overlays reference images on your live camera feed so artists can trace onto paper with ease.",
+    "thumbnail": "assets/thumbs/tracecam.jpg",
+    "tags": [
+      "Art",
+      "Draw",
+      "Project",
+      "Trace",
+      "TraceCam"
+    ],
+    "category": "Art",
+    "featured": true,
+    "date": "2026-09-23",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "title": "CashFlow",
     "slug": "cashflow",
     "description": "CashFlow Planner is a private personal finance tool that forecasts your cash balance, tracks income and expenses, calculates safe-to-spend limits, and helps you plan savings goals.",
