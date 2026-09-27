@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaTagger Pro - Batch MP3 Metadata Editor</title>
+    
+    <!-- SEO & Metadata -->
+    <meta name="description" content="A premium, private, local, browser-based batch MP3 tag and artwork editor. Edit ID3 metadata, auto-tag via iTunes, and download without sending files to any server.">
+    <meta name="keywords" content="Batch MP3 tag editor, metadata editor, ID3 editor, browser mp3 editor, local mp3 metadata, album art editor, auto tag, JSZip">
+    <meta name="author" content="MetaTagger">
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:title" content="MetaTagger Pro - Batch MP3 Metadata Editor">
+    <meta property="og:description" content="A private, local, browser-based batch MP3 tag and artwork editor. Edit your music library safely and securely right inside your browser.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://metatagger.app/">
+    
+    <!-- Code-based Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%238b5cf6'/><path d='M35 25v50l40-25z' fill='%23fff'/></svg>">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- jsmediatags (for reading ID3 tags) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    
+    <!-- JSZip (for Batch Export) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            900: '#121212',
+                            800: '#1e1e1e',
+                            750: '#252525',
+                            700: '#2d2d2d',
+                            600: '#3d3d3d',
+                        },
+                        accent: {
+                            400: '#a78bfa',
+                            500: '#8b5cf6', // Violet
+                            600: '#7c3aed',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #f3f4f6;
+            overflow: hidden; /* Prevent body scroll, handle internally */
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3d3d3d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #8b5cf6;
+            cursor: pointer;
+            margin-top: -4px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #3d3d3d;
+            border-radius: 2px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        /* Form Inputs */
+        .input-field {
+            width: 100%;
+            background-color: #1e1e1e;
+            border: 1px solid #3d3d3d;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            color: #ffffff;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 1px #8b5cf6;
+        }
+        .input-field::placeholder {
+            color: #6b7280;
+        }
+        .input-field:disabled {
+            background-color: #2d2d2d;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .input-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #9ca3af;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        /* Drag & Drop */
+        .drag-active {
+            border-color: #8b5cf6 !important;
+            background-color: rgba(139, 92, 246, 0.1) !important;
+        }
+
+        /* Toast Animation */
+        .toast-enter {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        .toast-enter-active {
+            transform: translateY(0);
+            opacity: 1;
+            transition: all 0.3s ease-out;
+        }
+        .toast-leave {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast-leave-active {
+            transform: translateY(100%);
+            opacity: 0;
+            transition: all 0.3s ease-in;
+        }
+        
+        .artwork-overlay {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .artwork-container:hover .artwork-overlay {
+            opacity: 1;
+        }
+
+        /* Queue Item Selected State */
+        .queue-item.selected {
+            background-color: rgba(139, 92, 246, 0.15);
+            border-color: #8b5cf6;
+        }
+        
+        /* Modal Backdrop */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Placeholder styling for mixed values */
+        .mixed-values::placeholder {
+            color: #a78bfa;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700 py-3 px-4 z-20 shadow-sm shrink-0">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <a href="/projects/" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div class="flex items-center gap-3">
+                    <div class="bg-accent-500 p-2 rounded-lg text-white">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold tracking-tight text-white leading-tight">MetaTagger Pro</h1>
+                        <p class="text-[10px] text-accent-400 uppercase tracking-widest font-semibold">Batch Editor</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
+                <button id="btnToolbarTools" class="whitespace-nowrap px-3 py-1.5 rounded bg-gray-700 hover:bg-gray-600 text-sm font-medium text-white transition-colors disabled:opacity-50" disabled>
+                    <i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-1"></i> Filename Tools
+                </button>
+                <button id="btnToolbarLookup" class="whitespace-nowrap px-3 py-1.5 rounded bg-gray-700 hover:bg-gray-600 text-sm font-medium text-white transition-colors disabled:opacity-50" disabled>
+                    <i class="fa-solid fa-magnifying-glass text-blue-400 mr-1"></i> Auto-Tag (iTunes)
+                </button>
+                <div class="flex items-center gap-2 text-xs text-gray-400 bg-gray-900 px-3 py-1.5 rounded-full border border-gray-700 whitespace-nowrap">
+                    <i class="fa-solid fa-shield-halved text-green-400"></i>
+                    <span>100% Local</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="flex-grow flex overflow-hidden relative w-full">
+        
+        <!-- Dropzone Overlay (Hidden by default, shown on drag over) -->
+        <div id="dropOverlay" class="absolute inset-0 z-50 bg-gray-900/90 hidden flex-col items-center justify-center border-4 border-dashed border-accent-500 m-4 rounded-2xl backdrop-blur-sm transition-all">
+            <i class="fa-solid fa-file-audio text-6xl text-accent-500 mb-4 animate-bounce"></i>
+            <h2 class="text-2xl font-bold text-white">Drop MP3 files to add to queue</h2>
+        </div>
+
+        <!-- Empty State View -->
+        <div id="emptyView" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-30 overflow-y-auto p-6">
+            <div class="text-center max-w-xl">
+                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-2xl mb-8">
+                    <div class="w-20 h-20 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-gray-800 shadow-inner">
+                        <i class="fa-solid fa-music text-3xl text-accent-500"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold mb-3 text-white">Batch Tag Editing Made Easy</h2>
+                    <p class="text-gray-400 text-sm mb-6">Drop one or multiple MP3 files below. Edit tags in bulk, fetch missing artwork automatically, and export directly to a folder or ZIP file.</p>
+                    
+                    <label class="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent-500 hover:bg-accent-600 text-white rounded-lg font-bold transition-all hover:scale-105 shadow-lg shadow-accent-500/20">
+                        <i class="fa-solid fa-folder-open"></i> Browse Files
+                        <input type="file" id="initialFileInput" multiple accept=".mp3,audio/mpeg" class="hidden">
+                    </label>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-750">
+                        <i class="fa-solid fa-layer-group text-accent-400 mb-2 text-xl"></i>
+                        <h4 class="font-bold text-white text-sm">Batch Edit</h4>
+                        <p class="text-xs text-gray-400 mt-1">Select multiple tracks and change albums or artwork at once.</p>
+                    </div>
+                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-750">
+                        <i class="fa-solid fa-cloud-arrow-down text-accent-400 mb-2 text-xl"></i>
+                        <h4 class="font-bold text-white text-sm">Auto Lookup</h4>
+                        <p class="text-xs text-gray-400 mt-1">Query iTunes to fetch high-res covers and missing metadata.</p>
+                    </div>
+                    <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-750">
+                        <i class="fa-solid fa-hard-drive text-accent-400 mb-2 text-xl"></i>
+                        <h4 class="font-bold text-white text-sm">Direct Save</h4>
+                        <p class="text-xs text-gray-400 mt-1">Save changes straight to a local folder or export as ZIP.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Left Sidebar: File Queue -->
+        <aside id="sidebar" class="w-full md:w-72 lg:w-80 bg-gray-850 border-r border-gray-700 flex flex-col hidden md:flex shrink-0">
+            <!-- Sidebar Header -->
+            <div class="p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
+                <div class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-list text-gray-400"></i> Queue (<span id="queueCount">0</span>)
+                </div>
+                <div class="flex gap-1">
+                    <label class="cursor-pointer text-gray-400 hover:text-white p-1.5 rounded hover:bg-gray-700 transition-colors" title="Add Files">
+                        <i class="fa-solid fa-plus"></i>
+                        <input type="file" id="sidebarFileInput" multiple accept=".mp3,audio/mpeg" class="hidden">
+                    </label>
+                    <button id="btnSelectAll" class="text-gray-400 hover:text-white p-1.5 rounded hover:bg-gray-700 transition-colors text-xs font-semibold" title="Select All">
+                        ALL
+                    </button>
+                    <button id="btnClearQueue" class="text-red-400 hover:text-red-300 p-1.5 rounded hover:bg-red-900/20 transition-colors" title="Clear Queue">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Queue List -->
+            <div id="queueList" class="flex-grow overflow-y-auto p-2 flex flex-col gap-1">
+                <!-- Dynamically populated queue items -->
+            </div>
+            
+            <!-- Selection Status -->
+            <div class="p-3 border-t border-gray-700 bg-gray-800 text-xs text-gray-400 text-center">
+                <span id="selectionStatus">0 selected</span>
+                <div class="text-[10px] mt-1 text-gray-500">Hold Shift or Ctrl to multi-select</div>
+            </div>
+        </aside>
+
+        <!-- Right Content: Editor -->
+        <main id="editorPanel" class="flex-grow flex flex-col overflow-y-auto bg-gray-900 relative hidden h-full">
+            
+            <!-- Mobile Queue Toggle -->
+            <div class="md:hidden bg-gray-800 border-b border-gray-700 p-2 flex justify-between items-center sticky top-0 z-10">
+                <button id="btnMobileQueueToggle" class="text-sm font-bold text-white px-3 py-1.5 bg-gray-700 rounded shadow">
+                    <i class="fa-solid fa-list mr-1"></i> View Queue (<span id="mobileQueueCount">0</span>)
+                </button>
+                <span id="mobileSelectionStatus" class="text-xs text-accent-400 font-semibold">1 selected</span>
+            </div>
+
+            <!-- Editor Form Container -->
+            <div class="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto w-full flex-grow flex flex-col gap-6">
+                
+                <!-- Notice for Multi-Selection -->
+                <div id="multiSelectNotice" class="hidden bg-accent-500/20 border border-accent-500/50 rounded-lg p-3 text-sm text-accent-100 flex items-center gap-3">
+                    <i class="fa-solid fa-circle-info text-accent-400 text-lg"></i>
+                    <div>
+                        <strong class="block text-white">Batch Edit Mode Active</strong>
+                        Any changes made to fields below will be applied to <strong id="multiSelectCount">2</strong> files. Fields with differing values show as <i>&lt;Multiple Values&gt;</i>.
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- Left Column: Artwork & Player -->
+                    <div class="lg:col-span-4 flex flex-col gap-4">
+                        
+                        <!-- Artwork Card -->
+                        <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 shadow-lg">
+                            <div class="aspect-square bg-gray-900 rounded-lg relative overflow-hidden mb-4 group artwork-container shadow-inner border border-gray-700">
+                                <img id="artworkPreview" src="" alt="Album Artwork" class="w-full h-full object-cover hidden">
+                                <div id="artworkPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+                                    <i class="fa-solid fa-image text-4xl mb-2"></i>
+                                    <span class="text-sm font-medium" id="artworkPlaceholderText">No Artwork</span>
+                                </div>
+                                <!-- Hover Overlay -->
+                                <div class="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3 artwork-overlay z-10 backdrop-blur-sm">
+                                    <label class="cursor-pointer bg-white text-black px-4 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition-colors shadow-lg">
+                                        <i class="fa-solid fa-upload mr-1"></i> Replace
+                                        <input type="file" id="artworkInput" accept="image/jpeg,image/png" class="hidden">
+                                    </label>
+                                    <button id="btnRemoveArtwork" class="text-red-400 text-sm font-semibold hover:text-red-300 transition-colors bg-gray-900/80 px-4 py-1.5 rounded-full hidden">
+                                        <i class="fa-solid fa-trash mr-1"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center text-xs text-gray-400">
+                                <span id="artworkInfo">No image</span>
+                                <span id="artworkDimensions"></span>
+                            </div>
+                        </div>
+
+                        <!-- Audio Player Card (Hidden in multi-select unless 1 file active) -->
+                        <div id="playerContainer" class="bg-gray-800 rounded-xl border border-gray-700 p-4 shadow-lg">
+                            <div class="flex items-center gap-4 mb-3">
+                                <button id="btnPlayPause" class="w-10 h-10 rounded-full bg-accent-500 hover:bg-accent-600 text-white flex items-center justify-center flex-shrink-0 transition-colors shadow-md">
+                                    <i class="fa-solid fa-play ml-0.5"></i>
+                                </button>
+                                <div class="overflow-hidden">
+                                    <p id="playerTitle" class="text-sm font-bold text-white truncate">Select a file</p>
+                                    <p id="playerArtist" class="text-xs text-gray-400 truncate">-</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 text-xs text-gray-400 mb-2">
+                                <span id="timeCurrent">0:00</span>
+                                <input type="range" id="seekSlider" value="0" min="0" max="100" class="flex-grow">
+                                <span id="timeTotal">0:00</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                                <i class="fa-solid fa-volume-low w-4 text-center"></i>
+                                <input type="range" id="volumeSlider" value="100" min="0" max="100" class="flex-grow">
+                                <i class="fa-solid fa-volume-high w-4 text-center"></i>
+                            </div>
+                            <audio id="audioElement" class="hidden"></audio>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Metadata Form -->
+                    <div class="lg:col-span-8 flex flex-col gap-4">
+                        <div class="bg-gray-800 rounded-xl border border-gray-700 p-5 sm:p-6 shadow-lg flex-grow">
+                            <div class="flex justify-between items-center mb-5 border-b border-gray-700 pb-3">
+                                <h2 class="text-lg font-bold text-white">Metadata Tags</h2>
+                                <button id="btnResetFields" class="text-xs font-semibold text-gray-400 hover:text-white transition-colors">
+                                    <i class="fa-solid fa-rotate-left mr-1"></i> Revert Edits
+                                </button>
+                            </div>
+                            
+                            <form id="metadataForm" class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                                <div class="md:col-span-2">
+                                    <label class="input-label" for="tagTitle">Title</label>
+                                    <input type="text" id="tagTitle" name="title" class="input-field font-medium text-base py-2" placeholder="Track Title">
+                                </div>
+                                <div>
+                                    <label class="input-label" for="tagArtist">Artist</label>
+                                    <input type="text" id="tagArtist" name="artist" class="input-field" placeholder="Artist Name">
+                                </div>
+                                <div>
+                                    <label class="input-label" for="tagAlbumArtist">Album Artist</label>
+                                    <input type="text" id="tagAlbumArtist" name="albumArtist" class="input-field" placeholder="Album Artist">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="input-label" for="tagAlbum">Album</label>
+                                    <input type="text" id="tagAlbum" name="album" class="input-field" placeholder="Album Name">
+                                </div>
+                                <div>
+                                    <label class="input-label" for="tagGenre">Genre</label>
+                                    <input type="text" id="tagGenre" name="genre" class="input-field" placeholder="e.g. Pop, Rock, Electronic">
+                                </div>
+                                <div>
+                                    <label class="input-label" for="tagYear">Release Year</label>
+                                    <input type="text" id="tagYear" name="year" class="input-field" placeholder="YYYY">
+                                </div>
+                                
+                                <div class="flex gap-2">
+                                    <div class="w-1/2">
+                                        <label class="input-label" for="tagTrack">Track</label>
+                                        <input type="text" id="tagTrack" name="track" class="input-field" placeholder="No.">
+                                    </div>
+                                    <div class="w-1/2">
+                                        <label class="input-label" for="tagTotalTracks">Of</label>
+                                        <input type="text" id="tagTotalTracks" name="totalTracks" class="input-field" placeholder="Total">
+                                    </div>
+                                </div>
+                                
+                                <div class="flex gap-2">
+                                    <div class="w-1/2">
+                                        <label class="input-label" for="tagDisc">Disc</label>
+                                        <input type="text" id="tagDisc" name="disc" class="input-field" placeholder="No.">
+                                    </div>
+                                    <div class="w-1/2">
+                                        <label class="input-label" for="tagTotalDiscs">Of</label>
+                                        <input type="text" id="tagTotalDiscs" name="totalDiscs" class="input-field" placeholder="Total">
+                                    </div>
+                                </div>
+                            </form>
+
+                            <!-- Advanced Metadata Accordion -->
+                            <div class="border border-gray-700 rounded-lg overflow-hidden">
+                                <button id="btnToggleAdvanced" class="w-full flex items-center justify-between p-3.5 bg-gray-750 hover:bg-gray-700 transition-colors text-sm font-semibold text-white">
+                                    <span><i class="fa-solid fa-sliders mr-2 text-gray-400"></i> Advanced Properties</span>
+                                    <i id="iconAdvanced" class="fa-solid fa-chevron-down text-gray-400 transition-transform"></i>
+                                </button>
+                                
+                                <div id="advancedSection" class="hidden p-5 bg-gray-800/50 border-t border-gray-700">
+                                    <form id="advancedMetadataForm" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <div>
+                                            <label class="input-label" for="tagComposer">Composer</label>
+                                            <input type="text" id="tagComposer" name="composer" class="input-field" placeholder="Composer Name">
+                                        </div>
+                                        <div>
+                                            <label class="input-label" for="tagPublisher">Publisher / Label</label>
+                                            <input type="text" id="tagPublisher" name="publisher" class="input-field" placeholder="Record Label">
+                                        </div>
+                                        <div>
+                                            <label class="input-label" for="tagBpm">BPM</label>
+                                            <input type="number" id="tagBpm" name="bpm" class="input-field" placeholder="Beats per minute">
+                                        </div>
+                                        <div>
+                                            <label class="input-label" for="tagIsrc">ISRC</label>
+                                            <input type="text" id="tagIsrc" name="isrc" class="input-field" placeholder="Standard Recording Code">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="input-label" for="tagGrouping">Grouping</label>
+                                            <input type="text" id="tagGrouping" name="grouping" class="input-field" placeholder="Content Group">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="flex items-center gap-3 cursor-pointer w-fit">
+                                                <input type="checkbox" id="tagCompilation" name="compilation" class="w-4 h-4 text-accent-500 bg-gray-800 border-gray-600 rounded focus:ring-accent-500 focus:ring-2">
+                                                <span class="text-sm font-medium text-gray-300">Part of a Compilation (Various Artists)</span>
+                                            </label>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="input-label" for="tagComment">Comment</label>
+                                            <input type="text" id="tagComment" name="comment" class="input-field" placeholder="Custom comments">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="input-label" for="tagLyrics">Lyrics</label>
+                                            <textarea id="tagLyrics" name="lyrics" class="input-field resize-y min-h-[100px]" placeholder="Unsynchronised lyrics..."></textarea>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Action Bar (Fixed) -->
+                <div class="bg-gray-800 border-t border-gray-700 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] mt-auto sticky bottom-0 z-20 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    
+                    <!-- Export Options Dropdown/ButtonGroup -->
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button id="btnSaveZIP" class="flex-1 sm:flex-none px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors shadow flex items-center justify-center gap-2 border border-gray-600" title="Export all modified files as a ZIP archive">
+                            <i class="fa-solid fa-file-zipper text-yellow-400"></i>
+                            <span class="hidden sm:inline">Export ZIP</span>
+                        </button>
+                        <button id="btnSaveDirectory" class="flex-1 sm:flex-none px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors shadow flex items-center justify-center gap-2 border border-gray-600" title="Save directly to a local folder">
+                            <i class="fa-solid fa-folder-tree text-blue-400"></i>
+                            <span class="hidden sm:inline">Save to Folder</span>
+                        </button>
+                    </div>
+
+                    <button id="btnSaveSelected" class="w-full sm:w-auto px-8 py-2.5 rounded-lg text-sm font-bold text-white bg-accent-500 hover:bg-accent-600 transition-colors shadow-lg shadow-accent-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-download"></i> <span id="saveBtnText">Download Selected</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals Container -->
+    
+    <!-- Auto-Tag Modal -->
+    <div id="modalLookup" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 modal-backdrop" id="modalLookupBg"></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl w-full max-w-3xl z-10 flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850 rounded-t-xl">
+                <h3 class="text-lg font-bold text-white"><i class="fa-brands fa-itunes-note text-blue-400 mr-2"></i> iTunes Metadata Lookup</h3>
+                <button class="text-gray-400 hover:text-white" id="btnCloseLookup"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-4 border-b border-gray-700 flex gap-2">
+                <input type="text" id="lookupQuery" class="input-field flex-grow" placeholder="e.g. Daft Punk Get Lucky">
+                <button id="btnExecuteLookup" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors whitespace-nowrap">
+                    Search
+                </button>
+            </div>
+            <div id="lookupResults" class="flex-grow overflow-y-auto p-4 flex flex-col gap-3 min-h-[300px]">
+                <div class="text-center text-gray-500 mt-10" id="lookupStateMsg">Search for an artist, album, or track.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filename Tools Modal -->
+    <div id="modalFilename" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 modal-backdrop" id="modalFilenameBg"></div>
+        <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl w-full max-w-lg z-10 flex flex-col">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-850 rounded-t-xl">
+                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i> Filename Tools</h3>
+                <button class="text-gray-400 hover:text-white" id="btnCloseFilename"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 flex flex-col gap-6">
+                <!-- Tags to Filename -->
+                <div>
+                    <h4 class="text-sm font-bold text-white mb-2">Auto-Rename Output File</h4>
+                    <p class="text-xs text-gray-400 mb-3">Set how the file should be named when downloaded/saved.</p>
+                    <select id="filenameFormatSelect" class="input-field mb-2 cursor-pointer">
+                        <option value="%artist% - %title%">Artist - Title.mp3</option>
+                        <option value="%track% - %title%">Track - Title.mp3</option>
+                        <option value="%artist% - %album% - %track% - %title%">Artist - Album - Track - Title.mp3</option>
+                        <option value="original">Keep Original Filename</option>
+                        <option value="custom">Custom Format...</option>
+                    </select>
+                    <input type="text" id="customFilenameFormat" class="input-field hidden" placeholder="%artist% - %title%">
+                    <div class="text-xs text-gray-500 mt-2">Example: <span id="filenamePreview" class="text-accent-400">Loading...</span></div>
+                </div>
+
+                <hr class="border-gray-700">
+
+                <!-- Filename to Tags -->
+                <div>
+                    <h4 class="text-sm font-bold text-white mb-2">Extract Tags from Filename</h4>
+                    <p class="text-xs text-gray-400 mb-3">Attempt to fill missing tags by parsing the current filename.</p>
+                    <button id="btnParseFilename" class="w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded font-medium transition-colors border border-gray-600">
+                        Parse "%artist% - %title%"
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toasts Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        /**
+         * MetaTagger Pro - Batch Logic
+         */
+        
+        // Define common field mappings (UI ID to object key)
+        const TAG_FIELDS = [
+            'title', 'artist', 'album', 'albumArtist', 'genre', 'year',
+            'track', 'totalTracks', 'disc', 'totalDiscs', 'composer',
+            'publisher', 'bpm', 'isrc', 'grouping', 'compilation',
+            'comment', 'lyrics'
+        ];
+
+        const App = {
+            state: {
+                files: new Map(), // key: uuid, value: FileState object
+                selectedIds: new Set(),
+                activeId: null, // the one whose audio/artwork is currently primary
+                isPlaying: false,
+                filenameOutputFormat: '%artist% - %title%',
+                directoryHandle: null // For File System API
+            },
+
+            els: {
+                // Main Views
+                emptyView: document.getElementById('emptyView'),
+                sidebar: document.getElementById('sidebar'),
+                editorPanel: document.getElementById('editorPanel'),
+                dropOverlay: document.getElementById('dropOverlay'),
+                
+                // Inputs
+                initialFileInput: document.getElementById('initialFileInput'),
+                sidebarFileInput: document.getElementById('sidebarFileInput'),
+                
+                // Queue
+                queueList: document.getElementById('queueList'),
+                queueCount: document.getElementById('queueCount'),
+                selectionStatus: document.getElementById('selectionStatus'),
+                btnSelectAll: document.getElementById('btnSelectAll'),
+                btnClearQueue: document.getElementById('btnClearQueue'),
+                
+                // Mobile
+                btnMobileQueueToggle: document.getElementById('btnMobileQueueToggle'),
+                mobileQueueCount: document.getElementById('mobileQueueCount'),
+                mobileSelectionStatus: document.getElementById('mobileSelectionStatus'),
+                
+                // Editor & Multi-select
+                multiSelectNotice: document.getElementById('multiSelectNotice'),
+                multiSelectCount: document.getElementById('multiSelectCount'),
+                btnResetFields: document.getElementById('btnResetFields'),
+                
+                // Player & Artwork
+                playerContainer: document.getElementById('playerContainer'),
+                btnPlayPause: document.getElementById('btnPlayPause'),
+                playerTitle: document.getElementById('playerTitle'),
+                playerArtist: document.getElementById('playerArtist'),
+                timeCurrent: document.getElementById('timeCurrent'),
+                timeTotal: document.getElementById('timeTotal'),
+                seekSlider: document.getElementById('seekSlider'),
+                volumeSlider: document.getElementById('volumeSlider'),
+                audioElement: document.getElementById('audioElement'),
+                artworkPreview: document.getElementById('artworkPreview'),
+                artworkPlaceholder: document.getElementById('artworkPlaceholder'),
+                artworkPlaceholderText: document.getElementById('artworkPlaceholderText'),
+                artworkInput: document.getElementById('artworkInput'),
+                btnRemoveArtwork: document.getElementById('btnRemoveArtwork'),
+                artworkInfo: document.getElementById('artworkInfo'),
+                artworkDimensions: document.getElementById('artworkDimensions'),
+                
+                // Toolbar & Saving
+                btnToolbarTools: document.getElementById('btnToolbarTools'),
+                btnToolbarLookup: document.getElementById('btnToolbarLookup'),
+                btnSaveSelected: document.getElementById('btnSaveSelected'),
+                saveBtnText: document.getElementById('saveBtnText'),
+                btnSaveZIP: document.getElementById('btnSaveZIP'),
+                btnSaveDirectory: document.getElementById('btnSaveDirectory'),
+                
+                toastContainer: document.getElementById('toastContainer'),
+                
+                // Form references map
+                formInputs: {}
+            },
+
+            init() {
+                // Populate formInputs references
+                TAG_FIELDS.forEach(key => {
+                    const elId = `tag${key.charAt(0).toUpperCase() + key.slice(1)}`;
+                    this.els.formInputs[key] = document.getElementById(elId);
+                });
+
+                this.bindEvents();
+                this.setupModals();
+            },
+
+            bindEvents() {
+                // Drag & Drop
+                const handleDragOver = (e) => { e.preventDefault(); e.stopPropagation(); this.els.dropOverlay.classList.remove('hidden'); this.els.dropOverlay.classList.add('flex'); };
+                const handleDragLeave = (e) => { e.preventDefault(); e.stopPropagation(); this.els.dropOverlay.classList.add('hidden'); this.els.dropOverlay.classList.remove('flex'); };
+                
+                document.body.addEventListener('dragover', handleDragOver);
+                document.body.addEventListener('dragleave', (e) => {
+                    if (e.relatedTarget === null) handleDragLeave(e);
+                });
+                document.body.addEventListener('drop', (e) => {
+                    handleDragLeave(e);
+                    if (e.dataTransfer.files.length > 0) this.handleFiles(e.dataTransfer.files);
+                });
+
+                // File Inputs
+                this.els.initialFileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
+                this.els.sidebarFileInput.addEventListener('change', (e) => this.handleFiles(e.target.files));
+
+                // Queue Management
+                this.els.btnSelectAll.addEventListener('click', () => {
+                    this.state.selectedIds = new Set(this.state.files.keys());
+                    this.renderQueue();
+                    this.updateEditorView();
+                });
+                this.els.btnClearQueue.addEventListener('click', () => this.clearQueue());
+                
+                // Mobile toggle
+                this.els.btnMobileQueueToggle.addEventListener('click', () => {
+                    this.els.sidebar.classList.toggle('hidden');
+                    this.els.sidebar.classList.toggle('absolute');
+                    this.els.sidebar.classList.toggle('inset-0');
+                    this.els.sidebar.classList.toggle('z-40');
+                });
+
+                // Form Inputs Binding (Batch update logic)
+                Object.entries(this.els.formInputs).forEach(([key, input]) => {
+                    const eventType = input.type === 'checkbox' ? 'change' : 'input';
+                    input.addEventListener(eventType, (e) => {
+                        const val = input.type === 'checkbox' ? input.checked : input.value;
+                        
+                        // Clear mixed state visual if user starts typing
+                        if (input.classList.contains('mixed-values')) {
+                            input.classList.remove('mixed-values');
+                        }
+
+                        // Apply to all selected files
+                        this.state.selectedIds.forEach(id => {
+                            const fileData = this.state.files.get(id);
+                            if (fileData) {
+                                fileData.tags[key] = val;
+                                fileData.isModified = true;
+                            }
+                        });
+                        
+                        this.renderQueue(); // Update titles in list if title changed
+                        this.updatePlayerText();
+                    });
+                });
+
+                // Artwork Binding
+                this.els.artworkInput.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                        this.processUploadedArtwork(e.target.files[0]);
+                    }
+                    e.target.value = '';
+                });
+                this.els.btnRemoveArtwork.addEventListener('click', () => this.removeArtwork());
+                
+                // Reset / Revert
+                this.els.btnResetFields.addEventListener('click', () => {
+                    if (confirm('Revert all unsaved changes for the selected files?')) {
+                        this.state.selectedIds.forEach(id => {
+                            const f = this.state.files.get(id);
+                            f.tags = JSON.parse(JSON.stringify(f.originalTags)); // deep clone reset
+                            f.artwork = f.originalArtwork ? { ...f.originalArtwork } : { buffer: null, mimeType: null, url: null };
+                            f.isModified = false;
+                        });
+                        this.updateEditorView();
+                        this.renderQueue();
+                    }
+                });
+
+                // Audio Player
+                this.els.btnPlayPause.addEventListener('click', () => this.togglePlay());
+                this.els.audioElement.addEventListener('timeupdate', () => this.updateTime());
+                this.els.audioElement.addEventListener('loadedmetadata', () => {
+                    this.els.timeTotal.textContent = this.formatTime(this.els.audioElement.duration);
+                });
+                this.els.audioElement.addEventListener('ended', () => {
+                    this.state.isPlaying = false;
+                    this.updatePlayBtnIcon();
+                    this.els.seekSlider.value = 0;
+                    this.els.timeCurrent.textContent = '0:00';
+                });
+                this.els.seekSlider.addEventListener('input', () => {
+                    const time = (this.els.seekSlider.value / 100) * this.els.audioElement.duration;
+                    this.els.timeCurrent.textContent = this.formatTime(time);
+                });
+                this.els.seekSlider.addEventListener('change', () => {
+                    this.els.audioElement.currentTime = (this.els.seekSlider.value / 100) * this.els.audioElement.duration;
+                });
+                this.els.volumeSlider.addEventListener('input', () => {
+                    this.els.audioElement.volume = this.els.volumeSlider.value / 100;
+                });
+
+                // Advanced Metadata Toggle
+                document.getElementById('btnToggleAdvanced').addEventListener('click', () => {
+                    document.getElementById('advancedSection').classList.toggle('hidden');
+                    document.getElementById('iconAdvanced').classList.toggle('rotate-180');
+                });
+                
+                // Saving Actions
+                this.els.btnSaveSelected.addEventListener('click', () => this.saveSelectedFiles());
+                this.els.btnSaveZIP.addEventListener('click', () => this.exportZIP());
+                this.els.btnSaveDirectory.addEventListener('click', () => this.saveToDirectory());
+            },
+
+            async handleFiles(fileList) {
+                const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.mp3') || f.type === 'audio/mpeg');
+                if (files.length === 0) {
+                    this.showToast('No valid MP3 files selected.', 'error');
+                    return;
+                }
+
+                this.showToast(`Loading ${files.length} file(s)...`, 'info');
+                
+                // Switch UI view
+                this.els.emptyView.classList.add('hidden');
+                this.els.sidebar.classList.remove('hidden');
+                this.els.editorPanel.classList.remove('hidden');
+
+                let firstNewId = null;
+
+                for (let file of files) {
+                    const id = crypto.randomUUID();
+                    if (!firstNewId) firstNewId = id;
+                    
+                    try {
+                        const buffer = await this.readFileAsArrayBuffer(file);
+                        const tagsData = await this.readID3Tags(file);
+                        
+                        const fileState = {
+                            id,
+                            filename: file.name,
+                            fileObj: file,
+                            originalBuffer: buffer,
+                            originalTags: tagsData.tags,
+                            tags: JSON.parse(JSON.stringify(tagsData.tags)), // Working copy
+                            originalArtwork: tagsData.artwork,
+                            artwork: tagsData.artwork ? { ...tagsData.artwork } : { buffer: null, mimeType: null, url: null },
+                            isModified: false,
+                            audioUrl: URL.createObjectURL(file)
+                        };
+                        
+                        this.state.files.set(id, fileState);
+                    } catch (e) {
+                        console.error("Error processing", file.name, e);
+                    }
+                }
+
+                this.updateCounts();
+                this.renderQueue();
+                
+                // Select first newly added file if none selected
+                if (firstNewId && this.state.selectedIds.size === 0) {
+                    this.selectFile(firstNewId, false);
+                }
+                
+                // Enable tools
+                this.els.btnToolbarTools.disabled = false;
+                this.els.btnToolbarLookup.disabled = false;
+            },
+
+            readFileAsArrayBuffer(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.onerror = e => reject(e);
+                    reader.readAsArrayBuffer(file);
+                });
+            },
+
+            readID3Tags(file) {
+                return new Promise((resolve) => {
+                    jsmediatags.read(file, {
+                        onSuccess: (tag) => {
+                            const t = tag.tags;
+                            const parsedTags = {
+                                title: t.title || '',
+                                artist: t.artist || '',
+                                album: t.album || '',
+                                albumArtist: t.TPE2?.data || '',
+                                genre: t.genre || '',
+                                year: t.year || t.TYER?.data || '',
+                                track: t.track ? String(t.track).split('/')[0] : '',
+                                totalTracks: t.track && String(t.track).includes('/') ? String(t.track).split('/')[1] : '',
+                                disc: t.TPOS?.data ? String(t.TPOS.data).split('/')[0] : '',
+                                totalDiscs: t.TPOS?.data && String(t.TPOS.data).includes('/') ? String(t.TPOS.data).split('/')[1] : '',
+                                composer: t.TCOM?.data || '',
+                                publisher: t.TPUB?.data || '',
+                                bpm: t.TBPM?.data || '',
+                                isrc: t.TSRC?.data || '',
+                                grouping: t.TIT1?.data || '',
+                                compilation: t.TCMP?.data === '1' || t.TCMP?.data === 1 || false,
+                                comment: t.comment ? t.comment.text : (t.COMM?.data?.text || ''),
+                                lyrics: t.USLT?.data?.lyrics || ''
+                            };
+
+                            let artwork = null;
+                            if (t.picture) {
+                                const { data, format } = t.picture;
+                                const buffer = new Uint8Array(data).buffer;
+                                let base64String = "";
+                                for (let i = 0; i < data.length; i++) base64String += String.fromCharCode(data[i]);
+                                const url = `data:${format};base64,${window.btoa(base64String)}`;
+                                artwork = { buffer, mimeType: format, url };
+                            }
+
+                            resolve({ tags: parsedTags, artwork });
+                        },
+                        onError: () => resolve({ tags: this.getEmptyTags(), artwork: null })
+                    });
+                });
+            },
+
+            getEmptyTags() {
+                const empty = {};
+                TAG_FIELDS.forEach(k => empty[k] = (k === 'compilation' ? false : ''));
+                return empty;
+            },
+
+            renderQueue() {
+                this.els.queueList.innerHTML = '';
+                
+                this.state.files.forEach(f => {
+                    const isSelected = this.state.selectedIds.has(f.id);
+                    const isActive = this.state.activeId === f.id;
+                    
+                    const div = document.createElement('div');
+                    div.className = `queue-item flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors border ${isSelected ? 'selected' : 'border-transparent hover:bg-gray-700/50'}`;
+                    
+                    // Simple Artwork thumbnail
+                    const thumbStr = f.artwork?.url 
+                        ? `<img src="${f.artwork.url}" class="w-10 h-10 rounded object-cover shadow">`
+                        : `<div class="w-10 h-10 rounded bg-gray-700 flex items-center justify-center text-gray-500 shadow"><i class="fa-solid fa-music"></i></div>`;
+                    
+                    const displayTitle = f.tags.title || f.filename;
+                    const displayArtist = f.tags.artist || 'Unknown Artist';
+                    const modIndicator = f.isModified ? `<span class="w-2 h-2 rounded-full bg-accent-500 shadow-[0_0_5px_#8b5cf6]" title="Unsaved changes"></span>` : '';
+
+                    div.innerHTML = `
+                        <div class="shrink-0 relative">
+                            ${thumbStr}
+                            ${isActive ? '<div class="absolute inset-0 bg-black/40 rounded flex items-center justify-center"><i class="fa-solid fa-volume-high text-accent-400 text-xs shadow-black"></i></div>' : ''}
+                        </div>
+                        <div class="flex-grow overflow-hidden">
+                            <div class="text-sm font-semibold text-white truncate flex items-center gap-2">${displayTitle} ${modIndicator}</div>
+                            <div class="text-xs text-gray-400 truncate">${displayArtist}</div>
+                        </div>
+                    `;
+
+                    div.addEventListener('click', (e) => {
+                        this.handleQueueClick(f.id, e);
+                    });
+                    
+                    this.els.queueList.appendChild(div);
+                });
+                
+                this.updateCounts();
+            },
+
+            handleQueueClick(id, event) {
+                if (event.ctrlKey || event.metaKey) {
+                    // Toggle selection
+                    if (this.state.selectedIds.has(id)) {
+                        this.state.selectedIds.delete(id);
+                    } else {
+                        this.state.selectedIds.add(id);
+                        this.state.activeId = id; // Make active if newly added
+                    }
+                } else if (event.shiftKey && this.state.activeId) {
+                    // Range selection (simplified: map iteration order)
+                    const ids = Array.from(this.state.files.keys());
+                    const startIdx = ids.indexOf(this.state.activeId);
+                    const endIdx = ids.indexOf(id);
+                    
+                    if (startIdx !== -1 && endIdx !== -1) {
+                        const min = Math.min(startIdx, endIdx);
+                        const max = Math.max(startIdx, endIdx);
+                        this.state.selectedIds.clear();
+                        for (let i = min; i <= max; i++) {
+                            this.state.selectedIds.add(ids[i]);
+                        }
+                    }
+                } else {
+                    // Single select
+                    this.state.selectedIds.clear();
+                    this.state.selectedIds.add(id);
+                    this.state.activeId = id;
+                }
+                
+                // Ensure activeId is within selection
+                if (!this.state.selectedIds.has(this.state.activeId)) {
+                    this.state.activeId = Array.from(this.state.selectedIds)[0] || null;
+                }
+
+                this.renderQueue();
+                this.updateEditorView();
+            },
+
+            updateCounts() {
+                const total = this.state.files.size;
+                const sel = this.state.selectedIds.size;
+                this.els.queueCount.textContent = total;
+                this.els.mobileQueueCount.textContent = total;
+                
+                const selText = `${sel} selected`;
+                this.els.selectionStatus.textContent = selText;
+                this.els.mobileSelectionStatus.textContent = selText;
+                
+                this.els.btnSaveSelected.disabled = sel === 0;
+                this.els.saveBtnText.textContent = sel > 1 ? `Save ${sel} Files` : `Save & Download`;
+            },
+
+            clearQueue() {
+                if (!confirm('Clear the entire queue? Unsaved changes will be lost.')) return;
+                
+                // revoke urls
+                this.state.files.forEach(f => {
+                    if(f.audioUrl) URL.revokeObjectURL(f.audioUrl);
+                    if(f.artwork?.url && f.artwork.url.startsWith('blob:')) URL.revokeObjectURL(f.artwork.url);
+                });
+                
+                this.state.files.clear();
+                this.state.selectedIds.clear();
+                this.state.activeId = null;
+                
+                this.els.audioElement.pause();
+                this.els.audioElement.removeAttribute('src');
+                
+                this.els.sidebar.classList.add('hidden');
+                this.els.editorPanel.classList.add('hidden');
+                this.els.emptyView.classList.remove('hidden');
+                
+                this.els.btnToolbarTools.disabled = true;
+                this.els.btnToolbarLookup.disabled = true;
+                
+                this.renderQueue();
+            },
+
+            selectFile(id, isMulti) {
+                if (!isMulti) this.state.selectedIds.clear();
+                this.state.selectedIds.add(id);
+                this.state.activeId = id;
+                this.renderQueue();
+                this.updateEditorView();
+            },
+
+            updateEditorView() {
+                const selCount = this.state.selectedIds.size;
+                
+                if (selCount === 0) {
+                    // Clear form
+                    Object.values(this.els.formInputs).forEach(inp => {
+                        if (inp.type === 'checkbox') inp.checked = false;
+                        else inp.value = '';
+                        inp.disabled = true;
+                    });
+                    this.removeArtwork(true);
+                    this.els.playerContainer.classList.add('opacity-50', 'pointer-events-none');
+                    this.els.multiSelectNotice.classList.add('hidden');
+                    return;
+                }
+
+                // Enable forms
+                Object.values(this.els.formInputs).forEach(inp => inp.disabled = false);
+                this.els.playerContainer.classList.remove('opacity-50', 'pointer-events-none');
+
+                if (selCount === 1) {
+                    this.els.multiSelectNotice.classList.add('hidden');
+                    // Populate exact values for the 1 file
+                    const file = this.state.files.get(this.state.activeId);
+                    this.populateFormExact(file);
+                    this.updatePlayerText();
+                    
+                    // Audio Player setup
+                    if (this.els.audioElement.src !== file.audioUrl) {
+                        this.els.audioElement.src = file.audioUrl;
+                        if(this.state.isPlaying) this.els.audioElement.play();
+                    }
+                } else {
+                    // Multi-select mode
+                    this.els.multiSelectNotice.classList.remove('hidden');
+                    this.els.multiSelectCount.textContent = selCount;
+                    
+                    this.populateFormMixed();
+                    this.els.playerTitle.textContent = `${selCount} files selected`;
+                    this.els.playerArtist.textContent = "Batch Mode";
+                    
+                    // Keep active audio playing but maybe pause it visually
+                }
+                
+                // Artwork display: Show active file's artwork, or mixed placeholder
+                const activeFile = this.state.files.get(this.state.activeId);
+                if (selCount > 1) {
+                     this.setArtworkUI(activeFile.artwork, true); // true = show mixed hint
+                } else {
+                     this.setArtworkUI(activeFile.artwork, false);
+                }
+            },
+
+            populateFormExact(file) {
+                TAG_FIELDS.forEach(key => {
+                    const input = this.els.formInputs[key];
+                    input.classList.remove('mixed-values');
+                    input.placeholder = this.getDefaultPlaceholder(key);
+                    
+                    if (input.type === 'checkbox') {
+                        input.checked = !!file.tags[key];
+                    } else {
+                        input.value = file.tags[key] || '';
+                    }
+                });
+            },
+
+            populateFormMixed() {
+                // For each field, check if all selected files share the same value
+                TAG_FIELDS.forEach(key => {
+                    const input = this.els.formInputs[key];
+                    
+                    let firstVal = undefined;
+                    let isMixed = false;
+                    
+                    for (let id of this.state.selectedIds) {
+                        const val = this.state.files.get(id).tags[key];
+                        if (firstVal === undefined) {
+                            firstVal = val;
+                        } else if (firstVal !== val) {
+                            isMixed = true;
+                            break;
+                        }
+                    }
+
+                    if (input.type === 'checkbox') {
+                        // Checkboxes don't have placeholders, just uncheck or indeterminate
+                        input.checked = isMixed ? false : !!firstVal;
+                        input.indeterminate = isMixed;
+                    } else {
+                        if (isMixed) {
+                            input.value = '';
+                            input.placeholder = '<Multiple Values>';
+                            input.classList.add('mixed-values');
+                        } else {
+                            input.value = firstVal || '';
+                            input.placeholder = this.getDefaultPlaceholder(key);
+                            input.classList.remove('mixed-values');
+                        }
+                    }
+                });
+            },
+
+            getDefaultPlaceholder(key) {
+                const map = {
+                    title: 'Track Title', artist: 'Artist Name', album: 'Album Name', year: 'YYYY'
+                };
+                return map[key] || '';
+            },
+
+            updatePlayerText() {
+                if (this.state.selectedIds.size === 1) {
+                    const file = this.state.files.get(this.state.activeId);
+                    this.els.playerTitle.textContent = file.tags.title || file.filename;
+                    this.els.playerArtist.textContent = file.tags.artist || 'Unknown Artist';
+                }
+            },
+
+            processUploadedArtwork(file) {
+                const MAX_SIZE = 800;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > MAX_SIZE || height > MAX_SIZE) {
+                            if (width > height) { height = Math.round((height *= MAX_SIZE / width)); width = MAX_SIZE; }
+                            else { width = Math.round((width *= MAX_SIZE / height)); height = MAX_SIZE; }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            const url = URL.createObjectURL(blob);
+                            blob.arrayBuffer().then(buffer => {
+                                const newArt = { buffer, mimeType: 'image/jpeg', url, width, height };
+                                
+                                // Apply to all selected files
+                                this.state.selectedIds.forEach(id => {
+                                    const f = this.state.files.get(id);
+                                    if(f.artwork?.url && f.artwork.url.startsWith('blob:')) URL.revokeObjectURL(f.artwork.url);
+                                    f.artwork = { ...newArt };
+                                    f.isModified = true;
+                                });
+                                
+                                this.setArtworkUI(newArt, false);
+                                this.renderQueue(); // Update thumbs
+                            });
+                        }, 'image/jpeg', 0.9);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            setArtworkUI(artwork, isMixedWarning) {
+                if (artwork && artwork.buffer) {
+                    this.els.artworkPreview.src = artwork.url;
+                    this.els.artworkPreview.classList.remove('hidden');
+                    this.els.artworkPlaceholder.classList.add('hidden');
+                    this.els.btnRemoveArtwork.classList.remove('hidden');
+                    
+                    const typeText = artwork.mimeType === 'image/jpeg' ? 'JPEG' : 'PNG';
+                    this.els.artworkInfo.innerHTML = isMixedWarning ? `<span class="text-yellow-500">Batch update will override</span>` : typeText;
+                    this.els.artworkDimensions.textContent = artwork.width ? `${artwork.width}x${artwork.height}` : '';
+                } else {
+                    this.els.artworkPreview.src = '';
+                    this.els.artworkPreview.classList.add('hidden');
+                    this.els.artworkPlaceholder.classList.remove('hidden');
+                    this.els.btnRemoveArtwork.classList.add('hidden');
+                    this.els.artworkPlaceholderText.textContent = isMixedWarning ? 'Multiple Covers Selected' : 'No Artwork';
+                    this.els.artworkInfo.textContent = 'No image';
+                    this.els.artworkDimensions.textContent = '';
+                }
+            },
+
+            removeArtwork(bypassApply = false) {
+                if (!bypassApply) {
+                    this.state.selectedIds.forEach(id => {
+                        const f = this.state.files.get(id);
+                        f.artwork = { buffer: null, mimeType: null, url: null };
+                        f.isModified = true;
+                    });
+                    this.renderQueue();
+                }
+                this.setArtworkUI(null, false);
+            },
+
+            togglePlay() {
+                if(!this.state.activeId) return;
+                if (this.state.isPlaying) this.els.audioElement.pause();
+                else this.els.audioElement.play();
+                
+                this.state.isPlaying = !this.state.isPlaying;
+                this.updatePlayBtnIcon();
+            },
+            
+            updatePlayBtnIcon() {
+                this.els.btnPlayPause.innerHTML = this.state.isPlaying 
+                    ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play ml-0.5"></i>';
+            },
+            
+            updateTime() {
+                const current = this.els.audioElement.currentTime;
+                const duration = this.els.audioElement.duration;
+                if (!duration) return;
+                this.els.timeCurrent.textContent = this.formatTime(current);
+                if (!this.els.seekSlider.matches(':active')) {
+                    this.els.seekSlider.value = (current / duration) * 100;
+                }
+            },
+
+            async generateMp3Blob(fileData) {
+                const module = await import('https://cdn.jsdelivr.net/npm/browser-id3-writer@6.4.0/dist/browser-id3-writer.mjs');
+                const ID3Writer = module.ID3Writer;
+                
+                const writer = new ID3Writer(fileData.originalBuffer.slice(0));
+                const tags = fileData.tags;
+                
+                if (tags.title) writer.setFrame('TIT2', tags.title);
+                if (tags.artist) writer.setFrame('TPE1', [tags.artist]);
+                if (tags.album) writer.setFrame('TALB', tags.album);
+                if (tags.albumArtist) writer.setFrame('TPE2', tags.albumArtist);
+                if (tags.genre) writer.setFrame('TCON', [tags.genre]);
+                if (tags.year) writer.setFrame('TYER', isNaN(parseInt(tags.year)) ? tags.year : parseInt(tags.year));
+                
+                let trck = tags.track; if(tags.totalTracks) trck += `/${tags.totalTracks}`;
+                if (trck) writer.setFrame('TRCK', trck);
+                
+                let tpos = tags.disc; if(tags.totalDiscs) tpos += `/${tags.totalDiscs}`;
+                if (tpos) writer.setFrame('TPOS', tpos);
+
+                if (tags.composer) writer.setFrame('TCOM', [tags.composer]);
+                if (tags.publisher) writer.setFrame('TPUB', tags.publisher);
+                
+                try { if (tags.grouping) writer.setFrame('TIT1', tags.grouping); } catch(e){}
+                try { if (tags.bpm) writer.setFrame('TBPM', tags.bpm); } catch(e){}
+                try { if (tags.isrc) writer.setFrame('TSRC', tags.isrc); } catch(e){}
+                try { if (tags.compilation) writer.setFrame('TCMP', '1'); } catch(e){}
+                
+                if (tags.comment) writer.setFrame('COMM', { description: '', text: tags.comment, language: 'eng' });
+                if (tags.lyrics) writer.setFrame('USLT', { description: '', lyrics: tags.lyrics, language: 'eng' });
+
+                if (fileData.artwork && fileData.artwork.buffer) {
+                    writer.setFrame('APIC', { type: 3, data: fileData.artwork.buffer, description: 'Cover' });
+                }
+
+                writer.addTag();
+                return new Blob([writer.arrayBuffer], { type: 'audio/mpeg' });
+            },
+
+            getOutputFilename(fileData) {
+                let outName = fileData.filename; // fallback
+                const format = this.state.filenameOutputFormat;
+                
+                if (format !== 'original') {
+                    outName = format
+                        .replace('%artist%', fileData.tags.artist || 'Unknown Artist')
+                        .replace('%title%', fileData.tags.title || 'Unknown Title')
+                        .replace('%album%', fileData.tags.album || 'Unknown Album')
+                        .replace('%track%', (fileData.tags.track || '').padStart(2, '0'));
+                    
+                    outName += '.mp3';
+                    // clean invalid chars
+                    outName = outName.replace(/[<>:"/\\|?*]/g, '');
+                }
+                return outName;
+            },
+
+            async saveSelectedFiles() {
+                if (this.state.selectedIds.size === 0) return;
+                
+                this.els.btnSaveSelected.disabled = true;
+                this.showToast(`Processing ${this.state.selectedIds.size} file(s)...`, 'info');
+                
+                for (let id of this.state.selectedIds) {
+                    const fileData = this.state.files.get(id);
+                    try {
+                        const blob = await this.generateMp3Blob(fileData);
+                        const filename = this.getOutputFilename(fileData);
+                        
+                        // Standard download link approach
+                        const downloadUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = downloadUrl; a.download = filename;
+                        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                        setTimeout(() => URL.revokeObjectURL(downloadUrl), 2000);
+                        
+                        fileData.isModified = false;
+                    } catch (e) {
+                        this.showToast(`Error saving ${fileData.filename}`, 'error');
+                        console.error(e);
+                    }
+                }
+                
+                this.renderQueue();
+                this.els.btnSaveSelected.disabled = false;
+                this.showToast('Downloads triggered.', 'success');
+            },
+
+            async exportZIP() {
+                if (this.state.files.size === 0) return;
+                
+                this.showToast('Generating ZIP archive... this may take a moment for large queues.', 'info');
+                this.els.btnSaveZIP.disabled = true;
+                
+                try {
+                    const zip = new JSZip();
+                    let count = 0;
+                    
+                    // Iterate all modified OR selected? Let's do ALL files in queue to be safe.
+                    for (let [id, fileData] of this.state.files) {
+                        const blob = await this.generateMp3Blob(fileData);
+                        zip.file(this.getOutputFilename(fileData), blob);
+                        count++;
+                    }
+                    
+                    const zipBlob = await zip.generateAsync({ type: 'blob' });
+                    const downloadUrl = URL.createObjectURL(zipBlob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl; a.download = `MetaTagger_Export_${new Date().getTime()}.zip`;
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(downloadUrl), 2000);
+                    
+                    this.showToast(`ZIP created successfully with ${count} files!`, 'success');
+                } catch (e) {
+                    this.showToast('Failed to create ZIP', 'error');
+                    console.error(e);
+                } finally {
+                    this.els.btnSaveZIP.disabled = false;
+                }
+            },
+
+            async saveToDirectory() {
+                if (!('showDirectoryPicker' in window)) {
+                    this.showToast('Your browser does not support folder saving. Please use Export ZIP.', 'error');
+                    return;
+                }
+
+                try {
+                    const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                    this.showToast('Saving files to folder...', 'info');
+                    
+                    for (let id of this.state.selectedIds) {
+                        const fileData = this.state.files.get(id);
+                        const blob = await this.generateMp3Blob(fileData);
+                        const filename = this.getOutputFilename(fileData);
+                        
+                        const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(blob);
+                        await writable.close();
+                        
+                        fileData.isModified = false;
+                    }
+                    
+                    this.renderQueue();
+                    this.showToast('Saved to folder successfully.', 'success');
+                } catch (e) {
+                    if (e.name !== 'AbortError') {
+                        this.showToast('Failed to save to folder.', 'error');
+                        console.error(e);
+                    }
+                }
+            },
+
+            setupModals() {
+                // iTunes Lookup
+                document.getElementById('btnToolbarLookup').addEventListener('click', () => {
+                    const activeFile = this.state.files.get(this.state.activeId);
+                    if(activeFile) {
+                        const query = `${activeFile.tags.artist} ${activeFile.tags.title}`.trim();
+                        document.getElementById('lookupQuery').value = query || activeFile.filename.replace('.mp3','');
+                    }
+                    document.getElementById('modalLookup').classList.remove('hidden');
+                    document.getElementById('modalLookup').classList.add('flex');
+                });
+                
+                const closeLookup = () => { document.getElementById('modalLookup').classList.add('hidden'); document.getElementById('modalLookup').classList.remove('flex'); };
+                document.getElementById('btnCloseLookup').addEventListener('click', closeLookup);
+                document.getElementById('modalLookupBg').addEventListener('click', closeLookup);
+
+                document.getElementById('btnExecuteLookup').addEventListener('click', () => this.executeiTunesSearch());
+                document.getElementById('lookupQuery').addEventListener('keypress', (e) => { if(e.key==='Enter') this.executeiTunesSearch(); });
+
+                // Filename Tools
+                document.getElementById('btnToolbarTools').addEventListener('click', () => {
+                    this.updateFilenamePreview();
+                    document.getElementById('modalFilename').classList.remove('hidden');
+                    document.getElementById('modalFilename').classList.add('flex');
+                });
+                
+                const closeFilename = () => { document.getElementById('modalFilename').classList.add('hidden'); document.getElementById('modalFilename').classList.remove('flex'); };
+                document.getElementById('btnCloseFilename').addEventListener('click', closeFilename);
+                document.getElementById('modalFilenameBg').addEventListener('click', closeFilename);
+                
+                // Filename settings
+                const selFormat = document.getElementById('filenameFormatSelect');
+                const customInp = document.getElementById('customFilenameFormat');
+                
+                selFormat.addEventListener('change', (e) => {
+                    if (e.target.value === 'custom') {
+                        customInp.classList.remove('hidden');
+                        this.state.filenameOutputFormat = customInp.value;
+                    } else {
+                        customInp.classList.add('hidden');
+                        this.state.filenameOutputFormat = e.target.value;
+                    }
+                    this.updateFilenamePreview();
+                });
+                customInp.addEventListener('input', (e) => {
+                    this.state.filenameOutputFormat = e.target.value;
+                    this.updateFilenamePreview();
+                });
+                
+                document.getElementById('btnParseFilename').addEventListener('click', () => {
+                    this.parseTagsFromFilenames();
+                    closeFilename();
+                });
+            },
+            
+            updateFilenamePreview() {
+                if (!this.state.activeId) return;
+                const fileData = this.state.files.get(this.state.activeId);
+                const prevEl = document.getElementById('filenamePreview');
+                prevEl.textContent = this.getOutputFilename(fileData);
+            },
+
+            parseTagsFromFilenames() {
+                let updated = 0;
+                this.state.selectedIds.forEach(id => {
+                    const f = this.state.files.get(id);
+                    // simple logic: "Artist - Title.mp3"
+                    const base = f.filename.replace(/\.[^/.]+$/, "");
+                    const parts = base.split(' - ');
+                    if (parts.length === 2) {
+                        f.tags.artist = parts[0].trim();
+                        f.tags.title = parts[1].trim();
+                        f.isModified = true;
+                        updated++;
+                    }
+                });
+                this.updateEditorView();
+                this.renderQueue();
+                this.showToast(`Parsed tags for ${updated} file(s).`, 'success');
+            },
+
+            async executeiTunesSearch() {
+                const q = document.getElementById('lookupQuery').value.trim();
+                if(!q) return;
+                
+                const container = document.getElementById('lookupResults');
+                container.innerHTML = '<div class="text-center text-gray-400 mt-10"><i class="fa-solid fa-circle-notch fa-spin text-2xl text-accent-500 mb-2"></i><br>Searching iTunes...</div>';
+                
+                try {
+                    const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=15`);
+                    const data = await response.json();
+                    
+                    if (data.results.length === 0) {
+                        container.innerHTML = '<div class="text-center text-gray-500 mt-10">No results found. Try a different query.</div>';
+                        return;
+                    }
+                    
+                    container.innerHTML = '';
+                    data.results.forEach(track => {
+                        const hiResImg = track.artworkUrl100 ? track.artworkUrl100.replace('100x100bb', '600x600bb') : '';
+                        
+                        const div = document.createElement('div');
+                        div.className = "flex gap-4 p-3 bg-gray-900 border border-gray-700 rounded-lg hover:border-accent-500 transition-colors group";
+                        
+                        div.innerHTML = `
+                            <img src="${track.artworkUrl100 || ''}" class="w-16 h-16 rounded object-cover shadow-md bg-gray-800 shrink-0">
+                            <div class="flex-grow flex flex-col justify-center">
+                                <h4 class="text-white font-bold text-sm leading-tight">${track.trackName}</h4>
+                                <div class="text-xs text-gray-400 mt-0.5">${track.artistName} • ${track.collectionName}</div>
+                                <div class="text-[10px] text-gray-500 mt-1 flex gap-2">
+                                    <span><i class="fa-solid fa-calendar mr-1"></i>${track.releaseDate ? track.releaseDate.substring(0,4) : 'N/A'}</span>
+                                    <span><i class="fa-solid fa-music mr-1"></i>${track.primaryGenreName}</span>
+                                </div>
+                            </div>
+                            <button class="self-center px-4 py-2 bg-accent-500 hover:bg-accent-600 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-all transform group-hover:-translate-x-1 shadow-lg">
+                                Apply
+                            </button>
+                        `;
+                        
+                        div.querySelector('button').addEventListener('click', () => {
+                            this.applyiTunesMetadata(track, hiResImg);
+                            document.getElementById('btnCloseLookup').click();
+                        });
+                        
+                        container.appendChild(div);
+                    });
+                    
+                } catch (e) {
+                    container.innerHTML = '<div class="text-center text-red-400 mt-10">Error connecting to iTunes API.</div>';
+                }
+            },
+
+            async applyiTunesMetadata(track, imageUrl) {
+                this.showToast('Applying metadata...', 'info');
+                
+                // Fetch image buffer
+                let newArtwork = null;
+                if (imageUrl) {
+                    try {
+                        const imgRes = await fetch(imageUrl);
+                        const blob = await imgRes.blob();
+                        const buffer = await blob.arrayBuffer();
+                        const objUrl = URL.createObjectURL(blob);
+                        
+                        // We assume JPEG from iTunes
+                        newArtwork = { buffer, mimeType: 'image/jpeg', url: objUrl, width: 600, height: 600 };
+                    } catch (e) {
+                        console.error('Failed to fetch high-res cover:', e);
+                    }
+                }
+                
+                const year = track.releaseDate ? track.releaseDate.substring(0,4) : '';
+                
+                this.state.selectedIds.forEach(id => {
+                    const f = this.state.files.get(id);
+                    if (track.trackName) f.tags.title = track.trackName;
+                    if (track.artistName) f.tags.artist = track.artistName;
+                    if (track.collectionName) f.tags.album = track.collectionName;
+                    if (track.primaryGenreName) f.tags.genre = track.primaryGenreName;
+                    if (year) f.tags.year = year;
+                    if (track.trackNumber) f.tags.track = track.trackNumber;
+                    if (track.trackCount) f.tags.totalTracks = track.trackCount;
+                    if (track.discNumber) f.tags.disc = track.discNumber;
+                    if (track.discCount) f.tags.totalDiscs = track.discCount;
+                    
+                    if (newArtwork) {
+                        if(f.artwork?.url && f.artwork.url.startsWith('blob:')) URL.revokeObjectURL(f.artwork.url);
+                        f.artwork = { ...newArtwork };
+                    }
+                    f.isModified = true;
+                });
+                
+                this.updateEditorView();
+                this.renderQueue();
+                this.showToast('Metadata applied successfully!', 'success');
+            },
+
+            // Utils
+            formatTime(seconds) {
+                if (isNaN(seconds)) return '0:00';
+                const m = Math.floor(seconds / 60);
+                const s = Math.floor(seconds % 60);
+                return `${m}:${s.toString().padStart(2, '0')}`;
+            },
+            
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                let icon = 'fa-info-circle text-blue-400';
+                let border = 'border-blue-500/30';
+                let bg = 'bg-blue-500/10 backdrop-blur-md';
+                
+                if (type === 'success') { icon = 'fa-check-circle text-green-400'; border = 'border-green-500/30'; bg = 'bg-green-500/10 backdrop-blur-md'; } 
+                else if (type === 'error') { icon = 'fa-exclamation-circle text-red-400'; border = 'border-red-500/30'; bg = 'bg-red-500/10 backdrop-blur-md'; }
+
+                toast.className = `flex items-center gap-3 border ${border} ${bg} shadow-2xl rounded-lg px-4 py-3 text-sm font-medium text-white toast-enter pointer-events-auto min-w-[250px]`;
+                toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+                
+                this.els.toastContainer.appendChild(toast);
+                void toast.offsetWidth; // Reflow
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-enter-active');
+                
+                setTimeout(() => {
+                    toast.classList.remove('toast-enter-active');
+                    toast.classList.add('toast-leave', 'toast-leave-active');
+                    setTimeout(() => toast.remove(), 300);
+                }, 4000);
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+</body>
+</html>
