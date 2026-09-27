@@ -1,8 +1,10 @@
 [
   {
+    "demoUrl": "",
+    "repoUrl": "",
     "title": "MetaTagger Pro",
     "slug": "metatagger",
-    "description": "MetaTagger Pro is a browser-based MP3 metadata and artwork editor built for musicians, producers, DJs, and anyone preparing music for release or distribution.  Clean up and organise your tracks in bulk by editing ID3 tags, adding album artwork, and filling in track details with iTunes lookup. Preview your audio as you work, then export your finished MP3s individually, to a folder, or bundled into a ZIP. Get your MP3s properly tagged, artwork-ready, and organised before you send them out, upload them, or share them.",
+    "description": "MetaTagger Pro lets musicians and producers quickly tag, artwork and organise their MP3s, entirely in the browser.",
     "thumbnail": "assets/thumbs/metatagger.jpg",
     "tags": [
       "Data",
@@ -13,9 +15,7 @@
     ],
     "category": "Tools",
     "featured": true,
-    "date": "2026-09-27",
-    "demoUrl": "",
-    "repoUrl": ""
+    "date": "2026-09-27"
   },
   {
     "title": "TraceCam",
