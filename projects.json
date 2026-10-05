@@ -1,5 +1,24 @@
 [
   {
+    "title": "PS4 DAL",
+    "slug": "ps4",
+    "description": "PS4-DAL is a beautiful, PS4-styled digital archive interface for browsing and downloading validated PlayStation 4 FPKG backups directly in your browser.",
+    "thumbnail": "assets/thumbs/ps4.jpg",
+    "tags": [
+      "DAL",
+      "Download",
+      "PKG",
+      "PS4",
+      "Playstation",
+      "games"
+    ],
+    "category": "Experiments",
+    "featured": true,
+    "date": "2026-10-05",
+    "demoUrl": "",
+    "repoUrl": ""
+  },
+  {
     "demoUrl": "",
     "repoUrl": "",
     "title": "MetaTagger Pro",
