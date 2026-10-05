@@ -21,9 +21,22 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=SST:wght@300;400;500;700&display=swap');
 
+        /* Theme CSS Variables */
+        :root {
+            --bg-1: #004cba;
+            --bg-2: #001a4d;
+            --bg-1-pulse: #005ce6;
+            --bg-2-pulse: #001133;
+            --theme-btn: #2563eb;
+            --theme-btn-hover: #1d4ed8;
+            --theme-btn-text: #ffffff;
+            --theme-nav-active: #ffffff;
+            --theme-nav-text: #000000;
+        }
+
         /* PS4 UI Base Configuration */
         body {
-            background-color: #003791;
+            background-color: var(--bg-2);
             color: #ffffff;
             font-family: 'SST', 'Open Sans', system-ui, -apple-system, sans-serif;
             overflow: hidden; 
@@ -44,13 +57,13 @@
             width: 100vw; height: 100vh;
             z-index: -1;
             overflow: hidden;
-            background: radial-gradient(circle at 50% 50%, #004cba 0%, #001a4d 100%);
+            background: radial-gradient(circle at 50% 50%, var(--bg-1) 0%, var(--bg-2) 100%);
             animation: pulseBg 15s infinite alternate;
         }
 
         @keyframes pulseBg {
-            0% { background: radial-gradient(circle at 50% 50%, #004cba 0%, #001a4d 100%); }
-            100% { background: radial-gradient(circle at 50% 60%, #005ce6 0%, #001133 100%); }
+            0% { background: radial-gradient(circle at 50% 50%, var(--bg-1) 0%, var(--bg-2) 100%); }
+            100% { background: radial-gradient(circle at 50% 60%, var(--bg-1-pulse) 0%, var(--bg-2-pulse) 100%); }
         }
 
         .ps4-ribbon {
@@ -63,7 +76,7 @@
         }
 
         .ps4-ribbon:nth-child(2) {
-            background: linear-gradient(to right, rgba(0, 162, 255, 0) 0%, rgba(0, 162, 255, 0.08) 50%, rgba(0, 162, 255, 0) 100%);
+            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0) 100%);
             animation-direction: reverse;
             animation-duration: 25s;
             transform: rotate(15deg);
@@ -85,6 +98,16 @@
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
         .animate-slide-in { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .animate-slide-panel { animation: slidePanelRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* Dynamic Theme Classes */
+        .theme-btn-primary {
+            background-color: var(--theme-btn) !important;
+            color: var(--theme-btn-text) !important;
+            border-color: var(--theme-btn) !important;
+        }
+        .theme-btn-primary:hover {
+            background-color: var(--theme-btn-hover) !important;
+        }
 
         /* PS4 Tile Interactions */
         .ps4-tile {
@@ -114,8 +137,8 @@
             outline: none;
         }
         .ps4-nav-item.selected {
-            background-color: #ffffff;
-            color: #000000;
+            background-color: var(--theme-nav-active);
+            color: var(--theme-nav-text);
             font-weight: 600;
         }
 
@@ -234,10 +257,10 @@
             transition: all 0.2s ease;
         }
         .ps4-toggle:checked {
-            background: #2563eb;
+            background: var(--theme-btn);
         }
         .ps4-settings-item:hover .ps4-toggle:checked {
-            background: #1d4ed8;
+            background: var(--theme-btn-hover);
         }
         .ps4-settings-item:hover .ps4-toggle:not(:checked) {
             background: rgba(0, 0, 0, 0.2);
@@ -269,6 +292,12 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef, useCallback } = React;
 
+        const THEMES = {
+            'ps4-blue': { bg1: '#004cba', bg2: '#001a4d', bg1p: '#005ce6', bg2p: '#001133', btn: '#2563eb', btnHover: '#1d4ed8', btnText: '#ffffff', navActive: '#ffffff', navText: '#000000' },
+            'ps5-dark': { bg1: '#2d2d30', bg2: '#0a0a0a', bg1p: '#3d3d40', bg2p: '#1a1a1a', btn: '#e5e5e5', btnHover: '#ffffff', btnText: '#000000', navActive: '#ffffff', navText: '#000000' },
+            'retro-gray': { bg1: '#6b7280', bg2: '#1f2937', bg1p: '#9ca3af', bg2p: '#374151', btn: '#ef4444', btnHover: '#dc2626', btnText: '#ffffff', navActive: '#ef4444', navText: '#ffffff' }
+        };
+
         const Icons = {
             Search: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
             Download: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
@@ -284,7 +313,8 @@
             Dashboard: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>,
             CoverFlow: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="4" width="10" height="16" rx="1"></rect><path d="M3 6v12"></path><path d="M21 6v12"></path></svg>,
             ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>,
-            ChevronLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            ChevronLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>,
+            ArrowUp: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
         };
 
         const formatBytes = (bytes, decimals = 2) => {
@@ -328,7 +358,7 @@
         const saveMetaCache = (id, data) => { metaCache[id] = data; saveCache('ps4_meta_cache', metaCache); };
 
         /* =========================================================================
-           DISCLAIMER MODAL (Updated with story & screenshots)
+           DISCLAIMER MODAL
            ========================================================================= */
         const DisclaimerModal = ({ isOpen, onAccept }) => {
             const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
@@ -374,13 +404,13 @@
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
                                     <div className="flex flex-col gap-2">
                                         <div className="border border-white/20 rounded overflow-hidden shadow-lg bg-black">
-                                            <img src="screenshot1.png" alt="Raw Archive Index" className="w-full h-44 object-cover object-top hover:scale-105 transition-transform duration-300" onError={(e) => { e.target.style.display = 'none'; }} />
+                                            <img src="screenshot1.jpg" alt="Raw Archive Index" className="w-full h-44 object-cover object-top hover:scale-105 transition-transform duration-300" onError={(e) => { e.target.style.display = 'none'; }} />
                                         </div>
                                         <span className="text-xs text-center text-white/50">Raw Directory Index</span>
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <div className="border border-white/20 rounded overflow-hidden shadow-lg bg-black">
-                                            <img src="screenshot2.png" alt="Filtering Difficulties" className="w-full h-44 object-cover object-top hover:scale-105 transition-transform duration-300" onError={(e) => { e.target.style.display = 'none'; }} />
+                                            <img src="screenshot2.jpg" alt="Filtering Difficulties" className="w-full h-44 object-cover object-top hover:scale-105 transition-transform duration-300" onError={(e) => { e.target.style.display = 'none'; }} />
                                         </div>
                                         <span className="text-xs text-center text-white/50">Manual Search Limitations</span>
                                     </div>
@@ -393,13 +423,13 @@
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
                                     <div className="flex flex-col gap-2">
                                         <div className="border border-white/20 rounded overflow-hidden shadow-lg bg-black">
-                                            <img src="screenshot3.png" alt="Fetching Artwork" className="w-full h-44 object-cover object-top hover:scale-105 transition-transform duration-300" onError={(e) => { e.target.style.display = 'none'; }} />
+                                            <img src="screenshot3.jpg" alt="Fetching Artwork" className="w-full h-44 object-cover object-top hover:scale-105 transition-transform duration-300" onError={(e) => { e.target.style.display = 'none'; }} />
                                         </div>
                                         <span className="text-xs text-center text-white/50">Python Artwork Fetcher</span>
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <div className="border border-white/20 rounded overflow-hidden shadow-lg bg-black">
-                                            <img src="screenshot4.png" alt="Fetching Descriptions" className="w-full h-44 object-cover object-top hover:scale-105 transition-transform duration-300" onError={(e) => { e.target.style.display = 'none'; }} />
+                                            <img src="screenshot4.jpg" alt="Fetching Descriptions" className="w-full h-44 object-cover object-top hover:scale-105 transition-transform duration-300" onError={(e) => { e.target.style.display = 'none'; }} />
                                         </div>
                                         <span className="text-xs text-center text-white/50">Wikipedia Data Scraper</span>
                                     </div>
@@ -431,13 +461,52 @@
                                 disabled={!hasScrolledToBottom}
                                 className={`px-8 py-3 rounded text-base font-bold flex items-center gap-3 transition-all focus:outline-none ${
                                     hasScrolledToBottom 
-                                        ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-[0_0_20px_rgba(37,99,235,0.6)] scale-100 hover:scale-105' 
+                                        ? 'theme-btn-primary cursor-pointer shadow-lg scale-100 hover:scale-105' 
                                         : 'bg-white/10 text-white/30 cursor-not-allowed border border-white/5'
                                 }`}
                             >
                                 <span className="w-5 h-5 rounded-full border border-white/40 flex items-center justify-center text-xs font-mono">✕</span>
                                 Acknowledge & Enter Library
                             </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        /* =========================================================================
+           GOLDHEN EXPLOIT MODAL
+           ========================================================================= */
+        const GoldHENModal = ({ isOpen, onClose }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[400] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 md:p-10 animate-fade-in">
+                    <div className="relative w-full max-w-2xl bg-gradient-to-b from-gray-900 to-black border-2 border-yellow-500/30 rounded-md shadow-[0_0_60px_rgba(234,179,8,0.2)] flex flex-col">
+                        <div className="p-6 border-b border-white/10 flex items-center gap-4 bg-black/50">
+                            <img src="https://avatars.githubusercontent.com/u/91367123?v=4" alt="GoldHEN" className="w-12 h-12 rounded-full border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.5)]" />
+                            <div>
+                                <h2 className="text-2xl font-bold text-white tracking-wide">GoldHEN Web Exploit</h2>
+                                <p className="text-yellow-500/80 text-sm font-mono mt-1">Host Entry Point / Payload Injector</p>
+                            </div>
+                        </div>
+                        <div className="p-6 md:p-8 space-y-5 text-white/80 font-light leading-relaxed text-[15px]">
+                            <p>
+                                Hey there! This tool serves as a <strong>browser-based exploit entry point</strong> to jailbreak PS4 consoles on specific firmware versions (primarily <strong>13.02 through 13.52</strong>) and automatically loads the GoldHEN payload.
+                            </p>
+                            <p>
+                                The general process involves blocking official Sony updates via your console's network settings (custom DNS), clearing all previous browser data, and navigating here through the PS4's web browser to trigger the WebKit exploit.
+                            </p>
+                            <div className="bg-red-900/20 border border-red-500/30 p-4 rounded text-red-200 text-sm flex gap-3">
+                                <span className="text-xl">⚠️</span>
+                                <div>
+                                    <strong>Important Compatibility Note:</strong><br/>
+                                    This exploit is strictly <u>incompatible</u> with firmware versions <strong>14.00 and above</strong>. Do not attempt on higher firmwares.
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-white/10 bg-black/40 flex justify-end gap-4">
+                            <button onClick={onClose} className="px-6 py-2.5 rounded font-bold transition-colors bg-white/10 hover:bg-white/20 text-white focus:outline-none">Go Back</button>
+                            <button onClick={() => { window.open('https://raw13g.github.io', '_blank'); onClose(); }} className="px-6 py-2.5 rounded font-bold transition-transform hover:scale-105 bg-yellow-600 hover:bg-yellow-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.4)] focus:outline-none">Proceed to Exploit</button>
                         </div>
                     </div>
                 </div>
@@ -569,8 +638,8 @@
                                             setTimeout(() => setDownloadingDirect(false), 3000);
                                         }}
                                         disabled={downloadingDirect}
-                                        className={`w-full border py-3.5 px-6 text-base font-bold rounded-sm flex items-center justify-center gap-3 transition-all focus:outline-none shadow-[0_0_15px_rgba(37,99,235,0.4)]
-                                            ${downloadingDirect ? 'bg-blue-800 border-blue-700 text-white cursor-default' : 'bg-blue-600 border-blue-500 text-white hover:bg-blue-500 hover:scale-105 focus:scale-105'}
+                                        className={`w-full border py-3.5 px-6 text-base font-bold rounded-sm flex items-center justify-center gap-3 transition-all focus:outline-none shadow-lg
+                                            ${downloadingDirect ? 'bg-gray-800 border-gray-700 text-white cursor-default' : 'theme-btn-primary hover:scale-105 focus:scale-105'}
                                         `}
                                     >
                                         {downloadingDirect ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Starting...</> : <><Icons.Download /> Direct Download</>}
@@ -669,7 +738,7 @@
                                 onClick={handleDownloadAll}
                                 disabled={queue.length === 0}
                                 className={`flex-1 py-2 px-4 rounded text-sm font-bold flex justify-center items-center gap-2 transition-colors
-                                    ${queue.length === 0 ? 'bg-white/10 text-white/50 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500'}`}
+                                    ${queue.length === 0 ? 'bg-white/10 text-white/50 cursor-not-allowed' : 'theme-btn-primary'}`}
                             >
                                 <Icons.Download /> Download All Staggered
                             </button>
@@ -706,7 +775,7 @@
                                                     onClick={() => handleDownload(item)}
                                                     disabled={downloadingIds[item.id]}
                                                     className={`mt-2 py-1.5 px-3 rounded text-xs font-bold flex items-center justify-center gap-2 transition-colors w-full
-                                                        ${downloadingIds[item.id] ? 'bg-blue-800 text-white/70 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
+                                                        ${downloadingIds[item.id] ? 'bg-gray-800 text-white/70 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200'}`}
                                                 >
                                                     {downloadingIds[item.id] ? <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Starting...</> : <><Icons.Download /> Download PKG</>}
                                                 </button>
@@ -732,12 +801,12 @@
         };
 
         /* =========================================================================
-           SETTINGS MODAL (Redesigned in full PS4 theme)
+           SETTINGS MODAL
            ========================================================================= */
-        const SettingsModal = ({ isOpen, onClose, settings, setSettings, clearCache }) => {
+        const SettingsModal = ({ isOpen, onClose, settings, setSettings, clearCache, setFavourites, setDownloadHistory, setRecentlyViewed }) => {
             if (!isOpen) return null;
             return (
-                <div className="fixed inset-0 z-[200] bg-gradient-to-b from-[#003791] to-[#001026] text-white flex flex-col animate-fade-in custom-scrollbar">
+                <div className="fixed inset-0 z-[200] bg-gradient-to-b from-gray-900 to-black text-white flex flex-col animate-fade-in custom-scrollbar">
                     {/* Floating PS4 Ribbons for Ambience inside modal */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-50 z-0">
                         <div className="ps4-ribbon"></div>
@@ -784,6 +853,26 @@
                             <div className="ps4-settings-item px-4">
                                 <label className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6 cursor-pointer group">
                                     <div className="flex flex-col">
+                                        <span className="text-xl font-light text-white transition-colors">System Theme Colors</span>
+                                        <span className="settings-desc text-sm text-white/50 mt-1 transition-colors">Change the background gradient and accent colors across the UI.</span>
+                                    </div>
+                                    <div className="md:w-64" onClick={e => e.stopPropagation()}>
+                                        <select 
+                                            value={settings.theme || 'ps4-blue'}
+                                            onChange={e => setSettings({...settings, theme: e.target.value})}
+                                            className="ps4-select w-full p-2.5 text-base rounded cursor-pointer transition-colors shadow-sm"
+                                        >
+                                            <option value="ps4-blue">PS4 Classic Blue</option>
+                                            <option value="ps5-dark">PS5 Midnight Black</option>
+                                            <option value="retro-gray">Retro PlayStation Gray</option>
+                                        </select>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div className="ps4-settings-item px-4">
+                                <label className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6 cursor-pointer group">
+                                    <div className="flex flex-col">
                                         <span className="text-xl font-light text-white transition-colors">Hide Downloaded Games</span>
                                         <span className="settings-desc text-sm text-white/50 mt-1 transition-colors">Automatically hides titles that are present in your browser's local download history.</span>
                                     </div>
@@ -808,9 +897,30 @@
                             <div className="text-sm font-semibold tracking-widest uppercase text-white/50 mt-10 mb-4 px-4">System Storage & Cache</div>
                             
                             <div className="ps4-settings-item px-4">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4">
+                                    <span className="text-lg font-light text-white">Clear Favourites</span>
+                                    <button onClick={() => { if(window.confirm("Clear all favourites?")) setFavourites([]); }} className="bg-white/10 hover:bg-red-900/50 hover:text-red-400 text-white px-4 py-2 rounded text-sm font-semibold transition-all">Clear</button>
+                                </div>
+                            </div>
+
+                            <div className="ps4-settings-item px-4">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4">
+                                    <span className="text-lg font-light text-white">Clear Download History</span>
+                                    <button onClick={() => { if(window.confirm("Clear your download history log?")) setDownloadHistory([]); }} className="bg-white/10 hover:bg-red-900/50 hover:text-red-400 text-white px-4 py-2 rounded text-sm font-semibold transition-all">Clear</button>
+                                </div>
+                            </div>
+                            
+                            <div className="ps4-settings-item px-4">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4">
+                                    <span className="text-lg font-light text-white">Clear Recent History</span>
+                                    <button onClick={() => { if(window.confirm("Clear recently viewed items?")) setRecentlyViewed([]); }} className="bg-white/10 hover:bg-red-900/50 hover:text-red-400 text-white px-4 py-2 rounded text-sm font-semibold transition-all">Clear</button>
+                                </div>
+                            </div>
+
+                            <div className="ps4-settings-item px-4">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6 mt-4">
                                     <div className="flex flex-col">
-                                        <span className="text-xl font-light text-white transition-colors">Initialize System Memory</span>
+                                        <span className="text-xl font-light text-red-400 transition-colors">Initialize System Memory</span>
                                         <span className="settings-desc text-sm text-white/50 mt-1 transition-colors">Wipe saved preferences, download history, queues, search caches, and restore the Disclaimer.</span>
                                     </div>
                                     <div>
@@ -1014,17 +1124,17 @@
                         <div className="text-sm text-white/50 font-mono">{items.length} item{items.length !== 1 ? 's' : ''}</div>
                     </div>
                     
-                    <button onClick={() => scroll('left')} className="absolute left-2 top-1/2 -translate-y-1/2 z-40 bg-black/60 hover:bg-white text-white hover:text-black border border-white/20 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hidden md:block">
+                    <button onClick={() => scroll('left')} className="absolute left-2 top-1/2 -translate-y-1/2 z-[100] bg-black/80 hover:bg-white text-white hover:text-black border border-white/20 p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all hidden md:block drop-shadow-2xl hover:scale-110">
                         <Icons.ChevronLeft />
                     </button>
                     
-                    <button onClick={() => scroll('right')} className="absolute right-2 top-1/2 -translate-y-1/2 z-40 bg-black/60 hover:bg-white text-white hover:text-black border border-white/20 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hidden md:block">
+                    <button onClick={() => scroll('right')} className="absolute right-2 top-1/2 -translate-y-1/2 z-[100] bg-black/80 hover:bg-white text-white hover:text-black border border-white/20 p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all hidden md:block drop-shadow-2xl hover:scale-110">
                         <Icons.ChevronRight />
                     </button>
 
                     <div ref={scrollRef} className="dashboard-row-container flex gap-4 overflow-x-auto px-10 pb-6 pt-2 snap-x">
                         {items.map(game => (
-                            <div key={game.id} className="snap-start shrink-0">
+                            <div key={game.id} className="snap-start shrink-0 w-[140px] sm:w-[160px] md:w-[180px] lg:w-[200px]">
                                 <GameCard 
                                     game={game} 
                                     onClick={onGameClick}
@@ -1043,32 +1153,47 @@
             const favGames = useMemo(() => favourites.map(id => games.find(g => g.id === id)).filter(Boolean), [favourites, games]);
             const dlGames = useMemo(() => downloadHistory.map(id => games.find(g => g.id === id)).filter(Boolean), [downloadHistory, games]);
 
-            const heroGame = recentGames[0];
+            // Carousel Setup
+            const carouselGames = useMemo(() => recentGames.slice(0, 5), [recentGames]);
+            const [heroIndex, setHeroIndex] = useState(0);
+
+            useEffect(() => {
+                if (carouselGames.length <= 1) return;
+                const timer = setInterval(() => {
+                    setHeroIndex(prev => (prev + 1) % carouselGames.length);
+                }, 6000);
+                return () => clearInterval(timer);
+            }, [carouselGames.length]);
+
+            const heroGame = carouselGames[heroIndex] || recentGames[0];
             const [heroImgSrc, setHeroImgSrc] = useState(null);
 
             useEffect(() => {
                 if (!heroGame) return;
+                let currentSrc = null;
                 if (artworkCache[heroGame.id]) {
-                    setHeroImgSrc(artworkCache[heroGame.id]);
+                    currentSrc = artworkCache[heroGame.id];
                 } else if (heroGame.imageUrl) {
-                    setHeroImgSrc(heroGame.imageUrl);
+                    currentSrc = heroGame.imageUrl;
                 }
+                setHeroImgSrc(currentSrc);
 
                 const pollCache = setInterval(() => {
-                    if (artworkCache[heroGame.id] && artworkCache[heroGame.id] !== heroImgSrc) {
+                    if (artworkCache[heroGame.id] && artworkCache[heroGame.id] !== currentSrc) {
                         setHeroImgSrc(artworkCache[heroGame.id]);
                         clearInterval(pollCache);
                     }
                 }, 300);
 
                 return () => clearInterval(pollCache);
-            }, [heroGame, heroImgSrc]);
+            }, [heroGame]);
 
             return (
                 <div className="flex-grow flex flex-col w-full relative z-10 mt-2 overflow-y-auto custom-scrollbar">
                     {heroGame && (
-                        <div className="w-full px-10 mb-10 mt-4">
-                            <div className="relative w-full h-[320px] rounded-lg overflow-hidden border border-white/20 shadow-2xl flex items-end p-8 cursor-pointer group" onClick={() => onGameClick(heroGame, heroImgSrc)}>
+                        <div className="w-full px-10 mb-10 mt-4 h-[320px]">
+                            {/* Adding Key forces re-render/animation on hero swap */}
+                            <div key={heroGame.id} className="relative w-full h-[320px] rounded-lg overflow-hidden border border-white/20 shadow-2xl flex items-end p-8 cursor-pointer group animate-fade-in" onClick={() => onGameClick(heroGame, heroImgSrc)}>
                                 {heroImgSrc ? (
                                     <img src={heroImgSrc} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500" alt="" />
                                 ) : (
@@ -1096,6 +1221,15 @@
                                         </div>
                                     </div>
                                 </div>
+                                
+                                {/* Carousel Indicators */}
+                                {carouselGames.length > 1 && (
+                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                                        {carouselGames.map((_, idx) => (
+                                            <div key={idx} className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${idx === heroIndex ? 'bg-white scale-150' : 'bg-white/30'}`} />
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -1205,7 +1339,7 @@
             }, [isVisible, game]);
 
             return (
-                <div className="flex flex-col gap-2 relative group w-[170px] sm:w-auto">
+                <div className="flex flex-col gap-2 relative group w-full h-full">
                     <div 
                         ref={cardRef}
                         className="ps4-tile w-full aspect-[3/4] relative overflow-hidden flex-shrink-0 rounded-sm"
@@ -1286,16 +1420,38 @@
             const [isQueueOpen, setIsQueueOpen] = useState(false);
             const [isSettingsOpen, setIsSettingsOpen] = useState(false);
             const [showDisclaimer, setShowDisclaimer] = useState(() => !getCache('ps4_disclaimer_accepted', false));
+            const [showGoldHENModal, setShowGoldHENModal] = useState(false);
             
             // Persisted States
-            const [settings, setSettings] = useState(() => getCache('ps4_settings', { hideDownloaded: false, showBrokenLinks: false, defaultView: 'store' }));
+            const [settings, setSettings] = useState(() => getCache('ps4_settings', { hideDownloaded: false, showBrokenLinks: false, defaultView: 'store', theme: 'ps4-blue' }));
             const [downloadHistory, setDownloadHistory] = useState(() => getCache('ps4_downloaded_games', []));
             const [queue, setQueue] = useState(() => getCache('ps4_download_queue', []));
             const [favourites, setFavourites] = useState(() => getCache('ps4_favourites', []));
             const [recentlyViewed, setRecentlyViewed] = useState(() => getCache('ps4_recent', []));
             
+            // Apply Dynamic Theme
+            useEffect(() => {
+                const t = THEMES[settings.theme] || THEMES['ps4-blue'];
+                const root = document.documentElement;
+                root.style.setProperty('--bg-1', t.bg1);
+                root.style.setProperty('--bg-2', t.bg2);
+                root.style.setProperty('--bg-1-pulse', t.bg1p);
+                root.style.setProperty('--bg-2-pulse', t.bg2p);
+                root.style.setProperty('--theme-btn', t.btn);
+                root.style.setProperty('--theme-btn-hover', t.btnHover);
+                root.style.setProperty('--theme-btn-text', t.btnText);
+                root.style.setProperty('--theme-nav-active', t.navActive);
+                root.style.setProperty('--theme-nav-text', t.navText);
+            }, [settings.theme]);
+
             // Set Store default dynamically from settings on load
             const [currentView, setCurrentView] = useState(() => settings.defaultView || 'store');
+
+            // Handle Scroll Top in Store
+            const storeMainRef = useRef(null);
+            const [showFab, setShowFab] = useState(false);
+            const handleStoreScroll = (e) => setShowFab(e.target.scrollTop > 500);
+            const scrollToTop = () => storeMainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
 
             useEffect(() => saveCache('ps4_settings', settings), [settings]);
             useEffect(() => saveCache('ps4_download_queue', queue), [queue]);
@@ -1493,6 +1649,11 @@
                         isOpen={showDisclaimer} 
                         onAccept={acceptDisclaimer} 
                     />
+                    
+                    <GoldHENModal
+                        isOpen={showGoldHENModal}
+                        onClose={() => setShowGoldHENModal(false)}
+                    />
 
                     <SettingsModal 
                         isOpen={isSettingsOpen} 
@@ -1500,6 +1661,9 @@
                         settings={settings}
                         setSettings={setSettings}
                         clearCache={clearAllCache}
+                        setFavourites={setFavourites}
+                        setDownloadHistory={setDownloadHistory}
+                        setRecentlyViewed={setRecentlyViewed}
                     />
 
                     {selectedGame && (
@@ -1525,7 +1689,14 @@
 
                     {/* PS4 Library Top Bar */}
                     <header className="w-full flex-shrink-0 pt-4 pb-3 px-6 md:px-10 flex flex-wrap justify-between items-center z-10 bg-gradient-to-b from-black/50 to-transparent gap-4">
-                        <div className="flex items-center gap-3 text-2xl md:text-3xl font-light tracking-wide">
+                        <div className="flex items-center gap-4 text-2xl md:text-3xl font-light tracking-wide">
+                            <button 
+                                onClick={() => setShowGoldHENModal(true)} 
+                                className="hover:scale-105 transition-transform flex-shrink-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                                title="GoldHEN Exploit Details"
+                            >
+                                <img src="https://avatars.githubusercontent.com/u/91367123?v=4" alt="GoldHEN" className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white/20" />
+                            </button>
                             <Icons.Library /> 
                             <span>Library</span>
                         </div>
@@ -1579,7 +1750,7 @@
                             </button>
 
                             <div className="hidden sm:flex items-center gap-2 bg-black/20 px-3 py-1 rounded-full border border-white/10">
-                                <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center text-xs"><Icons.User /></div>
+                                <div className="w-5 h-5 rounded flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--theme-btn)' }}><Icons.User /></div>
                                 <span className="font-semibold text-xs px-1">Player 1</span>
                             </div>
                             <Clock />
@@ -1647,6 +1818,7 @@
                                             checked={artworkOnly} 
                                             onChange={e => setArtworkOnly(e.target.checked)} 
                                             className="w-4 h-4 accent-blue-600 rounded bg-black/50 border-white/30"
+                                            style={{ accentColor: 'var(--theme-btn)' }}
                                         />
                                         <span className="text-xs text-white/80 font-medium">Artwork only</span>
                                     </label>
@@ -1723,7 +1895,7 @@
                             </aside>
 
                             {/* Grid Display */}
-                            <main className="flex-grow px-6 md:px-8 pb-16 overflow-y-auto custom-scrollbar">
+                            <main ref={storeMainRef} onScroll={handleStoreScroll} className="flex-grow px-6 md:px-8 pb-16 overflow-y-auto custom-scrollbar relative">
                                 {displayedGames.length === 0 && !fetchStatus.active ? (
                                     <div className="w-full h-full flex flex-col items-center justify-center text-white/30">
                                         <Icons.Search />
@@ -1751,6 +1923,17 @@
                                         <span className="text-xs font-bold tracking-widest uppercase opacity-30">End of Library</span>
                                     )}
                                 </div>
+
+                                {/* Floating Back-to-Top Button */}
+                                {showFab && (
+                                    <button
+                                        onClick={scrollToTop}
+                                        className="fixed bottom-8 right-8 z-[200] p-3.5 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.8)] theme-btn-primary hover:scale-110 transition-transform flex items-center justify-center animate-fade-in focus:outline-none"
+                                        title="Back to Top"
+                                    >
+                                        <Icons.ArrowUp />
+                                    </button>
+                                )}
                             </main>
                         </div>
                     )}
