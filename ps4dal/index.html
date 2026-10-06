@@ -280,6 +280,10 @@
         .ps4-toggle:checked::after {
             transform: translateX(20px);
         }
+
+        /* Low Performance Mode */
+        body.low-performance .ps4-bg-container { animation: none !important; }
+        body.low-performance .ps4-ribbon { display: none !important; }
     </style>
 </head>
 <body>
@@ -314,7 +318,9 @@
             CoverFlow: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="4" width="10" height="16" rx="1"></rect><path d="M3 6v12"></path><path d="M21 6v12"></path></svg>,
             ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>,
             ChevronLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>,
-            ArrowUp: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+            ArrowUp: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>,
+            Copy: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
+            Trophy: ({ filled }) => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={filled ? "#eab308" : "none"} stroke={filled ? "#eab308" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
         };
 
         const formatBytes = (bytes, decimals = 2) => {
@@ -362,7 +368,16 @@
            ========================================================================= */
         const DisclaimerModal = ({ isOpen, onAccept }) => {
             const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+            const [countdown, setCountdown] = useState(4);
             const scrollRef = useRef(null);
+
+            useEffect(() => {
+                if (!isOpen) return;
+                const timer = setInterval(() => {
+                    setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+                }, 1000);
+                return () => clearInterval(timer);
+            }, [isOpen]);
 
             const handleScroll = () => {
                 if (!scrollRef.current) return;
@@ -453,14 +468,14 @@
                         {/* Footer / Accept Button */}
                         <div className="p-6 border-t border-white/10 bg-black/40 flex flex-col md:flex-row items-center justify-between gap-4">
                             <span className="text-xs text-white/50">
-                                {!hasScrolledToBottom ? "Please scroll through the notice to continue." : "Thank you for reviewing."}
+                                {(!hasScrolledToBottom && countdown > 0) ? `Please review the notice to continue... (${countdown}s)` : "Thank you for reviewing."}
                             </span>
                             
                             <button
                                 onClick={onAccept}
-                                disabled={!hasScrolledToBottom}
+                                disabled={!hasScrolledToBottom && countdown > 0}
                                 className={`px-8 py-3 rounded text-base font-bold flex items-center gap-3 transition-all focus:outline-none ${
-                                    hasScrolledToBottom 
+                                    hasScrolledToBottom || countdown === 0
                                         ? 'theme-btn-primary cursor-pointer shadow-lg scale-100 hover:scale-105' 
                                         : 'bg-white/10 text-white/30 cursor-not-allowed border border-white/5'
                                 }`}
@@ -516,7 +531,7 @@
         /* =========================================================================
            GAME DETAILS MODAL
            ========================================================================= */
-        const GameDetailsModal = ({ game, coverSrc, onClose, queue, addToQueue, markAsDownloaded, isFav, toggleFav }) => {
+        const GameDetailsModal = ({ game, coverSrc, onClose, queue, addToQueue, markAsDownloaded, isFav, toggleFav, allGames = [], onGameSelect, isOwned, toggleOwn, isDownloaded }) => {
             const hasInitialDesc = Boolean(game.overview);
             const [meta, setMeta] = useState({
                 desc: game.overview || (metaCache[game.id]?.desc ?? null),
@@ -525,6 +540,7 @@
             });
             const isQueued = queue.some(q => q.id === game.id);
             const [downloadingDirect, setDownloadingDirect] = useState(false);
+            const [copiedUrl, setCopiedUrl] = useState(false);
 
             useEffect(() => {
                 let isMounted = true;
@@ -577,7 +593,32 @@
                 return () => { isMounted = false; window.removeEventListener('keydown', handleEsc); };
             }, [game]);
 
+            const handleCopyUrl = () => {
+                const textArea = document.createElement("textarea");
+                textArea.value = game.downloadUrl;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setCopiedUrl(true);
+                    setTimeout(() => setCopiedUrl(false), 2000);
+                } catch (err) {
+                    console.error('Failed to copy', err);
+                }
+                document.body.removeChild(textArea);
+            };
+
             const bgImage = meta.bg || coverSrc || game.imageUrl;
+
+            const similarGames = useMemo(() => {
+                if (!allGames.length) return [];
+                return allGames
+                    .filter(g => g.id !== game.id && g.type === game.type && g.region === game.region)
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, 4);
+            }, [game, allGames]);
 
             return (
                 <div className="fixed inset-0 z-[100] flex animate-fade-in bg-black/80 backdrop-blur-xl custom-scrollbar">
@@ -621,6 +662,22 @@
                                     </button>
 
                                     <button 
+                                        onClick={() => toggleOwn(game.id)}
+                                        className={`w-full py-3 px-6 text-sm font-bold rounded-sm flex items-center justify-center gap-3 transition-colors focus:outline-none border
+                                            ${isOwned ? 'bg-yellow-900/40 border-yellow-500 text-yellow-400 hover:bg-yellow-900/60' : 'bg-black/40 border-white/20 text-white hover:bg-white/10'}`}
+                                    >
+                                        <Icons.Trophy filled={isOwned} /> {isOwned ? 'Marked as Owned' : 'Mark as Owned'}
+                                    </button>
+
+                                    <button 
+                                        onClick={handleCopyUrl}
+                                        className={`w-full py-3 px-6 text-sm font-bold rounded-sm flex items-center justify-center gap-3 transition-colors focus:outline-none border
+                                            ${copiedUrl ? 'bg-green-800/40 border-green-500 text-green-300' : 'bg-black/40 border-white/20 text-white hover:bg-white/10'}`}
+                                    >
+                                        {copiedUrl ? <><Icons.CheckCircle /> URL Copied!</> : <><Icons.Copy /> Copy Download URL</>}
+                                    </button>
+
+                                    <button 
                                         onClick={() => { if (!isQueued) addToQueue(game, coverSrc); }}
                                         disabled={isQueued}
                                         className={`w-full py-3.5 px-6 text-base font-bold rounded-sm flex items-center justify-center gap-3 transition-transform focus:outline-none shadow-[0_0_20px_rgba(255,255,255,0.2)] 
@@ -659,6 +716,7 @@
                             <div className="flex-grow flex flex-col pt-2">
                                 <div className="flex items-center gap-3 mb-2">
                                     <span className="px-2 py-0.5 bg-black/40 border border-white/20 text-xs font-semibold tracking-wide rounded">PS4</span>
+                                    {isDownloaded && <span className="px-2 py-0.5 bg-green-700/80 border border-green-500 text-xs font-semibold tracking-wide rounded">Downloaded</span>}
                                     {game.type !== 'Base Game' && <span className="px-2 py-0.5 bg-[#0040a8] text-xs font-semibold tracking-wide rounded">{game.type}</span>}
                                     {game.region !== 'Other' && <span className="px-2 py-0.5 bg-red-700 text-xs font-semibold tracking-wide rounded">{game.region}</span>}
                                 </div>
@@ -686,6 +744,38 @@
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Similar Games Section */}
+                                {similarGames.length > 0 && (
+                                    <div className="mt-8 animate-fade-in">
+                                        <h2 className="text-xl font-light mb-4 border-b border-white/20 pb-2">Similar Titles</h2>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {similarGames.map(sim => (
+                                                <div key={sim.id} className="cursor-pointer group relative rounded overflow-hidden aspect-[3/4] border border-white/20 hover:border-white transition-colors"
+                                                     onClick={() => {
+                                                         const simArt = artworkCache[sim.id] || sim.imageUrl;
+                                                         onGameSelect(sim, simArt);
+                                                     }}>
+                                                    {artworkCache[sim.id] || sim.imageUrl ? (
+                                                        <img src={artworkCache[sim.id] || sim.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={sim.title} />
+                                                    ) : (
+                                                        <div className="w-full h-full card-image-fallback flex items-center justify-center p-2 text-center text-xs">
+                                                            <span className="font-bold drop-shadow-md line-clamp-3">{sim.title}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                                    <div className="absolute bottom-0 left-0 w-full p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                                        <p className="text-xs font-semibold truncate text-white drop-shadow-md">{sim.title}</p>
+                                                        <div className="flex gap-2 items-center mt-1">
+                                                            <span className="text-[10px] text-white/80 bg-white/20 px-1.5 rounded">{formatBytes(sim.size)}</span>
+                                                            <span className="text-[10px] text-white/60">{sim.region}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -803,7 +893,7 @@
         /* =========================================================================
            SETTINGS MODAL
            ========================================================================= */
-        const SettingsModal = ({ isOpen, onClose, settings, setSettings, clearCache, setFavourites, setDownloadHistory, setRecentlyViewed }) => {
+        const SettingsModal = ({ isOpen, onClose, settings, setSettings, clearCache, setFavourites, setDownloadHistory, setRecentlyViewed, userProfile, setUserProfile }) => {
             if (!isOpen) return null;
             return (
                 <div className="fixed inset-0 z-[200] bg-gradient-to-b from-gray-900 to-black text-white flex flex-col animate-fade-in custom-scrollbar">
@@ -828,8 +918,46 @@
                         
                         <div className="flex-grow p-6 md:p-10 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
                             
-                            <div className="text-sm font-semibold tracking-widest uppercase text-white/50 mb-4 px-4 mt-2">Display & Navigation Preferences</div>
+                            <div className="text-sm font-semibold tracking-widest uppercase text-white/50 mb-4 px-4 mt-2">User Profile</div>
                             
+                            <div className="ps4-settings-item px-4">
+                                <label className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6">
+                                    <div className="flex flex-col">
+                                        <span className="text-xl font-light text-white transition-colors">Username</span>
+                                        <span className="settings-desc text-sm text-white/50 mt-1 transition-colors">Change your display name.</span>
+                                    </div>
+                                    <div className="md:w-64">
+                                        <input 
+                                            type="text" 
+                                            value={userProfile.name}
+                                            onChange={e => setUserProfile({...userProfile, name: e.target.value})}
+                                            className="ps4-input w-full p-2.5 text-base rounded shadow-sm"
+                                            placeholder="Player 1"
+                                        />
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div className="ps4-settings-item px-4">
+                                <label className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6">
+                                    <div className="flex flex-col">
+                                        <span className="text-xl font-light text-white transition-colors">Avatar URL</span>
+                                        <span className="settings-desc text-sm text-white/50 mt-1 transition-colors">Paste a link to an image for your profile picture.</span>
+                                    </div>
+                                    <div className="md:w-64">
+                                        <input 
+                                            type="text" 
+                                            value={userProfile.avatar}
+                                            onChange={e => setUserProfile({...userProfile, avatar: e.target.value})}
+                                            className="ps4-input w-full p-2.5 text-base rounded shadow-sm"
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div className="text-sm font-semibold tracking-widest uppercase text-white/50 mt-6 mb-4 px-4">Display & Navigation Preferences</div>
+
                             <div className="ps4-settings-item px-4">
                                 <label className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6 cursor-pointer group">
                                     <div className="flex flex-col">
@@ -869,6 +997,18 @@
                                     </div>
                                 </label>
                             </div>
+                            
+                            <div className="ps4-settings-item px-4">
+                                <label className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6 cursor-pointer group">
+                                    <div className="flex flex-col">
+                                        <span className="text-xl font-light text-white transition-colors">Show Broken Links (500 Errors)</span>
+                                        <span className="settings-desc text-sm text-white/50 mt-1 transition-colors">Shows archive links that returned 500 errors during periodic index checks.</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <input type="checkbox" checked={settings.showBrokenLinks} onChange={e => setSettings({...settings, showBrokenLinks: e.target.checked})} className="ps4-toggle" />
+                                    </div>
+                                </label>
+                            </div>
 
                             <div className="ps4-settings-item px-4">
                                 <label className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6 cursor-pointer group">
@@ -885,11 +1025,11 @@
                             <div className="ps4-settings-item px-4">
                                 <label className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-6 cursor-pointer group">
                                     <div className="flex flex-col">
-                                        <span className="text-xl font-light text-white transition-colors">Show Broken Links (500 Errors)</span>
-                                        <span className="settings-desc text-sm text-white/50 mt-1 transition-colors">Shows archive links that returned 500 errors during periodic index checks.</span>
+                                        <span className="text-xl font-light text-white transition-colors">Low Performance Mode</span>
+                                        <span className="settings-desc text-sm text-white/50 mt-1 transition-colors">Disables animated background ribbons and pulsing to improve performance on slower devices.</span>
                                     </div>
                                     <div className="flex items-center">
-                                        <input type="checkbox" checked={settings.showBrokenLinks} onChange={e => setSettings({...settings, showBrokenLinks: e.target.checked})} className="ps4-toggle" />
+                                        <input type="checkbox" checked={settings.lowPerformanceMode} onChange={e => setSettings({...settings, lowPerformanceMode: e.target.checked})} className="ps4-toggle" />
                                     </div>
                                 </label>
                             </div>
@@ -1094,7 +1234,7 @@
         /* =========================================================================
            DASHBOARD ROW & DASHBOARD
            ========================================================================= */
-        const DashboardRow = ({ title, items, onGameClick, toggleFav, favourites, emptyMessage }) => {
+        const DashboardRow = ({ title, items, onGameClick, toggleFav, favourites, ownedGames, emptyMessage }) => {
             const scrollRef = useRef(null);
 
             const scroll = (direction) => {
@@ -1140,6 +1280,7 @@
                                     onClick={onGameClick}
                                     isFav={favourites.includes(game.id)}
                                     toggleFav={toggleFav}
+                                    isOwned={ownedGames && ownedGames.includes(game.id)}
                                 />
                             </div>
                         ))}
@@ -1148,10 +1289,30 @@
             );
         };
 
-        const Dashboard = ({ games, downloadHistory, favourites, recentlyViewed, onGameClick, toggleFav }) => {
+        const Dashboard = ({ games, downloadHistory, favourites, recentlyViewed, onGameClick, toggleFav, ownedGames }) => {
             const recentGames = useMemo(() => recentlyViewed.map(id => games.find(g => g.id === id)).filter(Boolean), [recentlyViewed, games]);
             const favGames = useMemo(() => favourites.map(id => games.find(g => g.id === id)).filter(Boolean), [favourites, games]);
             const dlGames = useMemo(() => downloadHistory.map(id => games.find(g => g.id === id)).filter(Boolean), [downloadHistory, games]);
+            const ownedItems = useMemo(() => ownedGames.map(id => games.find(g => g.id === id)).filter(Boolean), [ownedGames, games]);
+
+            const totalDownloadedBytes = useMemo(() => dlGames.reduce((acc, g) => acc + (g.size || 0), 0), [dlGames]);
+
+            const [randomGame, setRandomGame] = useState(null);
+            const [randomGameArt, setRandomGameArt] = useState(null);
+
+            const pickRandom = useCallback(() => {
+                if (games.length > 0) {
+                    setRandomGame(games[Math.floor(Math.random() * games.length)]);
+                }
+            }, [games]);
+
+            useEffect(() => { pickRandom(); }, [pickRandom]);
+
+            useEffect(() => {
+                if (!randomGame) return;
+                const art = artworkCache[randomGame.id] || randomGame.imageUrl;
+                setRandomGameArt(art);
+            }, [randomGame]);
 
             // Carousel Setup
             const carouselGames = useMemo(() => recentGames.slice(0, 5), [recentGames]);
@@ -1234,6 +1395,84 @@
                         </div>
                     )}
 
+                    {/* --- SYSTEM OVERVIEW / QUICK STATS --- */}
+                    <div className="px-10 mb-12 animate-slide-in">
+                        <h3 className="text-2xl font-light mb-4 text-white/90 tracking-wider">System Overview</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            
+                            <div className="bg-black/30 border border-white/10 rounded-lg p-5 flex flex-col justify-between hover:bg-black/40 transition-colors">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-white/50 text-sm font-semibold tracking-widest uppercase">Storage Manager</span>
+                                    <Icons.Download />
+                                </div>
+                                <div>
+                                    <div className="text-3xl font-light mb-1">{formatBytes(totalDownloadedBytes)}</div>
+                                    <div className="text-sm text-white/60">Downloaded across {dlGames.length} titles</div>
+                                </div>
+                                <div className="w-full h-1.5 bg-black/50 rounded-full mt-4 overflow-hidden border border-white/10">
+                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min((totalDownloadedBytes / (500 * 1024 * 1024 * 1024)) * 100, 100)}%` }}></div>
+                                </div>
+                            </div>
+
+                            <div className="bg-black/30 border border-white/10 rounded-lg p-5 flex flex-col justify-between hover:bg-black/40 transition-colors">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-white/50 text-sm font-semibold tracking-widest uppercase">Library Database</span>
+                                    <Icons.Library />
+                                </div>
+                                <div>
+                                    <div className="text-3xl font-light mb-1">{games.length}</div>
+                                    <div className="text-sm text-white/60">Total Packages Indexed</div>
+                                </div>
+                                <div className="flex gap-2 mt-4 text-xs">
+                                    <span className="px-2 py-1 bg-black/40 rounded border border-white/5 shadow-sm text-white/80">Owned: {ownedGames.length}</span>
+                                    <span className="px-2 py-1 bg-black/40 rounded border border-white/5 shadow-sm text-white/80">US: {games.filter(g => g.region === 'US').length}</span>
+                                </div>
+                            </div>
+
+                            {randomGame ? (
+                                <div 
+                                    className="bg-gradient-to-br from-blue-900/40 to-black/30 border border-blue-500/30 rounded-lg flex flex-col justify-between cursor-pointer hover:border-blue-400 hover:scale-[1.02] transition-all relative overflow-hidden group shadow-[0_0_15px_rgba(37,99,235,0.1)]"
+                                >
+                                    {randomGameArt && (
+                                        <div className="absolute inset-0 z-0">
+                                            <img src={randomGameArt} className="w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity" alt="" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#001433] via-[#001433]/80 to-transparent"></div>
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-0 pointer-events-none"></div>
+                                    
+                                    <div className="p-5 flex flex-col h-full relative z-10" onClick={() => onGameClick(randomGame, randomGameArt)}>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-blue-300/80 text-sm font-semibold tracking-widest uppercase flex items-center gap-2">
+                                                Surprise Me 
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); pickRandom(); }} 
+                                                    className="hover:bg-white hover:text-black transition-colors bg-blue-900/50 text-white p-1 rounded-full flex items-center justify-center border border-blue-400/30"
+                                                    title="Pick another random game"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                                                </button>
+                                            </span>
+                                            <Icons.Library className="text-blue-400" />
+                                        </div>
+                                        <div className="flex-grow flex flex-col justify-end pr-2">
+                                            <div className="text-xl font-light mb-1 truncate text-white drop-shadow-md">{randomGame.title}</div>
+                                            <div className="text-sm text-white/60">Discover a random game</div>
+                                        </div>
+                                        <button className="mt-4 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white py-1.5 px-4 rounded shadow-lg w-max border border-blue-400/50 transition-colors">
+                                            Inspect Title
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="bg-black/30 border border-white/10 rounded-lg p-5 flex flex-col justify-center items-center text-white/30">
+                                    Loading discover engine...
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+
                     <div className="pb-16 pt-2">
                         <DashboardRow 
                             title="Recently Viewed" 
@@ -1241,6 +1480,7 @@
                             onGameClick={onGameClick} 
                             toggleFav={toggleFav} 
                             favourites={favourites}
+                            ownedGames={ownedGames}
                             emptyMessage="Games you inspect will appear here for quick access."
                         />
                         <DashboardRow 
@@ -1249,7 +1489,17 @@
                             onGameClick={onGameClick} 
                             toggleFav={toggleFav} 
                             favourites={favourites}
+                            ownedGames={ownedGames}
                             emptyMessage="Click the heart icon on any game to pin it to your favourites."
+                        />
+                        <DashboardRow 
+                            title="Owned Games" 
+                            items={ownedItems} 
+                            onGameClick={onGameClick} 
+                            toggleFav={toggleFav} 
+                            favourites={favourites}
+                            ownedGames={ownedGames}
+                            emptyMessage="Titles you've marked as owned will appear here."
                         />
                         <DashboardRow 
                             title="Downloaded Games" 
@@ -1257,6 +1507,7 @@
                             onGameClick={onGameClick} 
                             toggleFav={toggleFav} 
                             favourites={favourites}
+                            ownedGames={ownedGames}
                             emptyMessage="Your download history is currently empty."
                         />
                     </div>
@@ -1267,7 +1518,7 @@
         /* =========================================================================
            GAME CARD (Comprehensive Scrapers Preserved)
            ========================================================================= */
-        const GameCard = React.memo(({ game, onClick, isFav, toggleFav }) => {
+        const GameCard = React.memo(({ game, onClick, isFav, toggleFav, isOwned }) => {
             const cardRef = useRef();
             const [isVisible, setIsVisible] = useState(false);
             const [imgState, setImgState] = useState('pending');
@@ -1367,6 +1618,7 @@
                         <img src={PS4_CASE_OVERLAY_URL} className="absolute top-0 left-0 w-full h-full pointer-events-none z-10" style={{ objectFit: 'fill' }} alt="" />
 
                         <div className="absolute top-7 right-2 flex flex-col gap-1 items-end z-10 pointer-events-none">
+                            {isOwned && <span className="bg-yellow-600 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-sm shadow-md flex items-center gap-1"><Icons.Trophy filled={true} /> OWNED</span>}
                             {game.isBroken && <span className="text-white text-[9px] font-bold px-1 py-0.5 rounded-sm shadow-md mb-0.5 broken-strip border border-red-500/50">BROKEN</span>}
                             {game.region !== 'Other' && <span className="bg-red-700 text-white text-[9px] font-bold px-1 py-0.5 rounded-sm shadow-md">{game.region}</span>}
                             {game.type !== 'Base Game' && <span className="bg-[#0040a8] text-white text-[9px] font-bold px-1 py-0.5 rounded-sm shadow-md">{game.type}</span>}
@@ -1423,11 +1675,13 @@
             const [showGoldHENModal, setShowGoldHENModal] = useState(false);
             
             // Persisted States
-            const [settings, setSettings] = useState(() => getCache('ps4_settings', { hideDownloaded: false, showBrokenLinks: false, defaultView: 'store', theme: 'ps4-blue' }));
+            const [settings, setSettings] = useState(() => getCache('ps4_settings', { hideDownloaded: false, showBrokenLinks: false, defaultView: 'store', theme: 'ps4-blue', lowPerformanceMode: false }));
             const [downloadHistory, setDownloadHistory] = useState(() => getCache('ps4_downloaded_games', []));
             const [queue, setQueue] = useState(() => getCache('ps4_download_queue', []));
             const [favourites, setFavourites] = useState(() => getCache('ps4_favourites', []));
             const [recentlyViewed, setRecentlyViewed] = useState(() => getCache('ps4_recent', []));
+            const [ownedGames, setOwnedGames] = useState(() => getCache('ps4_owned', []));
+            const [userProfile, setUserProfile] = useState(() => getCache('ps4_user_profile', { name: 'Player 1', avatar: 'https://i.redd.it/u45mwanjqqbe1.png' }));
             
             // Apply Dynamic Theme
             useEffect(() => {
@@ -1442,7 +1696,13 @@
                 root.style.setProperty('--theme-btn-text', t.btnText);
                 root.style.setProperty('--theme-nav-active', t.navActive);
                 root.style.setProperty('--theme-nav-text', t.navText);
-            }, [settings.theme]);
+                
+                if (settings.lowPerformanceMode) {
+                    document.body.classList.add('low-performance');
+                } else {
+                    document.body.classList.remove('low-performance');
+                }
+            }, [settings.theme, settings.lowPerformanceMode]);
 
             // Set Store default dynamically from settings on load
             const [currentView, setCurrentView] = useState(() => settings.defaultView || 'store');
@@ -1457,6 +1717,8 @@
             useEffect(() => saveCache('ps4_download_queue', queue), [queue]);
             useEffect(() => saveCache('ps4_favourites', favourites), [favourites]);
             useEffect(() => saveCache('ps4_recent', recentlyViewed), [recentlyViewed]);
+            useEffect(() => saveCache('ps4_owned', ownedGames), [ownedGames]);
+            useEffect(() => saveCache('ps4_user_profile', userProfile), [userProfile]);
 
             const acceptDisclaimer = () => {
                 saveCache('ps4_disclaimer_accepted', true);
@@ -1478,7 +1740,14 @@
                 setFavourites(prev => {
                     const isFaved = prev.includes(id);
                     const updated = isFaved ? prev.filter(f => f !== id) : [id, ...prev];
-                    saveCache('ps4_favourites', updated);
+                    return updated;
+                });
+            }, []);
+            
+            const toggleOwn = useCallback((id) => {
+                setOwnedGames(prev => {
+                    const isOwned = prev.includes(id);
+                    const updated = isOwned ? prev.filter(f => f !== id) : [id, ...prev];
                     return updated;
                 });
             }, []);
@@ -1507,6 +1776,7 @@
             const [searchInput, setSearchInput] = useState('');
             const [regionFilter, setRegionFilter] = useState('All');
             const [dlStatusFilter, setDlStatusFilter] = useState('All');
+            const [ownStatusFilter, setOwnStatusFilter] = useState('All');
             const [artworkOnly, setArtworkOnly] = useState(false);
             const [sortOption, setSortOption] = useState('A-Z');
             const [minSizeGB, setMinSizeGB] = useState('');
@@ -1603,6 +1873,9 @@
                 if (dlStatusFilter === 'Downloaded') result = result.filter(g => downloadHistory.includes(g.id));
                 if (dlStatusFilter === 'Not Downloaded') result = result.filter(g => !downloadHistory.includes(g.id));
 
+                if (ownStatusFilter === 'Owned') result = result.filter(g => ownedGames.includes(g.id));
+                if (ownStatusFilter === 'Not Owned') result = result.filter(g => !ownedGames.includes(g.id));
+
                 if (minSizeGB !== '') {
                     const min = parseFloat(minSizeGB);
                     if (!isNaN(min)) result = result.filter(g => g.sizeGB >= min);
@@ -1633,10 +1906,10 @@
                     }
                 });
                 return result;
-            }, [games, searchQuery, activeCategory, regionFilter, dlStatusFilter, artworkOnly, sortOption, minSizeGB, maxSizeGB, settings, downloadHistory, favourites]);
+            }, [games, searchQuery, activeCategory, regionFilter, dlStatusFilter, ownStatusFilter, artworkOnly, sortOption, minSizeGB, maxSizeGB, settings, downloadHistory, favourites, ownedGames]);
 
             // Reset pagination on filter adjustments
-            useEffect(() => { setDisplayLimit(48); }, [searchQuery, activeCategory, regionFilter, dlStatusFilter, artworkOnly, sortOption, minSizeGB, maxSizeGB]);
+            useEffect(() => { setDisplayLimit(48); }, [searchQuery, activeCategory, regionFilter, dlStatusFilter, ownStatusFilter, artworkOnly, sortOption, minSizeGB, maxSizeGB]);
 
             const displayedGames = useMemo(() => processedGames.slice(0, displayLimit), [processedGames, displayLimit]);
             const hasMore = displayLimit < processedGames.length;
@@ -1664,6 +1937,8 @@
                         setFavourites={setFavourites}
                         setDownloadHistory={setDownloadHistory}
                         setRecentlyViewed={setRecentlyViewed}
+                        userProfile={userProfile}
+                        setUserProfile={setUserProfile}
                     />
 
                     {selectedGame && (
@@ -1676,6 +1951,11 @@
                             markAsDownloaded={markAsDownloaded}
                             isFav={favourites.includes(selectedGame.game.id)}
                             toggleFav={toggleFav}
+                            isOwned={ownedGames.includes(selectedGame.game.id)}
+                            toggleOwn={toggleOwn}
+                            isDownloaded={downloadHistory.includes(selectedGame.game.id)}
+                            allGames={processedGames}
+                            onGameSelect={handleGameClick}
                         />
                     )}
 
@@ -1744,14 +2024,14 @@
                             <button 
                                 onClick={() => setIsSettingsOpen(true)}
                                 className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors p-2 rounded-full border border-white/20 focus:outline-none"
-                                title="Settings"
+                                title="Settings & Profile"
                             >
                                 <Icons.Settings />
                             </button>
 
-                            <div className="hidden sm:flex items-center gap-2 bg-black/20 px-3 py-1 rounded-full border border-white/10">
-                                <div className="w-5 h-5 rounded flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--theme-btn)' }}><Icons.User /></div>
-                                <span className="font-semibold text-xs px-1">Player 1</span>
+                            <div className="hidden sm:flex items-center gap-2 bg-black/20 pr-3 pl-1 py-1 rounded-full border border-white/10 cursor-pointer hover:bg-white/10 transition-colors" onClick={() => setIsSettingsOpen(true)}>
+                                <img src={userProfile.avatar} alt="User Avatar" className="w-6 h-6 rounded-full object-cover border border-white/20" onError={(e) => { e.target.src = 'https://i.redd.it/u45mwanjqqbe1.png'; }} />
+                                <span className="font-semibold text-xs px-1">{userProfile.name}</span>
                             </div>
                             <Clock />
                         </div>
@@ -1764,6 +2044,7 @@
                             downloadHistory={downloadHistory} 
                             favourites={favourites} 
                             recentlyViewed={recentlyViewed}
+                            ownedGames={ownedGames}
                             onGameClick={handleGameClick}
                             toggleFav={toggleFav}
                         />
@@ -1840,14 +2121,14 @@
                                     </div>
 
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-white/70 text-xs font-semibold px-1">Status</label>
+                                        <label className="text-white/70 text-xs font-semibold px-1">Ownership</label>
                                         <div className="flex gap-1.5 bg-black/30 p-1 rounded">
-                                            {['All', 'Downloaded', 'Not Downloaded'].map(stat => (
+                                            {['All', 'Owned', 'Not Owned'].map(stat => (
                                                 <button 
-                                                    key={stat} onClick={() => setDlStatusFilter(stat)}
-                                                    className={`flex-1 py-1 text-[11px] text-center rounded transition-colors ${dlStatusFilter === stat ? 'bg-white text-black font-bold' : 'text-white/70 hover:bg-white/10'}`}
+                                                    key={stat} onClick={() => setOwnStatusFilter(stat)}
+                                                    className={`flex-1 py-1 text-[11px] text-center rounded transition-colors ${ownStatusFilter === stat ? 'bg-white text-black font-bold' : 'text-white/70 hover:bg-white/10'}`}
                                                 >
-                                                    {stat === 'Not Downloaded' ? 'New' : stat}
+                                                    {stat}
                                                 </button>
                                             ))}
                                         </div>
@@ -1910,6 +2191,7 @@
                                                     onClick={handleGameClick}
                                                     isFav={favourites.includes(game.id)}
                                                     toggleFav={toggleFav}
+                                                    isOwned={ownedGames.includes(game.id)}
                                                 />
                                             </div>
                                         ))}
