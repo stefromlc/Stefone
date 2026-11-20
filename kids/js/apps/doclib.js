@@ -15,6 +15,8 @@ export const DOC_TYPES = {
 
 /** Kid-friendly "name your work" dialog. Resolves to a name or null. */
 export function nameIt(current = '', what = 'work') {
+  // When the desktop is saving everything automatically (e.g. screen time is up), don't wait for a child to type a name.
+  if (window.__klAutoName) return Promise.resolve(current || `My ${what} – ${fmtDate(Date.now(), { day: 'numeric', month: 'short' })} ${new Date().toTimeString().slice(0, 5)}`);
   return new Promise(res => {
     const inp = h('input', { class: 'input big-input', value: current, placeholder: 'e.g. My dragon story', maxlength: 60 });
     let done = false;

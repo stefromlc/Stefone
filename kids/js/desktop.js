@@ -1,7 +1,7 @@
 // "KidOS" — the children's virtual desktop: top bar, dock, launcher, widgets and a window manager
 // with snapping, animations and save-before-close support.
 import { store } from './store.js';
-import { esc, h, today, greeting, toast, fmtDate, uid, choose, md } from './util.js';
+import { esc, h, today, greeting, toast, fmtDate, uid, choose, md, modal } from './util.js';
 import { subject } from './skills.js';
 import { root, logout } from './main.js';
 import { sfx, loadImage, say } from './media.js';
@@ -145,10 +145,7 @@ export async function mountDesktop(me) {
   applyPrefs();
 
   // desktop icons
-  for (const [id, a] of Object.entries(APPS)) {
-    icons.append(h('button', { class: 'kos-icon', 'data-app': id, title: a.name, onclick: () => openApp(id) },
-      h('span', { class: 'ic', style: { '--c': a.color } }, a.icon, h('span', { class: 'badge hidden' })), h('span', { class: 'lb' }, a.name)));
-  }
+  renderIcons();
   desk.addEventListener('contextmenu', e => { if (e.target === wall || e.target === icons || e.target === desk) { e.preventDefault(); contextMenu(e.clientX, e.clientY); } });
   desk.addEventListener('pointerdown', e => { if (!e.target.closest('.kos-pop')) closePops(); });
 
@@ -247,11 +244,12 @@ function renderDock() {
       if (!w.length) return openApp(id);
       const top = w[w.length - 1];
       if (top.active && !top.el.classList.contains('min')) top.minimise(); else { top.restore(); top.focus(); }
-    } }, h('span', { class: 'ic', style: { '--c': a.color } }, a.icon), h('span', { class: 'tip' }, a.name));
+    }, oncontextmenu: e => { e.preventDefault(); appMenu(id, e.clientX, e.clientY); } }, h('span', { class: 'ic', style: { '--c': a.color } }, a.icon), h('span', { class: 'tip' }, a.name));
   };
   dock.append(h('button', { class: 'dock-i dock-launch', title: 'All apps', onclick: e => { e.stopPropagation(); launcher(); } }, h('span', { class: 'ic' }, '▦'), h('span', { class: 'tip' }, 'All apps')));
-  DOCK.forEach(id => dock.append(item(id)));
-  const extra = [...new Set(ctx.wins.map(w => w.appId))].filter(id => !DOCK.includes(id));
+  const pinned = dockApps();
+  pinned.forEach(id => dock.append(item(id)));
+  const extra = [...new Set(ctx.wins.map(w => w.appId))].filter(id => !pinned.includes(id));
   if (extra.length) { dock.append(h('span', { class: 'dock-sep' })); extra.forEach(id => dock.append(item(id))); }
 }
 
@@ -261,71 +259,203 @@ function ring(pctDone, label) {
   return `<svg viewBox="0 0 64 64" class="ring"><circle cx="32" cy="32" r="${r}" fill="none" stroke="#e9ecf5" stroke-width="8"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pctDone)}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="900" fill="#1f2440">${label}</text></svg>`;
 }
 
+const FACTS = [
+  'Octopuses have three hearts and blue blood! 🐙', 'A day on Venus is longer than a year on Venus. 🪐', 'Honey never goes off — archaeologists found 3,000-year-old honey that was still OK to eat. 🍯',
+  'Bananas are berries, but strawberries are not! 🍌', 'The Eiffel Tower grows about 15 cm taller in summer because metal expands in the heat. 🗼', 'Sloths can hold their breath longer than dolphins. 🦥',
+  'There are more stars in the universe than grains of sand on all of Earth\'s beaches. ✨', 'A group of flamingos is called a "flamboyance". 🦩', 'Your nose can remember about 50,000 different smells. 👃',
+  'Butterflies taste with their feet! 🦋', 'The Great Wall of China is over 21,000 km long. 🧱', 'A blue whale\'s heart is about the size of a small car. 🐋',
+  'Lightning is about five times hotter than the surface of the Sun. ⚡', 'Snails can sleep for up to three years. 🐌', 'The shortest war in history lasted about 38 minutes. ⏱️',
+  'Cows have best friends and get stressed when they are apart. 🐄', 'Saturn would float if you could find a bath big enough! 🪐', 'Polar bears have black skin under their white fur. 🐻‍❄️',
+  'A bolt of lightning could toast 100,000 slices of bread. 🍞', 'Owls can turn their heads about 270 degrees. 🦉', 'The Moon is slowly moving away from Earth — about 4 cm every year. 🌙',
+  'Hummingbirds are the only birds that can fly backwards. 🐦', 'Your bones are about five times stronger than steel of the same weight. 🦴', 'Wombats do cube-shaped poos! 🟫',
+  'The Romans used to build roads so straight that some are still used today. 🏛️', 'Antarctica is the biggest desert in the world. 🧊', 'Sharks were around before trees existed! 🦈',
+  'A teaspoon of a neutron star would weigh about a billion tonnes. 🌟', 'Koalas sleep up to 22 hours a day. 🐨', 'Big Ben is the name of the bell, not the tower! 🔔',
+];
+
+export const WIDGETS = {
+  today: { name: "Today's lessons", icon: '📒' },
+  mood: { name: 'How I feel', icon: '😊' },
+  notes: { name: 'Notes from Mum & Dad', icon: '💌' },
+  stars: { name: 'My stars', icon: '⭐' },
+  upcoming: { name: 'Coming up', icon: '📅' },
+  word: { name: 'Word of the day', icon: '🪄' },
+  fact: { name: 'Fun fact', icon: '🌍' },
+  gallery: { name: 'Latest picture', icon: '🖼️' },
+  sticky: { name: 'My sticky note', icon: '📝' },
+  ask: { name: 'Ask Ollie', icon: '🦉' },
+};
+const DEFAULT_WIDGETS = ['today', 'mood', 'notes', 'stars', 'word', 'fact', 'ask'];
+function widgetOrder() {
+  const p = ctx.prefs;
+  const order = p.widgetOrder?.length ? p.widgetOrder.filter(k => WIDGETS[k]) : [...DEFAULT_WIDGETS, ...Object.keys(WIDGETS).filter(k => !DEFAULT_WIDGETS.includes(k))];
+  Object.keys(WIDGETS).forEach(k => { if (!order.includes(k)) order.push(k); });
+  const hidden = new Set(p.hiddenWidgets ?? Object.keys(WIDGETS).filter(k => !DEFAULT_WIDGETS.includes(k)));
+  return { order, hidden };
+}
+const allowed = id => !(ctx?.settings.apps?.disabled?.[ctx.me.id] || []).includes(id);
+const dockApps = () => (ctx.prefs.dock?.length ? ctx.prefs.dock : DOCK).filter(id => APPS[id] && allowed(id));
+
+function renderIcons() {
+  const { icons, prefs } = ctx;
+  icons.innerHTML = '';
+  const hidden = new Set(prefs.hiddenIcons || []);
+  for (const [id, a] of Object.entries(APPS)) {
+    if (!allowed(id) || hidden.has(id)) continue;
+    icons.append(h('button', { class: 'kos-icon', 'data-app': id, title: a.name, onclick: () => openApp(id), oncontextmenu: e => { e.preventDefault(); e.stopPropagation(); appMenu(id, e.clientX, e.clientY); } },
+      h('span', { class: 'ic', style: { '--c': a.color } }, a.icon, h('span', { class: 'badge hidden' })), h('span', { class: 'lb' }, a.name)));
+  }
+  if (ctx.lessonBadge) { const lb = icons.querySelector('[data-app="lessons"] .badge'); if (lb) { lb.textContent = ctx.lessonBadge; lb.classList.remove('hidden'); } }
+}
+
+function appMenu(id, x, y) {
+  closePops();
+  const a = APPS[id];
+  const docked = dockApps().includes(id);
+  const onDesk = !(ctx.prefs.hiddenIcons || []).includes(id);
+  const m = h('div', { class: 'kos-pop kos-ctx', style: { left: Math.min(x, innerWidth - 230) + 'px', top: Math.min(y, innerHeight - 180) + 'px' } },
+    h('div', { class: 'ctx-title' }, `${a.icon} ${a.name}`),
+    h('button', { onclick: () => { closePops(); openApp(id); } }, '▶  Open'),
+    h('button', { onclick: () => { closePops(); const d = dockApps(); ctx.prefs.dock = docked ? d.filter(x => x !== id) : [...d, id]; savePrefs(); renderDock(); sfx('pop'); } }, docked ? '➖  Remove from dock' : '📌  Add to dock'),
+    h('button', { onclick: () => { closePops(); const l = new Set(ctx.prefs.hiddenIcons || []); onDesk ? l.add(id) : l.delete(id); ctx.prefs.hiddenIcons = [...l]; savePrefs(); renderIcons(); sfx('pop'); if (onDesk) toast(`${a.name} is still in 🦉 Apps`, 'info'); } }, onDesk ? '🙈  Hide from desktop' : '🧸  Show on desktop'));
+  ctx.desk.append(m);
+}
+
+function editWidgets() {
+  if (ctx.settings.widgets?.allowHide === false) return toast('Mum or Dad have locked the widgets 🔒', 'warn');
+  const { order, hidden } = widgetOrder();
+  const list = h('div', { class: 'we-list' });
+  const draw = () => {
+    list.innerHTML = '';
+    order.forEach((k, i) => {
+      const w = WIDGETS[k];
+      list.append(h('div', { class: `we-row ${hidden.has(k) ? 'off' : ''}` },
+        h('span', { class: 'we-ic' }, w.icon), h('b', { style: { flex: 1 } }, w.name),
+        h('button', { class: 'icon-btn', title: 'Move up', disabled: !i, onclick: () => { [order[i - 1], order[i]] = [order[i], order[i - 1]]; draw(); apply(); } }, '▲'),
+        h('button', { class: 'icon-btn', title: 'Move down', disabled: i === order.length - 1, onclick: () => { [order[i + 1], order[i]] = [order[i], order[i + 1]]; draw(); apply(); } }, '▼'),
+        h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: !hidden.has(k), onchange: e => { e.target.checked ? hidden.delete(k) : hidden.add(k); draw(); apply(); } }), h('span'))));
+    });
+  };
+  const apply = () => { ctx.prefs.widgetOrder = [...order]; ctx.prefs.hiddenWidgets = [...hidden]; ctx.prefs.widgetsCollapsed = false; savePrefs(); renderWidgets(); };
+  draw();
+  modal({ title: '🧩 My widgets', cls: 'modal-kid', body: h('div', {}, h('p', { class: 'small muted', style: { fontWeight: 700 } }, 'Switch widgets on or off and move them up or down.'), list),
+    actions: [{ label: '↺ Reset', onClick: () => { ctx.prefs.widgetOrder = null; ctx.prefs.hiddenWidgets = null; savePrefs(); renderWidgets(); } }, { label: 'Done ✓', cls: 'btn-primary' }] });
+}
+
 async function renderWidgets() {
   if (!ctx) return;
-  const { me, widgets } = ctx;
-  const [assignments, notes, lessons, journal] = await Promise.all([
-    store.list('assignments', { childId: me.id }), store.list('notes', { childId: me.id }), store.list('lessons'), store.get('journal', `${me.id}_${today()}`),
+  const { me, widgets, prefs } = ctx;
+  const wo = widgetOrder();
+  const wantPics = !prefs.widgetsCollapsed && !wo.hidden.has('gallery');
+  const [assignments, notes, lessons, journal, imgs] = await Promise.all([
+    store.list('assignments', { childId: me.id }), store.list('notes', { childId: me.id }), store.list('lessons'), store.get('journal', `${me.id}_${today()}`), wantPics ? store.list('images', { childId: me.id }).catch(() => []) : [],
   ]);
+  if (!ctx) return;
   const L = Object.fromEntries(lessons.map(l => [l.id, l]));
   const t = today();
   const mine = assignments.filter(a => L[a.lessonId]);
   const todo = mine.filter(a => a.date <= t && ['assigned', 'in_progress'].includes(a.status)).sort((a, b) => a.date.localeCompare(b.date));
+  const soon = mine.filter(a => a.date > t && ['assigned', 'in_progress'].includes(a.status)).sort((a, b) => a.date.localeCompare(b.date));
   const doneToday = mine.filter(a => a.completedAt && new Date(a.completedAt).toDateString() === new Date().toDateString());
   const total = todo.length + doneToday.length;
   const newFeedback = mine.filter(a => a.status === 'reviewed' && !a.feedbackSeen);
   const unread = notes.filter(n => !n.read);
   ctx.unread = { notes: unread, feedback: newFeedback };
   ctx.bellEl?.querySelector('.dot').classList.toggle('hidden', !(unread.length + newFeedback.length));
-  widgets.innerHTML = '';
-
-  // Today
-  const w = h('div', { class: 'kw kw-today' },
-    h('div', { class: 'kw-head' }, h('div', { html: ring(total ? doneToday.length / total : 1, total ? `${doneToday.length}/${total}` : '✓') }),
-      h('div', {}, h('div', { class: 'kw-hi' }, `${greeting()}, ${me.name}!`), h('div', { class: 'muted small' }, todo.length ? `${todo.length} lesson${todo.length > 1 ? 's' : ''} to do today` : doneToday.length ? '🎉 All done for today — amazing!' : 'No lessons today. Explore, create or play!'))));
-  todo.slice(0, 4).forEach(a => {
-    const l = L[a.lessonId]; const s = subject(l.subject);
-    w.append(h('button', { class: 'kw-lesson', onclick: () => openApp('lessons', { assignmentId: a.id }) },
-      h('span', { class: 'si', style: { background: s.color + '26' } }, s.icon), h('span', { class: 'tx' }, h('b', {}, l.title), h('small', {}, `${s.name} · ${l.durationMins || 30} min${a.date < t ? ' · from ' + fmtDate(a.date) : ''}`)),
-      h('span', { class: 'go' }, a.status === 'in_progress' ? '⏯' : '▶')));
-  });
-  if (todo.length > 4) w.append(h('button', { class: 'btn btn-sm', style: { width: '100%' }, onclick: () => openApp('lessons') }, `See all ${todo.length} →`));
-  widgets.append(w);
-
-  // Mood check-in (once a day)
-  if (!journal?.mood) {
-    const moods = [['😄', 'Great'], ['🙂', 'Good'], ['😐', 'OK'], ['😟', 'Worried'], ['😢', 'Sad']];
-    widgets.append(h('div', { class: 'kw' }, h('div', { class: 'kw-title' }, 'How are you feeling today?'),
-      h('div', { class: 'mood-row' }, ...moods.map(([e, l]) => h('button', { title: l, onclick: async () => {
-        await store.put('journal', { ...(journal || {}), id: `${me.id}_${today()}`, childId: me.id, date: today(), mood: e, moodLabel: l });
-        store.log('mood', { mood: e, label: l });
-        sfx('pop');
-        toast(['😟', '😢'].includes(e) ? "Thanks for telling me 💛 It's a good idea to talk to Mum or Dad about it." : 'Thanks for sharing! Have a brilliant day ✨', 'good', 4500);
-        renderWidgets();
-      } }, h('span', {}, e), h('small', {}, l))))));
-  }
-
-  // Notes from parents
-  unread.sort((a, b) => b.ts - a.ts).slice(0, 2).forEach(n => {
-    widgets.append(h('div', { class: 'kw kw-note' }, h('div', { class: 'small' }, `${n.fromAvatar || '💌'} Note from ${n.from}`), h('p', {}, n.text),
-      h('button', { class: 'btn btn-sm', onclick: async () => { n.read = true; await store.put('notes', n); sfx('pop'); renderWidgets(); } }, '👍 Thanks!')));
-  });
-  if (newFeedback.length) widgets.append(h('button', { class: 'kw kw-feedback', onclick: () => openApp('lessons', { tab: 'done' }) }, `💬 New feedback on ${newFeedback.length} lesson${newFeedback.length > 1 ? 's' : ''}!`));
-
-  // Word of the day
-  const dayNo = Math.floor(Date.now() / 86400000);
-  const [word, mean, ex] = WORDS[dayNo % WORDS.length];
-  widgets.append(h('div', { class: 'kw kw-word' }, h('div', { class: 'kw-title' }, '🪄 Word of the day'),
-    h('div', { class: 'row' }, h('b', { class: 'big-word' }, word), h('button', { class: 'icon-btn', title: 'Say it', onclick: () => say(`${word}. ${mean}. ${ex}`) }, '🔊')),
-    h('div', { class: 'small' }, mean), h('div', { class: 'small muted' }, `“${ex}”`)));
-
-  // Ask Ollie quick box
-  const q = h('input', { class: 'input', placeholder: 'Ask Ollie anything…' });
-  q.addEventListener('keydown', e => { if (e.key === 'Enter' && q.value.trim()) { openApp('helper', { ask: q.value.trim() }); q.value = ''; } });
-  widgets.append(h('div', { class: 'kw kw-ask' }, h('span', { style: { fontSize: '26px' } }, '🦉'), q));
-
+  ctx.lessonBadge = todo.length;
   const lb = ctx.icons.querySelector('[data-app="lessons"] .badge');
-  lb.textContent = todo.length; lb.classList.toggle('hidden', !todo.length);
+  if (lb) { lb.textContent = todo.length; lb.classList.toggle('hidden', !todo.length); }
+  widgets.innerHTML = '';
+  ctx.desk.querySelector('.kw-tab')?.remove();
+  if (prefs.widgetsCollapsed) {
+    ctx.desk.append(h('button', { class: 'kw-tab', title: 'Show widgets', onclick: () => { prefs.widgetsCollapsed = false; savePrefs(); renderWidgets(); } }, '◀', h('span', {}, 'Widgets'), unread.length + todo.length ? h('span', { class: 'kw-tab-dot' }, unread.length + todo.length) : null));
+    widgets.classList.add('hidden'); return;
+  }
+  widgets.classList.remove('hidden');
+  widgets.append(h('div', { class: 'kw-bar' }, h('button', { class: 'kw-tool', title: 'Edit widgets', onclick: editWidgets }, '✏️ Edit'), h('button', { class: 'kw-tool', title: 'Hide widgets', onclick: () => { prefs.widgetsCollapsed = true; savePrefs(); renderWidgets(); } }, 'Hide ▶')));
+  const { order, hidden } = widgetOrder();
+  const dayNo = Math.floor(Date.now() / 86400000);
+  const card = (k, ...kids) => h('div', { class: `kw kw-${k}`, 'data-w': k }, ...kids);
+  const build = {
+    today() {
+      const w = card('today', h('div', { class: 'kw-head' }, h('div', { html: ring(total ? doneToday.length / total : 1, total ? `${doneToday.length}/${total}` : '✓') }),
+        h('div', {}, h('div', { class: 'kw-hi' }, `${greeting()}, ${me.name}!`), h('div', { class: 'muted small' }, todo.length ? `${todo.length} lesson${todo.length > 1 ? 's' : ''} to do today` : doneToday.length ? '🎉 All done for today — amazing!' : 'No lessons today. Explore, create or play!'))));
+      todo.slice(0, 4).forEach(a => {
+        const l = L[a.lessonId]; const s = subject(l.subject);
+        w.append(h('button', { class: 'kw-lesson', onclick: () => openApp('lessons', { assignmentId: a.id }) },
+          h('span', { class: 'si', style: { background: s.color + '26' } }, s.icon), h('span', { class: 'tx' }, h('b', {}, l.title), h('small', {}, `${s.name} · ${l.durationMins || 30} min${a.date < t ? ' · from ' + fmtDate(a.date) : ''}`)),
+          h('span', { class: 'go' }, a.status === 'in_progress' ? '⏯' : '▶')));
+      });
+      if (todo.length > 4) w.append(h('button', { class: 'btn btn-sm', style: { width: '100%' }, onclick: () => openApp('lessons') }, `See all ${todo.length} →`));
+      if (newFeedback.length) w.append(h('button', { class: 'kw-feedback', onclick: () => openApp('lessons', { tab: 'done' }) }, `💬 New feedback on ${newFeedback.length} lesson${newFeedback.length > 1 ? 's' : ''}!`));
+      return w;
+    },
+    mood() {
+      if (journal?.mood) return null;
+      const moods = [['😄', 'Great'], ['🙂', 'Good'], ['😐', 'OK'], ['😟', 'Worried'], ['😢', 'Sad']];
+      return card('mood', h('div', { class: 'kw-title' }, 'How are you feeling today?'),
+        h('div', { class: 'mood-row' }, ...moods.map(([e, l]) => h('button', { title: l, onclick: async () => {
+          await store.put('journal', { ...(journal || {}), id: `${me.id}_${today()}`, childId: me.id, date: today(), mood: e, moodLabel: l });
+          store.log('mood', { mood: e, label: l }); sfx('pop');
+          toast(['😟', '😢'].includes(e) ? "Thanks for telling me 💛 It's a good idea to talk to Mum or Dad about it." : 'Thanks for sharing! Have a brilliant day ✨', 'good', 4500);
+          renderWidgets();
+        } }, h('span', {}, e), h('small', {}, l)))));
+    },
+    notes() {
+      if (!unread.length) return null;
+      const n = unread.sort((a, b) => b.ts - a.ts)[0];
+      return card('note', h('div', { class: 'small' }, `${n.fromAvatar || '💌'} Note from ${n.from}${unread.length > 1 ? ` (+${unread.length - 1} more)` : ''}`), h('p', {}, n.text),
+        h('div', { class: 'row' }, h('button', { class: 'btn btn-sm', onclick: async () => { n.read = true; await store.put('notes', n); sfx('pop'); renderWidgets(); } }, '👍 Thanks!'), h('button', { class: 'icon-btn', title: 'Read it to me', onclick: () => say(`Note from ${n.from}. ${n.text}`) }, '🔊')));
+    },
+    stars() {
+      const el = card('stars', h('div', { class: 'kw-title' }, '⭐ My stars'), h('div', { class: 'muted small' }, '…'));
+      el.onclick = () => openApp('stars'); el.style.cursor = 'pointer';
+      import('./apps/stars.js').then(async ({ computeRewards }) => {
+        const r = await computeRewards(me.id); const got = r.badges.filter(b => b.got); const next = r.badges.find(b => !b.got);
+        el.lastChild.replaceWith(h('div', { class: 'kw-stat3' }, h('div', {}, h('b', {}, `⭐ ${r.stars}`), h('small', {}, 'stars')), h('div', {}, h('b', {}, `🔥 ${r.streak}`), h('small', {}, 'day streak')), h('div', {}, h('b', {}, `🏅 ${got.length}`), h('small', {}, 'badges'))),
+          next ? h('div', { class: 'small muted', style: { marginTop: '6px' } }, `Next badge: ${next.e} ${next.name} — ${next.desc}`) : null);
+      });
+      return el;
+    },
+    upcoming() {
+      const w = card('upcoming', h('div', { class: 'kw-title' }, '📅 Coming up'));
+      if (!soon.length) w.append(h('div', { class: 'small muted' }, 'Nothing planned yet.'));
+      soon.slice(0, 4).forEach(a => { const l = L[a.lessonId]; w.append(h('div', { class: 'kw-up' }, h('span', {}, subject(l.subject).icon), h('span', { style: { flex: 1 } }, l.title), h('small', { class: 'muted' }, fmtDate(a.date, { weekday: 'short' })))); });
+      return w;
+    },
+    word() {
+      const [word, mean, ex] = WORDS[dayNo % WORDS.length];
+      return card('word', h('div', { class: 'kw-title' }, '🪄 Word of the day'),
+        h('div', { class: 'row' }, h('b', { class: 'big-word' }, word), h('button', { class: 'icon-btn', title: 'Say it', onclick: () => say(`${word}. ${mean}. ${ex}`) }, '🔊'), allowed('words') ? h('button', { class: 'icon-btn', title: 'Open in Word Wizard', onclick: () => openApp('words', { word }) }, '🔎') : null),
+        h('div', { class: 'small' }, mean), h('div', { class: 'small muted' }, `“${ex}”`));
+    },
+    fact() {
+      const f = FACTS[(dayNo * 7) % FACTS.length];
+      return card('fact', h('div', { class: 'kw-title' }, '🌍 Fun fact'), h('div', { class: 'kw-fact' }, f),
+        h('div', { class: 'row' }, h('button', { class: 'icon-btn', title: 'Read it', onclick: () => say(f) }, '🔊'), allowed('helper') ? h('button', { class: 'btn btn-sm', onclick: () => openApp('helper', { ask: `Tell me more about this fact: ${f.replace(/\p{Extended_Pictographic}/gu, '')}` }) }, '🦉 Tell me more') : null));
+    },
+    gallery() {
+      const pics = imgs.filter(i => ['kid', 'wallpaper', 'story'].includes(i.kind)).sort((a, b) => b.ts - a.ts);
+      if (!pics.length) return card('gallery', h('div', { class: 'kw-title' }, '🖼️ Latest picture'), h('div', { class: 'small muted' }, 'Make one in Picture Maker or Paint!'));
+      const img = h('img', { class: 'kw-pic', src: pics[0].data, alt: '' });
+      return card('gallery', h('div', { class: 'kw-title' }, '🖼️ Latest picture'), img, h('div', { class: 'small muted' }, (pics[0].prompt || '').slice(0, 60)));
+    },
+    sticky() {
+      const ta = h('textarea', { class: 'kw-sticky-ta', placeholder: 'Write yourself a note… ✏️', maxlength: 400 }, prefs.sticky || '');
+      let tm; ta.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { prefs.sticky = ta.value; store.put('prefs', prefs); }, 600); };
+      return card('sticky', h('div', { class: 'kw-title' }, '📝 My sticky note'), ta);
+    },
+    ask() {
+      if (!allowed('helper')) return null;
+      const q = h('input', { class: 'input', placeholder: 'Ask Ollie anything…' });
+      q.addEventListener('keydown', e => { if (e.key === 'Enter' && q.value.trim()) { openApp('helper', { ask: q.value.trim() }); q.value = ''; } });
+      return card('ask', h('span', { style: { fontSize: '26px' } }, '🦉'), q, h('button', { class: 'icon-btn', title: 'Ask', onclick: () => { if (q.value.trim()) { openApp('helper', { ask: q.value.trim() }); q.value = ''; } } }, '➤'));
+    },
+  };
+  for (const k of order) {
+    if (hidden.has(k) && !(k === 'notes' && unread.length)) continue; // notes from parents always show
+    const el = build[k]?.();
+    if (el) widgets.append(el);
+  }
 }
 
 // ───────────────────────── Pop-ups: launcher, menus, notifications ─────────────────────────
@@ -340,9 +470,9 @@ function launcher() {
     grid.innerHTML = '';
     const term = q.value.toLowerCase();
     for (const [cat, label] of Object.entries(CATS)) {
-      const apps = Object.entries(APPS).filter(([, a]) => a.cat === cat && (!term || a.name.toLowerCase().includes(term)));
+      const apps = Object.entries(APPS).filter(([id, a]) => allowed(id) && a.cat === cat && (!term || a.name.toLowerCase().includes(term)));
       if (!apps.length) continue;
-      grid.append(h('div', { class: 'kl-cat' }, h('h4', {}, label), h('div', { class: 'kl-grid' }, ...apps.map(([id, a]) => h('button', { class: 'kl-app', onclick: () => { closePops(); openApp(id); } }, h('span', { class: 'ic', style: { '--c': a.color } }, a.icon), a.name)))));
+      grid.append(h('div', { class: 'kl-cat' }, h('h4', {}, label), h('div', { class: 'kl-grid' }, ...apps.map(([id, a]) => h('button', { class: 'kl-app', onclick: () => { closePops(); openApp(id); }, oncontextmenu: e => { e.preventDefault(); appMenu(id, e.clientX, e.clientY); } }, h('span', { class: 'ic', style: { '--c': a.color } }, a.icon), a.name)))));
     }
   };
   q.oninput = draw;
@@ -364,6 +494,7 @@ function meMenu(anchor) {
     h('div', { class: 'row', style: { marginBottom: '10px' } }, h('span', { style: { fontSize: '40px' } }, ctx.me.avatar), h('div', {}, h('b', { style: { fontSize: '1.15em' } }, ctx.me.name), h('div', { class: 'small muted' }, ctx.me.yearGroup || ''))),
     h('div', { class: 'kw-title' }, '🖼️ Wallpaper'), walls,
     h('button', { class: 'btn btn-sm', style: { margin: '6px 0 12px' }, onclick: () => { closePops(); openApp('pictures', { wallpaper: true }); } }, '🎨 Make my own wallpaper'),
+    h('button', { class: 'btn btn-sm', style: { margin: '0 0 12px' }, onclick: () => { closePops(); editWidgets(); } }, '🧩 Edit my widgets'),
     h('div', { class: 'kw-title' }, '🔠 Text'),
     h('div', { class: 'row wrap', style: { marginBottom: '12px' } },
       ...[['normal', 'Normal'], ['large', 'Bigger']].map(([v, l]) => h('button', { class: `btn btn-sm ${prefs.textSize === v ? 'btn-primary' : ''}`, onclick: () => { prefs.textSize = v; savePrefs(); closePops(); } }, l)),
@@ -389,6 +520,9 @@ function contextMenu(x, y) {
     h('button', { onclick: () => { closePops(); launcher(); } }, '▦  All apps'),
     h('button', { onclick: () => { closePops(); setWallpaper(((ctx.prefs.wallpaper || 0) + 1) % WALLPAPERS.length, null); } }, '🖼️  Next wallpaper'),
     h('button', { onclick: () => { closePops(); ctx.wins.forEach(w => w.minimise()); } }, '⬇️  Show desktop'),
+    h('button', { onclick: () => { closePops(); editWidgets(); } }, '🧩  Edit widgets'),
+    h('button', { onclick: () => { closePops(); ctx.prefs.widgetsCollapsed = !ctx.prefs.widgetsCollapsed; savePrefs(); renderWidgets(); } }, ctx.prefs.widgetsCollapsed ? '👀  Show widgets' : '🙈  Hide widgets'),
+    ctx.prefs.hiddenIcons?.length ? h('button', { onclick: () => { closePops(); ctx.prefs.hiddenIcons = []; savePrefs(); renderIcons(); } }, '🧸  Show all desktop icons') : null,
     h('button', { onclick: () => { closePops(); renderWidgets(); renderTop(); } }, '🔄  Refresh'));
   ctx.desk.append(m);
 }
@@ -398,6 +532,7 @@ export async function openApp(id, args = {}) {
   if (!ctx) return;
   const def = APPS[id];
   if (!def) return;
+  if (!allowed(id)) { toast('That app is switched off — ask Mum or Dad.', 'warn'); return; }
   closePops();
   if (def.single) {
     const existing = ctx.wins.find(w => w.appId === id);
@@ -432,7 +567,9 @@ async function closeAllGuarded() {
   return true;
 }
 async function saveAll() {
-  for (const w of [...(ctx?.wins || [])]) { try { if (w.dirty?.isDirty?.()) await w.dirty.save(); } catch { } }
+  window.__klAutoName = true;
+  try { for (const w of [...(ctx?.wins || [])]) { try { if (w.dirty?.isDirty?.()) await w.dirty.save(); } catch { } } }
+  finally { window.__klAutoName = false; }
 }
 
 function createWindow(appId, def, title) {

@@ -98,7 +98,7 @@ export const ACTIVITY_SCHEMA = `
    { "type": "speak", "prompt": "Read this sentence aloud", "target": "the exact sentence to read (max 20 words)", "skill": "skill-id" }
  where ...common = "skill": "skill-id", "hint": "a helpful nudge", "explanation": "why the answer is right"`;
 
-export async function generateLesson({ child, subject, topic, durationMins = 30, difficulty = 'at their level', activityCount = 6, focusSkills = [], mistakes = [], notes = '', interactive = true, withImages = true, onStage }) {
+export async function generateLesson({ child, subject, topic, durationMins = 30, difficulty = 'at their level', activityCount = 6, focusSkills = [], mistakes = [], notes = '', interactive = true, withImages = true, check = true, onStage }) {
   const s = await store.settings();
   const subj = SUBJECTS.find(x => x.id === subject)?.name || subject;
   const sys = `You are an outstanding, warm primary teacher in the UK designing an interactive home-school lesson.
@@ -130,6 +130,7 @@ Rules:
 - mcq "answer" is the 0-based index; multi "answers" lists all correct indices. Options must be unambiguous.
 - order: 3–6 items in the CORRECT order. match: 3–6 pairs. sort: 2–3 categories and 4–8 items. fillblank: wrap each missing word in [[double brackets]]; 2–5 blanks; include a word bank (bank: true) for younger learners.
 - numberline: answer must sit on the step grid between min and max; give helpful labels.
+- QUALITY: every question must make sense on its own and have exactly ONE clearly correct answer. Never ask about "the 7" in a number where 7 appears more than once (use numbers whose digits are all different, or name the position, e.g. "the digit in the hundreds place"). Numeric answers must be a single plain number (say the unit in the question). No trick questions. Double-check every answer key — children only get one or two tries.
 - Every activity tests ONE skill. Use only these skill ids: ${SKILL_LIST}.
 - ${withImages ? 'Add "imagePrompt" to 1–3 sections where a picture really helps (diagrams of real things, scenes, animals, places). ' : 'Do not include imagePrompt fields. '}Questions must never depend on a picture.
 - Difficulty: ${difficulty}.`;
@@ -140,7 +141,39 @@ ${mistakes.length ? `This is a BRIDGING lesson to close a learning gap. Recent m
 ${notes ? `Extra instructions from the parent: ${notes}` : ''}`;
   onStage && onStage('Writing the lesson…');
   const lesson = await completeJSON({ task: 'lessons', maxTokens: 8000, messages: [{ role: 'system', content: sys }, { role: 'user', content: user }] });
-  return normaliseLesson(lesson, { subject, durationMins });
+  const out = normaliseLesson(lesson, { subject, durationMins });
+  if (check) { onStage && onStage('Double-checking every question…'); await checkActivities(out, child); }
+  return out;
+}
+
+/**
+ * Second AI pass: a strict "question checker" that fixes ambiguous wording, wrong answer keys and
+ * questions that don't make sense (e.g. "the value of the 7 in 7,758"). Mutates lesson.activities in place.
+ * Never throws — if the check fails, the original questions are kept.
+ */
+export async function checkActivities(lesson, child) {
+  if (!lesson.activities?.length) return lesson;
+  try {
+    const strip = a => { const { id, imageId, ...rest } = a; return rest; };
+    const r = await completeJSON({
+      task: 'analysis', maxTokens: 6000, temperature: 0.1,
+      messages: [
+        { role: 'system', content: `You are a meticulous UK primary-school quality checker. Check EVERY activity for a child (${childLine(child)}):
+1. Exactly one clearly correct answer; the answer key is mathematically/factually right.
+2. No ambiguity — e.g. asking for "the value of the 7" in 7,758 is ambiguous because 7 appears twice; fix it by changing the number so every digit is different, or by naming the position.
+3. Wording is clear and age-appropriate; the question makes sense on its own without a picture.
+4. numeric answers are a single plain number; mcq/multi options are distinct with the right indexes; order items have one sensible order; match pairs are one-to-one; sort items clearly belong to one group; fill-the-gap blanks have one obvious word; numberline answers lie between min and max on the step grid.
+Fix any problem with the smallest change. Return ONLY JSON: {"activities":[the full list, same order, same shapes and fields],"changes":["one short note per fix (empty if none)"]}` },
+        { role: 'user', content: JSON.stringify({ lesson: lesson.title, activities: lesson.activities.map(strip) }) },
+      ],
+    });
+    const fixed = (r.activities || []).map(a => normaliseActivity(a));
+    if (fixed.length === lesson.activities.length && fixed.every(Boolean)) {
+      lesson.activities = fixed.map((a, i) => ({ ...a, id: lesson.activities[i].id, ...(lesson.activities[i].imageId ? { imageId: lesson.activities[i].imageId } : {}), skill: a.skill && a.skill !== 'general.other' ? a.skill : lesson.activities[i].skill }));
+      lesson.qualityCheck = { at: Date.now(), changes: (r.changes || []).filter(Boolean).slice(0, 12) };
+    }
+  } catch (e) { console.warn('quality check skipped', e); }
+  return lesson;
 }
 
 const rid = p => p + Math.random().toString(36).slice(2, 9);
@@ -193,6 +226,41 @@ export function normaliseLesson(l, defaults = {}) {
   };
   lesson.skills = [...new Set([...(l.skills || []).map(fixSkill), ...lesson.activities.map(a => a.skill)])];
   return lesson;
+}
+
+export async function generateActivities({ lesson, type, count = 1, skill, child, like }) {
+  const s = await store.settings();
+  const valid = new Set(Object.keys(SKILLS));
+  const r = await completeJSON({
+    task: 'lessons', maxTokens: 2500, temperature: 0.8,
+    messages: [
+      { role: 'system', content: `You write activities for a UK primary home-school lesson (${s.curriculum}), British English, for a reading age of 7–9. Return ONLY JSON: {"activities":[...]} using these shapes:${ACTIVITY_SCHEMA}\nUse only these skill ids: ${SKILL_LIST}. Answers must be unambiguous and correct.` },
+      { role: 'user', content: `${childLine(child)}\nLesson: ${lesson.title} (${lesson.topic || lesson.subject}).\nWhat the lesson teaches:\n${(lesson.sections || []).map(x => `- ${x.title}: ${String(x.body || '').slice(0, 300)}`).join('\n')}\n${like ? `Write ${count} NEW activity of type "${like.type}" testing the same skill as this one, but with different content (don't repeat it):\n${JSON.stringify(like)}` : `Write ${count} new ${type === 'mix' ? 'activities of different interactive types' : `"${type}" activities`}${skill ? ` testing ${skill}` : ''}, different from these existing ones: ${(lesson.activities || []).map(a => a.prompt).join(' | ').slice(0, 1500)}`}` },
+    ],
+  });
+  const fix = sk => (valid.has(sk) ? sk : skill || like?.skill || lesson.skills?.[0] || 'general.other');
+  const acts = (r.activities || (r.type ? [r] : [])).map(a => normaliseActivity(a, fix)).filter(Boolean);
+  const tmp = { title: lesson.title, activities: acts };
+  await checkActivities(tmp, child);
+  return tmp.activities;
+}
+
+export async function adaptLesson({ lesson, child, direction, notes = '' }) {
+  const s = await store.settings();
+  const howTo = { easier: 'Make it EASIER: simpler language, smaller numbers, more worked examples, more scaffolding and hints, word banks.', harder: 'Make it HARDER: a stretch — bigger numbers, multi-step problems, reasoning and "explain why" questions.', personal: 'Keep the level but PERSONALISE it heavily to the learner\'s interests and notes.', shorter: 'Make a SHORTER 15-minute version with the key ideas and 4 activities.' }[direction] || '';
+  const r = await completeJSON({
+    task: 'lessons', maxTokens: 8000, temperature: 0.7,
+    messages: [
+      { role: 'system', content: `You adapt home-school lessons for UK primary children (${s.curriculum}), British English. Return ONLY the complete adapted lesson as JSON in exactly the same shape as the input (title, subject, topic, yearGroup, durationMins, objectives, skills, coverImagePrompt, intro, sections, activities, offlineActivity, parentNotes). Activity shapes:${ACTIVITY_SCHEMA}\nUse only these skill ids: ${SKILL_LIST}.` },
+      { role: 'user', content: `${childLine(child)}\n${howTo}\n${notes ? 'Parent notes: ' + notes : ''}\n\nOriginal lesson JSON:\n${JSON.stringify({ ...lesson, id: undefined, createdAt: undefined, updatedAt: undefined }).slice(0, 14000)}` },
+    ],
+  });
+  const out = normaliseLesson(r, { subject: lesson.subject, durationMins: lesson.durationMins });
+  await checkActivities(out, child);
+  // keep existing pictures where sections line up
+  out.coverImageId = lesson.coverImageId;
+  out.sections.forEach((sec, i) => { const old = lesson.sections[i]; if (old?.imageId && !sec.imageId) sec.imageId = old.imageId; });
+  return out;
 }
 
 export async function improveSection({ lesson, section, instruction, child }) {

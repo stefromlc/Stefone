@@ -25,6 +25,7 @@ export const ACT_LABEL = {
   reading: a => `📖 Reading Buddy: “${a.title}”${a.score != null ? ` — ${pct(a.score)}` : ''}`,
   game: a => `🧩 Played ${a.title}${a.score != null ? ` — ${pct(a.score)}` : ''}`,
   code: a => `🐢 Completed Code Turtle “${a.title}”`,
+  search: a => `🔎 Ollie looked up: ${a.q}`,
 };
 
 export async function render(main, state) {

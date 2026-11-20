@@ -224,3 +224,20 @@ export function choose({ title, message, icon = '', choices }) {
     return m;
   });
 }
+
+// "7,000", "7000", "7 thousand", "seven thousand" → 7000
+const WORDNUM = { zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+export function toNumber(v) {
+  let t = String(v).toLowerCase().replace(/,/g, '').replace(/\band\b/g, ' ').replace(/-/g, ' ').trim();
+  if (/^-?\d+(\.\d+)?$/.test(t)) return Number(t);
+  let total = 0, cur = 0, seen = false;
+  for (const w of t.split(/\s+/)) {
+    if (/^\d+(\.\d+)?$/.test(w)) { cur += Number(w); seen = true; }
+    else if (w in WORDNUM) { cur += WORDNUM[w]; seen = true; }
+    else if (w === 'hundred') cur = (cur || 1) * 100;
+    else if (w === 'thousand') { total += (cur || 1) * 1000; cur = 0; }
+    else if (w === 'million') { total += (cur || 1) * 1e6; cur = 0; }
+    else return NaN;
+  }
+  return seen ? total + cur : NaN;
+}

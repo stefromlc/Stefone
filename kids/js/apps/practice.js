@@ -1,9 +1,10 @@
 // Practice — quick maths drills and spelling tests. Results feed progress + gap analysis.
 import { store } from '../store.js';
-import { h, speak, toast, confetti, uid, esc } from '../util.js';
+import { h, speak, toast, confetti, uid, esc, toNumber } from '../util.js';
+export { toNumber };
 import { Y34_WORDS } from '../skills.js';
 import { starsFor } from './player.js';
-import { sfx } from '../media.js';
+import { sfx, say } from '../media.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -24,7 +25,17 @@ const MATHS = {
   doubles: { name: 'Doubles & halves', icon: '🪞', color: '#ae3ec9', skill: 'maths.mental-maths',
     gen: () => { const n = R(2, 50); return Math.random() < .5 ? { q: `Double ${n}`, a: n * 2 } : { q: `Half of ${n * 2}`, a: n }; } },
   place: { name: 'Place value', icon: '🔢', color: '#1098ad', skill: 'maths.place-value',
-    gen: () => { const n = R(100, 9999); const s = String(n); const i = R(0, s.length - 1); if (s[i] === '0') return MATHS.place.gen(); const v = +s[i] * Math.pow(10, s.length - 1 - i); return { q: `Value of the ${s[i]} in ${n.toLocaleString('en-GB')}`, a: v, small: true }; } },
+    // Every digit is different, so "the 7" can only mean one place — and that digit is highlighted too.
+    gen: () => {
+      let n, s;
+      do { n = Math.random() < .35 ? R(102, 987) : R(1023, 9876); s = String(n); } while (new Set(s).size !== s.length);
+      let i; do { i = R(0, s.length - 1); } while (s[i] === '0');
+      const v = +s[i] * Math.pow(10, s.length - 1 - i);
+      const shown = n.toLocaleString('en-GB');
+      let k = -1; const html = [...shown].map(ch => { if (/\d/.test(ch)) k++; return k === i && /\d/.test(ch) ? `<mark class="pv">${ch}</mark>` : ch; }).join('');
+      const forms = [`What is the value of the <b>${s[i]}</b> in ${html}?`, `What is the <b>${s[i]}</b> worth in ${html}?`];
+      return { q: `Value of the ${s[i]} in ${shown}`, html: forms[R(0, 1)], a: v, small: true, explain: `The ${s[i]} is in the ${['ones', 'tens', 'hundreds', 'thousands'][s.length - 1 - i]} place, so it is worth ${v.toLocaleString('en-GB')}.` };
+    } },
 };
 
 export async function open(win, ctx) {
@@ -82,7 +93,7 @@ export async function open(win, ctx) {
   function run({ title, qs, kind, mode, skill, numeric }) {
     win.setTitle(title);
     let i = 0, correct = 0; const missed = []; const t0 = Date.now();
-    const sayWord = q => speak(`${q.a}. ${q.sentence || ''} ${q.sentence ? q.a : ''}`, { rate: 0.85 });
+    const sayWord = q => say(`${q.a}. ${q.sentence || ''} ${q.sentence ? q.a : ''}`);
     const next = () => {
       if (i >= qs.length) return finish();
       const q = qs[i];
@@ -91,22 +102,29 @@ export async function open(win, ctx) {
       const fb = h('div', { style: { minHeight: '60px', fontSize: '1.3em', fontWeight: 800, marginTop: '12px' } });
       const bar = h('div', { class: 'bar', style: { maxWidth: '400px', margin: '0 auto' } }, h('i', { style: { width: `${(i / qs.length) * 100}%` } }));
       pad.append(h('div', { class: 'drill' }, bar, h('div', { class: 'muted', style: { marginTop: '8px' } }, `Question ${i + 1} of ${qs.length} · ⭐ ${correct}`),
-        kind === 'spelling' ? h('div', { class: 'q' }, h('button', { class: 'btn btn-lg', style: { fontSize: '1.2em' }, onclick: () => sayWord(q) }, '🔊 Hear the word')) : h('div', { class: 'q', style: q.small ? { fontSize: '1.8em' } : null }, q.q),
+        kind === 'spelling' ? h('div', { class: 'q' }, h('button', { class: 'btn btn-lg', style: { fontSize: '1.2em' }, onclick: () => sayWord(q) }, '🔊 Hear the word')) : h('div', { class: 'q', style: q.small ? { fontSize: '1.8em' } : null, html: q.html || null }, q.html ? null : q.q),
         h('div', { class: 'row', style: { justifyContent: 'center' } }, inp, h('button', { class: 'btn btn-good btn-lg', onclick: check }, '✓')), fb));
       if (kind === 'spelling') setTimeout(() => sayWord(q), 250);
       setTimeout(() => inp.focus(), 60);
       let done = false;
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+      let tries = 0;
       function check() {
         if (done) return;
         const v = inp.value.trim();
         if (!v) return;
+        const ok = numeric ? toNumber(v) === q.a : v.toLowerCase() === String(q.a).toLowerCase();
+        if (!ok && tries === 0) { // one more go before we show the answer
+          tries = 1; sfx('bad');
+          fb.innerHTML = '🤔 Not quite — have another go!'; fb.style.color = '#e67700';
+          inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); inp.select();
+          return;
+        }
         done = true;
-        const ok = numeric ? Number(v.replace(/,/g, '')) === q.a : v.toLowerCase() === String(q.a).toLowerCase();
-        if (ok) { correct++; sfx('good'); fb.innerHTML = '✅ Correct!'; fb.style.color = '#2f9e44'; }
-        else { sfx('bad'); missed.push({ q: q.q, a: q.a, given: v }); fb.innerHTML = `❌ It's <b>${esc(q.a)}</b>`; fb.style.color = '#e03131'; }
+        if (ok) { correct += tries ? 0.5 : 1; sfx('good'); fb.innerHTML = tries ? '💪 Got it on the second go!' : '✅ Correct!'; fb.style.color = '#2f9e44'; }
+        else { sfx('bad'); missed.push({ q: q.q, a: q.a, given: v }); fb.innerHTML = `❌ It's <b>${esc(q.a)}</b>${q.explain ? `<div class="small" style="font-weight:600;margin-top:4px">${esc(q.explain)}</div>` : ''}`; fb.style.color = '#e03131'; }
         inp.readOnly = true;
-        i++; setTimeout(next, ok ? 700 : 1900);
+        i++; setTimeout(next, ok ? 750 : q.explain ? 3200 : 2100);
       }
     };
     async function finish() {

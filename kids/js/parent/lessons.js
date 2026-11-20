@@ -2,7 +2,7 @@
 import { store } from '../store.js';
 import { h, esc, toast, modal, confirmDlg, md, today, fmtDate, uid, promptDlg, addDays } from '../util.js';
 import { SUBJECTS, SKILLS, subject, skillName, skillSubject } from '../skills.js';
-import { generateLesson, improveSection, aiReady } from '../ai.js';
+import { generateLesson, improveSection, aiReady, generateActivities, adaptLesson } from '../ai.js';
 import { header, go, state, kidById } from './shell.js';
 import { childData, recentMistakes } from './data.js';
 import { renderPlayer } from '../apps/player.js';
@@ -194,6 +194,7 @@ async function generator(main, { kidId, skill, topicHint }) {
   const focus = skillSelect(skill || ''); focus.prepend(h('option', { value: '', selected: !skill }, '(let the AI choose)'));
   const interactive = h('input', { type: 'checkbox', checked: true });
   const pics = h('input', { type: 'checkbox', checked: settings.media?.lessonImages !== false && !!settings.models.image });
+  const qcheck = h('input', { type: 'checkbox', checked: true });
   const notes = h('textarea', { class: 'input', rows: 2, placeholder: 'Anything else? e.g. "Use football examples", "Include a short reading passage", "Link to our trip to the museum"' });
   const publish = h('input', { type: 'checkbox', checked: true });
   const pubDate = h('input', { class: 'input', type: 'date', value: today(), style: { maxWidth: '170px' } });
@@ -224,7 +225,7 @@ async function generator(main, { kidId, skill, topicHint }) {
       h('label', { class: 'field' }, h('span', {}, 'Length'), dur),
       h('label', { class: 'field' }, h('span', {}, 'Difficulty'), diff),
       h('label', { class: 'field' }, h('span', {}, 'Activities'), count),
-      h('div', { class: 'field' }, h('span', {}, 'Extras'), h('label', { class: 'check' }, interactive, '🧩 Interactive activities (drag, match, sort, number lines…)'), h('label', { class: 'check' }, pics, `🎨 AI illustrations${settings.models.image ? '' : ' (no picture model set)'}`))),
+      h('div', { class: 'field' }, h('span', {}, 'Extras'), h('label', { class: 'check' }, interactive, '🧩 Interactive activities (drag, match, sort, number lines…)'), h('label', { class: 'check' }, pics, `🎨 AI illustrations${settings.models.image ? '' : ' (no picture model set)'}`), h('label', { class: 'check' }, qcheck, '🔍 Double-check every question with AI (recommended)'))),
     h('label', { class: 'field' }, h('span', {}, 'Extra instructions'), notes),
     h('div', { class: 'row wrap' }, h('label', { class: 'check' }, publish, 'Publish to the children from'), pubDate, spread),
     h('div', { class: 'row', style: { marginTop: '12px' } }, sum, h('span', { class: 'spacer' }), btn), jobsEl));
@@ -253,7 +254,7 @@ async function generator(main, { kidId, skill, topicHint }) {
           set(j, '✍️', 'Writing the lesson…');
           const child = j.kids.length === 1 ? j.kids[0] : { ...j.kids[0], gender: j.kids.every(k => k.gender === j.kids[0].gender) ? j.kids[0].gender : '', name: j.kids.map(k => k.name).join(' and '), interests: j.kids.map(k => k.interests).filter(Boolean).join('; '), learningNotes: '' };
           const lesson = await generateLesson({
-            child, subject: subj.value, topic: j.topic, durationMins: +dur.value, difficulty: diff.value, activityCount: +count.value, interactive: interactive.checked, withImages: pics.checked,
+            child, subject: subj.value, topic: j.topic, durationMins: +dur.value, difficulty: diff.value, activityCount: +count.value, interactive: interactive.checked, withImages: pics.checked, check: qcheck.checked, onStage: m => set(j, '✍️', m),
             focusSkills: focus.value ? [focus.value] : [], mistakes: j.kids.length === 1 ? await mistakesFor(j.kids[0]) : [], notes: notes.value.trim(),
           });
           Object.assign(lesson, { source: 'ai', createdBy: state.me.name });
@@ -347,6 +348,7 @@ async function editor(main, lesson, isNew) {
   header(main, isNew ? 'New lesson' : 'Edit lesson', {
     actions: [h('button', { class: 'btn', onclick: () => go('lessons') }, '← Library'),
       h('button', { class: 'btn', onclick: () => previewLesson(collect()) }, '👁 Preview as child'),
+      !isNew ? h('button', { class: 'btn btn-ai', onclick: () => versionDialog() }, '✨ Make a version…') : null,
       h('button', { class: 'btn', onclick: async () => { try { await save(false); } catch { return; } assignDialog(L).then(() => go('lessons', L.id)); } }, '📅 Assign'), saveBtn],
   });
   const markDirty = () => { dirty = true; saveBtn.textContent = '💾 Save *'; };
@@ -354,6 +356,7 @@ async function editor(main, lesson, isNew) {
   ed.addEventListener('input', markDirty); ed.addEventListener('change', markDirty);
 
   if (asgs.length) ed.append(h('div', { class: 'alert info' }, '📅', h('div', {}, `Assigned ${asgs.length} time${asgs.length > 1 ? 's' : ''}: `, ...asgs.map(a => h('span', { class: 'pill', style: { marginRight: '4px' } }, `${kidById(a.childId)?.avatar || ''} ${fmtDate(a.date)} · ${a.status.replace('_', ' ')}`)))));
+  if (L.qualityCheck) ed.append(h('div', { class: 'alert info' }, '🔍', h('div', {}, h('b', {}, 'Every question was double-checked by AI. '), L.qualityCheck.changes?.length ? `Fixed: ${L.qualityCheck.changes.join(' · ')}` : 'No problems found.')));
   if (L.parentNotes) ed.append(h('div', { class: 'alert' }, '📝', h('div', { class: 'md', html: md('**Notes for parents:** ' + L.parentNotes) })));
 
   const f = {
@@ -409,7 +412,13 @@ async function editor(main, lesson, isNew) {
   // Activities
   const actWrap = h('div');
   const addType = h('select', { class: 'input', style: { width: '210px' } }, ...Object.entries(TYPES).map(([v, t]) => h('option', { value: v }, `${t.icon} ${t.label}`)));
-  ed.append(h('div', { class: 'card', style: { marginTop: '14px' } }, h('div', { class: 'row wrap' }, h('h3', { style: { margin: 0 } }, '🧩 Activities'), h('span', { class: 'spacer' }), addType, h('button', { class: 'btn btn-sm', onclick: () => { L.activities.push(newActivity(addType.value, f.subject.value)); markDirty(); drawActs(); } }, '+ Add')),
+  ed.append(h('div', { class: 'card', style: { marginTop: '14px' } }, h('div', { class: 'row wrap' }, h('h3', { style: { margin: 0 } }, '🧩 Activities'), h('span', { class: 'spacer' }), addType, h('button', { class: 'btn btn-sm', onclick: () => { L.activities.push(newActivity(addType.value, f.subject.value)); markDirty(); drawActs(); } }, '+ Add'),
+      h('button', { class: 'btn btn-sm btn-ai', title: 'Let the AI write new activities of this type', onclick: async e => {
+        const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
+        try { const acts = await generateActivities({ lesson: collect(), type: addType.value, count: 2, child: kidById(L.personalisedFor) || kidById(state.kidId) }); L.activities.push(...acts); markDirty(); drawActs(); toast(`✨ Added ${acts.length} activities`, 'good'); }
+        catch (err) { toast(err.message, 'error'); }
+        b.disabled = false; b.textContent = '✨ Add 2 with AI';
+      } }, '✨ Add 2 with AI')),
     h('p', { class: 'small muted' }, 'Most types are marked instantly. Short answers, writing and drawings are marked by AI (or by you in Review). Each activity is tagged with a skill, which powers progress tracking and gap detection.'), actWrap));
   function drawActs() {
     actWrap.innerHTML = '';
@@ -422,6 +431,12 @@ async function editor(main, lesson, isNew) {
       actWrap.append(h('div', { class: 'editor-sec' },
         h('div', { class: 'row' }, h('b', {}, `Q${i + 1}`), h('span', { class: 'pill brand' }, `${t.icon} ${t.label}`), h('span', { class: 'spacer' }), h('div', { style: { width: '250px' } }, skill),
           h('button', { class: 'btn btn-sm', title: 'Try it', onclick: () => previewLesson({ ...collect(), sections: [], intro: '', activities: [a] }) }, '👁'),
+          h('button', { class: 'btn btn-sm btn-ai', title: 'Swap for a fresh AI question like this', onclick: async e => {
+            const b = e.currentTarget; b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
+            try { const [n] = await generateActivities({ lesson: collect(), like: a, child: kidById(L.personalisedFor) || kidById(state.kidId) }); if (n) { L.activities[i] = n; markDirty(); drawActs(); toast('✨ New question', 'good'); } else toast('The AI could not make that one — try again', 'warn'); }
+            catch (err) { toast(err.message, 'error'); }
+            b.disabled = false; b.textContent = '✨';
+          } }, '✨'),
           h('button', { class: 'btn btn-sm', title: 'Move up', onclick: () => { if (i) { [L.activities[i - 1], L.activities[i]] = [L.activities[i], L.activities[i - 1]]; markDirty(); drawActs(); } } }, '↑'),
           h('button', { class: 'btn btn-sm', onclick: () => { L.activities.splice(i, 1); markDirty(); drawActs(); } }, '🗑')),
         prompt, h('div', { style: { margin: '8px 0' } }, activityEditor(a, markDirty)), h('div', { class: 'grid2' }, hint, expl),
@@ -436,6 +451,36 @@ async function editor(main, lesson, isNew) {
     h('label', { class: 'field' }, h('span', {}, '📝 Notes for parents (never shown to the child)'), f.notes),
     h('div', { class: 'row' }, !isNew ? h('button', { class: 'btn btn-danger', onclick: del }, '🗑 Delete lesson') : null,
       !isNew ? h('button', { class: 'btn', onclick: dup }, '⧉ Duplicate') : null, h('span', { class: 'spacer' }), h('button', { class: 'btn btn-primary btn-lg', onclick: () => save(true).catch(() => { }) }, '💾 Save lesson'))));
+
+  function versionDialog() {
+    const kp = kidPicker(L.personalisedFor ? [L.personalisedFor] : state.kids.slice(0, 1).map(k => k.id));
+    let dir = 'easier';
+    const seg = h('div', { class: 'seg' }, ...[['easier', '🌱 Easier', 'More support'], ['harder', '🚀 Harder', 'A stretch'], ['personal', '🎯 Personalised', 'Their interests'], ['shorter', '⏱ Shorter', '15 minutes']].map(([v, l, d]) => h('button', { type: 'button', class: v === dir ? 'on' : '', onclick: e => { dir = v; seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === e.currentTarget)); } }, h('b', {}, l), h('small', {}, d))));
+    const date = h('input', { class: 'input', type: 'date', value: today(), style: { maxWidth: '170px' } });
+    const assign = h('input', { type: 'checkbox', checked: true });
+    const out = h('div');
+    modal({
+      title: `✨ Make a version of “${L.title}”`, wide: true,
+      body: h('div', {}, h('div', { class: 'field' }, h('span', {}, 'For'), kp.el), h('div', { class: 'field' }, h('span', {}, 'How should it change?'), seg),
+        h('div', { class: 'row', style: { marginTop: '8px' } }, h('label', { class: 'check' }, assign, 'Assign it on'), date), out),
+      actions: [{ label: 'Cancel' }, { label: '✨ Create', cls: 'btn-ai', onClick: async () => {
+        if (!kp.set.size) { toast('Pick a child', 'warn'); return false; }
+        const made = [];
+        for (const id of kp.set) {
+          const kid = kidById(id);
+          out.append(h('p', {}, h('span', { class: 'spinner' }), ` Writing a ${dir} version for ${kid.name}…`));
+          try {
+            const v = await adaptLesson({ lesson: collect(), child: kid, direction: dir });
+            Object.assign(v, { source: 'ai', createdBy: state.me.name, personalisedFor: id, adaptedFrom: L.id, yearGroup: kid.yearGroup || v.yearGroup });
+            await store.put('lessons', v); made.push(v);
+            if (assign.checked) await store.put('assignments', asgFor(v.id, id, date.value || today()));
+          } catch (e) { toast(e.message, 'error'); return false; }
+        }
+        toast(`✨ Created ${made.length} version${made.length > 1 ? 's' : ''}`, 'good');
+        go('lessons', made[0].id);
+      } }],
+    });
+  }
 
   function collect() {
     Object.assign(L, {

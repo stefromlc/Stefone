@@ -199,6 +199,19 @@ function safety(body, s, saveBar) {
   const mode = h('select', { class: 'input' }, h('option', { value: 'balanced', selected: s.helper.mode === 'balanced' }, 'Balanced — guides on schoolwork, may explain simple facts for curiosity questions'), h('option', { value: 'strict', selected: s.helper.mode === 'strict' }, 'Strict — never gives answers, always guides them to work it out'));
   const limit = h('input', { class: 'input', type: 'number', min: 0, value: s.helper.dailyMessageLimit });
   const voice = h('input', { type: 'checkbox', checked: s.helper.allowVoice !== false });
+  const sr = s.search || {};
+  const sOn = h('input', { type: 'checkbox', checked: sr.enabled !== false });
+  const sWeb = h('input', { type: 'checkbox', checked: sr.web !== false });
+  const sPics = h('input', { type: 'checkbox', checked: sr.pictures !== false });
+  const sEx = h('textarea', { class: 'input', rows: 2 }, (sr.excludedDomains || []).join(', '));
+  const kidHide = h('input', { type: 'checkbox', checked: s.widgets?.allowHide !== false });
+  const disabled = structuredClone(s.apps?.disabled || {});
+  const appGrid = h('div', { class: 'app-grid-set' });
+  import('../desktop.js').then(({ APPS }) => {
+    appGrid.append(h('div', { class: 'ags-row ags-head' }, h('span'), ...state.kids.map(k => h('b', {}, `${k.avatar} ${k.name}`))));
+    Object.entries(APPS).forEach(([id, a]) => appGrid.append(h('div', { class: 'ags-row' }, h('span', {}, `${a.icon} ${a.name}`),
+      ...state.kids.map(k => h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: !(disabled[k.id] || []).includes(id), disabled: ['lessons', 'files', 'stars'].includes(id), onchange: e => { const l = new Set(disabled[k.id] || []); e.target.checked ? l.delete(id) : l.add(id); disabled[k.id] = [...l]; } }), h('span', {}))))));
+  });
   const words = h('textarea', { class: 'input', rows: 3 }, (s.safety.blockedWords || []).join(', '));
   const sites = structuredClone(s.safety.allowedSites || []);
   const siteWrap = h('div');
@@ -218,6 +231,15 @@ function safety(body, s, saveBar) {
       h('label', { class: 'field' }, h('span', {}, 'Answering style'), mode),
       h('label', { class: 'check' }, voice, 'Allow talking to the helper with the microphone (where the browser supports it)'),
       h('p', { class: 'small muted' }, 'Every chat is saved for you to read in “Helper chats”. Messages that look like personal information (addresses, phone numbers, emails, passwords) are blocked before they reach the AI, and anything suggesting distress is flagged to you.')),
+    h('div', { class: 'card', style: { marginTop: '14px' } }, h('h3', {}, '🔎 Ollie can look things up'),
+      h('p', { class: 'small muted' }, 'Lets Ollie answer real-world questions with facts it finds (e.g. “How many Big Bens fit in the Shard?”) and show real photos (“Show me a picture of Big Ben”). Every search is listed in the Helper chats page.'),
+      h('label', { class: 'check' }, sOn, h('b', {}, 'Allow Ollie to use research tools'), ' (kids’ encyclopedia + calculator)'),
+      h('label', { class: 'check' }, sWeb, 'Live web search via OpenRouter (up-to-date facts; small extra cost per search)'),
+      h('label', { class: 'check' }, sPics, 'Show real photos from Wikipedia / Wikimedia Commons'),
+      h('label', { class: 'field', style: { marginTop: '8px' } }, h('span', {}, 'Never use these websites (comma-separated)'), sEx)),
+    h('div', { class: 'card', style: { marginTop: '14px' } }, h('h3', {}, '🧩 Apps the kids can use'),
+      h('p', { class: 'small muted' }, 'Switch apps off for a child — they disappear from their desktop, dock and launcher.'), appGrid,
+      h('label', { class: 'check', style: { marginTop: '10px' } }, kidHide, 'Let the kids hide, show and rearrange their desktop widgets')),
     h('div', { class: 'card', style: { marginTop: '14px' } }, h('h3', {}, '⛔ Blocked words'), h('p', { class: 'small muted' }, 'Comma-separated. Blocks Explorer searches/pages and helper messages containing these words, and flags them for you.'), words),
     h('div', { class: 'card', style: { marginTop: '14px' } }, h('h3', {}, '🌐 Approved websites (Explorer)'), h('p', { class: 'small muted' }, 'Shown as tiles in Explorer. Explorer otherwise only shows Simple English Wikipedia. Some sites refuse to load inside another page; the kids get an “open in new tab” button for those.'), siteWrap,
       h('button', { class: 'btn btn-sm', onclick: () => { sites.push({ name: '', url: 'https://', icon: '🌐' }); drawSites(); } }, '+ Add website')),
@@ -225,6 +247,9 @@ function safety(body, s, saveBar) {
       s.helper = { ...s.helper, name: name.value.trim() || 'Ollie the Owl', mode: mode.value, dailyMessageLimit: +limit.value || 0, allowVoice: voice.checked };
       s.safety.blockedWords = words.value.split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
       s.safety.allowedSites = sites.filter(x => x.name && /^https:\/\//.test(x.url));
+      s.search = { ...sr, enabled: sOn.checked, web: sWeb.checked, pictures: sPics.checked, excludedDomains: sEx.value.split(',').map(x => x.trim()).filter(Boolean) };
+      s.apps = { ...(s.apps || {}), disabled };
+      s.widgets = { ...(s.widgets || {}), allowHide: kidHide.checked };
     }));
 }
 

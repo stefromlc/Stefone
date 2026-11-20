@@ -3,12 +3,13 @@ import { store } from '../store.js';
 import { h, md, stopSpeaking, speak, confetti, toast } from '../util.js';
 import { subject, skillSubject } from '../skills.js';
 import { renderActivity, markActivity, correctText, responseText, persistDrawing, TYPES } from './activities.js';
-import { sayButton, storedImg, sfx } from '../media.js';
+import { sayButton, storedImg, sfx, say } from '../media.js';
 
 export { correctText, responseText };
 export function starsFor(score) { return score == null ? 2 : score >= 0.9 ? 3 : score >= 0.7 ? 2 : 1; }
 export const autoMark = markActivity;
 
+const RETRY = new Set(['mcq', 'multi', 'numeric', 'short', 'order', 'match', 'sort', 'fillblank', 'numberline']);
 const PRAISE = ['🎉 Brilliant!', '⭐ Spot on!', '👏 Well done!', '🚀 Super!', '🌟 Fantastic!', '💪 Great thinking!'];
 
 /** renderPlayer(container, { lesson, assignment, child, preview, onExit, onAskHelper }) */
@@ -35,10 +36,25 @@ export function renderPlayer(container, opts) {
 
   container.innerHTML = '';
   const dots = h('div', { class: 'lp-dots' });
-  const head = h('div', { class: 'lp-head', style: { '--sc': subj.color } }, h('span', { class: 'lp-subj' }, subj.icon), h('b', { class: 'lp-title' }, lesson.title), dots);
+  let autoRead = !!opts.autoRead, combo = 0;
+  const autoBtn = h('button', { class: `lp-auto ${autoRead ? 'on' : ''}`, title: 'Read every page to me automatically', onclick: () => { autoRead = !autoRead; autoBtn.classList.toggle('on', autoRead); opts.onAutoRead?.(autoRead); if (autoRead) speakStep(); else stopSpeaking(); } }, '🔊 Auto');
+  const head = h('div', { class: 'lp-head', style: { '--sc': subj.color } }, h('span', { class: 'lp-subj' }, subj.icon), h('b', { class: 'lp-title' }, lesson.title), dots, autoBtn);
+  const speakStep = () => {
+    const st = steps[idx];
+    if (st.kind === 'intro') say(`${lesson.title}. ${lesson.intro}`);
+    else if (st.kind === 'section') say(`${st.s.title}. ${st.s.body || ''} ${(st.s.cards || []).map(c => c.front).join('. ')}`);
+    else if (st.kind === 'act' && !asg.answers[st.a.id]) say(st.a.prompt + (st.a.options ? '. ' + st.a.options.join('. ') : ''));
+  };
   const body = h('div', { class: 'lp-body' });
   const foot = h('div', { class: 'lp-foot' });
-  container.append(h('div', { class: 'lp' }, head, body, foot));
+  const lpEl = h('div', { class: 'lp', tabindex: '-1' }, head, body, foot);
+  container.append(lpEl);
+  // Enter = press the main button (Check / Next / Start), except when typing in a box that handles Enter itself.
+  lpEl.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || e.shiftKey || e.target.matches('input, textarea, [contenteditable]') || foot.contains(e.target)) return;
+    const main = foot.querySelector('.btn-good:not(:disabled), .btn-primary:not(:disabled)');
+    if (main) { e.preventDefault(); main.click(); }
+  });
 
   const add = (...xs) => foot.append(...xs.filter(Boolean));
   const go = async n => { stopSpeaking(); idx = Math.max(0, Math.min(steps.length - 1, n)); if (!preview) { asg.progress = Math.max(asg.progress || 0, idx); await save(); } draw(); body.scrollTop = 0; };
@@ -73,6 +89,8 @@ export function renderPlayer(container, opts) {
     } else if (st.kind === 'section') drawSection(st, back);
     else if (st.kind === 'act') drawActivity(st, back);
     else drawFinish();
+    if (autoRead) setTimeout(speakStep, 250);
+    setTimeout(() => { if (!lpEl.contains(document.activeElement)) lpEl.focus({ preventScroll: true }); }, 80);
   }
 
   function drawSection({ s, i }, back) {
@@ -95,7 +113,7 @@ export function renderPlayer(container, opts) {
 
   function drawActivity({ a, i }, back) {
     const prev = asg.answers[a.id];
-    let hintUsed = prev?.hintUsed || false;
+    let hintUsed = prev?.hintUsed || false, attempts = 0;
     const t = TYPES[a.type] || {};
     body.append(h('div', { class: 'lp-kicker' }, `${t.icon || '❓'} Question ${i + 1} of ${lesson.activities.length}`), h('div', { class: 'md lp-q', html: md(a.prompt) }));
     let checkFn = () => { };
@@ -109,7 +127,8 @@ export function renderPlayer(container, opts) {
       const good = r.correct;
       const partial = !good && r.score > 0.4;
       fb.append(h('div', { class: `feedback ${good ? 'good' : 'bad'}` },
-        h('div', { style: { fontSize: '1.15em' } }, good ? PRAISE[i % PRAISE.length] : partial ? `👍 Nearly! You got ${Math.round(r.score * 100)}% right.` : "🤔 Not quite — that's OK, mistakes help us learn!"),
+        h('div', { style: { fontSize: '1.15em' } }, good ? (r.secondTry ? '💪 Got it on the second go — well done for not giving up!' : PRAISE[i % PRAISE.length]) : partial ? `👍 Nearly! You got ${Math.round((r.secondTry ? r.score * 2 : r.score) * 100)}% right.` : "🤔 Not quite — that's OK, mistakes help us learn!"),
+        good && combo >= 3 && !r.secondTry ? h('div', { class: 'combo' }, `🔥 ${combo} in a row!`) : null,
         r.feedback ? h('div', { style: { marginTop: '6px', fontWeight: 600 } }, r.feedback) : null,
         !good && ['mcq', 'numeric', 'short', 'multi'].includes(a.type) && correctText(a) ? h('div', { style: { marginTop: '6px', fontWeight: 600 } }, `The answer is: ${correctText(a)}`) : null,
         a.explanation ? h('div', { class: 'md', style: { marginTop: '6px', fontWeight: 500 }, html: md(a.explanation) }) : null));
@@ -126,7 +145,19 @@ export function renderPlayer(container, opts) {
       if (a.type === 'writing' && a.minWords && (String(response).match(/\S+/g) || []).length < Math.min(a.minWords, 10)) return toast(`Try writing a bit more — at least ${Math.min(a.minWords, 10)} words.`, 'warn');
       checkBtn.disabled = true; checkBtn.innerHTML = '<span class="spinner"></span> Checking…';
       const r = await markActivity(a, response, child);
-      const ans = { response: a.type === 'draw' ? 'drawing' : response, ...r, hintUsed, ts: Date.now() };
+      if (!r.correct && !r.pending && RETRY.has(a.type) && attempts === 0) {
+        attempts = 1; combo = 0;
+        sfx('bad');
+        checkBtn.disabled = false; checkBtn.textContent = 'Check again ✓';
+        fb.innerHTML = '';
+        fb.append(h('div', { class: 'feedback bad' }, h('div', { style: { fontSize: '1.1em' } }, r.score > 0.4 ? `👍 Nearly — ${Math.round(r.score * 100)}% right. Have another go!` : '🤔 Not quite — have another go!'), h('div', { style: { marginTop: '6px', fontWeight: 600 } }, a.hint ? '💡 ' + a.hint : 'Read the question again carefully. You can do it! 💪')));
+        if (a.type === 'mcq') widget.el.querySelectorAll('.choice.sel').forEach(c => { c.classList.add('tried'); c.classList.remove('sel'); });
+        if (autoRead && a.hint) say(a.hint);
+        return;
+      }
+      if (attempts === 1 && r.score != null) { r.score = r.score * 0.5; r.secondTry = true; }
+      if (r.correct && !attempts) combo++; else if (!r.pending) combo = 0;
+      const ans = { response: a.type === 'draw' ? 'drawing' : response, ...r, hintUsed, attempts: attempts + 1, ts: Date.now() };
       if (a.type === 'draw' && !preview) ans.imageId = await persistDrawing(response, { childId: child.id, ref: asg.id });
       else if (a.type === 'draw') ans.imageId = response;
       asg.answers[a.id] = ans;
@@ -164,7 +195,9 @@ export function renderPlayer(container, opts) {
           h('h1', {}, `Lesson complete, ${child.name}!`),
           score != null ? h('p', { style: { fontSize: '1.3em' } }, `You got ${Math.round(score * 100)}% right.`) : null,
           pending ? h('p', {}, '📨 Some answers have been sent to Mum & Dad to check.') : null,
-          lesson.offlineActivity ? h('div', { class: 'feedback info', style: { textAlign: 'left', maxWidth: '620px', margin: '18px auto' } }, h('div', {}, '🏃 Away-from-the-screen challenge'), h('div', { class: 'md', style: { fontWeight: 500 }, html: md(lesson.offlineActivity) })) : null)));
+          lesson.offlineActivity ? h('div', { class: 'feedback info', style: { textAlign: 'left', maxWidth: '620px', margin: '18px auto' } }, h('div', {}, '🏃 Away-from-the-screen challenge'), h('div', { class: 'md', style: { fontWeight: 500 }, html: md(lesson.offlineActivity) })) : null,
+          h('details', { class: 'lp-review' }, h('summary', {}, '📋 See all my answers'),
+            ...lesson.activities.map((a, k) => { const an = asg.answers[a.id] || {}; return h('div', { class: 'lp-rev-row' }, h('span', { class: 'lp-rev-ic' }, an.pending ? '⏳' : an.correct ? (an.attempts > 1 ? '💪' : '✅') : '❌'), h('div', { style: { flex: 1 } }, h('b', {}, `${k + 1}. `, a.prompt.replace(/[*_#]/g, '').slice(0, 120)), !an.correct && !an.pending && correctText(a) && a.type !== 'writing' && a.type !== 'draw' ? h('div', { class: 'small muted' }, `Answer: ${correctText(a)}`) : null, h('button', { class: 'btn btn-sm', style: { marginTop: '4px' }, onclick: () => go(steps.findIndex(s => s.kind === 'act' && s.a.id === a.id)) }, 'Look again'))); })))));
     add(h('span', { class: 'spacer' }), opts.onExit ? btn(preview ? 'Close preview' : 'Back to my lessons', 'btn-primary', opts.onExit) : null);
   }
 

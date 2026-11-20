@@ -3,6 +3,7 @@ import { store } from '../store.js';
 import { esc, h, today, fmtDate, md, pct } from '../util.js';
 import { subject } from '../skills.js';
 import { renderPlayer, correctText, responseText } from './player.js';
+import { storedImg } from '../media.js';
 
 export async function open(win, ctx, args = {}) {
   const { me } = ctx;
@@ -21,6 +22,7 @@ export async function open(win, ctx, args = {}) {
     player = renderPlayer(win.body, {
       lesson, assignment: a, child: me, onExit: exitPlayer,
       onAskHelper: context => ctx.openApp('helper', { context }),
+      autoRead: !!ctx.prefs?.autoRead, onAutoRead: v => { if (ctx.prefs) { ctx.prefs.autoRead = v; store.put('prefs', ctx.prefs); } },
     });
   }
 
@@ -64,9 +66,12 @@ export async function open(win, ctx, args = {}) {
     win.body.append(tabs, pad);
     const card = (a, onclick, extra) => {
       const l = L[a.lessonId]; const s = subject(l.subject);
-      return h('div', { class: 'lesson-card', onclick },
-        h('div', { class: 'si', style: { background: s.color + '22' } }, s.icon),
-        h('div', { style: { flex: 1 } }, h('b', { style: { fontSize: '1.1em' } }, l.title), h('div', { class: 'muted small' }, `${s.name} · ${l.durationMins || 30} min · ${fmtDate(a.date)}`)),
+      const steps = 2 + (l.sections?.length || 0) + (l.activities?.length || 0);
+      const prog = a.status === 'in_progress' ? Math.min(1, (a.progress || 0) / (steps - 1)) : null;
+      return h('div', { class: `lesson-card ${onclick ? '' : 'static'}`, onclick },
+        l.coverImageId ? h('div', { class: 'lc-cover' }, storedImg(l.coverImageId)) : h('div', { class: 'si', style: { background: s.color + '22' } }, s.icon),
+        h('div', { style: { flex: 1, minWidth: 0 } }, h('b', { style: { fontSize: '1.1em' } }, l.title), h('div', { class: 'muted small' }, `${s.icon} ${s.name} · ${l.durationMins || 30} min · ${fmtDate(a.date)} · ${l.activities?.length || 0} activities`),
+          prog != null ? h('div', { class: 'bar', style: { marginTop: '6px', maxWidth: '260px' } }, h('i', { style: { width: Math.round(prog * 100) + '%', background: s.color } })) : null),
         extra);
     };
     const items = tab === 'todo' ? todo : tab === 'soon' ? soon : done;

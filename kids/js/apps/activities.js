@@ -1,5 +1,5 @@
 // Interactive lesson activities: rendering, marking and display helpers for every question type.
-import { h, md, toast, esc } from '../util.js';
+import { h, md, toast, esc, toNumber } from '../util.js';
 import { markAnswer, aiReady } from '../ai.js';
 import { lookAtImage, micButton, saveImage, storedImg, sfx } from '../media.js';
 
@@ -70,7 +70,8 @@ export async function markActivity(a, r, child) {
       return { score: Math.max(0, (hits - wrong) / Math.max(1, want.size)), correct: hits === want.size && !wrong };
     }
     case 'numeric': {
-      const v = parseFloat(String(r).replace(/[, ]/g, '').replace(/[^0-9.\-]/g, ''));
+      let v = toNumber(String(r).replace(new RegExp(`\\s*${(a.unit || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i'), ''));
+      if (isNaN(v)) v = parseFloat(String(r).replace(/[, ]/g, '').replace(/[^0-9.\-]/g, ''));
       const ok = !isNaN(v) && Math.abs(v - Number(a.answer)) < (a.tolerance || 0.001);
       return { score: ok ? 1 : 0, correct: ok };
     }
@@ -262,7 +263,7 @@ export function renderActivity(a, { prev, onEnter } = {}) {
           const inp = h('input', { class: `blank ${locked ? (norm(value[k]) === norm(blanks[k]) ? 'right' : 'wrong') : ''}`, value: value[k] || '', size: Math.max(5, blanks[k].length + 1), autocomplete: 'off', spellcheck: 'false' });
           inp.oninput = () => { value[k] = inp.value; };
           inp.onfocus = () => { focusIdx = k; };
-          inp.onkeydown = e => { if (e.key === 'Enter') { (inputs[k + 1] || null)?.focus() ?? onEnter?.(); } };
+          inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); if (inputs[k + 1]) inputs[k + 1].focus(); else onEnter?.(); } };
           if (locked) inp.readOnly = true;
           inputs.push(inp); para.append(inp);
         }

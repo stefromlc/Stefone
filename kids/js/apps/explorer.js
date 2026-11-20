@@ -2,6 +2,8 @@
 import { store } from '../store.js';
 import { h, esc, toast, stopSpeaking } from '../util.js';
 import { say } from '../media.js';
+import { findPictures } from '../tools.js';
+import { pictureGrid } from './ui.js';
 
 const WIKI = 'https://simple.wikipedia.org/w/api.php';
 
@@ -67,7 +69,9 @@ export async function open(win, ctx, args = {}) {
       const d = await wiki({ action: 'query', list: 'search', srsearch: q, srlimit: 15, srprop: 'snippet' });
       const res = (d.query?.search || []).filter(r => !blocked(r.title + ' ' + r.snippet));
       page.innerHTML = '';
-      const box = h('div', { class: 'wiki' }, h('h2', {}, `Results for "${q}"`));
+      const pics = h('div', { class: 'wiki-pics' });
+      const box = h('div', { class: 'wiki' }, h('h2', {}, `Results for "${q}"`), pics);
+      findPictures(q, 4).then(p => { if (p.length) pics.append(h('div', { class: 'small muted', style: { fontWeight: 800, margin: '4px 0' } }, `🖼️ Pictures of “${q}” — tap to see them big`), pictureGrid(p)); });
       if (!res.length) box.append(h('p', {}, 'No pages found. Try a different word or check the spelling.'));
       res.forEach(r => {
         const sn = h('div', { class: 'small muted' }); sn.innerHTML = window.DOMPurify.sanitize(r.snippet + '…', { ALLOWED_TAGS: ['span'] });

@@ -16,6 +16,8 @@ A colourful desktop. It has:
 - a **dock** with favourite apps, plus a searchable **app launcher** (press 🦉 Apps, or Ctrl+Space)
 - **widgets**: today's lessons with a progress ring, a daily mood check-in, notes from Mum & Dad, a word of the day, and an "Ask Ollie" box
 
+**Widgets are customisable.** Children can switch any widget on or off, reorder them (✏️ Edit), or tuck the whole panel away (Hide ▶). Widgets available: Today's lessons, How I feel, Notes from Mum & Dad, My stars, Coming up, Word of the day, Fun fact, Latest picture, My sticky note, Ask Ollie. **Right-click any app** to pin it to the dock or hide it from the desktop. You can lock widgets and switch whole apps off per child in Settings.
+
 Windows can be dragged, resized, minimised and snapped to half the screen or full screen. **Every app that makes something asks "Do you want to save before closing?"** The same check runs when the child logs out or their screen time ends. Ctrl+S saves too.
 
 Wallpapers: illustrated space, hills, ocean, rainbow and candy scenes, gradients, or **the child's own AI picture or painting**.
@@ -23,7 +25,13 @@ Wallpapers: illustrated space, hills, ocean, rainbow and candy scenes, gradients
 | | App | What it does |
 |---|---|---|
 | 🎓 | **My Lessons** | Interactive lessons: pictures, flip-cards, "Did you know?" facts, read-aloud in a natural AI voice, hints, a progress-dot trail, stars and feedback from you. |
-| 🦉 | **Ollie** | AI tutor that **guides rather than answers**. Kids can **show Ollie a photo of their work** (vision AI), talk instead of typing, and switch on "Ollie talks". Chats are visible to you; distress is flagged. |
+| 🦉 | **Ollie** | AI tutor that **guides rather than answers**. Ollie can now **look things up**:
+  - a kids' encyclopedia
+  - live web search via OpenRouter
+  - a calculator
+  - **real photos**
+
+  So "How many Big Bens fit in the Shard?" gets the real heights, a worked answer, and a nudge to check the sum. "Show me a picture of Big Ben" shows tappable photos. Sources are always shown. Kids can **show Ollie a photo of their work** (vision AI), talk instead of typing, and switch on "Ollie talks". Chats are visible to you; distress is flagged. |
 | 🎯 | **Practice** | Maths drills and spelling tests (your lists, the Year 3/4 list, "my tricky words"). |
 | 📖 | **Reading Buddy** | AI writes a passage pitched to the child's level and interests. They can 👂 listen first, then 🎤 read it aloud: speech recognition scores accuracy and words per minute and highlights tricky words. Comprehension questions follow. |
 | 🪄 | **Word Wizard** | Kids' dictionary: meaning, syllable clapping, pronunciation, WOW-word synonyms, opposites, rhymes and an AI picture. Builds a "my words" collection. |
@@ -42,6 +50,8 @@ Wallpapers: illustrated space, hills, ocean, rainbow and candy scenes, gradients
 | 🧮 | **Calculator** / ⏱️ **Timer** | Big-button calculator with read-aloud; visual timer with focus/break modes and brain-break ideas. |
 
 ### Interactive lessons — 12 activity types
+Every lesson question gets **two goes**: a wrong first try shows a hint and lets the child have another go (worth half marks). Lessons also have 🔥 streaks for answers in a row, Enter-to-check, 🔊 Auto read-aloud, and a "See all my answers" review at the end. **Every AI-generated question is double-checked by a second AI pass**: ambiguous wording, wrong answer keys and questions like "the value of the 7 in 7,758" (two 7s!) are fixed before the lesson is saved, and the editor shows what was fixed. Practice drills also give a second try. Place-value questions always use numbers with no repeated digits and highlight the digit, and answers like "7,000", "7 thousand" or "seven thousand" are all accepted.
+
 Multiple choice · choose-all-that-apply · number answer · short answer · writing · **put in order** · **match pairs** · **sort into groups** · **fill the gaps** (with a word bank) · **number line** (drag a marker) · **draw it** (marked by vision AI) · **read aloud** (checked with speech recognition).
 
 Lessons can also have a **cover picture** and **AI illustrations**, **flashcard** sections and **"Did you know?"** facts. The AI mixes these automatically when you tick "Interactive activities", and you can edit every one of them in the lesson editor (✨ make a picture, or ⬆️ upload your own).
@@ -51,6 +61,12 @@ Lessons can also have a **cover picture** and **AI illustrations**, **flashcard*
   - Pick any children and choose either *one shared lesson* or *a personalised version for each child* (their year group, interests, gender, learning notes and gaps).
   - Type **several topics, one per line**, and it generates them all.
   - It **publishes them automatically**: all on one day, or one topic per school day.
+- **Lesson editor AI tools**:
+  - **✨ Make a version…**: easier, harder, personalised to a child's interests, or shorter.
+  - **✨ Swap a question** for a fresh one.
+  - **✨ Add 2 with AI** of any activity type.
+
+  All of these are double-checked by the AI question checker.
 - **Lesson library** with filters and **bulk publish**: tick lessons and publish them to any children, on the same day or spread over school days.
 - **Planner**: a week view, plus "✨ Plan the week with AI" (now interactive and illustrated).
 - **Progress & gaps**, **Review work** (including the kids' drawings), **Helper chats**, **Spelling lists**, **Notes**, **Reports**.
@@ -71,7 +87,11 @@ Lessons can also have a **cover picture** and **AI illustrations**, **flashcard*
 
   You can also switch AI illustrations on or off (and set pictures per lesson), switch kids' AI pictures on or off (and set the **daily limit per child**), and turn sound effects on or off.
 - **Family**: name, **gender** (used for he/she in lessons, stories and Ollie), age, year group, interests, learning notes, avatar, colour, PINs and passwords.
-- **Helper & safety**, **School hours & screen-time limit**, **Data & backup**.
+- **Helper & safety**:
+  - **🔎 Ollie can look things up**: turn the research tools, live web search and real photos on or off, and list websites Ollie must never use.
+  - **🧩 Apps the kids can use**: an on/off switch per app, per child.
+  - **Widget lock**.
+- **School hours & screen-time limit**, **Data & backup**.
 
 ---
 

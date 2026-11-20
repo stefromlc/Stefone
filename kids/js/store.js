@@ -28,6 +28,9 @@ export const DEFAULT_SETTINGS = {
   voice: { aiVoice: true, ttsVoice: 'en_paul_neutral', aiTranscribe: true, speed: 1 },
   media: { kidPictures: true, kidPicturesPerDay: 15, lessonImages: true, lessonImageCount: 3 },
   sounds: true,
+  search: { enabled: true, web: true, pictures: true, maxResults: 4, excludedDomains: ['reddit.com', '4chan.org', 'x.com', 'twitter.com', 'tiktok.com', 'facebook.com', 'instagram.com', 'youtube.com'] },
+  widgets: { allowHide: true },
+  apps: { disabled: {} },
   curriculum: 'National Curriculum for England (Key Stage 2)',
   helper: { mode: 'balanced', dailyMessageLimit: 120, name: 'Ollie the Owl', allowVoice: true },
   safety: {

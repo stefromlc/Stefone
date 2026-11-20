@@ -4,8 +4,13 @@ import CONFIG from './config.js';
 import { root, enter } from './main.js';
 
 function shell(inner) {
-  root().innerHTML = `<div class="splash"><div class="splash-inner">
+  const hr = new Date().getHours();
+  const hello = hr < 12 ? 'Good morning! ☀️' : hr < 18 ? 'Good afternoon! 🌤️' : 'Good evening! 🌙';
+  const floaters = ['⭐', '🚀', '📚', '🎨', '🦉', '✏️', '🌈', '🧩', '🎵', '🔬'].map((e, i) => `<span class="floater" style="left:${(i * 10.3 + 3) % 96}%;animation-delay:${i * 1.7}s;animation-duration:${14 + (i % 4) * 4}s">${e}</span>`).join('');
+  root().innerHTML = `<div class="splash">${floaters}<div class="splash-inner">
+    <div class="login-clock">${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
     <div class="logo">🦉 <span>${esc(CONFIG.appName)}</span></div>
+    <div class="login-hello">${hello}</div>
     <div id="login-inner">${inner}</div></div></div>`;
   return document.getElementById('login-inner');
 }

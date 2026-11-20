@@ -2,6 +2,8 @@
 import { store } from '../store.js';
 import { h, md, fmtDate, fmtTime, timeAgo, toast } from '../util.js';
 import { header, state, kidById, refreshBadges, rerender } from './shell.js';
+import { pictureGrid, sourceChips } from '../apps/ui.js';
+import { storedImg } from '../media.js';
 
 export async function render(main) {
   header(main, '🦉 Helper chats', { kidSwitch: true, all: true });
@@ -32,7 +34,12 @@ export async function render(main) {
     const log = h('div', { class: 'chat-log', style: { maxHeight: '60vh', borderRadius: '12px', marginTop: '10px' } });
     c.messages.forEach(m => {
       const b = h('div', { class: `msg ${m.role} ${m.flagged ? 'flagged' : ''}` });
-      if (m.role === 'assistant') b.append(h('div', { class: 'md', html: md(m.content) })); else b.textContent = m.content;
+      if (m.role === 'assistant') {
+        if (m.tools?.length) b.append(h('div', { class: 'small', style: { opacity: .75, marginBottom: '4px' } }, '🔎 ', m.tools.map(t => `${t.name}${t.query ? `: “${t.query}”` : ''}`).join(' · ')));
+        b.append(h('div', { class: 'md', html: md(m.content) }));
+        if (m.pictures?.length) b.append(pictureGrid(m.pictures));
+        if (m.sources?.length) b.append(sourceChips(m.sources));
+      } else { if (m.imageId) b.append(storedImg(m.imageId, { class: 'msg-img' })); b.append(h('div', {}, m.content)); }
       b.append(h('div', { class: 'small', style: { opacity: .6, marginTop: '4px' } }, fmtTime(m.ts)));
       log.append(b);
     });

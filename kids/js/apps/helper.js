@@ -3,6 +3,8 @@ import { store } from '../store.js';
 import { h, md, toast } from '../util.js';
 import { complete, tutorSystemPrompt, screenKidMessage } from '../ai.js';
 import { say, micButton, fileToDataUrl, saveImage, storedImg, sfx } from '../media.js';
+import { chatWithTools, TOOL_PROMPT } from '../tools.js';
+import { pictureGrid, sourceChips } from './ui.js';
 
 export async function open(win, ctx, args = {}) {
   const { me, settings } = ctx;
@@ -42,7 +44,12 @@ export async function open(win, ctx, args = {}) {
   }
   function bubble(m) {
     const b = h('div', { class: `msg ${m.role} ${m.flagged ? 'flagged' : ''}` });
-    if (m.role === 'assistant') { b.append(h('div', { class: 'md', html: md(m.content) })); b.append(h('button', { class: 'icon-btn say', title: 'Read aloud', onclick: () => say(m.content) }, '🔊')); }
+    if (m.role === 'assistant') {
+      b.append(h('div', { class: 'md', html: md(m.content) }));
+      if (m.pictures?.length) b.append(pictureGrid(m.pictures));
+      if (m.sources?.length) b.append(sourceChips(m.sources));
+      b.append(h('button', { class: 'icon-btn say', title: 'Read aloud', onclick: () => say(m.content) }, '🔊'));
+    }
     else { if (m.imageId) b.append(storedImg(m.imageId, { class: 'msg-img' })); b.append(h('div', {}, m.content)); }
     return b;
   }
@@ -52,7 +59,7 @@ export async function open(win, ctx, args = {}) {
     if (chat?.context) ctxBar.textContent = '📌 Helping with: ' + chat.context.split('\n')[0].slice(0, 140);
     if (!chat || !chat.messages.length) {
       const sugg = chat?.context ? ["I don't understand this part", 'Can you give me a hint?', 'Can you explain it a different way?', 'Am I on the right track?']
-        : ['Help me with my times tables', 'How do I start a story?', 'Why is the sky blue?', 'Can you quiz me on spellings?', 'What is a fraction?'];
+        : ['How many Big Bens would fit in the Shard?', 'Show me a picture of a blue whale', 'Help me with my times tables', 'Why is the sky blue?', 'How do I start a story?'];
       log.append(h('div', { class: 'owl-intro' }, h('div', { class: 'big' }, '🦉'), h('h2', {}, `Hi ${me.name}! I'm ${helperName}.`),
         h('p', {}, "I won't just tell you the answers — I'll help you work them out yourself, like a real detective! 🔎"),
         h('div', { class: 'suggest' }, ...sugg.map(s => h('button', { onclick: () => { ta.value = s; submit(); } }, s)))));
@@ -100,14 +107,27 @@ export async function open(win, ctx, args = {}) {
     try {
       const history = chat.messages.slice(0, -1).slice(-20).map(m => ({ role: m.role, content: m.content }));
       if (image) history[history.length - 1] = { role: 'user', content: [{ type: 'text', text: text + '\n\n(The child has shared a photo of their work. Look carefully, praise what is good, and guide them to spot any mistakes themselves — do not give the answers.)' }, { type: 'image_url', image_url: { url: image } }] };
-      const full = await complete({
-        task: image ? 'vision' : 'tutor', temperature: 0.6, maxTokens: 450,
-        messages: [{ role: 'system', content: tutorSystemPrompt({ child: me, settings, context: chat.context }) }, ...history],
-        onToken: (_, f) => { b.querySelector('.md').innerHTML = md(f.replace(/^\s*\[FLAG\]\s*/, '')); log.scrollTop = log.scrollHeight; },
-      });
+      const useTools = !image && settings.search?.enabled !== false;
+      const sys = tutorSystemPrompt({ child: me, settings, context: chat.context }) + (useTools ? TOOL_PROMPT : '');
+      let full;
+      if (useTools) {
+        const st = h('div', { class: 'tool-status' }, h('span', { class: 'spinner' }), ' Thinking…');
+        b.querySelector('.md').innerHTML = ''; b.querySelector('.md').append(st);
+        const r = await chatWithTools({ messages: [{ role: 'system', content: sys }, ...history], maxTokens: 600, onStatus: t => { st.innerHTML = `<span class="spinner"></span> ${t}`; log.scrollTop = log.scrollHeight; } });
+        full = r.content;
+        if (r.pictures.length) am.pictures = r.pictures;
+        if (r.sources.length) am.sources = r.sources.slice(0, 5);
+        if (r.used.length) { am.tools = r.used; store.log('search', { q: r.used.map(u => u.query).filter(Boolean).join('; ') || text.slice(0, 60) }); }
+      } else {
+        full = await complete({
+          task: image ? 'vision' : 'tutor', temperature: 0.6, maxTokens: 450,
+          messages: [{ role: 'system', content: sys }, ...history],
+          onToken: (_, f) => { b.querySelector('.md').innerHTML = md(f.replace(/^\s*\[FLAG\]\s*/, '')); log.scrollTop = log.scrollHeight; },
+        });
+      }
       am.content = full.replace(/^\s*\[FLAG\]\s*/, '').trim() || "Hmm, I'm not sure. Can you ask me another way?";
       if (/^\s*\[FLAG\]/.test(full)) { am.flagged = true; await flag('Helper noticed a wellbeing/safety concern'); }
-      b.querySelector('.md').innerHTML = md(am.content);
+      const nb = bubble(am); b.replaceWith(nb); log.scrollTop = log.scrollHeight;
       sfx('pop');
       if (autoSpeak) say(am.content);
     } catch (e) {
