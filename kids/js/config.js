@@ -10,6 +10,6 @@
 // ─────────────────────────────────────────────────────────────
 export default {
   appName: 'Stefone Kids',
-  supabaseUrl: '',
-  supabaseAnonKey: '',
+  supabaseUrl: 'https://xrduaocitxkdtlesnumb.supabase.co',
+  supabaseAnonKey: 'sb_publishable_P6Jgmb8j8ZYri5Vtf11mIA__GUu6LHE',
 };
