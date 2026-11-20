@@ -5,7 +5,8 @@ import { subject, skillSubject } from '../skills.js';
 import { markAnswer, aiReady } from '../ai.js';
 import { header, go, state, kidById, refreshBadges, rerender } from './shell.js';
 import { lessonsMap } from './data.js';
-import { correctText, starsFor } from '../apps/player.js';
+import { correctText, responseText, starsFor } from '../apps/player.js';
+import { storedImg } from '../media.js';
 
 export async function render(main, st, arg) {
   if (arg) { const a = await store.get('assignments', arg); if (a) return reviewAssignment(main, a); }
@@ -52,9 +53,9 @@ async function reviewAssignment(main, a) {
     const card = h('div', { class: 'card', style: { marginBottom: '10px' } }, h('div', { class: 'row' }, h('b', {}, `Q${i + 1}`), h('span', { class: 'pill' }, act.type), h('span', { class: 'spacer' }), ans?.hintUsed ? h('span', { class: 'pill warn' }, 'used hint') : null),
       h('div', { class: 'md', html: md(act.prompt) }));
     if (!ans) { card.append(h('p', { class: 'muted' }, 'Not answered.')); main.append(card); return; }
-    const resp = act.type === 'mcq' ? act.options[ans.response] : ans.response;
-    card.append(h('div', { style: { background: '#f6f7fc', borderRadius: '10px', padding: '10px 12px', whiteSpace: 'pre-wrap' } }, String(resp ?? '')));
-    if (act.type !== 'writing') card.append(h('p', { class: 'small' }, h('b', {}, 'Expected: '), correctText(act)));
+    const resp = responseText(act, ans.response);
+    card.append(act.type === 'draw' && ans.imageId ? h('div', { class: 'act-img' }, storedImg(ans.imageId)) : h('div', { style: { background: '#f6f7fc', borderRadius: '10px', padding: '10px 12px', whiteSpace: 'pre-wrap' } }, String(resp ?? '')));
+    if (!['writing', 'draw'].includes(act.type)) card.append(h('p', { class: 'small' }, h('b', {}, 'Expected: '), correctText(act)));
     else if (act.rubric) card.append(h('p', { class: 'small' }, h('b', {}, 'Rubric: '), act.rubric));
     if (ans.feedback && !ans.pending) card.append(h('p', { class: 'small' }, h('b', {}, '🤖 Feedback given: '), ans.feedback));
     const cur = ans.score;
@@ -75,14 +76,14 @@ async function reviewAssignment(main, a) {
       if (e.note != null) ans.parentNote = e.note;
       if (e.score != null) {
         Object.assign(ans, { score: e.score, correct: e.score >= 0.7, pending: false, markedBy: state.me.name });
-        await store.put('evidence', { id: `${a.id}_${id}`, childId: a.childId, skill: act.skill, subject: skillSubject(act.skill), score: e.score, weight: 1, ts: ans.ts || Date.now(), source: 'lesson', ref: a.id, lessonTitle: lesson.title, prompt: act.prompt, response: act.type === 'mcq' ? act.options[ans.response] : String(ans.response).slice(0, 400), correct: correctText(act) });
+        await store.put('evidence', { id: `${a.id}_${id}`, childId: a.childId, skill: act.skill, subject: skillSubject(act.skill), score: e.score, weight: 1, ts: ans.ts || Date.now(), source: 'lesson', ref: a.id, lessonTitle: lesson.title, prompt: act.prompt, response: responseText(act, ans.response).slice(0, 400), correct: correctText(act) });
       }
     }
     // any still-pending answers that now have a score need evidence too
     for (const act of lesson.activities) {
       const ans = a.answers?.[act.id];
       if (ans && ans.score != null && !edits[act.id]?.score && ans.markedBy == null && ans.pending === false)
-        await store.put('evidence', { id: `${a.id}_${act.id}`, childId: a.childId, skill: act.skill, subject: skillSubject(act.skill), score: ans.score, weight: 1, ts: ans.ts || Date.now(), source: 'lesson', ref: a.id, lessonTitle: lesson.title, prompt: act.prompt, response: String(act.type === 'mcq' ? act.options[ans.response] : ans.response).slice(0, 400), correct: correctText(act) });
+        await store.put('evidence', { id: `${a.id}_${act.id}`, childId: a.childId, skill: act.skill, subject: skillSubject(act.skill), score: ans.score, weight: 1, ts: ans.ts || Date.now(), source: 'lesson', ref: a.id, lessonTitle: lesson.title, prompt: act.prompt, response: responseText(act, ans.response).slice(0, 400), correct: correctText(act) });
     }
     const scored = Object.values(a.answers || {}).filter(x => x.score != null);
     a.score = scored.length ? scored.reduce((t, x) => t + x.score, 0) / scored.length : null;

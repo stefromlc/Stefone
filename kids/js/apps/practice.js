@@ -3,6 +3,7 @@ import { store } from '../store.js';
 import { h, speak, toast, confetti, uid, esc } from '../util.js';
 import { Y34_WORDS } from '../skills.js';
 import { starsFor } from './player.js';
+import { sfx } from '../media.js';
 
 const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -102,8 +103,8 @@ export async function open(win, ctx) {
         if (!v) return;
         done = true;
         const ok = numeric ? Number(v.replace(/,/g, '')) === q.a : v.toLowerCase() === String(q.a).toLowerCase();
-        if (ok) { correct++; fb.innerHTML = '✅ Correct!'; fb.style.color = '#2f9e44'; }
-        else { missed.push({ q: q.q, a: q.a, given: v }); fb.innerHTML = `❌ It's <b>${esc(q.a)}</b>`; fb.style.color = '#e03131'; }
+        if (ok) { correct++; sfx('good'); fb.innerHTML = '✅ Correct!'; fb.style.color = '#2f9e44'; }
+        else { sfx('bad'); missed.push({ q: q.q, a: q.a, given: v }); fb.innerHTML = `❌ It's <b>${esc(q.a)}</b>`; fb.style.color = '#e03131'; }
         inp.readOnly = true;
         i++; setTimeout(next, ok ? 700 : 1900);
       }

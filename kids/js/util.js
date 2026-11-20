@@ -74,7 +74,7 @@ export function h(tag, attrs = {}, ...children) {
     if (k === 'class') el.className = v;
     else if (k === 'html') el.innerHTML = v;
     else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
-    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k === 'style' && typeof v === 'object') { for (const [sk, sv] of Object.entries(v)) { if (sv == null) continue; if (sk.startsWith('--')) el.style.setProperty(sk, sv); else el.style[sk] = sv; } }
     else el.setAttribute(k, v === true ? '' : v);
   }
   for (const c of children.flat()) {
@@ -169,7 +169,7 @@ export function speak(text, { rate = 0.95 } = {}) {
     speechSynthesis.speak(u);
   }
 }
-export function stopSpeaking() { window.speechSynthesis && speechSynthesis.cancel(); }
+export function stopSpeaking() { window.speechSynthesis && speechSynthesis.cancel(); window.__klStopAudio?.(); }
 export function textOf(html) { const d = document.createElement('div'); d.innerHTML = html; return d.textContent || ''; }
 
 // ---------- crypto / files ----------
@@ -210,3 +210,17 @@ export function confetti(n = 80) {
 
 export const AVATARS = ['🦊', '🐼', '🐯', '🦄', '🐸', '🐙', '🦁', '🐨', '🐵', '🐧', '🐢', '🦖', '🐬', '🦉', '🐝', '🚀', '⚽', '🎨', '🌈', '🐱', '🐶', '🐰', '👨', '👩', '🧔', '👱‍♀️'];
 export const COLORS = ['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#38d9a9', '#4dabf7', '#748ffc', '#b197fc', '#f783ac', '#20c997'];
+
+/** Kid-friendly multiple-choice dialog. Resolves to the chosen value (or null if dismissed). */
+export function choose({ title, message, icon = '', choices }) {
+  return new Promise(res => {
+    let done = false;
+    const m = modal({
+      title, cls: 'modal-kid',
+      body: h('div', { class: 'choose-body' }, icon ? h('div', { class: 'choose-icon' }, icon) : null, h('p', {}, message)),
+      actions: choices.map(c => ({ label: c.label, cls: c.cls || '', onClick: () => { done = true; res(c.value); } })),
+      onClose: () => { if (!done) res(null); },
+    });
+    return m;
+  });
+}

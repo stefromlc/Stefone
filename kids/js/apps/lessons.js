@@ -2,7 +2,7 @@
 import { store } from '../store.js';
 import { esc, h, today, fmtDate, md, pct } from '../util.js';
 import { subject } from '../skills.js';
-import { renderPlayer, correctText } from './player.js';
+import { renderPlayer, correctText, responseText } from './player.js';
 
 export async function open(win, ctx, args = {}) {
   const { me } = ctx;
@@ -37,7 +37,7 @@ export async function open(win, ctx, args = {}) {
     lesson.activities.forEach((act, i) => {
       const ans = a.answers?.[act.id];
       if (!ans) return;
-      const resp = act.type === 'mcq' ? act.options[ans.response] : ans.response;
+      const resp = responseText(act, ans.response);
       pad.append(h('div', { class: 'card', style: { margin: '12px 0' } },
         h('div', { class: 'md', style: { fontWeight: 700 }, html: md(`**${i + 1}.** ${act.prompt}`) }),
         h('p', {}, h('b', {}, 'You said: '), String(resp ?? '')),

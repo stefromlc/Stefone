@@ -10,43 +10,68 @@ A complete learning platform for home-schooled children, running at **stefone.co
 
 ## What's inside
 
-### Kids' desktop apps
-| App | What it does |
-|---|---|
-| 📒 **My Lessons** | Today's lessons, coming up, finished lessons. An interactive lesson player with sections, 🔊 read-aloud, hints, instant feedback, stars and confetti, plus feedback from Mum & Dad. |
-| 📝 **Writer** | A word processor: fonts, sizes, colours, headings, lists, alignment, emoji, British spell-check, read-aloud, "🦉 Check my writing" (two stars and a wish, without rewriting it for them), send to parents, print. |
-| 📊 **Sheets** | A spreadsheet with formulas (`=A1+B2`, `SUM`, `AVERAGE`, `MIN`, `MAX`, `COUNT`, `ROUND`), quick Σ and average, bold and fill colours, and **bar charts**. |
-| 🧭 **Explorer** | A safe browser: a Simple English Wikipedia search and reader, plus websites you approve. Blocked words, read-aloud, and "ask the helper about this page". |
-| 🦉 **Helper** (Ollie the Owl) | An AI tutor that **guides rather than answers**, using Socratic questions, hints and similar examples. It has voice input, read-aloud and a daily question limit, and blocks personal information. Signs of distress are **flagged to parents**. Every chat is visible to you. |
-| 🎯 **Practice** | Maths drills (times tables, division, missing numbers, adding, taking away, bonds to 100, doubles and halves, place value) and spelling tests (your lists, the built-in Year 3/4 statutory list, and "my tricky words"). |
-| 🖌️ **Paint** | Brush, rubber, fill bucket, stamps, line tool, undo, save, and send to parents. |
-| 📁 **My Files** | All their writing, spreadsheets and pictures. |
-| ⭐ **My Stars** | Stars, day streak, a 4-week calendar and 13 badges. |
+### Kids' desktop ("KidOS")
+A colourful desktop. It has:
+- a **top bar**: clock, stars and streak, messages, sound on/off, and the child's menu (wallpapers, text size and an easy-read font)
+- a **dock** with favourite apps, plus a searchable **app launcher** (press 🦉 Apps, or Ctrl+Space)
+- **widgets**: today's lessons with a progress ring, a daily mood check-in, notes from Mum & Dad, a word of the day, and an "Ask Ollie" box
 
-They can also pick their own wallpaper, and they get sticky notes from Mum & Dad on the desktop.
+Windows can be dragged, resized, minimised and snapped to half the screen or full screen. **Every app that makes something asks "Do you want to save before closing?"** The same check runs when the child logs out or their screen time ends. Ctrl+S saves too.
+
+Wallpapers: illustrated space, hills, ocean, rainbow and candy scenes, gradients, or **the child's own AI picture or painting**.
+
+| | App | What it does |
+|---|---|---|
+| 🎓 | **My Lessons** | Interactive lessons: pictures, flip-cards, "Did you know?" facts, read-aloud in a natural AI voice, hints, a progress-dot trail, stars and feedback from you. |
+| 🦉 | **Ollie** | AI tutor that **guides rather than answers**. Kids can **show Ollie a photo of their work** (vision AI), talk instead of typing, and switch on "Ollie talks". Chats are visible to you; distress is flagged. |
+| 🎯 | **Practice** | Maths drills and spelling tests (your lists, the Year 3/4 list, "my tricky words"). |
+| 📖 | **Reading Buddy** | AI writes a passage pitched to the child's level and interests. They can 👂 listen first, then 🎤 read it aloud: speech recognition scores accuracy and words per minute and highlights tricky words. Comprehension questions follow. |
+| 🪄 | **Word Wizard** | Kids' dictionary: meaning, syllable clapping, pronunciation, WOW-word synonyms, opposites, rhymes and an AI picture. Builds a "my words" collection. |
+| 🧭 | **Explorer** | A safe browser: Simple English Wikipedia plus websites you approve. |
+| ✨ | **Writer** | Word-style ribbon (Home / Insert / Helpers). Includes templates (story, letter, diary, poem, fact file, instructions, book review), fonts including handwriting and easy-read, tables, emoji, photos and **AI pictures**, 🎤 talk-to-type, 🔊 read-aloud, 🦉 "two stars and a wish", and 🪄 a word helper. File menu: New, Open, Save, Save a copy, Send, Print. |
+| 📊 | **Sheets** | A spreadsheet with formulas (SUM, AVERAGE, MEDIAN, MODE, RANGE, MIN, MAX, COUNT, ROUND, …), sorting, and **bar, line and pie charts**. |
+| 🖌️ | **Paint** | Brush, pencil, rubber, fill, line, rectangle, circle, text and stickers, plus undo/redo. Add photos, make **AI colouring pages**, set a painting as the wallpaper. |
+| 🎨 | **Picture Maker** | Describe it and AI paints it, in 7 styles and 3 shapes, with a daily limit set by you. **🔍 Photo Detective** lets kids photograph a leaf, bug or rock and Ollie helps them investigate it. |
+| 📚 | **Story Studio** | Make an illustrated picture book page by page. AI paints each page from the child's words (or they draw it). Ollie asks "what if…?" questions but never writes it for them. 📖 "Read my book" narrates it in the AI voice. |
+| 🎹 | **Music Maker** | Playable piano (mouse, touch or keyboard) with 4 instruments and tune playback, plus a 16-step beat maker. |
+| 🐢 | **Code Turtle** | Logo-style coding (forward, turn, repeat, colours) with code blocks, an animated turtle, friendly error messages and 8 challenges. |
+| 🧩 | **Brain Games** | Memory Match, Word Scramble (from their spellings) and Make the Number (mental maths). Results count towards progress. |
+| 📔 | **My Journal** | Daily mood, gratitude, "today I learned" and a writing prompt, with dictation. Kids are told Mum & Dad can read it. |
+| ⭐ | **My Stars** | Stars, streak, calendar and 19 badges. |
+| 📁 | **My Files** | All their work, plus a gallery of their AI pictures. |
+| 🧮 | **Calculator** / ⏱️ **Timer** | Big-button calculator with read-aloud; visual timer with focus/break modes and brain-break ideas. |
+
+### Interactive lessons — 12 activity types
+Multiple choice · choose-all-that-apply · number answer · short answer · writing · **put in order** · **match pairs** · **sort into groups** · **fill the gaps** (with a word bank) · **number line** (drag a marker) · **draw it** (marked by vision AI) · **read aloud** (checked with speech recognition).
+
+Lessons can also have a **cover picture** and **AI illustrations**, **flashcard** sections and **"Did you know?"** facts. The AI mixes these automatically when you tick "Interactive activities", and you can edit every one of them in the lesson editor (✨ make a picture, or ⬆️ upload your own).
 
 ### Parent dashboard (Mum & Dad)
-- **Overview**: each child's lessons today, scores, time, streak and top gaps. Alerts for flagged chats and work to review. Live activity feed.
-- **Lessons**:
-  - ✨ **Create with AI**: personalised to the child's year group, interests and notes. You choose the subject, topic, length, difficulty and number of questions, and can assign it straight away.
-  - A **full editor** for sections (markdown, plus "✨ improve with AI") and questions (multiple choice, number, short answer, writing). Every question is tagged with a curriculum skill.
-  - Preview as a child, assign, duplicate, delete.
-- **Planner**: a week view per child. Add, move or remove lessons. ✨ **Plan the week with AI**: it drafts a balanced plan (putting gaps first), you edit it, then it generates and schedules every lesson.
-- **Progress & gaps**: mastery per subject and per skill (recency-weighted), score trends and screen time. Automatic **gap detection** (skills under 65% with 3+ answers), a list of mistakes per skill, and tricky spellings.
-  - ✨ **AI gap analysis** finds misconceptions in wrong answers and suggests a plan.
-  - One click creates a **bridging lesson** that re-teaches the misconception in a different way.
-- **Review work**: answers the AI couldn't mark, writing tasks and documents the kids sent. Adjust scores, add notes and an overall comment; the kids see your feedback.
-- **Helper chats**: every conversation, with flagged ones first.
-- **Spelling lists**: write your own or ✨ generate them, and assign them per child.
-- **Notes to kids**: these appear as sticky notes on their desktop.
-- **Reports**: a printable progress report for any date range. Handy for home-education records and council visits.
+- **Create lessons with AI for several children at once.**
+  - Pick any children and choose either *one shared lesson* or *a personalised version for each child* (their year group, interests, gender, learning notes and gaps).
+  - Type **several topics, one per line**, and it generates them all.
+  - It **publishes them automatically**: all on one day, or one topic per school day.
+- **Lesson library** with filters and **bulk publish**: tick lessons and publish them to any children, on the same day or spread over school days.
+- **Planner**: a week view, plus "✨ Plan the week with AI" (now interactive and illustrated).
+- **Progress & gaps**, **Review work** (including the kids' drawings), **Helper chats**, **Spelling lists**, **Notes**, **Reports**.
+- **🎨 Creations & moods** (new):
+  - every AI picture with exactly what the child typed
+  - story books you can read
+  - Reading Buddy results (accuracy, words per minute, tricky words)
+  - journal entries, words looked up
+  - a **2-week mood chart** with a nudge if a child has had several not-so-happy days
 
 ### Settings (Dad only)
-- **AI**: OpenRouter key with a test button, and a model choice for each job (lessons, gap analysis, kids' helper, marking) from the live OpenRouter list, with prices. You can also set the curriculum.
-- **Family**: add or edit children (year group, age, interests, learning notes, avatar, colour), add parents, and change PINs or passwords.
-- **Helper & safety**: the helper's name, strict or balanced mode, daily question limit, voice input, blocked words, and approved websites.
-- **School hours**: allowed hours and days, and a daily screen-time limit.
-- **Data**: export and import backups, and erase.
+- **AI & models**: OpenRouter key, plus a model for each job:
+  - lessons, gap analysis, kids' helper, marking
+  - **vision** (looking at pictures)
+  - **picture generation**
+  - **voice (text-to-speech)**, with a voice picker and 🔊 Test voice
+  - **listening (speech-to-text)**
+
+  You can also switch AI illustrations on or off (and set pictures per lesson), switch kids' AI pictures on or off (and set the **daily limit per child**), and turn sound effects on or off.
+- **Family**: name, **gender** (used for he/she in lessons, stories and Ollie), age, year group, interests, learning notes, avatar, colour, PINs and passwords.
+- **Helper & safety**, **School hours & screen-time limit**, **Data & backup**.
 
 ---
 
@@ -114,9 +139,16 @@ Out of the box, everything is saved **in the browser on that one computer**. Tha
 
 ## 5. Choosing AI models
 
+> **Upgrading an existing cloud setup?** Run `supabase/schema.sql` again (it's safe to re-run). It lets the kids save their new kinds of work: pictures, journal, reading and words.
+
 Recommended defaults (you can change them in **Settings → AI**):
 - Lessons & planning, gap analysis: `anthropic/claude-sonnet-5.5`
-- Kids' helper and marking: `anthropic/claude-haiku-5.5` (fast and cheap)
+- Kids' helper, marking and vision: `anthropic/claude-haiku-5.5` (fast and cheap, understands images)
+- Pictures: `google/gemini-2.5-flash-image` (or any model in the image list, e.g. `openai/gpt-image-1`)
+- Voice: `mistralai/voxtral-mini-tts-2603` with voice `en_paul_neutral` (pick any speech model and voice in Settings; voices are listed for you)
+- Listening: `openai/whisper-large-v3`
+
+**Costs:** text is pennies per lesson. Pictures typically cost a few pence each, so the per-child daily limit and the "pictures per lesson" setting keep this in check. AI voice clips are cached, so re-reading the same text is free. Leave the picture, voice or listening model empty to switch that feature off: read-aloud and talk-to-type then fall back to the browser's built-in voice and speech recognition.
 
 Any model on OpenRouter works. The settings page loads the full list with prices. The helper model must follow instructions well so it doesn't give answers away. Test it yourself with "just tell me the answer to 7 × 8!".
 
@@ -130,18 +162,21 @@ Any model on OpenRouter works. The settings page loads the full list with prices
 ## Files
 
 ```
-index.html          app entry
-css/app.css         all styles
-js/config.js        ← your Supabase details go here (optional)
-js/main.js          boot + routing
-js/store.js         data layer (IndexedDB or Supabase) + auth
-js/ai.js            OpenRouter calls and all AI prompts
-js/skills.js        curriculum subjects, skills and the mastery model
-js/desktop.js       kids' desktop and window manager
-js/apps/*           kids' apps
-js/parent/*         parent dashboard pages
-supabase/schema.sql database tables + security rules
-vendor/             marked, DOMPurify, supabase-js (bundled, no CDN needed)
+index.html            app entry
+css/app.css           base + parent dashboard styles
+css/desktop.css       kids' desktop (top bar, dock, windows, widgets)
+css/apps.css          kids' apps and interactive lesson activities
+js/config.js          ← your Supabase details go here (optional)
+js/main.js            boot + routing
+js/store.js           data layer (IndexedDB or Supabase) + auth + default settings
+js/ai.js              OpenRouter text AI and all prompts
+js/media.js           OpenRouter pictures, vision, voice (TTS) and listening (STT), plus sound effects
+js/skills.js          curriculum subjects, skills and the mastery model
+js/desktop.js         kids' desktop, launcher and window manager (save-before-close)
+js/apps/*             the kids' apps (activities.js + player.js = interactive lessons)
+js/parent/*           parent dashboard pages
+supabase/schema.sql   database tables + security rules
+vendor/               marked, DOMPurify, supabase-js (bundled, no CDN needed)
 ```
 
 No build step and no server: it's plain HTML, CSS and JavaScript.

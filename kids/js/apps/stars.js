@@ -4,9 +4,10 @@ import { h, localDate, addDays, today } from '../util.js';
 import { starsFor } from './player.js';
 
 export async function computeRewards(childId) {
-  const [asg, prac, docs, chats, acts] = await Promise.all([
+  const [asg, prac, docs, chats, acts, imgs, reading, journal, words, prefs] = await Promise.all([
     store.list('assignments', { childId }), store.list('practice', { childId }), store.list('documents', { childId }),
-    store.list('chats', { childId }), store.list('activity', { childId }),
+    store.list('chats', { childId }), store.list('activity', { childId }), store.list('images', { childId }).catch(() => []),
+    store.list('reading', { childId }).catch(() => []), store.list('journal', { childId }).catch(() => []), store.list('words', { childId }).catch(() => []), store.get('prefs', childId).catch(() => null),
   ]);
   const done = asg.filter(a => a.completedAt);
   const stars = done.reduce((t, a) => t + (a.stars || 0), 0) + prac.reduce((t, p) => t + starsFor(p.correct / p.total), 0);
@@ -28,6 +29,12 @@ export async function computeRewards(childId) {
     ['🎨', 'Artist', 'Save 3 pictures', docs.filter(x => x.type === 'drawing').length >= 3],
     ['🧭', 'Explorer', 'Read 10 encyclopedia pages', acts.filter(a => a.type === 'browse').length >= 10],
     ['🦉', 'Curious mind', 'Have 5 chats with the helper', chats.length >= 5],
+    ['🖼️', 'Picture painter', 'Make 5 AI pictures', imgs.filter(i => i.kind === 'kid').length >= 5],
+    ['📚', 'Author', 'Save a story book with 3+ pages', docs.some(d => d.type === 'story' && (d.pages || []).length >= 3)],
+    ['📖', 'Reading star', 'Finish 5 Reading Buddy sessions', reading.length >= 5],
+    ['🐢', 'Coder', 'Complete 3 Code Turtle challenges', (prefs?.turtleDone || []).length >= 3],
+    ['📔', 'Journal keeper', 'Write in your journal 5 times', journal.filter(j => j.text || j.grateful).length >= 5],
+    ['🪄', 'Word collector', 'Look up 10 words', words.length >= 10],
   ].map(([e, name, desc, got]) => ({ e, name, desc, got }));
   return { stars, streak, days, badges, lessons: done.length };
 }

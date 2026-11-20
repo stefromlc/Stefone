@@ -23,6 +23,7 @@ export function profileForm(p = {}, { role = p.role || 'child', isNew = !p.id } 
       isNew ? h('label', { class: 'field' }, h('span', {}, secretLabel), inp('secret', { type: kid ? 'tel' : 'password', inputmode: kid ? 'numeric' : null, autocomplete: 'new-password', value: '' })) : h('div'),
       kid ? h('label', { class: 'field' }, h('span', {}, 'Year group'), yg) : h('div'),
       kid ? h('label', { class: 'field' }, h('span', {}, 'Age'), inp('age', { type: 'number', min: 4, max: 12, value: p.age || 8 })) : null,
+      kid ? h('label', { class: 'field' }, h('span', {}, 'Gender'), h('select', { class: 'input', name: 'gender' }, ...[['girl', '👧 Girl'], ['boy', '👦 Boy'], ['', 'Prefer not to say']].map(([v, l]) => h('option', { value: v, selected: (p.gender || '') === v }, l))), h('span', { class: 'hint' }, 'Used so lessons, stories and Ollie use the right words (he/she).')) : null,
       kid ? h('label', { class: 'field' }, h('span', {}, 'Loves / interests'), inp('interests', { placeholder: 'e.g. dinosaurs, football, Minecraft, space' }), h('span', { class: 'hint' }, 'The AI uses these to make lessons more fun.')) : null,
     ),
     kid ? h('label', { class: 'field' }, h('span', {}, 'Learning notes (only parents & AI see this)'), h('textarea', { class: 'input', name: 'learningNotes', rows: 2, placeholder: 'e.g. Confident reader, finds column subtraction tricky, prefers short tasks' }, p.learningNotes || '')) : null,
@@ -33,7 +34,7 @@ export function profileForm(p = {}, { role = p.role || 'child', isNew = !p.id } 
     const v = n => el.querySelector(`[name="${n}"]`)?.value?.trim() ?? '';
     const out = { ...p, role, name: v('name'), avatar: state.avatar, color: state.color };
     if (cloud) out.email = (v('email') || p.email || '').toLowerCase();
-    if (kid) Object.assign(out, { yearGroup: v('yearGroup'), age: +v('age') || 8, interests: v('interests'), learningNotes: el.querySelector('[name="learningNotes"]').value.trim() });
+    if (kid) Object.assign(out, { yearGroup: v('yearGroup'), age: +v('age') || 8, gender: v('gender'), interests: v('interests'), learningNotes: el.querySelector('[name="learningNotes"]').value.trim() });
     if (isNew) out.secret = v('secret');
     if (!out.name) throw new Error('Please enter a name');
     if (cloud && isNew && !/^\S+@\S+\.\S+$/.test(out.email)) throw new Error(`Please enter a login email for ${out.name}`);

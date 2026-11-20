@@ -1,6 +1,7 @@
 // Explorer — a safe, kid-friendly browser: Simple English Wikipedia + parent-approved sites.
 import { store } from '../store.js';
-import { h, esc, toast, speak, stopSpeaking } from '../util.js';
+import { h, esc, toast, stopSpeaking } from '../util.js';
+import { say } from '../media.js';
 
 const WIKI = 'https://simple.wikipedia.org/w/api.php';
 
@@ -117,7 +118,7 @@ export async function open(win, ctx, args = {}) {
       h('iframe', { src: s.url, sandbox: 'allow-scripts allow-same-origin allow-forms allow-popups', referrerpolicy: 'no-referrer', style: { height: 'calc(100% - 60px)' } }));
   }
 
-  bRead.onclick = () => { if (!current.text) return toast('Open a page first 🙂'); speak(current.title + '. ' + current.text.slice(0, 1800)); };
+  bRead.onclick = () => { if (!current.text) return toast('Open a page first 🙂'); say(current.title + '. ' + current.text.slice(0, 1800)); };
   bAsk.onclick = () => ctx.openApp('helper', { context: current.title ? `${ctx.me.name} is reading the encyclopedia page "${current.title}":\n${current.text.slice(0, 1500)}` : '' });
 
   go(args.q ? { kind: 'search', q: args.q } : { kind: 'home' });

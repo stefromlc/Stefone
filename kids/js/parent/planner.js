@@ -3,6 +3,7 @@ import { store } from '../store.js';
 import { h, esc, toast, modal, confirmDlg, today, addDays, startOfWeek, fmtDate, uid, pct } from '../util.js';
 import { SUBJECTS, subject, skillName } from '../skills.js';
 import { generatePlan, generateLesson, aiReady } from '../ai.js';
+import { illustrateLesson } from '../media.js';
 import { header, go, state, kidById, rerender } from './shell.js';
 import { childData, lessonsMap } from './data.js';
 import { assignDialog, previewLesson } from './lessons.js';
@@ -81,7 +82,7 @@ async function pickLesson(kid, date) {
 // ───────── AI week planner ─────────
 async function aiWeek(days) {
   if (!(await aiReady())) return toast('Connect AI first (Settings → AI)', 'warn');
-  const kidSel = h('select', { class: 'input' }, ...state.kids.map(k => h('option', { value: k.id, selected: k.id === state.kidId }, `${k.avatar} ${k.name}`)), h('option', { value: '__both' }, '👫 Both (same plan, personalised separately)'));
+  const kidSel = h('select', { class: 'input' }, ...state.kids.map(k => h('option', { value: k.id, selected: k.id === state.kidId }, `${k.avatar} ${k.name}`)), h('option', { value: '__both' }, '👫 All children (personalised for each)'));
   const weekdays = days.slice(0, 5).filter(d => d >= today());
   const dayChecks = days.map((d, i) => h('label', { class: 'check', style: { display: 'inline-flex', marginRight: '10px' } }, h('input', { type: 'checkbox', value: d, checked: weekdays.includes(d) }), fmtDate(d, { weekday: 'short', day: 'numeric' })));
   const perDay = h('select', { class: 'input' }, ...[1, 2, 3, 4].map(n => h('option', { value: n, selected: n === 3 }, n)));
@@ -143,8 +144,9 @@ async function aiWeek(days) {
       while (jobs.length) {
         const { p, k } = jobs.shift();
         try {
-          const lesson = await generateLesson({ child: k, subject: p.subject, topic: p.topic, focusSkills: p.focusSkills || [], durationMins: 30 });
-          Object.assign(lesson, { source: 'ai', createdBy: state.me.name, yearGroup: k.yearGroup || lesson.yearGroup });
+          const lesson = await generateLesson({ child: k, subject: p.subject, topic: p.topic, focusSkills: p.focusSkills || [], durationMins: 30, interactive: true, withImages: !!state.settings.media?.lessonImages });
+          await illustrateLesson(lesson).catch(() => { });
+          Object.assign(lesson, { source: 'ai', createdBy: state.me.name, yearGroup: k.yearGroup || lesson.yearGroup, personalisedFor: k.id });
           await store.put('lessons', lesson);
           await store.put('assignments', { id: uid('as_'), lessonId: lesson.id, childId: k.id, date: p.date, status: 'assigned', answers: {}, progress: 0, assignedBy: state.me.name });
         } catch (e) { failed++; console.warn(e); }

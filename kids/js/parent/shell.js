@@ -10,6 +10,7 @@ const PAGES = [
   { id: 'planner', label: 'Planner', icon: '📅', load: () => import('./planner.js') },
   { id: 'progress', label: 'Progress & gaps', icon: '📈', load: () => import('./progress.js') },
   { id: 'review', label: 'Review work', icon: '✅', load: () => import('./review.js'), badge: 'review' },
+  { id: 'creations', label: 'Creations & moods', icon: '🎨', load: () => import('./creations.js') },
   { id: 'chats', label: 'Helper chats', icon: '🦉', load: () => import('./chats.js'), badge: 'flags' },
   { id: 'spelling', label: 'Spelling lists', icon: '🔤', load: () => import('./spelling.js') },
   { id: 'notes', label: 'Notes to kids', icon: '💌', load: () => import('./notes.js') },
@@ -83,7 +84,7 @@ export function header(main, title, { kidSwitch = false, all = false, actions = 
   const head = h('div', { class: 'pd-head' }, h('h1', {}, title), h('span', { class: 'spacer' }));
   if (kidSwitch && state.kids.length) {
     const sw = h('div', { class: 'kid-switch no-print' });
-    const opts = all ? [{ id: 'all', name: 'Both', avatar: '👫' }, ...state.kids] : state.kids;
+    const opts = all ? [{ id: 'all', name: state.kids.length > 2 ? 'Everyone' : 'Both', avatar: '👫' }, ...state.kids] : state.kids;
     if (!all && state.kidId === 'all') state.kidId = state.kids[0].id;
     opts.forEach(k => sw.append(h('button', { class: state.kidId === k.id ? 'on' : '', onclick: () => { state.kidId = k.id; route(); } }, `${k.avatar || ''} ${k.name}`)));
     head.append(sw);

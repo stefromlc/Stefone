@@ -16,6 +16,15 @@ export const ACT_LABEL = {
   browse_site: a => `🌐 Opened ${a.title}`,
   helper_flag: a => `🚩 Helper flag: ${a.reason}`,
   doc_sent: a => `📤 Sent you “${a.title}”`,
+  mood: a => `${a.mood} Feeling ${String(a.label || '').toLowerCase()} today`,
+  journal: a => `📔 Wrote in their journal ${a.mood || ''}`,
+  picture: a => `🎨 Made a picture: “${String(a.prompt || '').replace(/\. Style:.*$/, '').slice(0, 60)}”`,
+  picture_blocked: a => `⛔ Picture request blocked: “${String(a.prompt || '').slice(0, 60)}”`,
+  word: a => `🪄 Looked up “${a.title}”`,
+  detective: a => `🔍 Photo Detective: ${a.title}`,
+  reading: a => `📖 Reading Buddy: “${a.title}”${a.score != null ? ` — ${pct(a.score)}` : ''}`,
+  game: a => `🧩 Played ${a.title}${a.score != null ? ` — ${pct(a.score)}` : ''}`,
+  code: a => `🐢 Completed Code Turtle “${a.title}”`,
 };
 
 export async function render(main, state) {
@@ -42,10 +51,11 @@ export async function render(main, state) {
     const d = await childData(kid.id);
     const s = summarise(d, 7);
     const rw = await computeRewards(kid.id);
+    const mood = await store.get('journal', `${kid.id}_${today()}`).catch(() => null);
     feed.push(...d.activity.map(a => ({ ...a, kid })));
     const todays = d.assignments.filter(a => a.date === today() || (a.date < today() && !a.completedAt)).filter(a => L[a.lessonId]).sort((a, b) => a.date.localeCompare(b.date));
     const card = h('div', { class: 'card' },
-      h('div', { class: 'kid-card-head' }, h('div', { class: 'av', style: { background: (kid.color || '#ddd') + '33' } }, kid.avatar), h('div', { style: { flex: 1 } }, h('h3', { style: { margin: 0, fontSize: '1.3em' } }, kid.name), h('span', { class: 'muted small' }, `${kid.yearGroup || ''} · ⭐ ${rw.stars} · 🔥 ${rw.streak}-day streak`)),
+      h('div', { class: 'kid-card-head' }, h('div', { class: 'av', style: { background: (kid.color || '#ddd') + '33' } }, kid.avatar), h('div', { style: { flex: 1 } }, h('h3', { style: { margin: 0, fontSize: '1.3em' } }, kid.name), h('span', { class: 'muted small' }, `${kid.yearGroup || ''} · ⭐ ${rw.stars} · 🔥 ${rw.streak}-day streak${mood?.mood ? ` · today ${mood.mood} ${mood.moodLabel || ''}` : ''}`)),
         h('button', { class: 'btn btn-sm', onclick: () => { state.kidId = kid.id; go('progress'); } }, 'Progress →')),
       h('div', { class: 'stats-row' },
         stat(`${s.doneOfDue}/${s.due}`, 'Lessons (7 days)'), stat(pct(s.avgScore), 'Avg score'), stat(fmtDuration(s.todayTime), 'Time today'), stat(s.practiceRounds, 'Practice rounds')),

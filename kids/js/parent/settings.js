@@ -13,6 +13,12 @@ const TASKS = [
   ['analysis', 'Gap analysis', 'Analyses mistakes to find misconceptions. Use a strong model.'],
   ['tutor', 'Kids\' helper chat', 'Talks with the children. Fast & cheap is fine; must follow instructions well.'],
   ['marking', 'Marking answers', 'Marks short answers and writing. Fast & cheap is fine.'],
+  ['vision', 'Looking at pictures (vision)', 'Marks drawings, Photo Detective, “show Ollie my work”. Must accept images.'],
+];
+const MEDIA = [
+  ['image', 'Picture generation', 'Lesson illustrations, Picture Maker, Story Studio, colouring pages.', 'image'],
+  ['tts', 'Voice (text-to-speech)', 'Reads lessons, stories and Ollie aloud in a natural voice.', 'speech'],
+  ['stt', 'Listening (speech-to-text)', 'Lets the kids talk instead of type, and checks reading aloud.', 'transcription'],
 ];
 
 export async function render(main, st, arg) {
@@ -36,7 +42,49 @@ async function ai(body, s, saveBar) {
   const dl = h('datalist', { id: 'or-models' });
   const info = h('div', { class: 'small muted' }, 'Loading model list from OpenRouter…');
   let models = [];
-  const inputs = {};
+  const inputs = {}, mediaInputs = {};
+  const testOut = h('div', { class: 'small' });
+  const voiceSel = h('input', { class: 'input', list: 'or-voices', value: s.voice?.ttsVoice || '' });
+  const voiceDl = h('datalist', { id: 'or-voices' });
+  const aiVoice = h('input', { type: 'checkbox', checked: s.voice?.aiVoice !== false });
+  const aiStt = h('input', { type: 'checkbox', checked: s.voice?.aiTranscribe !== false });
+  const lessonImgs = h('input', { type: 'checkbox', checked: s.media?.lessonImages !== false });
+  const lessonImgCount = h('input', { class: 'input', type: 'number', min: 1, max: 6, value: s.media?.lessonImageCount ?? 3, style: { width: '64px', display: 'inline-block', padding: '3px 6px' } });
+  const kidPics = h('input', { type: 'checkbox', checked: s.media?.kidPictures !== false });
+  const kidPicLimit = h('input', { class: 'input', type: 'number', min: 0, max: 100, value: s.media?.kidPicturesPerDay ?? 15, style: { width: '64px', display: 'inline-block', padding: '3px 6px' } });
+  const sounds = h('input', { type: 'checkbox', checked: s.sounds !== false });
+  const loadVoices = async () => {
+    voiceDl.innerHTML = '';
+    const id = (mediaInputs.tts?.value || s.models.tts || '').trim(); if (!id) return;
+    try {
+      const j = await (await fetch(`https://openrouter.ai/api/v1/audio/speech/models/${id}`)).json();
+      const m = j.data || j;
+      const voice = m.supported_parameters?.voice || m.parameters?.voice || m.voice || {};
+      const list = voice.enum || voice.values || (Array.isArray(voice) ? voice : []);
+      list.forEach(v => voiceDl.append(h('option', { value: typeof v === 'string' ? v : v.id || v.name })));
+    } catch { }
+  };
+  voiceSel.after?.(voiceDl);
+  const applyMedia = () => {
+    for (const [id, inp] of Object.entries(mediaInputs)) s.models[id] = inp.value.trim();
+    s.voice = { ...s.voice, ttsVoice: voiceSel.value.trim(), aiVoice: aiVoice.checked, aiTranscribe: aiStt.checked };
+    s.media = { ...s.media, lessonImages: lessonImgs.checked, lessonImageCount: +lessonImgCount.value || 3, kidPictures: kidPics.checked, kidPicturesPerDay: +kidPicLimit.value || 0 };
+    s.sounds = sounds.checked;
+  };
+  async function testVoice() {
+    applyMedia(); const prev = store._settings; store._settings = { ...prev, ...s, apiKey: key.value.trim() || prev.apiKey };
+    testOut.innerHTML = '<span class="spinner"></span>';
+    try { const { say } = await import('../media.js'); await say('Hello! I am Ollie the Owl. Shall we learn something amazing today?', { onStart: st => { if (st === 'playing') testOut.textContent = '🔊 Playing…'; } }); testOut.textContent = '✓ Done (if you heard a robotic voice, the AI voice failed — check the model and voice id).'; }
+    catch (e) { testOut.textContent = e.message; }
+    store._settings = prev;
+  }
+  async function testPicture() {
+    applyMedia(); const prev = store._settings; store._settings = { ...prev, ...s, apiKey: key.value.trim() || prev.apiKey };
+    testOut.innerHTML = '<span class="spinner"></span> Painting…';
+    try { const { generateImage } = await import('../media.js'); const d = await generateImage('a friendly owl teacher reading a book to woodland animals'); testOut.innerHTML = ''; testOut.append(h('img', { src: d, style: { maxWidth: '200px', borderRadius: '10px', display: 'block' } })); }
+    catch (e) { testOut.textContent = e.message; }
+    store._settings = prev;
+  }
   const priceOf = id => { const m = models.find(x => x.id === id); if (!m) return ''; const p = m.pricing || {}; const per = v => (parseFloat(v) * 1e6).toFixed(2); return `≈ $${per(p.prompt)} in / $${per(p.completion)} out per 1M tokens · ${m.context_length?.toLocaleString?.() || '?'} context`; };
   body.append(h('div', { class: 'card' },
     h('h3', {}, '🔑 OpenRouter API key'),
@@ -51,12 +99,30 @@ async function ai(body, s, saveBar) {
         return h('label', { class: 'field' }, h('span', {}, label), inp, h('span', { class: 'hint' }, hint), p);
       }), info,
       h('button', { class: 'btn btn-sm', onclick: () => { for (const [id, { inp }] of Object.entries(inputs)) { inp.value = DEFAULT_SETTINGS.models[id]; inp.oninput(); } } }, 'Reset to recommended')),
+    h('div', { class: 'card', style: { marginTop: '14px' } }, h('h3', {}, '🎨🔊🎤 Pictures, voice & listening'),
+      h('p', { class: 'small muted' }, 'OpenRouter also has picture, voice and speech-recognition models. Leave a box empty to turn that feature off (the browser\'s own voice and speech recognition are used instead, where available).'),
+      ...MEDIA.map(([id, label, hint, mod]) => {
+        const dlm = h('datalist', { id: `or-${mod}` });
+        const inp = h('input', { class: 'input', list: `or-${mod}`, value: s.models[id] ?? '' });
+        mediaInputs[id] = inp;
+        fetch(`https://openrouter.ai/api/v1/models?output_modalities=${mod}`).then(r => r.json()).then(j => (j.data || []).forEach(m => dlm.append(h('option', { value: m.id }, m.name)))).catch(() => { });
+        return h('label', { class: 'field' }, h('span', {}, label), inp, dlm, h('span', { class: 'hint' }, hint));
+      }),
+      h('div', { class: 'grid2' },
+        h('label', { class: 'field' }, h('span', {}, 'Voice'), voiceSel, h('span', { class: 'hint' }, 'Voices depend on the voice model. Type a voice id if the list is empty.')),
+        h('div', { class: 'field' }, h('span', {}, 'Try it'), h('div', { class: 'row' }, h('button', { class: 'btn', onclick: testVoice }, '🔊 Test voice'), h('button', { class: 'btn', onclick: testPicture }, '🎨 Test picture')), testOut)),
+      h('label', { class: 'check' }, aiVoice, 'Use the AI voice for “Read to me” (falls back to the browser voice)'),
+      h('label', { class: 'check' }, aiStt, 'Use AI speech recognition for the 🎤 buttons and Reading Buddy'),
+      h('label', { class: 'check' }, lessonImgs, 'Add AI illustrations to new lessons — up to ', lessonImgCount, ' pictures per lesson'),
+      h('label', { class: 'check' }, kidPics, 'Let the kids make AI pictures (Picture Maker, Story Studio, Writer, Paint) — up to ', kidPicLimit, ' per child per day'),
+      h('label', { class: 'check' }, sounds, 'Fun sound effects on the kids\' desktop')),
     h('div', { class: 'card', style: { marginTop: '14px' } }, h('h3', {}, '📘 Curriculum'),
       h('label', { class: 'field' }, h('span', {}, 'Curriculum the AI should follow'), h('input', { class: 'input', id: 'curr', value: s.curriculum })),
       h('p', { class: 'small muted' }, 'e.g. “National Curriculum for England (Key Stage 2)”, “Scottish Curriculum for Excellence (First Level)”, “Charlotte Mason-inspired, UK”.')),
     saveBar(() => {
       s.apiKey = key.value.trim();
       for (const [id, { inp }] of Object.entries(inputs)) s.models[id] = inp.value.trim() || DEFAULT_SETTINGS.models[id];
+      applyMedia();
       s.curriculum = body.querySelector('#curr').value.trim() || DEFAULT_SETTINGS.curriculum;
     }));
   async function test() {
@@ -64,6 +130,8 @@ async function ai(body, s, saveBar) {
     try { const t = await complete({ task: 'tutor', apiKey: key.value.trim(), model: inputs.tutor.inp.value.trim(), maxTokens: 20, messages: [{ role: 'user', content: 'Reply with exactly: Hello from the AI!' }] }); res.innerHTML = `<span class="pill good">✓ Working</span> ${esc(t.slice(0, 80))}`; }
     catch (e) { res.innerHTML = `<span class="pill bad">✗</span> ${esc(e.message)}`; }
   }
+  body.append(voiceDl);
+  mediaInputs.tts?.addEventListener('change', loadVoices); loadVoices();
   try {
     const r = await fetch('https://openrouter.ai/api/v1/models');
     models = (await r.json()).data || [];
@@ -85,7 +153,7 @@ async function family(body) {
     h('td', { style: { fontSize: '28px' } }, p.avatar), h('td', {}, h('b', {}, p.name)),
     h('td', {}, h('span', { class: `pill ${p.role === 'admin' ? 'brand' : p.role === 'child' ? 'good' : ''}` }, { admin: 'Administrator', parent: 'Parent', child: 'Child' }[p.role])),
     h('td', { class: 'small' }, store.mode === 'cloud' ? p.email : p.role === 'child' ? 'Picture + PIN' : 'Picture + password'),
-    h('td', { class: 'small muted' }, p.role === 'child' ? `${p.yearGroup || ''}, age ${p.age || '?'}${p.interests ? ' · loves ' + p.interests : ''}` : ''),
+    h('td', { class: 'small muted' }, p.role === 'child' ? `${p.gender === 'girl' ? '👧 ' : p.gender === 'boy' ? '👦 ' : ''}${p.yearGroup || ''}, age ${p.age || '?'}${p.interests ? ' · loves ' + p.interests : ''}` : ''),
     h('td', { style: { whiteSpace: 'nowrap' } },
       h('button', { class: 'btn btn-sm', onclick: () => editPerson(p) }, '✏️ Edit'), ' ',
       h('button', { class: 'btn btn-sm', onclick: () => changeSecret(p) }, p.role === 'child' ? '🔢 PIN' : '🔑 Password'), ' ',

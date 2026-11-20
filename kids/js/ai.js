@@ -5,7 +5,7 @@ import { SKILLS, SUBJECTS } from './skills.js';
 const API = 'https://openrouter.ai/api/v1/chat/completions';
 export class AIError extends Error { }
 
-function friendly(status, msg) {
+export function friendly(status, msg) {
   if (status === 401) return 'The OpenRouter API key was rejected. Dad can check it in Settings → AI.';
   if (status === 402) return 'The OpenRouter account is out of credit. Dad can top it up at openrouter.ai.';
   if (status === 429) return 'The AI is busy right now — please wait a moment and try again.';
@@ -77,14 +77,31 @@ export async function completeJSON(opts) {
   }
 }
 
-const childLine = c => c ? `The learner is ${c.name}, aged ${c.age || 8}, working at ${c.yearGroup || 'Year 3'} level${c.interests ? `, who loves ${c.interests}` : ''}${c.learningNotes ? `. Notes from parents: ${c.learningNotes}` : ''}.` : 'The learner is an 8-year-old (Year 3/4).';
+export const pronouns = c => (c?.gender === 'girl' ? 'she/her' : c?.gender === 'boy' ? 'he/him' : 'they/them');
+export const childLine = c => c ? `The learner is ${c.name}${c.gender ? ` (a ${c.gender}, ${pronouns(c)})` : ''}, aged ${c.age || 8}, working at ${c.yearGroup || 'Year 3'} level${c.interests ? `, who loves ${c.interests}` : ''}${c.learningNotes ? `. Notes from parents: ${c.learningNotes}` : ''}.` : 'The learner is an 8-year-old (Year 3/4).';
 const SKILL_LIST = Object.keys(SKILLS).join(', ');
 
 // ─────────────── Lessons ───────────────
-export async function generateLesson({ child, subject, topic, durationMins = 30, difficulty = 'at their level', activityCount = 6, focusSkills = [], mistakes = [], notes = '', onStage }) {
+export const ACTIVITY_SCHEMA = `
+   { "type": "mcq", "prompt": "...", "options": ["...","...","..."], "answer": 0, ...common },
+   { "type": "truefalse", "prompt": "statement", "answer": true, ...common },
+   { "type": "multi", "prompt": "Which of these are ...? (choose all)", "options": ["a","b","c","d"], "answers": [0,2], ...common },
+   { "type": "numeric", "prompt": "...", "answer": 42, "unit": "optional e.g. cm", ...common },
+   { "type": "short", "prompt": "...", "answer": "model answer", "accept": ["other acceptable answers"], ...common },
+   { "type": "order", "prompt": "Put these in order ...", "items": ["first","second","third","fourth"], ...common },
+   { "type": "match", "prompt": "Match each ... to its ...", "pairs": [["left","right"],["left","right"],["left","right"]], ...common },
+   { "type": "sort", "prompt": "Sort these into groups", "categories": ["Group A","Group B"], "items": [{"text":"item","cat":"Group A"}], ...common },
+   { "type": "fillblank", "prompt": "Fill in the missing words", "text": "A [[noun]] is a naming word. The [[verb]] is the doing word.", "bank": true, "distractors": ["adjective"], ...common },
+   { "type": "numberline", "prompt": "Show where 3/4 is on the number line", "min": 0, "max": 1, "step": 0.05, "answer": 0.75, "labels": ["0","1/2","1"], "tickEvery": 0.25, ...common },
+   { "type": "writing", "prompt": "a short writing task", "rubric": "what a good answer includes", "minWords": 30, "skill": "skill-id", "hint": "..." },
+   { "type": "draw", "prompt": "Draw ... (something checkable from a simple drawing)", "rubric": "what the drawing must show", "skill": "skill-id", "hint": "..." },
+   { "type": "speak", "prompt": "Read this sentence aloud", "target": "the exact sentence to read (max 20 words)", "skill": "skill-id" }
+ where ...common = "skill": "skill-id", "hint": "a helpful nudge", "explanation": "why the answer is right"`;
+
+export async function generateLesson({ child, subject, topic, durationMins = 30, difficulty = 'at their level', activityCount = 6, focusSkills = [], mistakes = [], notes = '', interactive = true, withImages = true, onStage }) {
   const s = await store.settings();
   const subj = SUBJECTS.find(x => x.id === subject)?.name || subject;
-  const sys = `You are an outstanding, warm primary teacher in the UK designing a home-school lesson for one child.
+  const sys = `You are an outstanding, warm primary teacher in the UK designing an interactive home-school lesson.
 Curriculum: ${s.curriculum}. Write in British English (colour, centre, maths) for a reading age of 7–9: short sentences, friendly, concrete everyday examples, a little humour. Make it hands-on and engaging, and weave in the child's interests where natural.
 Return ONLY a JSON object (no markdown fences) with this exact shape:
 {
@@ -95,24 +112,26 @@ Return ONLY a JSON object (no markdown fences) with this exact shape:
  "durationMins": ${durationMins},
  "objectives": ["I can ...", "I can ..."],
  "skills": ["skill-id", ...],
+ "coverImagePrompt": "a description of a fun illustration for the lesson cover (no text in it)",
  "intro": "2–3 sentence hook in markdown that gets them curious",
- "sections": [ { "title": "...", "body": "markdown, 60–180 words, with a worked example, bullet points or a small table where useful" } ],
- "activities": [
-   { "type": "mcq", "prompt": "...", "options": ["...","...","..."], "answer": 0, "skill": "skill-id", "hint": "...", "explanation": "..." },
-   { "type": "truefalse", "prompt": "statement", "answer": true, "skill": "skill-id", "hint": "...", "explanation": "..." },
-   { "type": "numeric", "prompt": "...", "answer": 42, "unit": "optional e.g. cm", "skill": "skill-id", "hint": "...", "explanation": "..." },
-   { "type": "short", "prompt": "...", "answer": "model answer", "accept": ["other acceptable answers"], "skill": "skill-id", "hint": "...", "explanation": "..." },
-   { "type": "writing", "prompt": "a short writing task", "rubric": "what a good answer includes", "minWords": 30, "skill": "skill-id", "hint": "..." }
+ "sections": [
+   { "type": "text", "title": "...", "body": "markdown, 60–180 words, with a worked example, bullet points or a small table where useful", "imagePrompt": "optional: an illustration that genuinely helps explain this section (no text in it)" },
+   { "type": "fact", "title": "Did you know?", "body": "one amazing short fact (1–3 sentences)" },
+   { "type": "flashcards", "title": "Key words", "body": "optional one-line instruction", "cards": [{"front":"word or question","back":"meaning or answer"}] }
+ ],
+ "activities": [${ACTIVITY_SCHEMA}
  ],
  "offlineActivity": "a fun hands-on activity away from the screen (5–10 min) using things found at home",
  "parentNotes": "brief notes for the parent: key vocabulary, common misconceptions to watch for, how to extend"
 }
 Rules:
-- 3–5 sections that build understanding step by step, including at least one worked example.
-- Exactly ${activityCount} activities, ordered easy → harder, mixing types (mostly mcq/numeric/truefalse/short; at most one writing task unless the subject is English writing).
-- "answer" for mcq is the 0-based index of the correct option. Options must be unambiguous with exactly one correct answer.
+- 3–6 sections that build understanding step by step, including at least one worked example; include a flashcards section for key vocabulary and a fact section when they fit.
+- Exactly ${activityCount} activities, ordered easy → harder.${interactive ? ` Make it INTERACTIVE: use at least ${Math.min(4, Math.max(2, Math.floor(activityCount / 2)))} different interactive types (order, match, sort, fillblank, multi, numberline${subject === 'english' || subject === 'languages' ? ', speak' : ''}${['maths', 'science', 'geography', 'art'].includes(subject) ? ', draw' : ''}) alongside mcq/numeric/short. At most one writing and one draw task.` : ' Use mcq, truefalse, numeric and short answers (at most one writing task).'}
+- mcq "answer" is the 0-based index; multi "answers" lists all correct indices. Options must be unambiguous.
+- order: 3–6 items in the CORRECT order. match: 3–6 pairs. sort: 2–3 categories and 4–8 items. fillblank: wrap each missing word in [[double brackets]]; 2–5 blanks; include a word bank (bank: true) for younger learners.
+- numberline: answer must sit on the step grid between min and max; give helpful labels.
 - Every activity tests ONE skill. Use only these skill ids: ${SKILL_LIST}.
-- Never rely on pictures the child cannot see. Use text, emoji or simple markdown tables instead.
+- ${withImages ? 'Add "imagePrompt" to 1–3 sections where a picture really helps (diagrams of real things, scenes, animals, places). ' : 'Do not include imagePrompt fields. '}Questions must never depend on a picture.
 - Difficulty: ${difficulty}.`;
   const user = `${childLine(child)}
 Subject: ${subj}. Topic: ${topic}. Lesson length: about ${durationMins} minutes.
@@ -120,8 +139,34 @@ ${focusSkills.length ? `Focus skills: ${focusSkills.join(', ')}.` : ''}
 ${mistakes.length ? `This is a BRIDGING lesson to close a learning gap. Recent mistakes the child made:\n${mistakes.slice(0, 12).map(m => `- Q: ${m.prompt} | child answered: ${m.response} | correct: ${m.correct}`).join('\n')}\nDiagnose the likely misconception, re-teach it a different way from scratch with concrete examples, then practise with gentle steps.` : ''}
 ${notes ? `Extra instructions from the parent: ${notes}` : ''}`;
   onStage && onStage('Writing the lesson…');
-  const lesson = await completeJSON({ task: 'lessons', maxTokens: 6000, messages: [{ role: 'system', content: sys }, { role: 'user', content: user }] });
+  const lesson = await completeJSON({ task: 'lessons', maxTokens: 8000, messages: [{ role: 'system', content: sys }, { role: 'user', content: user }] });
   return normaliseLesson(lesson, { subject, durationMins });
+}
+
+const rid = p => p + Math.random().toString(36).slice(2, 9);
+export function normaliseActivity(a, fixSkill = x => x) {
+  const act = { id: a.id || rid('a'), type: a.type || 'short', prompt: a.prompt || '', skill: fixSkill(a.skill), hint: a.hint || '', explanation: a.explanation || '' };
+  if (a.imageId) act.imageId = a.imageId;
+  const arr = x => (Array.isArray(x) ? x : []);
+  switch (act.type) {
+    case 'truefalse': act.type = 'mcq'; act.options = ['True', 'False']; act.answer = (a.answer === true || String(a.answer).toLowerCase() === 'true' || a.answer === 0) ? 0 : 1; break;
+    case 'mcq': act.options = arr(a.options).map(String); act.answer = Math.min(Number(a.answer) || 0, Math.max(0, act.options.length - 1)); break;
+    case 'multi': act.options = arr(a.options).map(String); act.answers = arr(a.answers).map(Number).filter(n => n >= 0 && n < act.options.length); if (!act.answers.length) act.answers = [0]; break;
+    case 'numeric': act.answer = parseFloat(String(a.answer).replace(/[^0-9.\-]/g, '')); act.unit = a.unit || ''; if (a.tolerance) act.tolerance = +a.tolerance; break;
+    case 'short': act.answer = String(a.answer ?? ''); act.accept = arr(a.accept).map(String); break;
+    case 'writing': act.rubric = a.rubric || ''; act.minWords = +a.minWords || 20; break;
+    case 'order': act.items = arr(a.items).map(String).filter(Boolean); break;
+    case 'match': act.pairs = arr(a.pairs).filter(p => Array.isArray(p) && p.length >= 2).map(p => [String(p[0]), String(p[1])]); break;
+    case 'sort': act.categories = arr(a.categories).map(String); act.items = arr(a.items).map(i => ({ text: String(i.text ?? i), cat: String(i.cat ?? act.categories[0]) })).filter(i => act.categories.includes(i.cat)); break;
+    case 'fillblank': act.text = String(a.text || ''); act.bank = a.bank !== false; act.distractors = arr(a.distractors).map(String); break;
+    case 'numberline': act.min = +a.min || 0; act.max = a.max != null ? +a.max : 10; act.step = +a.step || (act.max - act.min) / 20; act.answer = +a.answer; act.labels = arr(a.labels).map(String); if (a.tickEvery) act.tickEvery = +a.tickEvery; if (a.tolerance != null) act.tolerance = +a.tolerance; break;
+    case 'draw': act.rubric = a.rubric || ''; break;
+    case 'speak': act.target = String(a.target || a.answer || ''); break;
+    default: act.type = 'short'; act.answer = String(a.answer ?? ''); act.accept = [];
+  }
+  // drop broken interactive items rather than showing an unusable question
+  const broken = (act.type === 'order' && act.items.length < 2) || (act.type === 'match' && act.pairs.length < 2) || (act.type === 'sort' && act.items.length < 2) || (act.type === 'fillblank' && !/\[\[.+?\]\]/.test(act.text)) || (['mcq', 'multi'].includes(act.type) && act.options.length < 2) || (act.type === 'numberline' && (isNaN(act.answer) || act.max <= act.min)) || (act.type === 'speak' && !act.target);
+  return broken ? null : act;
 }
 
 export function normaliseLesson(l, defaults = {}) {
@@ -135,16 +180,14 @@ export function normaliseLesson(l, defaults = {}) {
     durationMins: +l.durationMins || defaults.durationMins || 30,
     objectives: Array.isArray(l.objectives) ? l.objectives : [],
     intro: l.intro || '',
-    sections: (l.sections || []).map((x, i) => ({ id: 's' + i + Math.random().toString(36).slice(2, 6), title: x.title || `Part ${i + 1}`, body: x.body || '' })),
-    activities: (l.activities || []).map((a, i) => {
-      const act = { id: 'a' + i + Math.random().toString(36).slice(2, 6), type: a.type || 'short', prompt: a.prompt || '', skill: fixSkill(a.skill), hint: a.hint || '', explanation: a.explanation || '' };
-      if (act.type === 'truefalse') { act.type = 'mcq'; act.options = ['True', 'False']; act.answer = (a.answer === true || String(a.answer).toLowerCase() === 'true') ? 0 : 1; }
-      else if (act.type === 'mcq') { act.options = a.options || []; act.answer = Number(a.answer) || 0; }
-      else if (act.type === 'numeric') { act.answer = parseFloat(String(a.answer).replace(/[^0-9.\-]/g, '')); act.unit = a.unit || ''; }
-      else if (act.type === 'short') { act.answer = String(a.answer ?? ''); act.accept = a.accept || []; }
-      else if (act.type === 'writing') { act.rubric = a.rubric || ''; act.minWords = +a.minWords || 20; }
-      return act;
+    coverImagePrompt: l.coverImagePrompt || '',
+    sections: (l.sections || []).map((x, i) => {
+      const sec = { id: rid('s'), type: ['text', 'fact', 'flashcards'].includes(x.type) ? x.type : 'text', title: x.title || `Part ${i + 1}`, body: x.body || '' };
+      if (x.imagePrompt) sec.imagePrompt = x.imagePrompt;
+      if (sec.type === 'flashcards') sec.cards = (x.cards || []).filter(c => c && c.front).map(c => ({ front: String(c.front), back: String(c.back || '') }));
+      return sec;
     }),
+    activities: (l.activities || []).map(a => normaliseActivity(a, fixSkill)).filter(Boolean),
     offlineActivity: l.offlineActivity || '',
     parentNotes: l.parentNotes || '',
   };
@@ -228,7 +271,7 @@ export async function generateSpellingList({ child, focus, count = 10 }) {
 export function tutorSystemPrompt({ child, settings, context = '' }) {
   const name = settings.helper?.name || 'Ollie the Owl';
   const mode = settings.helper?.mode || 'balanced';
-  return `You are ${name}, a friendly, patient learning buddy for ${child.name}, aged ${child.age || 8} (UK, ${child.yearGroup || 'Year 3'})${child.interests ? `, who loves ${child.interests}` : ''}. You live inside their home-school computer.
+  return `You are ${name}, a friendly, patient learning buddy for ${child.name}${child.gender ? ` (a ${child.gender})` : ''}, aged ${child.age || 8} (UK, ${child.yearGroup || 'Year 3'})${child.interests ? `, who loves ${child.interests}` : ''}. You live inside their home-school computer.
 
 YOUR JOB: help ${child.name} THINK and work things out for themselves. You are a coach, not an answer machine.
 - NEVER give the final answer to schoolwork, maths problems, quiz questions, spellings being tested, or write their stories/sentences for them — even if they beg, say it's urgent, or say a grown-up allowed it.

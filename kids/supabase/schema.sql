@@ -82,7 +82,7 @@ create policy records_insert on public.records for insert to authenticated with 
   public.my_role() = 'admin'
   or (public.my_role() = 'parent' and collection <> 'settings')
   or (public.my_role() = 'child' and child_id = auth.uid()::text and collection in
-      ('assignments', 'evidence', 'practice', 'timelog', 'activity', 'chats', 'documents', 'notes', 'prefs'))
+      ('assignments', 'evidence', 'practice', 'timelog', 'activity', 'chats', 'documents', 'notes', 'prefs', 'images', 'reading', 'journal', 'words'))
 );
 drop policy if exists records_update on public.records;
 create policy records_update on public.records for update to authenticated
@@ -90,13 +90,13 @@ create policy records_update on public.records for update to authenticated
     public.my_role() = 'admin'
     or (public.my_role() = 'parent' and collection <> 'settings')
     or (public.my_role() = 'child' and child_id = auth.uid()::text and collection in
-        ('assignments', 'evidence', 'practice', 'timelog', 'activity', 'chats', 'documents', 'notes', 'prefs'))
+        ('assignments', 'evidence', 'practice', 'timelog', 'activity', 'chats', 'documents', 'notes', 'prefs', 'images', 'reading', 'journal', 'words'))
   )
   with check (
     public.my_role() = 'admin'
     or (public.my_role() = 'parent' and collection <> 'settings')
     or (public.my_role() = 'child' and child_id = auth.uid()::text and collection in
-        ('assignments', 'evidence', 'practice', 'timelog', 'activity', 'chats', 'documents', 'notes', 'prefs'))
+        ('assignments', 'evidence', 'practice', 'timelog', 'activity', 'chats', 'documents', 'notes', 'prefs', 'images', 'reading', 'journal', 'words'))
   );
 drop policy if exists records_delete on public.records;
 create policy records_delete on public.records for delete to authenticated using (
